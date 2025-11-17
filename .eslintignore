@@ -1,0 +1,11 @@
+# Configuration files that don't need linting
+**/allowed-domains.js
+next.config.js
+
+# Test files
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+**/e2e/**
+**/__tests__/**

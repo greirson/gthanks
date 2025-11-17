@@ -1,0 +1,521 @@
+import { PrismaAdapter } from '@next-auth/prisma-adapter';
+
+import { type Account, type NextAuthOptions, type User as NextAuthUser } from 'next-auth';
+import { type AdapterUser } from 'next-auth/adapters';
+import AppleProvider from 'next-auth/providers/apple';
+import EmailProvider from 'next-auth/providers/email';
+import FacebookProvider from 'next-auth/providers/facebook';
+import GoogleProvider from 'next-auth/providers/google';
+
+import { getAppleClientSecret } from '@/lib/auth/apple-client-secret-generator';
+// OIDC provider not available in NextAuth v4.24 - using custom provider
+
+import { db } from '@/lib/db';
+import { createEmailService } from '@/lib/email';
+import { logger } from '@/lib/services/logger';
+import {
+  RegenerationReason,
+  cleanupExpiredSessions,
+  enforceMaxSessions,
+  regenerateSession,
+} from '@/lib/services/session-service';
+import { UserProfileService } from '@/lib/services/user-profile';
+import { sanitizeRedirectUrl } from '@/lib/utils/url-validation';
+
+const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(db),
+  providers: [
+    EmailProvider({
+      from: process.env.EMAIL_FROM || 'noreply@localhost',
+      maxAge: 15 * 60, // 15 minutes
+      sendVerificationRequest: async ({ identifier: email, url }) => {
+        const emailService = createEmailService();
+
+        await emailService.send({
+          to: email,
+          subject: 'Sign in to gthanks',
+          html: `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+              <h1>Sign in to gthanks</h1>
+              <p>Click the link below to sign in to your account:</p>
+              <a href="${url}" style="display: inline-block; padding: 12px 24px; background: #000; color: #fff; text-decoration: none; border-radius: 6px;">Sign In</a>
+              <p style="color: #666; font-size: 14px; margin-top: 20px;">
+                This link will expire in 15 minutes. If you didn't request this, please ignore this email.
+              </p>
+              <p style="color: #999; font-size: 12px; margin-top: 10px;">
+                For security, verify this email is from ${process.env.EMAIL_FROM || 'noreply@localhost'}
+              </p>
+            </div>
+          `,
+        });
+      },
+    }),
+    ...(process.env.GOOGLE_CLIENT_ID
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+          }),
+        ]
+      : []),
+    ...(process.env.FACEBOOK_CLIENT_ID
+      ? [
+          FacebookProvider({
+            clientId: process.env.FACEBOOK_CLIENT_ID,
+            clientSecret: process.env.FACEBOOK_CLIENT_SECRET || '',
+          }),
+        ]
+      : []),
+    ...(process.env.APPLE_CLIENT_ID
+      ? [
+          AppleProvider({
+            clientId: process.env.APPLE_CLIENT_ID,
+            clientSecret: getAppleClientSecret() || '',
+          }),
+        ]
+      : []),
+    // Generic OAuth provider support (OIDC discovery)
+    ...(process.env.OAUTH_CLIENT_ID && process.env.OAUTH_CLIENT_SECRET && process.env.OAUTH_ISSUER
+      ? [
+          {
+            id: 'oauth',
+            name: process.env.OAUTH_NAME || 'OAuth',
+            type: 'oauth' as const,
+            clientId: process.env.OAUTH_CLIENT_ID,
+            clientSecret: process.env.OAUTH_CLIENT_SECRET,
+            wellKnown: `${process.env.OAUTH_ISSUER}/.well-known/openid-configuration`,
+            authorization: {
+              params: {
+                scope: process.env.OAUTH_SCOPE || 'openid email profile',
+                response_mode: 'form_post',
+              },
+            },
+            profile(profile: Record<string, unknown>) {
+              return {
+                id: String(profile.sub),
+                name: String(profile.name ?? profile.preferred_username ?? profile.email),
+                email: String(profile.email),
+                image: (profile.picture ?? profile.avatar_url ?? '') as string,
+              };
+            },
+          },
+        ]
+      : []),
+  ],
+  session: {
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  callbacks: {
+    redirect: ({ url, baseUrl }) => {
+      // Use secure URL validation to prevent open redirect attacks
+      const sanitizedUrl = sanitizeRedirectUrl(url, baseUrl, '/wishes');
+      return sanitizedUrl;
+    },
+    jwt: async ({ token, user }) => {
+      // Initial sign in - user object is available
+      if (user) {
+        token.id = user.id;
+        token.email = user.email;
+        token.name = user.name;
+      }
+
+      // Always fetch fresh user data from database to ensure we have latest admin status
+      // This is crucial for first-user admin assignment to work properly
+      if (token.id) {
+        const dbUser = await db.user.findUnique({
+          where: { id: token.id },
+          select: {
+            name: true,
+            email: true,
+            role: true,
+            isAdmin: true,
+            isOnboardingComplete: true,
+            themePreference: true,
+            username: true,
+            canUseVanityUrls: true,
+            showPublicProfile: true,
+            emails: {
+              where: { isPrimary: true, isVerified: true },
+              select: { email: true },
+              take: 1,
+            },
+          },
+        });
+
+        if (dbUser) {
+          token.name = dbUser.name;
+          // Use primary email from UserEmail table if available, fallback to User.email
+          token.email = dbUser.emails[0]?.email || dbUser.email;
+          token.role = dbUser.role || 'user';
+          token.isAdmin = dbUser.isAdmin || false;
+          token.isOnboardingComplete = dbUser.isOnboardingComplete || false;
+          token.themePreference = dbUser.themePreference || 'system';
+          token.username = dbUser.username;
+          token.canUseVanityUrls = dbUser.canUseVanityUrls;
+          token.showPublicProfile = dbUser.showPublicProfile;
+        }
+      }
+
+      return token;
+    },
+    session: ({ session, token }) => {
+      // Map JWT token data to session
+      if (token && session.user) {
+        session.user.id = token.id || '';
+        session.user.email = token.email || '';
+        session.user.name = token.name as string | null;
+        session.user.role = token.role || 'user';
+        session.user.isAdmin = token.isAdmin || false;
+        session.user.isOnboardingComplete = token.isOnboardingComplete || false;
+        session.user.themePreference = token.themePreference || 'system';
+        session.user.username = token.username as string | null;
+        session.user.canUseVanityUrls = token.canUseVanityUrls || false;
+        session.user.showPublicProfile = token.showPublicProfile || false;
+      }
+
+      return session;
+    },
+    signIn: async ({
+      user,
+      account,
+    }: {
+      user: NextAuthUser | AdapterUser;
+      account: Account | null;
+    }) => {
+      // For new users, registration is always enabled in MVP
+      if (!user.id) {
+        // This is a new user registration attempt - always allowed in MVP
+      } else {
+        // For existing users, ensure backward compatibility by marking onboarding complete
+        // if they already have a name but isOnboardingComplete is false
+        const existingUser = await db.user.findUnique({
+          where: { id: user.id },
+          select: { name: true, isOnboardingComplete: true },
+        });
+
+        if (existingUser?.name && !existingUser.isOnboardingComplete) {
+          await db.user.update({
+            where: { id: user.id },
+            data: { isOnboardingComplete: true },
+          });
+        }
+      }
+
+      // Handle email provider (magic links)
+      if (account?.provider === 'email') {
+        // For magic links, allow both new and existing users (MVP: registration always enabled)
+        if (user.email) {
+          const userEmail = await db.userEmail.findFirst({
+            where: {
+              email: user.email,
+              isVerified: true,
+            },
+            include: { user: true },
+          });
+
+          // If email exists in UserEmail and is verified, allow sign in
+          if (userEmail) {
+            // Update user.id to match the UserEmail's userId for proper session creation
+            user.id = userEmail.userId;
+            return true;
+          }
+
+          // For backward compatibility: check if email exists in User table
+          const legacyUser = await db.user.findUnique({
+            where: { email: user.email },
+          });
+
+          if (legacyUser) {
+            // This is an existing user without UserEmail records
+            // Allow sign in for backward compatibility
+            user.id = legacyUser.id;
+            return true;
+          }
+
+          // New user - allow sign in (NextAuth's PrismaAdapter will create the user)
+          // The UserEmail record will be created in the events.signIn callback
+          return true;
+        }
+
+        // No email provided - should not happen with email provider
+        return `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/auth/error?error=EmailRequired`;
+      }
+
+      // Handle OAuth providers
+      if (
+        account?.provider &&
+        ['google', 'facebook', 'apple', 'oauth'].includes(account.provider)
+      ) {
+        // OAuth providers must provide an email
+        if (!user.email) {
+          return `/auth/error?error=EmailRequired&provider=${account.provider}`;
+        }
+
+        try {
+          // CRITICAL: First check if this OAuth account is already linked to any user
+          // This prevents account hijacking attempts
+          const existingAccount = await db.account.findUnique({
+            where: {
+              provider_providerAccountId: {
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+              },
+            },
+            include: { user: true },
+          });
+
+          if (existingAccount) {
+            // OAuth account already exists - this is a normal sign-in
+            return true;
+          }
+
+          // OAuth account doesn't exist yet - check if we should link it to an existing user
+          // First check UserEmail table
+          const existingUserEmail = await db.userEmail.findFirst({
+            where: { email: user.email },
+            include: { user: true },
+          });
+
+          // Also check legacy User table for backward compatibility
+          const existingUser = existingUserEmail?.user || (await db.user.findUnique({
+            where: { email: user.email },
+          }));
+
+          if (existingUser) {
+            // User exists with this email - link the OAuth account
+            try {
+              await db.account.create({
+                data: {
+                  userId: existingUser.id,
+                  type: account.type,
+                  provider: account.provider,
+                  providerAccountId: account.providerAccountId,
+                  access_token: account.access_token,
+                  refresh_token: account.refresh_token ?? null,
+                  expires_at: account.expires_at ?? null,
+                  token_type: account.token_type ?? null,
+                  scope: account.scope ?? null,
+                  id_token: account.id_token ?? null,
+                  session_state: account.session_state ?? null,
+                },
+              });
+
+              // Ensure UserEmail record exists for this OAuth email
+              await db.userEmail.upsert({
+                where: {
+                  email: user.email,
+                },
+                update: {
+                  isVerified: true,
+                  verifiedAt: new Date(),
+                },
+                create: {
+                  userId: existingUser.id,
+                  email: user.email,
+                  isPrimary: !existingUserEmail, // Set as primary if this is their first email
+                  isVerified: true,
+                  verifiedAt: new Date(),
+                },
+              });
+
+              return true;
+            } catch (linkError) {
+              // Log OAuth link errors
+              logger.error('Failed to link OAuth account', linkError, {
+                provider: account.provider,
+                userId: existingUser.id,
+              });
+              return '/auth/error?error=AccountLinkFailed';
+            }
+          }
+
+          // New user - NextAuth's PrismaAdapter will handle user creation
+          // The UserEmail record will be created in the events.signIn callback
+          return true;
+        } catch (error) {
+          // Log database errors during OAuth sign-in
+          logger.error('Database error during OAuth sign-in', error, {
+            provider: account?.provider,
+            hasEmail: !!user.email,
+          });
+          return '/auth/error?error=DatabaseError';
+        }
+      }
+
+      // Deny unknown providers
+      return false;
+    },
+  },
+  events: {
+    signIn: async ({ user, account, profile, isNewUser }) => {
+      // Regenerate session on every successful login for security
+      if (user.id) {
+        try {
+          // Clean up any expired sessions first
+          await cleanupExpiredSessions();
+
+          // Regenerate session to prevent fixation attacks
+          await regenerateSession(user.id, RegenerationReason.LOGIN);
+
+          // Enforce maximum concurrent sessions
+          await enforceMaxSessions(user.id, 5);
+
+          logger.info({ userId: user.id, isNewUser }, 'User signed in with session regeneration');
+        } catch (error) {
+          logger.error('Failed to regenerate session on sign-in', error, {
+            userId: user.id,
+          });
+          // Don't fail sign-in if session regeneration fails
+        }
+      }
+
+      // Auto-admin: Make the first user an admin if no admins exist
+      if (isNewUser && user.id) {
+        try {
+          // Use a transaction with isolation to prevent race conditions
+          await db.$transaction(
+            async (tx) => {
+              // Check if any admin exists (more reliable than user count)
+              const adminExists = await tx.user.findFirst({
+                where: {
+                  OR: [{ isAdmin: true }, { role: 'admin' }],
+                },
+                select: { id: true },
+              });
+
+              // If no admin exists, make this user an admin
+              if (!adminExists) {
+                await tx.user.update({
+                  where: { id: user.id },
+                  data: {
+                    isAdmin: true,
+                    role: 'admin',
+                  },
+                });
+
+                logger.info(
+                  { userId: user.id },
+                  'First user automatically made admin (no existing admins)'
+                );
+
+                // Force token refresh by updating user's session version
+                // This ensures the JWT gets regenerated with admin privileges
+                await tx.user.update({
+                  where: { id: user.id },
+                  data: {
+                    // Touch the updatedAt field to signal token refresh needed
+                    updatedAt: new Date(),
+                  },
+                });
+              }
+            },
+            {
+              // Use serializable isolation to prevent concurrent admin creation
+              isolationLevel: 'Serializable',
+            }
+          );
+        } catch (error) {
+          logger.error('Failed to auto-assign admin role to first user', error, {
+            userId: user.id,
+          });
+          // Don't fail sign-in if admin assignment fails
+        }
+      }
+
+      // For new email provider users, create UserEmail record
+      if (account?.provider === 'email' && isNewUser && user.id && user.email) {
+        try {
+          await db.userEmail.upsert({
+            where: {
+              email: user.email,
+            },
+            update: {
+              isVerified: true,
+              verifiedAt: new Date(),
+            },
+            create: {
+              userId: user.id,
+              email: user.email,
+              isPrimary: true, // First email is always primary
+              isVerified: true, // Magic link emails are pre-verified
+              verifiedAt: new Date(),
+            },
+          });
+
+          logger.info(
+            { userId: user.id, email: user.email, provider: 'email' },
+            'Created UserEmail record for new email user'
+          );
+        } catch (error) {
+          logger.error('Failed to create UserEmail record for email user', error, {
+            userId: user.id,
+            email: user.email,
+          });
+          // Don't fail the sign-in if UserEmail creation fails
+        }
+      }
+
+      // After successful OAuth sign-in, import profile data and create UserEmail record
+      if (account?.provider && account.provider !== 'email' && profile && user.id) {
+        try {
+          await UserProfileService.importOAuthProfile(user.id, account.provider, profile);
+        } catch (error) {
+          // Log profile import errors
+          logger.error('Failed to import OAuth profile data', error, {
+            provider: account.provider,
+            userId: user.id,
+          });
+          // Don't fail the sign-in if profile import fails
+        }
+
+        // For new OAuth users, create UserEmail record
+        if (isNewUser && user.email) {
+          try {
+            await db.userEmail.upsert({
+              where: {
+                email: user.email,
+              },
+              update: {
+                isVerified: true,
+                verifiedAt: new Date(),
+              },
+              create: {
+                userId: user.id,
+                email: user.email,
+                isPrimary: true, // First email is always primary
+                isVerified: true, // OAuth emails are pre-verified
+                verifiedAt: new Date(),
+              },
+            });
+
+            logger.info(
+              { userId: user.id, email: user.email, provider: account.provider },
+              'Created UserEmail record for new OAuth user'
+            );
+          } catch (error) {
+            logger.error('Failed to create UserEmail record for OAuth user', error, {
+              provider: account.provider,
+              userId: user.id,
+              email: user.email,
+            });
+            // Don't fail the sign-in if UserEmail creation fails
+          }
+        }
+      }
+    },
+    signOut: ({ session }) => {
+      // Log sign-out event
+      if (session?.user?.id) {
+        logger.info({ userId: session.user.id }, 'User signed out');
+      }
+    },
+  },
+  pages: {
+    signIn: '/auth/login',
+    error: '/auth/error',
+    verifyRequest: '/auth/verify-request',
+  },
+};
+
+export { authOptions };

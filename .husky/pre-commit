@@ -1,0 +1,18 @@
+#!/bin/sh
+. "$(dirname "$0")/common.sh"
+
+# Run lint-staged on changed files only
+pnpm exec lint-staged
+
+# Quick type check on changed TypeScript files only
+echo "🔍 Quick type checking changed files..."
+changed_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx)$' || true)
+
+if [ -n "$changed_files" ]; then
+  # Just notify about type errors, don't block commit
+  if ! pnpm run typecheck 2>/dev/null; then
+    echo "⚠️  Note: TypeScript errors detected in the project"
+    echo "   These don't block commits but will fail in CI/CD"
+    echo "   Run 'pnpm run typecheck' to see details"
+  fi
+fi

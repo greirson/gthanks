@@ -1,0 +1,66 @@
+/**
+ * Reserved usernames that cannot be used for vanity URLs
+ * Includes system routes, common endpoints, and honeypot usernames
+ */
+export const RESERVED_USERNAMES = new Set([
+  // System routes
+  'admin', 'api', 'support', 'help', 'root', 'system',
+  'settings', 'auth', 'login', 'signup', 'public',
+  'share', 'list', 'lists', 'group', 'groups',
+  'wish', 'wishes', 'user', 'users', 'dashboard',
+  'profile', 'account', 'billing', 'checkout', 'payment',
+  'subscribe', 'unsubscribe', 'notifications', 'privacy',
+  'terms', 'contact', 'about', 'blog', 'docs', 'faq',
+  'status', 'health', 'metrics', 'analytics', 'reports',
+  'export', 'import', 'search', 'filter', 'sort',
+
+  // Common variations
+  'admins', 'administrator', 'administrators', 'moderator', 'moderators',
+  'webmaster', 'postmaster', 'hostmaster', 'sysadmin', 'superuser',
+
+  // Security/abuse prevention
+  'security', 'abuse', 'legal', 'dmca', 'copyright', 'trademark',
+  'noreply', 'no-reply', 'donotreply', 'do-not-reply',
+
+  // Common social/auth routes
+  'signin', 'signout', 'register', 'logout', 'reset', 'verify',
+  'oauth', 'callback', 'authorize', 'token', 'refresh',
+
+  // Common app routes
+  'home', 'index', 'welcome', 'getting-started', 'onboarding',
+  'explore', 'discover', 'trending', 'popular', 'featured',
+  'new', 'latest', 'recent', 'top', 'best',
+
+  // Common resource names
+  'reservation', 'reservations', 'invite', 'invites', 'invitation', 'invitations',
+  'member', 'members', 'family', 'families', 'friend', 'friends',
+
+  // API/webhook routes
+  'webhook', 'webhooks', 'callback', 'callbacks', 'hook', 'hooks',
+  'event', 'events', 'notify', 'notification',
+
+  // Static/asset routes
+  'static', 'assets', 'images', 'img', 'uploads', 'files',
+  'media', 'cdn', 'download', 'downloads',
+
+  // Developer/debug routes
+  'debug', 'test', 'testing', 'dev', 'development', 'staging',
+  'preview', 'sandbox', 'demo',
+]);
+
+/**
+ * Reserved slugs for lists and groups
+ * These prevent conflicts with common action routes
+ */
+export const RESERVED_SLUGS = new Set([
+  // Action routes
+  'admin', 'settings', 'edit', 'delete', 'share',
+  'public', 'private', 'password', 'wishes', 'reservations',
+  'new', 'create', 'update', 'remove', 'archive',
+
+  // View modes
+  'grid', 'list', 'card', 'table', 'detail', 'details',
+
+  // Filtering/sorting
+  'filter', 'sort', 'search', 'all', 'active', 'archived',
+]);

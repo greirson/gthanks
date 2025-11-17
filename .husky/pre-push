@@ -1,0 +1,36 @@
+#!/bin/sh
+. "$(dirname "$0")/common.sh"
+
+echo "🔍 Running pre-push checks..."
+
+# Run type checking - but allow push to continue if it fails
+echo "📝 Type checking..."
+if ! pnpm run typecheck; then
+  echo "⚠️  TypeScript errors found. Consider fixing these before pushing:"
+  echo "   - Run 'pnpm run typecheck' to see all errors"
+  echo "   - These errors will be caught by CI/CD"
+  echo ""
+  
+  # Ask if user wants to continue
+  echo "Do you want to push anyway? (y/N)"
+  read -r response
+  if [ "$response" != "y" ] && [ "$response" != "Y" ]; then
+    echo "❌ Push cancelled"
+    exit 1
+  fi
+  echo "⚠️  Pushing with TypeScript errors..."
+fi
+
+# Run linting - fail only on errors, not warnings
+echo "🧹 Linting..."
+if ! ./scripts/check-lint-errors.sh; then
+  echo "   Run 'pnpm run lint' to see all issues"
+  echo "   Run 'pnpm run lint:fix' to auto-fix some issues"
+  exit 1
+fi
+
+# Skip coverage check for now - it's in CI/CD
+# echo "🧪 Checking test coverage..."
+# ./scripts/check-coverage.sh
+
+echo "✅ Pre-push checks completed!"

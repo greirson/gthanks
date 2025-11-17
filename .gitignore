@@ -1,0 +1,176 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Production builds
+.next/
+out/
+build/
+dist/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+dev.db
+test.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Next.js build output
+.next/
+out/
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# Gatsby files
+.cache/
+# public - REMOVED: Next.js needs this directory tracked for Docker builds
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# Editor directories and files
+.vscode/
+.idea/
+.claude/*
+!.claude/guides/
+!.claude/commands/
+.serena/cache/*
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Turborepo
+.turbo/
+
+# Vercel
+.vercel
+
+# Prisma
+prisma/migrations/
+!prisma/migrations/.gitkeep
+
+# Jest
+coverage/
+
+# Testing
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Local development
+uploads/
+storage/
+
+# Docker
+.dockerignore
+
+# Backup files
+*.backup
+*.bak
+
+# Package manager locks (we use pnpm)
+package-lock.json
+yarn.lock
+
+lint-output.json
+
+# Build outputs and logs
+*.log
+*-output.txt
+*-report.md
+*-report.html  
+*-report.json
+
+# Backup files
+*_old
+*.backup
+*.bak
+
+# Temporary scripts
+fix-*.sh
+disable-*.sh
+
+# Bundle analysis
+bundle-analyzer-report.html
+.mcp.json
+prisma/*.backup-*
+
+# AI tool metadata
+.serena/
+zen_generated.code

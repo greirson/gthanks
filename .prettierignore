@@ -1,0 +1,12 @@
+node_modules
+.next
+dist
+build
+coverage
+pnpm-lock.yaml
+.turbo
+*.min.js
+*.min.css
+
+# TypeScript files with decorators
+apps/web/src/lib/dto/*.dto.ts
