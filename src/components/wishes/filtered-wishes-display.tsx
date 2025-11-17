@@ -10,7 +10,7 @@ import { MobileFilterSheet } from '@/components/wishes/filters/MobileFilterSheet
 import { Button } from '@/components/ui/button';
 import { Filter, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useViewPreference, ViewMode } from '@/lib/utils/view-preferences';
+import { useViewPreference } from '@/lib/utils/view-preferences';
 import { ViewToggle } from '@/components/ui/view-toggle';
 import { Badge } from '@/components/ui/badge';
 
@@ -43,7 +43,7 @@ export function FilteredWishesDisplay({
 }: FilteredWishesDisplayProps) {
   const [isDesktopFilterOpen, setIsDesktopFilterOpen] = useState(!compactFilters);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-  const [viewMode, setViewMode, isHydrated] = useViewPreference('viewMode.publicList', 'compact');
+  const [viewMode, setViewMode] = useViewPreference('viewMode.publicList', 'compact');
 
   // Use the filter hook
   const {
