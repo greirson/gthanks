@@ -13,12 +13,13 @@ const customJestConfig = {
   testMatch: [
     '<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}',
     '<rootDir>/src/**/*.{spec,test}.{js,jsx,ts,tsx}',
-    '<rootDir>/tests/**/*.{spec,test}.{js,jsx,ts,tsx}',
+    '<rootDir>/tests/integration/**/*.{spec,test}.{js,jsx,ts,tsx}',
   ],
   testPathIgnorePatterns: [
     '<rootDir>/.next/',
     '<rootDir>/node_modules/',
     '<rootDir>/src/e2e/',
+    '<rootDir>/tests/e2e/',
     '.*\\.e2e\\.test\\.(js|jsx|ts|tsx)$',
   ],
   moduleNameMapper: {
