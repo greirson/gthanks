@@ -2,7 +2,7 @@
 
 import { Wish } from '@prisma/client';
 import { useQuery } from '@tanstack/react-query';
-import { Eye, Lock, ArrowLeft, X, Info } from 'lucide-react';
+import { Lock, ArrowLeft, X, Info } from 'lucide-react';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -10,7 +10,6 @@ import { useParams } from 'next/navigation';
 
 import { ReservationDialog } from '@/components/reservations/reservation-dialog';
 import { SimpleThemeToggle } from '@/components/theme/simple-theme-toggle';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';

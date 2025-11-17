@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getUserFriendlyError } from '@/lib/errors';
 import { verifyEmailToken } from '@/lib/email-verification';
 import { rateLimiter, getClientIdentifier } from '@/lib/rate-limiter';
 import { db } from '@/lib/db';
