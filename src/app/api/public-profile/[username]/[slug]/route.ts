@@ -90,6 +90,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
     // Fetch list using service
     const list = await listService.getByVanityUrl(username, slug);
 
+    // Handle list not found or not accessible
+    if (!list) {
+      return NextResponse.json(
+        { error: getUserFriendlyError('NOT_FOUND'), code: 'NOT_FOUND' },
+        { status: 404 }
+      );
+    }
+
     // If list is password-protected, verify password
     if (list.visibility === 'password') {
       if (!password) {
