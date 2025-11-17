@@ -857,8 +857,8 @@ export class ListService {
       });
 
       return updatedList as ListWithOwner;
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+    } catch (error: any) {
+      if (error?.code === 'P2002' && error?.meta?.target?.includes('slug')) {
         throw new ConflictError('Slug is already in use by another of your lists');
       }
       throw error;
@@ -867,8 +867,9 @@ export class ListService {
 
   /**
    * Get list by vanity URL (username + slug)
+   * Returns null if list not found, is private, or hidden from profile
    */
-  async getByVanityUrl(username: string, slug: string): Promise<ListWithDetails> {
+  async getByVanityUrl(username: string, slug: string): Promise<ListWithDetails | null> {
     const list = await db.list.findFirst({
       where: {
         slug: slug.toLowerCase(),
@@ -903,12 +904,13 @@ export class ListService {
     });
 
     if (!list) {
-      throw new NotFoundError('List not found');
+      return null;
     }
 
     // Check visibility - vanity URLs only work for public and password-protected lists
-    if (list.visibility === 'private') {
-      throw new ForbiddenError('This list is private and cannot be accessed via vanity URL');
+    // Also exclude lists hidden from profile
+    if (list.visibility === 'private' || list.hideFromProfile) {
+      return null;
     }
 
     // For password-protected lists, return basic info without wishes

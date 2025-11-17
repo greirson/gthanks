@@ -181,6 +181,7 @@ describe('Vanity URLs Integration Tests', () => {
       const otherUser = await db.user.create({
         data: {
           email: 'other@example.com',
+          canUseVanityUrls: true,
         },
       });
 

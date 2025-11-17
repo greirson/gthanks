@@ -44,7 +44,6 @@ const createMockAdmin = (listId: string, userId: string, addedBy: string) => ({
 describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
   const mockOwner = createMockUser('owner-1');
   const mockCoManager = createMockUser('co-manager-1');
-  const mockTargetUser = createMockUser('target-user-1');
   const mockUnauthorizedUser = createMockUser('unauthorized-1');
 
   beforeEach(() => {
@@ -131,7 +130,7 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
       expect(response.status).toBe(401);
 
       const data = await response.json();
-      expect(data.error).toBe('Unauthorized');
+      expect(data.error).toBe('Please sign in to continue');
 
       // Should not call permission service
       expect(mockPermissionService.require).not.toHaveBeenCalled();
@@ -159,7 +158,7 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
       expect(response.status).toBe(403);
 
       const data = await response.json();
-      expect(data.error).toBe('Only list owners can remove co-managers');
+      expect(data.error).toBe("You don't have permission to do that");
       expect(data.code).toBe('FORBIDDEN');
     });
 
@@ -183,7 +182,7 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
       expect(response.status).toBe(403);
 
       const data = await response.json();
-      expect(data.error).toBe('You do not have permission to manage this list');
+      expect(data.error).toBe("You don't have permission to do that");
       expect(data.code).toBe('FORBIDDEN');
     });
   });
@@ -204,7 +203,7 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
       expect(response.status).toBe(400);
 
       const data = await response.json();
-      expect(data.error).toBe('Cannot remove yourself from the list');
+      expect(data.error).toBe("This action isn't allowed");
       expect(data.code).toBe('INVALID_OPERATION');
 
       // Should not perform database operations
@@ -240,7 +239,7 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
       expect(response.status).toBe(404);
 
       const data = await response.json();
-      expect(data.error).toBe('User is not a co-manager of this list');
+      expect(data.error).toBe("We couldn't find what you're looking for");
       expect(data.code).toBe('NOT_FOUND');
     });
   });
@@ -272,7 +271,7 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
       expect(response.status).toBe(404);
 
       const data = await response.json();
-      expect(data.error).toBe('List not found');
+      expect(data.error).toBe("We couldn't find what you're looking for");
       expect(data.code).toBe('NOT_FOUND');
     });
 
@@ -294,7 +293,7 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
       expect(response.status).toBe(404);
 
       const data = await response.json();
-      expect(data.error).toBe('List not found');
+      expect(data.error).toBe("We couldn't find what you're looking for");
       expect(data.code).toBe('NOT_FOUND');
     });
 
@@ -319,7 +318,7 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
       expect(response.status).toBe(500);
 
       const data = await response.json();
-      expect(data.error).toBe('Failed to remove co-manager');
+      expect(data.error).toBe('Something went wrong. Please try again');
     });
 
     it('handles database constraint violations gracefully', async () => {
@@ -358,7 +357,7 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
       expect(response.status).toBe(500);
 
       const data = await response.json();
-      expect(data.error).toBe('Failed to remove co-manager');
+      expect(data.error).toBe('Something went wrong. Please try again');
     });
 
     it('validates route parameters are present', async () => {
@@ -369,7 +368,7 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
       });
 
       // Test with missing userId parameter
-      const response = await DELETE(request, {
+      await DELETE(request, {
         params: { listId: 'list-1', userId: '' },
       });
 
@@ -383,11 +382,8 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
       mockGetCurrentUser.mockResolvedValue(mockOwner);
       mockPermissionService.require.mockResolvedValue(undefined);
 
-      let transactionCallback: any;
-
       // Capture the transaction callback
       mockDb.$transaction.mockImplementation(async (callback) => {
-        transactionCallback = callback;
 
         // Simulate partial failure - list check passes, admin check passes, but delete fails
         mockDb.list.findUnique.mockResolvedValue(createMockList('list-1', mockOwner.id) as any);
@@ -420,7 +416,7 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
       expect(response.status).toBe(500);
 
       const data = await response.json();
-      expect(data.error).toBe('Failed to remove co-manager');
+      expect(data.error).toBe('Something went wrong. Please try again');
 
       // Verify transaction was attempted
       expect(mockDb.$transaction).toHaveBeenCalled();
@@ -428,8 +424,6 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
 
     it('enforces list ownership rules consistently', async () => {
       // Test that only list owners (not co-managers) can remove other co-managers
-      const mockOtherCoManager = createMockUser('other-co-manager');
-
       mockGetCurrentUser.mockResolvedValue(mockCoManager); // A co-manager, not owner
       mockPermissionService.require.mockRejectedValue(
         new ForbiddenError('Only the list owner can remove co-managers')
@@ -449,7 +443,7 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
       expect(response.status).toBe(403);
 
       const data = await response.json();
-      expect(data.error).toBe('Only the list owner can remove co-managers');
+      expect(data.error).toBe("You don't have permission to do that");
       expect(data.code).toBe('FORBIDDEN');
 
       // Verify the permission check was for admin-level access
@@ -514,7 +508,7 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
       expect(response2.status).toBe(404);
 
       const data2 = await response2.json();
-      expect(data2.error).toBe('User is not a co-manager of this list');
+      expect(data2.error).toBe("We couldn't find what you're looking for");
     });
   });
 });

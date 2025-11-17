@@ -91,6 +91,9 @@ const mockDb = {
         avatarUrl: data.data.avatarUrl !== undefined ? data.data.avatarUrl : null,
         role: data.data.role || 'user',
         isAdmin: data.data.isAdmin || false,
+        username: data.data.username !== undefined ? data.data.username : null,
+        usernameSetAt: data.data.usernameSetAt !== undefined ? data.data.usernameSetAt : null,
+        canUseVanityUrls: data.data.canUseVanityUrls !== undefined ? data.data.canUseVanityUrls : true,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -100,6 +103,28 @@ const mockDb = {
     update: jest.fn().mockImplementation((args) => {
       const existing = mockDataStore.users.get(args.where.id);
       if (!existing) return Promise.resolve(null);
+
+      // Check for unique username constraint
+      if (args.data.username !== undefined && args.data.username !== null) {
+        const duplicateUsername = Array.from(mockDataStore.users.values()).find(
+          (u) => u.id !== args.where.id && u.username?.toLowerCase() === args.data.username.toLowerCase()
+        );
+        if (duplicateUsername) {
+          // Create a Prisma unique constraint error
+          const error = Object.create(Error.prototype);
+          error.code = 'P2002';
+          error.meta = { target: ['username'] };
+          error.clientVersion = '5.22.0';
+          error.message = 'Unique constraint failed on the fields: (`username`)';
+          // Make it an instance of PrismaClientKnownRequestError by setting constructor name
+          Object.defineProperty(error, 'constructor', {
+            value: class PrismaClientKnownRequestError extends Error {},
+            writable: false,
+          });
+          return Promise.reject(error);
+        }
+      }
+
       const updated = {
         ...existing,
         ...args.data,
@@ -490,6 +515,65 @@ const mockDb = {
       }
       return Promise.resolve(lists);
     }),
+    findFirst: jest.fn().mockImplementation((args) => {
+      mockDataStore.lists = mockDataStore.lists || new Map();
+      let lists = Array.from(mockDataStore.lists.values());
+
+      if (args?.where) {
+        // Filter by slug
+        if (args.where.slug) {
+          const slug = typeof args.where.slug === 'string' ? args.where.slug.toLowerCase() : args.where.slug;
+          lists = lists.filter((l) => l.slug?.toLowerCase() === slug);
+        }
+
+        // Filter by owner username
+        if (args.where.owner?.username) {
+          const username = args.where.owner.username.toLowerCase();
+          lists = lists.filter((l) => {
+            const owner = mockDataStore.users.get(l.ownerId);
+            return owner?.username?.toLowerCase() === username;
+          });
+        }
+
+        // Filter by visibility (NOT private)
+        if (args.where.visibility?.not) {
+          lists = lists.filter((l) => l.visibility !== args.where.visibility.not);
+        }
+
+        // Filter by hideFromProfile
+        if (args.where.hideFromProfile === false) {
+          lists = lists.filter((l) => !l.hideFromProfile);
+        }
+      }
+
+      const list = lists[0] || null;
+
+      if (!list) return Promise.resolve(null);
+
+      // Handle includes
+      if (args.include) {
+        const result = { ...list };
+
+        if (args.include.owner) {
+          const owner = mockDataStore.users.get(list.ownerId);
+          if (owner && args.include.owner.select) {
+            const selectedOwner = {};
+            Object.keys(args.include.owner.select).forEach((key) => {
+              if (args.include.owner.select[key] && owner[key] !== undefined) {
+                selectedOwner[key] = owner[key];
+              }
+            });
+            result.owner = selectedOwner;
+          } else {
+            result.owner = owner || null;
+          }
+        }
+
+        return Promise.resolve(result);
+      }
+
+      return Promise.resolve(list);
+    }),
     findUnique: jest.fn().mockImplementation((args) => {
       mockDataStore.lists = mockDataStore.lists || new Map();
       let list = null;
@@ -580,6 +664,8 @@ const mockDb = {
         visibility: data.data.visibility || 'private',
         password: data.data.password || null,
         shareToken: data.data.shareToken || null,
+        slug: data.data.slug !== undefined ? data.data.slug : null,
+        hideFromProfile: data.data.hideFromProfile !== undefined ? data.data.hideFromProfile : false,
         ownerId: data.data.ownerId,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -600,6 +686,30 @@ const mockDb = {
       mockDataStore.lists = mockDataStore.lists || new Map();
       const existing = mockDataStore.lists.get(args.where.id);
       if (!existing) return Promise.resolve(null);
+
+      // Check for unique slug constraint (per owner)
+      if (args.data.slug !== undefined && args.data.slug !== null) {
+        const duplicateSlug = Array.from(mockDataStore.lists.values()).find(
+          (l) => l.id !== args.where.id &&
+                 l.ownerId === existing.ownerId &&
+                 l.slug?.toLowerCase() === args.data.slug.toLowerCase()
+        );
+        if (duplicateSlug) {
+          // Create a Prisma unique constraint error
+          const error = Object.create(Error.prototype);
+          error.code = 'P2002';
+          error.meta = { target: ['slug', 'ownerId'] };
+          error.clientVersion = '5.22.0';
+          error.message = 'Unique constraint failed on the fields: (`slug`,`ownerId`)';
+          // Make it an instance of PrismaClientKnownRequestError by setting constructor name
+          Object.defineProperty(error, 'constructor', {
+            value: class PrismaClientKnownRequestError extends Error {},
+            writable: false,
+          });
+          return Promise.reject(error);
+        }
+      }
+
       const updated = {
         ...existing,
         ...args.data,
@@ -1576,7 +1686,7 @@ const mockDb = {
 
         if (data.include?.invitation && log.invitationId) {
           const invitation = mockDataStore.groupInvitations.get(log.invitationId);
-          // @ts-ignore - Dynamic property based on include
+          // @ts-expect-error - Dynamic property based on Prisma include
           result.invitation = invitation || null;
         }
 

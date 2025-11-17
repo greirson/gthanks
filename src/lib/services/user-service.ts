@@ -41,8 +41,8 @@ export class UserService {
       });
 
       return updatedUser;
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+    } catch (error: any) {
+      if (error?.code === 'P2002' && error?.meta?.target?.includes('username')) {
         throw new ConflictError('Username just taken by another user');
       }
       throw error;
