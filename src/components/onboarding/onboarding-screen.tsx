@@ -211,7 +211,7 @@ export function OnboardingScreen({ defaultName = '', defaultAvatar = '' }: Onboa
                 }}
                 mode="user"
                 currentImage={avatarUrl}
-                preSelectedFile={selectedFile}
+                preSelectedFile={selectedFile ?? undefined}
                 onSave={async (file) => {
                   // Upload the cropped image
                   const formData = new FormData();

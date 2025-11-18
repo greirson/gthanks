@@ -161,3 +161,55 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+/**
+ * DELETE /api/user/avatar - Removes the current user's avatar
+ *
+ * @description Deletes the user's avatar file from the filesystem and sets avatarUrl to null.
+ * Only deletes local uploads (paths starting with '/'); external OAuth avatars are preserved.
+ */
+export async function DELETE() {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json(
+        { error: getUserFriendlyError('UNAUTHORIZED'), code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
+    }
+
+    // Get current avatar URL from database
+    const userData = await db.user.findUnique({
+      where: { id: user.id },
+      select: { avatarUrl: true },
+    });
+
+    // Delete file if it exists (only if it's a local upload, not a data URL or external URL)
+    if (userData?.avatarUrl && userData.avatarUrl.startsWith('/api/images/')) {
+      try {
+        await imageProcessor.deleteImage(userData.avatarUrl);
+      } catch (error) {
+        // File might already be deleted, log but continue anyway
+        logger.warn({ error: error, avatarUrl: userData.avatarUrl }, 'Failed to delete avatar file');
+      }
+    }
+
+    // Set avatarUrl to null in database
+    await db.user.update({
+      where: { id: user.id },
+      data: {
+        avatarUrl: null,
+        image: null, // Also clear NextAuth image field
+      },
+    });
+
+    // Return 204 No Content
+    return new NextResponse(null, { status: 204 });
+  } catch (error) {
+    logger.error({ error: error }, 'Error deleting user avatar');
+    return NextResponse.json(
+      { error: getUserFriendlyError('INTERNAL_ERROR', 'Failed to delete avatar'), code: 'INTERNAL_ERROR' },
+      { status: 500 }
+    );
+  }
+}

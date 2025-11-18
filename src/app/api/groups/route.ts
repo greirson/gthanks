@@ -5,9 +5,35 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth-utils';
 import { AppError } from '@/lib/errors';
 import { groupService } from '@/lib/services/group/group.service';
+import { imageProcessor } from '@/lib/services/image-processor';
+import { logger } from '@/lib/services/logger';
 import { createUnifiedPagination } from '@/lib/utils/pagination-adapters';
 import { GroupCreateSchema } from '@/lib/validators/group';
 import { serializePrismaArray, serializePrismaResponse } from '@/lib/utils/date-serialization';
+
+/**
+ * Converts a data URL to a file and saves it to the filesystem
+ * @param dataUrl - Data URL string (data:image/jpeg;base64,...)
+ * @returns Path to saved file (e.g., '/api/images/abc123.webp')
+ */
+async function processDataUrlToFile(dataUrl: string): Promise<string> {
+  // Extract base64 data from data URL
+  const matches = dataUrl.match(/^data:image\/(\w+);base64,(.+)$/);
+  if (!matches) {
+    throw new Error('Invalid data URL format');
+  }
+
+  const [, , base64Data] = matches;
+
+  // Convert base64 to buffer
+  const buffer = Buffer.from(base64Data, 'base64');
+
+  // Process and save image using imageProcessor
+  // This will resize, optimize, convert to WebP, and save to filesystem
+  const result = await imageProcessor.processImageFromBuffer(buffer);
+
+  return result.localPath;
+}
 
 /**
  * Handles GET requests for retrieving user groups with pagination
@@ -92,7 +118,22 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const data = GroupCreateSchema.parse(body);
+    let data = GroupCreateSchema.parse(body);
+
+    // Process data URL avatar if present
+    if (data.avatarUrl && data.avatarUrl.startsWith('data:image/')) {
+      try {
+        logger.info('Processing data URL avatar for group creation');
+        // Convert data URL to file and save it
+        const avatarPath = await processDataUrlToFile(data.avatarUrl);
+        data = { ...data, avatarUrl: avatarPath };
+        logger.info({ avatarPath }, 'Avatar data URL processed successfully');
+      } catch (error) {
+        logger.error({ error: error }, 'Failed to process avatar data URL');
+        // Continue without avatar rather than failing the entire request
+        data = { ...data, avatarUrl: undefined };
+      }
+    }
 
     const group = await groupService.createGroup(data, user.id);
 
