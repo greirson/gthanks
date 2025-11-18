@@ -6,6 +6,7 @@ import { generateSecureToken } from '@/lib/utils';
 import { ReservationCreateInput } from '@/lib/validators/reservation';
 
 import { logger } from './logger';
+import { permissionService } from './permission-service';
 import {
   PublicReservation,
   ReminderStatus,
@@ -111,6 +112,14 @@ export class ReservationService {
   /**
    * Create a reservation for a wish
    * Uses serializable transaction isolation to prevent race conditions
+   *
+   * Permission Requirements:
+   * - Must have view access to at least one list containing the wish
+   * - Cannot reserve own wishes (surprise protection)
+   *
+   * Security:
+   * - Serializable transaction prevents race conditions
+   * - Permission check ensures user can view the wish via list access
    */
   async createReservation(data: ReservationCreateInput, userId?: string): Promise<Reservation> {
     try {
@@ -118,11 +127,16 @@ export class ReservationService {
       const reservation = await db.$transaction(
         async (tx) => {
           try {
-            // Check if wish exists
+            // Check if wish exists and get list information
             const wish = await tx.wish.findUnique({
               where: { id: data.wishId },
               include: {
                 owner: true,
+                lists: {
+                  include: {
+                    list: true,
+                  },
+                },
               },
             });
 
@@ -130,9 +144,31 @@ export class ReservationService {
               throw new NotFoundError('Wish not found');
             }
 
-            // Can't reserve your own wish
+            // Can't reserve your own wish (surprise protection)
             if (userId && wish.ownerId === userId) {
               throw new ForbiddenError('You cannot reserve your own wishes');
+            }
+
+            // Verify user has permission to view at least one list containing this wish
+            if (wish.lists.length === 0) {
+              throw new NotFoundError('Wish is not on any list');
+            }
+
+            // Check permission to view at least one list containing the wish
+            let hasAccess = false;
+            for (const listWish of wish.lists) {
+              const permissionResult = await permissionService.can(userId, 'view', {
+                type: 'list',
+                id: listWish.list.id,
+              });
+              if (permissionResult.allowed) {
+                hasAccess = true;
+                break;
+              }
+            }
+
+            if (!hasAccess) {
+              throw new ForbiddenError('You do not have permission to reserve this wish');
             }
 
             // Check if already reserved (within transaction)
@@ -193,9 +229,36 @@ export class ReservationService {
 
   /**
    * Remove a reservation
+   *
+   * Permission Requirements:
+   * - Must be authenticated
+   * - Can only remove own reservations (matched by email)
+   * - Admins can remove any reservation (permission service override)
+   *
+   * @param reservationId - ID of reservation to remove
+   * @param userEmail - Email of authenticated user (for backward compatibility)
+   * @param userId - ID of authenticated user (preferred, uses permission service)
    */
-  async removeReservation(reservationId: string, userEmail?: string): Promise<void> {
-    // Require email for authorization
+  async removeReservation(
+    reservationId: string,
+    userEmail?: string,
+    userId?: string
+  ): Promise<void> {
+    // If userId provided, use permission service (preferred approach)
+    if (userId) {
+      await permissionService.require(userId, 'delete', {
+        type: 'reservation',
+        id: reservationId,
+      });
+
+      // Remove reservation
+      await db.reservation.delete({
+        where: { id: reservationId },
+      });
+      return;
+    }
+
+    // Legacy email-based authorization (for backward compatibility)
     if (!userEmail) {
       throw new ForbiddenError('Authentication required to remove reservations');
     }
@@ -223,13 +286,21 @@ export class ReservationService {
 
   /**
    * Remove reservation by wish ID
+   *
+   * Permission Requirements:
+   * - Must be authenticated
+   * - Can only remove own reservations (matched by email)
+   * - Admins can remove any reservation (permission service override)
+   *
+   * @param wishId - ID of wish to unreserve
+   * @param userEmail - Email of authenticated user (for backward compatibility)
+   * @param userId - ID of authenticated user (preferred, uses permission service)
    */
-  async removeReservationByWishId(wishId: string, userEmail?: string): Promise<void> {
-    // Require email for authorization
-    if (!userEmail) {
-      throw new ForbiddenError('Authentication required to remove reservations');
-    }
-
+  async removeReservationByWishId(
+    wishId: string,
+    userEmail?: string,
+    userId?: string
+  ): Promise<void> {
     // Find reservation
     const reservation = await db.reservation.findFirst({
       where: { wishId },
@@ -237,6 +308,25 @@ export class ReservationService {
 
     if (!reservation) {
       throw new NotFoundError('No reservation found for this wish');
+    }
+
+    // If userId provided, use permission service (preferred approach)
+    if (userId) {
+      await permissionService.require(userId, 'delete', {
+        type: 'reservation',
+        id: reservation.id,
+      });
+
+      // Remove reservation
+      await db.reservation.delete({
+        where: { id: reservation.id },
+      });
+      return;
+    }
+
+    // Legacy email-based authorization (for backward compatibility)
+    if (!userEmail) {
+      throw new ForbiddenError('Authentication required to remove reservations');
     }
 
     // Check permission
@@ -285,9 +375,19 @@ export class ReservationService {
 
   /**
    * Get public reservation info (for wish owners)
+   *
+   * Permission Requirements:
+   * - Must have view access to the wish (via list access)
+   *
+   * Privacy Rules:
+   * - Wish owners see that wish is reserved but not who/when (surprise protection)
+   * - Non-owners see full reservation details
    */
   async getPublicReservationInfo(wishId: string, userId: string): Promise<PublicReservation> {
-    // Check if user owns the wish
+    // Verify user has permission to view the wish
+    await permissionService.require(userId, 'view', { type: 'wish', id: wishId });
+
+    // Get wish
     const wish = await db.wish.findUnique({
       where: { id: wishId },
     });
@@ -301,7 +401,13 @@ export class ReservationService {
       where: { wishId },
     });
 
-    // If user owns the wish, hide reservation details
+    // Get user email for canUnreserve check
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: { email: true },
+    });
+
+    // If user owns the wish, hide reservation details (surprise protection)
     if (wish.ownerId === userId) {
       return {
         wishId,
@@ -316,18 +422,30 @@ export class ReservationService {
       wishId,
       isReserved: !!reservation,
       reservedAt: reservation?.reservedAt,
-      canUnreserve: false, // Will implement later
+      canUnreserve: reservation?.reserverEmail === user?.email,
     };
   }
 
   /**
    * Get reservations for a list (excluding owner's view)
    * Allows anonymous access for public/password-protected lists
+   *
+   * Permission Requirements:
+   * - Public lists: Anyone can view reservations
+   * - Password-protected lists: Anyone with password can view
+   * - Private lists: Owner, co-managers, or group members
+   *
+   * Privacy Rules:
+   * - Wish owners never see their own reservation details (surprise protection)
+   * - Others see if wish is reserved and can unreserve if they made the reservation
    */
   async getListReservations(
     listId: string,
     userId?: string
   ): Promise<Record<string, PublicReservation>> {
+    // Use permission service to check list access
+    await permissionService.require(userId, 'view', { type: 'list', id: listId });
+
     // Get list with wishes
     const list = await db.list.findUnique({
       where: { id: listId },
@@ -344,47 +462,6 @@ export class ReservationService {
       throw new NotFoundError('List not found');
     }
 
-    // Check access permissions for private lists
-    if (list.visibility === 'private') {
-      // For private lists, require authentication and ownership/admin access
-      if (!userId) {
-        throw new ForbiddenError('Authentication required to view this list');
-      }
-
-      // Check if user is owner
-      const isOwner = list.ownerId === userId;
-      if (!isOwner) {
-        // Check if user is admin
-        const isAdmin = await db.listAdmin.findUnique({
-          where: {
-            listId_userId: {
-              listId,
-              userId,
-            },
-          },
-        });
-
-        // Check if user has access through group membership
-        const hasGroupAccess = !isAdmin
-          ? await db.userGroup.findFirst({
-              where: {
-                userId,
-                group: {
-                  lists: {
-                    some: { listId },
-                  },
-                },
-              },
-            })
-          : null;
-
-        if (!isAdmin && !hasGroupAccess) {
-          throw new ForbiddenError('You do not have access to this list');
-        }
-      }
-    }
-    // Public and password-protected lists allow anonymous access to reservations
-
     // Get all wish IDs
     const wishIds = list.wishes.map((lw) => lw.wishId);
 
@@ -395,6 +472,16 @@ export class ReservationService {
       },
     });
 
+    // Get user email for comparison (if authenticated)
+    let userEmail: string | undefined;
+    if (userId) {
+      const user = await db.user.findUnique({
+        where: { id: userId },
+        select: { email: true },
+      });
+      userEmail = user?.email;
+    }
+
     // Build reservation map
     const reservationMap: Record<string, PublicReservation> = {};
 
@@ -402,7 +489,7 @@ export class ReservationService {
       const reservation = reservations.find((r) => r.wishId === listWish.wishId);
       const isOwner = userId === listWish.wish.ownerId;
 
-      // Hide reservation details from wish owner
+      // Hide reservation details from wish owner (surprise protection)
       if (isOwner) {
         reservationMap[listWish.wish.id] = {
           wishId: listWish.wish.id,
@@ -414,7 +501,7 @@ export class ReservationService {
           wishId: listWish.wish.id,
           isReserved: !!reservation,
           reservedAt: reservation?.reservedAt,
-          canUnreserve: reservation?.reserverEmail === userId,
+          canUnreserve: reservation?.reserverEmail === userEmail,
         };
       }
     }
