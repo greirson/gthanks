@@ -100,17 +100,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   } catch (error) {
     logger.error({ error: error }, 'GET /api/lists/[listId]/admins error');
 
-    if (error instanceof NotFoundError) {
+    // Return 404 for both NotFoundError and ForbiddenError to prevent resource enumeration
+    if (error instanceof NotFoundError || error instanceof ForbiddenError) {
       return NextResponse.json(
-        { error: getUserFriendlyError('NOT_FOUND', error.message), code: 'NOT_FOUND' },
+        { error: getUserFriendlyError('NOT_FOUND'), code: 'NOT_FOUND' },
         { status: 404 }
-      );
-    }
-
-    if (error instanceof ForbiddenError) {
-      return NextResponse.json(
-        { error: getUserFriendlyError('FORBIDDEN', error.message), code: 'FORBIDDEN' },
-        { status: 403 }
       );
     }
 
@@ -161,7 +155,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     // Rate limiting - prevent spam adding
     const clientIdentifier = getClientIdentifier(request);
-    const rateLimitResult = rateLimiter.check('co-manager-add', clientIdentifier);
+    const rateLimitResult = await rateLimiter.check('co-manager-add', clientIdentifier);
 
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
