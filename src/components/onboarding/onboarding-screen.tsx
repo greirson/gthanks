@@ -1,17 +1,18 @@
 'use client';
 
-import { ArrowRight, CheckCircle, Gift } from 'lucide-react';
+import { ArrowRight, CheckCircle, Gift, Upload } from 'lucide-react';
 
 import { useState } from 'react';
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
-import { AvatarCrop } from '@/components/onboarding/avatar-crop';
+import { AvatarCropDialog } from '@/components/ui/avatar-crop-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { UserAvatar } from '@/components/ui/user-avatar';
 import { useToast } from '@/components/ui/use-toast';
 
 interface OnboardingScreenProps {
@@ -26,6 +27,7 @@ export function OnboardingScreen({ defaultName = '', defaultAvatar = '' }: Onboa
   const [name, setName] = useState(defaultName);
   const [avatarUrl, setAvatarUrl] = useState(defaultAvatar);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCropDialogOpen, setIsCropDialogOpen] = useState(false);
 
   const handleCompleteOnboarding = async () => {
     if (!name.trim()) {
@@ -126,8 +128,67 @@ export function OnboardingScreen({ defaultName = '', defaultAvatar = '' }: Onboa
                 </p>
               </div>
 
-              {/* Avatar Upload */}
-              <AvatarCrop value={avatarUrl} onChange={setAvatarUrl} disabled={isLoading} />
+              {/* Photo Upload Section */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Add a profile photo (optional)</Label>
+
+                {avatarUrl && (
+                  <div className="flex items-center gap-4 mt-4">
+                    <UserAvatar
+                      user={{
+                        id: 'preview',
+                        name,
+                        email: null,
+                        avatarUrl,
+                      }}
+                      size="2xl"
+                    />
+                    <p className="text-sm text-muted-foreground">Your photo</p>
+                  </div>
+                )}
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="min-h-[44px] w-full mt-4"
+                  onClick={() => setIsCropDialogOpen(true)}
+                  disabled={isLoading}
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  {avatarUrl ? 'Change Photo' : 'Upload Photo'}
+                </Button>
+
+                <p className="text-xs text-muted-foreground mt-2">
+                  JPEG, PNG, GIF, or WebP. Maximum size 2MB.
+                </p>
+              </div>
+
+              <AvatarCropDialog
+                open={isCropDialogOpen}
+                onOpenChange={setIsCropDialogOpen}
+                mode="user"
+                currentImage={avatarUrl}
+                onSave={async (file) => {
+                  // Upload the cropped image
+                  const formData = new FormData();
+                  formData.append('avatar', file, 'avatar.jpg');
+
+                  const response = await fetch('/api/user/avatar', {
+                    method: 'POST',
+                    body: formData,
+                  });
+
+                  if (response.ok) {
+                    const result = (await response.json()) as { avatarUrl: string };
+                    setAvatarUrl(result.avatarUrl);
+                  } else {
+                    throw new Error('Failed to upload photo');
+                  }
+                }}
+                shape="circle"
+                entityName={name || 'Your photo'}
+                disabled={isLoading}
+              />
 
               {/* Submit Button */}
               <div className="pt-4">
