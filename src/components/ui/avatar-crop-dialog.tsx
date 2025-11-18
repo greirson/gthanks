@@ -2,7 +2,7 @@
 
 import { Upload, ZoomIn, ZoomOut } from 'lucide-react';
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Cropper, { Area, Point } from 'react-easy-crop';
 
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,7 @@ interface AvatarCropDialogProps {
   aspect?: number;
   entityName?: string;
   disabled?: boolean;
+  preSelectedFile?: File; // NEW: Pre-selected file from parent
 }
 
 export function AvatarCropDialog({
@@ -42,6 +43,7 @@ export function AvatarCropDialog({
   aspect = 1,
   entityName,
   disabled = false,
+  preSelectedFile, // NEW
 }: AvatarCropDialogProps) {
   const { toast } = useToast();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -49,6 +51,19 @@ export function AvatarCropDialog({
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+
+  // NEW: Handle pre-selected file from parent
+  useEffect(() => {
+    if (preSelectedFile && open) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setSelectedImage(reader.result as string);
+        setCrop({ x: 0, y: 0 });
+        setZoom(1);
+      };
+      reader.readAsDataURL(preSelectedFile);
+    }
+  }, [preSelectedFile, open]);
 
   const onCropComplete = useCallback((_croppedArea: Area, croppedAreaPixels: Area) => {
     setCroppedAreaPixels(croppedAreaPixels);
@@ -153,6 +168,9 @@ export function AvatarCropDialog({
     },
     [onOpenChange]
   );
+
+  // Conditional rendering: Skip upload button if preSelectedFile exists
+  const showUploadButton = !preSelectedFile;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -267,37 +285,46 @@ export function AvatarCropDialog({
                 </div>
               )}
 
-              {/* Upload Button */}
-              <div>
-                <input
-                  type="file"
-                  id="avatar-crop-upload"
-                  accept="image/jpeg,image/png,image/gif,image/webp"
-                  onChange={handleFileSelect}
-                  disabled={disabled || isUploading}
-                  className="hidden"
-                />
-                <label
-                  htmlFor="avatar-crop-upload"
-                  aria-label={currentImage ? 'Change photo' : 'Upload photo'}
-                >
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="min-h-[44px] w-full cursor-pointer"
+              {/* Only show upload button if no preSelectedFile */}
+              {!selectedImage && showUploadButton && (
+                <div>
+                  <input
+                    type="file"
+                    id="avatar-crop-upload"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    onChange={handleFileSelect}
                     disabled={disabled || isUploading}
-                    asChild
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="avatar-crop-upload"
+                    aria-label={currentImage ? 'Change photo' : 'Upload photo'}
                   >
-                    <span>
-                      <Upload className="mr-2 h-4 w-4" />
-                      {currentImage ? 'Change Photo' : 'Upload Photo'}
-                    </span>
-                  </Button>
-                </label>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  JPEG, PNG, GIF, or WebP. Maximum size 2MB.
-                </p>
-              </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="min-h-[44px] w-full cursor-pointer"
+                      disabled={disabled || isUploading}
+                      asChild
+                    >
+                      <span>
+                        <Upload className="mr-2 h-4 w-4" />
+                        {currentImage ? 'Change Photo' : 'Upload Photo'}
+                      </span>
+                    </Button>
+                  </label>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    JPEG, PNG, GIF, or WebP. Maximum size 2MB.
+                  </p>
+                </div>
+              )}
+
+              {/* If preSelectedFile provided but no image yet, show loading state */}
+              {!selectedImage && preSelectedFile && (
+                <div className="flex items-center justify-center p-8">
+                  <p className="text-sm text-muted-foreground">Loading image...</p>
+                </div>
+              )}
             </div>
           )}
         </DialogBody>

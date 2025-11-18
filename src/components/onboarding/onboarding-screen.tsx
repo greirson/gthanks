@@ -2,10 +2,11 @@
 
 import { ArrowRight, CheckCircle, Gift, Upload } from 'lucide-react';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 import { AvatarCropDialog } from '@/components/ui/avatar-crop-dialog';
 import { Button } from '@/components/ui/button';
@@ -22,16 +23,40 @@ interface OnboardingScreenProps {
 
 export function OnboardingScreen({ defaultName = '', defaultAvatar = '' }: OnboardingScreenProps) {
   const { update: updateSession } = useSession();
-  const { toast } = useToast();
+  const { toast: showToast } = useToast();
   const router = useRouter();
   const [name, setName] = useState(defaultName);
   const [avatarUrl, setAvatarUrl] = useState(defaultAvatar);
   const [isLoading, setIsLoading] = useState(false);
   const [isCropDialogOpen, setIsCropDialogOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Please select a JPEG, PNG, GIF, or WebP image.');
+      return;
+    }
+
+    // Validate file size (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image must be less than 2MB');
+      return;
+    }
+
+    // Store file and open dialog
+    setSelectedFile(file);
+    setIsCropDialogOpen(true);
+  };
 
   const handleCompleteOnboarding = async () => {
     if (!name.trim()) {
-      toast({
+      showToast({
         title: 'Name Required',
         description: 'Please tell us what you want people to call you',
         variant: 'destructive',
@@ -62,7 +87,7 @@ export function OnboardingScreen({ defaultName = '', defaultAvatar = '' }: Onboa
         image: avatarUrl || undefined,
       });
 
-      toast({
+      showToast({
         title: 'Welcome to gthanks!',
         description: 'Your profile has been set up successfully',
       });
@@ -72,7 +97,7 @@ export function OnboardingScreen({ defaultName = '', defaultAvatar = '' }: Onboa
       router.refresh(); // Ensure session refresh
     } catch (error) {
       console.error('Onboarding error:', error);
-      toast({
+      showToast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to complete setup. Please try again.',
         variant: 'destructive',
@@ -147,11 +172,21 @@ export function OnboardingScreen({ defaultName = '', defaultAvatar = '' }: Onboa
                   </div>
                 )}
 
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  disabled={isLoading}
+                />
+
                 <Button
                   type="button"
                   variant="outline"
                   className="min-h-[44px] w-full mt-4"
-                  onClick={() => setIsCropDialogOpen(true)}
+                  onClick={() => fileInputRef.current?.click()}
                   disabled={isLoading}
                 >
                   <Upload className="mr-2 h-4 w-4" />
@@ -165,9 +200,18 @@ export function OnboardingScreen({ defaultName = '', defaultAvatar = '' }: Onboa
 
               <AvatarCropDialog
                 open={isCropDialogOpen}
-                onOpenChange={setIsCropDialogOpen}
+                onOpenChange={(open) => {
+                  setIsCropDialogOpen(open);
+                  if (!open) {
+                    setSelectedFile(null); // Clear file when dialog closes
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = ''; // Reset file input
+                    }
+                  }
+                }}
                 mode="user"
                 currentImage={avatarUrl}
+                preSelectedFile={selectedFile}
                 onSave={async (file) => {
                   // Upload the cropped image
                   const formData = new FormData();
@@ -181,8 +225,9 @@ export function OnboardingScreen({ defaultName = '', defaultAvatar = '' }: Onboa
                   if (response.ok) {
                     const result = (await response.json()) as { avatarUrl: string };
                     setAvatarUrl(result.avatarUrl);
+                    toast.success('Photo uploaded successfully');
                   } else {
-                    throw new Error('Failed to upload photo');
+                    toast.error('Failed to upload photo');
                   }
                 }}
                 shape="circle"
