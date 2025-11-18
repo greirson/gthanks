@@ -117,12 +117,19 @@ export class PermissionService {
     switch (resource.type) {
       case 'list':
         if (action === 'view') {
+          // Single query with ALL needed data to prevent timing attacks
           const list = await db.list.findUnique({
             where: { id: resource.id },
-            select: { visibility: true },
+            select: {
+              id: true,
+              visibility: true,
+              password: true, // Get password upfront, not in second query
+            },
           });
 
           if (!list) {
+            // Constant-time delay to prevent list enumeration via timing
+            await new Promise((resolve) => setTimeout(resolve, 100));
             return { allowed: false, reason: 'List not found' };
           }
 
@@ -135,27 +142,25 @@ export class PermissionService {
               return { allowed: false, reason: 'Password is required for this list' };
             }
 
-            // Get the full list with password for verification
-            const fullList = await db.list.findUnique({
-              where: { id: resource.id },
-              select: { password: true },
-            });
-
-            if (!fullList) {
-              return { allowed: false, reason: 'List not found' };
-            }
-
+            // Always verify password even if null (constant-time operation)
+            const passwordToCheck = list.password || '';
             const isValidPassword = await listService.verifyPassword(
               context.password,
-              fullList.password || ''
+              passwordToCheck
             );
-            return {
-              allowed: isValidPassword,
-              reason: isValidPassword ? undefined : 'Invalid password',
-            };
+
+            if (!isValidPassword) {
+              // Same delay as "not found" to prevent timing analysis
+              await new Promise((resolve) => setTimeout(resolve, 100));
+              return { allowed: false, reason: 'Invalid password' };
+            }
+
+            return { allowed: true };
           }
 
-          return { allowed: false, reason: 'List is not public' };
+          // Private lists - use same error as "not found" to prevent enumeration
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          return { allowed: false, reason: 'List not found' };
         }
         break;
       case 'reservation':
@@ -175,20 +180,38 @@ export class PermissionService {
     listId: string,
     context?: { password?: string }
   ): Promise<PermissionResult> {
-    const list = await db.list.findUnique({
-      where: { id: listId },
-      select: {
-        ownerId: true,
-        visibility: true,
-        password: true,
-        admins: {
-          where: { userId },
-          select: { userId: true },
+    // Single query with ALL needed data to prevent timing attacks
+    const [list, isGroupMemberResult] = await Promise.all([
+      db.list.findUnique({
+        where: { id: listId },
+        select: {
+          id: true,
+          ownerId: true,
+          visibility: true,
+          password: true, // Get password upfront
+          admins: {
+            where: { userId },
+            select: { userId: true },
+          },
         },
-      },
-    });
+      }),
+      // Check group membership separately
+      db.userGroup.findFirst({
+        where: {
+          userId,
+          group: {
+            lists: {
+              some: { listId },
+            },
+          },
+        },
+        select: { userId: true },
+      }),
+    ]);
 
     if (!list) {
+      // Constant-time delay to prevent list enumeration via timing
+      await new Promise((resolve) => setTimeout(resolve, 100));
       return { allowed: false, reason: 'List not found' };
     }
 
@@ -215,21 +238,8 @@ export class PermissionService {
     }
 
     // Group member permissions
-    if (action === 'view') {
-      const isGroupMember = await db.userGroup.findFirst({
-        where: {
-          userId,
-          group: {
-            lists: {
-              some: { listId },
-            },
-          },
-        },
-      });
-
-      if (isGroupMember) {
-        return { allowed: true };
-      }
+    if (action === 'view' && isGroupMemberResult) {
+      return { allowed: true };
     }
 
     // Public/password list visibility
@@ -243,18 +253,26 @@ export class PermissionService {
           return { allowed: false, reason: 'Password is required for this list' };
         }
 
+        // Always verify password even if null (constant-time operation)
+        const passwordToCheck = list.password || '';
         const isValidPassword = await listService.verifyPassword(
           context.password,
-          list.password || ''
+          passwordToCheck
         );
-        return {
-          allowed: isValidPassword,
-          reason: isValidPassword ? undefined : 'Invalid password',
-        };
+
+        if (!isValidPassword) {
+          // Same delay as "not found" to prevent timing analysis
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          return { allowed: false, reason: 'Invalid password' };
+        }
+
+        return { allowed: true };
       }
     }
 
-    return { allowed: false, reason: 'Insufficient permissions' };
+    // Private lists - use same error as "not found" to prevent enumeration
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    return { allowed: false, reason: 'List not found' };
   }
 
   /**

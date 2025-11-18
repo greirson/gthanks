@@ -300,16 +300,40 @@ const authOptions: NextAuthOptions = {
           }
 
           // OAuth account doesn't exist yet - check if we should link it to an existing user
-          // First check UserEmail table
+          // SECURITY: Only link to verified emails to prevent account hijacking
+          // Attack scenario: Attacker creates account with victim@example.com (unverified),
+          // then victim signs in with OAuth using same email. Without this check, victim's
+          // OAuth would link to attacker's account, giving attacker access.
           const existingUserEmail = await db.userEmail.findFirst({
-            where: { email: user.email },
+            where: {
+              email: user.email,
+              isVerified: true, // CRITICAL: Only match verified emails
+            },
             include: { user: true },
           });
 
           // Also check legacy User table for backward compatibility
-          const existingUser = existingUserEmail?.user || (await db.user.findUnique({
-            where: { email: user.email },
-          }));
+          // For legacy users, we need to verify their email is verified in UserEmail table
+          let existingUser = existingUserEmail?.user;
+
+          if (!existingUser) {
+            const legacyUser = await db.user.findUnique({
+              where: { email: user.email },
+              include: {
+                emails: {
+                  where: {
+                    email: user.email,
+                    isVerified: true,
+                  },
+                },
+              },
+            });
+
+            // Only use legacy user if their email is verified (has verified UserEmail record)
+            if (legacyUser && legacyUser.emails.length > 0) {
+              existingUser = legacyUser;
+            }
+          }
 
           if (existingUser) {
             // User exists with this email - link the OAuth account
