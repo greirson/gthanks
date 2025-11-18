@@ -88,7 +88,7 @@ export default function PublicListVanityUrlPage() {
   const [password, setPassword] = useState('');
   const [passwordSubmitted, setPasswordSubmitted] = useState(false);
   const [showReservationDialog, setShowReservationDialog] = useState(false);
-  const [selectedWish, setSelectedWish] = useState<Wish | null>(null);
+  const [selectedWish, setSelectedWish] = useState<any>(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
@@ -173,7 +173,7 @@ export default function PublicListVanityUrlPage() {
     }
   };
 
-  const handleReserveWish = (wish: Wish) => {
+  const handleReserveWish = (wish: any) => {
     setSelectedWish(wish);
     setShowReservationDialog(true);
   };
@@ -380,7 +380,7 @@ export default function PublicListVanityUrlPage() {
             isOwner: currentUserId === list.owner.id,
           })) || []
         }
-        onReserve={(wish: Wish) => handleReserveWish(wish)}
+        onReserve={(wish) => handleReserveWish(wish)}
         reservedWishIds={
           reservations
             ? Object.keys(reservations).filter((wishId) => reservations[wishId].isReserved)

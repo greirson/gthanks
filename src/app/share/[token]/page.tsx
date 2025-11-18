@@ -41,7 +41,7 @@ export default function PublicListPage({ params }: PageProps) {
   const [password, setPassword] = useState('');
   const [_showPasswordForm, setShowPasswordForm] = useState(false);
   const [showReservationDialog, setShowReservationDialog] = useState(false);
-  const [selectedWish, setSelectedWish] = useState<Wish | null>(null);
+  const [selectedWish, setSelectedWish] = useState<any>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Fetch public list
@@ -111,7 +111,7 @@ export default function PublicListPage({ params }: PageProps) {
     }
   };
 
-  const handleReserveWish = (wish: Wish) => {
+  const handleReserveWish = (wish: any) => {
     setSelectedWish(wish);
     setShowReservationDialog(true);
   };
@@ -262,7 +262,7 @@ export default function PublicListPage({ params }: PageProps) {
             isOwner: currentUserId === list.owner.id,
           })) || []
         }
-        onReserve={(wish: Wish) => handleReserveWish(wish)}
+        onReserve={(wish) => handleReserveWish(wish)}
         reservedWishIds={
           reservations
             ? Object.keys(reservations).filter((wishId) => reservations[wishId].isReserved)
