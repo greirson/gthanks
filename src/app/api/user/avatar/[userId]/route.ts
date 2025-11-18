@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getCurrentUser } from '@/lib/auth-utils';
 import { getUserFriendlyError } from '@/lib/errors';
+// eslint-disable-next-line local-rules/no-direct-db-import -- Avatar file serving requires direct db query; read-only operation with no business logic
 import { db } from '@/lib/db';
 import { logger } from '@/lib/services/logger';
 

@@ -7,6 +7,7 @@ import { getUserFriendlyError } from '@/lib/errors';
 import { AdminService } from '@/lib/services/admin-service';
 import type { BulkUserRequest } from '@/types/admin-api';
 import { logger } from '@/lib/services/logger';
+// eslint-disable-next-line local-rules/no-direct-db-import -- Bulk operations require direct transaction access; uses AdminService for business logic
 import { db as prisma } from '@/lib/db';
 
 const BulkOperationSchema = z.object({
