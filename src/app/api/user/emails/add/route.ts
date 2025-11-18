@@ -4,9 +4,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getCurrentUser } from '@/lib/auth-utils';
 import { getUserFriendlyError } from '@/lib/errors';
-import { db } from '@/lib/db';
-import { generateVerificationToken, sendVerificationEmail } from '@/lib/email-verification';
 import { rateLimiter, getRateLimitHeaders, getClientIdentifier } from '@/lib/rate-limiter';
+import { userService } from '@/lib/services/user-service';
 import { logger } from '@/lib/services/logger';
 
 const AddEmailSchema = z.object({
@@ -31,8 +30,7 @@ const AddEmailSchema = z.object({
  *
  * @see {@link getCurrentUser} for unified authentication
  * @see {@link AddEmailSchema} for request validation
- * @see {@link generateVerificationToken} for token generation
- * @see {@link sendVerificationEmail} for verification email
+ * @see {@link userService.addEmail} for service implementation
  */
 export async function POST(request: NextRequest) {
   try {
@@ -64,70 +62,24 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const data = AddEmailSchema.parse(body);
 
-    // Create UserEmail record (not verified yet)
-    // Database unique constraints will prevent duplicates atomically
-    try {
-      const userEmail = await db.userEmail.create({
-        data: {
-          userId: user.id,
-          email: data.email,
-          isPrimary: false, // New emails are never primary by default
-          isVerified: false,
+    // Use service layer
+    const userEmail = await userService.addEmail(user.id, data.email, true);
+
+    return NextResponse.json(
+      {
+        success: true,
+        email: {
+          id: userEmail.id,
+          email: userEmail.email,
+          isPrimary: userEmail.isPrimary,
+          isVerified: userEmail.isVerified,
+          verifiedAt: userEmail.verifiedAt,
+          createdAt: userEmail.createdAt,
         },
-      });
-
-      // Generate verification token
-      const token = await generateVerificationToken(userEmail.id);
-
-      // Send verification email
-      try {
-        await sendVerificationEmail(data.email, token);
-      } catch (emailError) {
-        // If email sending fails, delete the UserEmail record and return error
-        await db.userEmail.delete({
-          where: { id: userEmail.id },
-        });
-
-        logger.error({ error: emailError }, 'Failed to send verification email');
-        return NextResponse.json(
-          {
-            error: getUserFriendlyError('INTERNAL_ERROR', 'Failed to send verification email. Please try again.'),
-            code: 'INTERNAL_ERROR',
-          },
-          { status: 500 }
-        );
-      }
-
-      return NextResponse.json(
-        {
-          success: true,
-          email: {
-            id: userEmail.id,
-            email: userEmail.email,
-            isPrimary: userEmail.isPrimary,
-            isVerified: userEmail.isVerified,
-            verifiedAt: userEmail.verifiedAt,
-            createdAt: userEmail.createdAt,
-          },
-          message: 'Email added. Please check your inbox for verification link.',
-        },
-        { headers: getRateLimitHeaders(rateLimitResult) }
-      );
-    } catch (createError: any) {
-      // Handle Prisma unique constraint violation
-      if (createError.code === 'P2002') {
-        return NextResponse.json(
-          {
-            error: getUserFriendlyError('ALREADY_EXISTS', 'Email already in use'),
-            code: 'ALREADY_EXISTS',
-          },
-          { status: 400, headers: getRateLimitHeaders(rateLimitResult) }
-        );
-      }
-
-      // Re-throw other errors to be handled by outer catch
-      throw createError;
-    }
+        message: 'Email added. Please check your inbox for verification link.',
+      },
+      { headers: getRateLimitHeaders(rateLimitResult) }
+    );
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

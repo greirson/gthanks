@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getCurrentUser } from '@/lib/auth-utils';
 import { getUserFriendlyError } from '@/lib/errors';
-import { db } from '@/lib/db';
+import { userService } from '@/lib/services/user-service';
 import { logger } from '@/lib/services/logger';
 
 /**
@@ -10,6 +10,8 @@ import { logger } from '@/lib/services/logger';
  *
  * @description Completes the user onboarding process by updating their name and avatar,
  * and marking isOnboardingComplete as true.
+ *
+ * @see {@link userService.completeProfile} for service implementation
  */
 export async function POST(request: NextRequest) {
   let user: Awaited<ReturnType<typeof getCurrentUser>> | null = null;
@@ -24,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, avatarUrl } = body;
+    const { name, avatarUrl, username } = body;
 
     // Validate required fields
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
@@ -79,38 +81,29 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Update user profile and mark onboarding complete
-    const updatedUser = await db.user.update({
-      where: { id: user.id },
-      data: {
-        name: trimmedName,
-        ...(avatarUrl && {
-          avatarUrl: avatarUrl.trim(),
-          image: avatarUrl.trim(), // For NextAuth compatibility
-        }),
-        isOnboardingComplete: true,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        avatarUrl: true,
-        image: true,
-        isOnboardingComplete: true,
-      },
+    // Use service layer
+    const updatedUser = await userService.completeProfile(user.id, {
+      name: trimmedName,
+      username,
     });
 
     logger.info(
       {
         userId: user.id,
-        hasAvatar: !!updatedUser.avatarUrl,
+        hasUsername: !!updatedUser.username,
       },
       'User completed onboarding'
     );
 
     return NextResponse.json({
       success: true,
-      user: updatedUser,
+      user: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        username: updatedUser.username,
+        isOnboardingComplete: updatedUser.isOnboardingComplete,
+      },
     });
   } catch (error) {
     logger.error('Profile completion error', error, {

@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getCurrentUser } from '@/lib/auth-utils';
 import { getUserFriendlyError } from '@/lib/errors';
-import { db } from '@/lib/db';
+import { userService } from '@/lib/services/user-service';
 import { logger } from '@/lib/services/logger';
 
 const UpdatePreferencesSchema = z.object({
@@ -31,6 +31,8 @@ const UpdatePreferencesSchema = z.object({
  * // Get current user's preferences
  * GET /api/user/preferences
  * // Returns: { preferences: { autoAcceptGroupInvitations: false, sortBy: "createdAt", ... } }
+ *
+ * @see {@link userService.getPreferences} for service implementation
  */
 export async function GET(_request: NextRequest) {
   try {
@@ -42,28 +44,20 @@ export async function GET(_request: NextRequest) {
       );
     }
 
-    // FIX FOR ISSUE 3: Use atomic upsert operation to prevent race condition
-    const preferences = await db.userPreference.upsert({
-      where: { userId: user.id },
-      create: {
-        userId: user.id,
-        sortBy: 'createdAt',
-        sortOrder: 'desc',
-        autoAcceptGroupInvitations: false,
-      },
-      update: {}, // No updates needed, just return existing if found
-    });
+    // Use service layer - will create if doesn't exist
+    const preferences = await userService.getPreferences(user.id);
 
     return NextResponse.json({
-      preferences: {
-        id: preferences.id,
-        autoAcceptGroupInvitations: preferences.autoAcceptGroupInvitations,
-        sortBy: preferences.sortBy,
-        sortOrder: preferences.sortOrder,
-        wishLevelMin: preferences.wishLevelMin,
-        wishLevelMax: preferences.wishLevelMax,
-        priceMin: preferences.priceMin,
-        priceMax: preferences.priceMax,
+      preferences: preferences || {
+        id: '',
+        userId: user.id,
+        autoAcceptGroupInvitations: false,
+        sortBy: 'createdAt',
+        sortOrder: 'desc',
+        wishLevelMin: null,
+        wishLevelMax: null,
+        priceMin: null,
+        priceMax: null,
       },
     });
   } catch (error) {
@@ -92,6 +86,8 @@ export async function GET(_request: NextRequest) {
  * {
  *   "autoAcceptGroupInvitations": true
  * }
+ *
+ * @see {@link userService.updatePreferences} for service implementation
  */
 export async function PATCH(request: NextRequest) {
   try {
@@ -106,23 +102,8 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
     const data = UpdatePreferencesSchema.parse(body);
 
-    // Upsert preferences (create if doesn't exist, update if it does)
-    const preferences = await db.userPreference.upsert({
-      where: { userId: user.id },
-      create: {
-        userId: user.id,
-        autoAcceptGroupInvitations: data.autoAcceptGroupInvitations ?? false,
-        sortBy: data.sortBy ?? 'createdAt',
-        sortOrder: data.sortOrder ?? 'desc',
-        wishLevelMin: data.wishLevelMin,
-        wishLevelMax: data.wishLevelMax,
-        priceMin: data.priceMin,
-        priceMax: data.priceMax,
-      },
-      update: {
-        ...data,
-      },
-    });
+    // Use service layer
+    const preferences = await userService.updatePreferences(user.id, data);
 
     return NextResponse.json({
       preferences: {
