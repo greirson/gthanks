@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getCurrentAdmin } from '@/lib/auth-admin';
-import { db } from '@/lib/db';
+import { userService } from '@/lib/services/user-service';
 import { getErrorMessage, getUserFriendlyError } from '@/lib/errors';
 import { AdminService } from '@/lib/services/admin-service';
 import { logger } from '@/lib/services/logger';
@@ -42,20 +42,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Update user vanity URL access
-    const updatedUser = await db.user.update({
-      where: { id: userId },
-      data: {
-        canUseVanityUrls: body.canUseVanityUrls,
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        username: true,
-        canUseVanityUrls: true,
-      },
-    });
+    // Update user vanity URL access using service
+    const updatedUser = await userService.setVanityAccess(userId, body.canUseVanityUrls);
 
     // Create audit log
     AdminService.createAuditLog(
@@ -71,7 +59,13 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     );
 
     return NextResponse.json({
-      user: updatedUser,
+      user: {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        name: updatedUser.name,
+        username: updatedUser.username,
+        canUseVanityUrls: updatedUser.canUseVanityUrls,
+      },
       message: `Vanity URL access ${body.canUseVanityUrls ? 'enabled' : 'disabled'} successfully`,
     });
   } catch (error) {

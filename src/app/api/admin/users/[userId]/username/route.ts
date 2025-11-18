@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { getCurrentAdmin } from '@/lib/auth-admin';
-import { db } from '@/lib/db';
+import { userService } from '@/lib/services/user-service';
 import { ConflictError, handleApiError, NotFoundError } from '@/lib/errors';
 import { usernameSchema } from '@/lib/validators/vanity-url';
-import { Prisma } from '@prisma/client';
 
 interface RouteParams {
   params: {
@@ -58,24 +57,15 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const data = UpdateUsernameSchema.parse(body);
 
     // Verify user exists
-    const user = await db.user.findUnique({
-      where: { id: userId },
-      select: { id: true },
-    });
-
-    if (!user) {
+    try {
+      await userService.getUserById(userId);
+    } catch (error) {
       throw new NotFoundError('User not found');
     }
 
     try {
-      // Update username (admin can override existing username)
-      const updatedUser = await db.user.update({
-        where: { id: userId },
-        data: {
-          username: data.username ? data.username.toLowerCase() : null,
-          usernameSetAt: data.username ? new Date() : null,
-        },
-      });
+      // Update username using service (admin can override existing username)
+      const updatedUser = await userService.adminUpdateUsername(userId, data.username);
 
       return NextResponse.json({
         user: {
@@ -86,9 +76,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
           canUseVanityUrls: updatedUser.canUseVanityUrls,
         },
       });
-    } catch (error) {
-      // Handle unique constraint violation
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+    } catch (error: any) {
+      // Handle ConflictError from service
+      if (error instanceof ConflictError || error?.message?.includes('already')) {
         throw new ConflictError('Username already taken by another user');
       }
       throw error;

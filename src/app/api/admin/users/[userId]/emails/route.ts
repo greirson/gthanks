@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { getCurrentAdmin } from '@/lib/auth-admin';
-import { db } from '@/lib/db';
+import { userService } from '@/lib/services/user-service';
 import { generateVerificationToken, sendVerificationEmail } from '@/lib/email-verification';
 import { getUserFriendlyError } from '@/lib/errors';
 import { logger } from '@/lib/services/logger';
@@ -35,11 +35,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const { userId } = params;
 
-    // Fetch all emails for user
-    const emails = await db.userEmail.findMany({
-      where: { userId },
-      orderBy: [{ isPrimary: 'desc' }, { isVerified: 'desc' }, { createdAt: 'asc' }],
-    });
+    // Fetch all emails for user using service
+    const emails = await userService.getUserEmails(userId);
 
     return NextResponse.json({ emails });
   } catch (error) {
@@ -73,32 +70,23 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const { email, sendVerification } = AddEmailSchema.parse(body);
 
     // Check if user exists
-    const user = await db.user.findUnique({
-      where: { id: userId },
-      select: { id: true },
-    });
-
-    if (!user) {
+    try {
+      await userService.getUserById(userId);
+    } catch (error) {
       return NextResponse.json(
         { error: getUserFriendlyError('NOT_FOUND', 'User not found'), code: 'NOT_FOUND' },
         { status: 404 }
       );
     }
 
-    // Create email
+    // Create email using service (but handle verification email separately for admin message)
     let newEmail;
     try {
-      newEmail = await db.userEmail.create({
-        data: {
-          userId,
-          email,
-          isPrimary: false,
-          isVerified: false,
-        },
-      });
+      // Add email without sending verification (we'll send custom admin message)
+      newEmail = await userService.addEmail(userId, email, false);
     } catch (error: any) {
-      // Handle unique constraint violation (P2002)
-      if (error.code === 'P2002') {
+      // Handle conflict error from service
+      if (error.message?.includes('already in use')) {
         return NextResponse.json(
           {
             error: getUserFriendlyError('CONFLICT', 'Email already exists for this user'),
@@ -110,7 +98,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       throw error;
     }
 
-    // Optionally send verification email
+    // Optionally send verification email with custom admin message
     if (sendVerification) {
       try {
         const token = await generateVerificationToken(newEmail.id);

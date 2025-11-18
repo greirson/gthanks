@@ -399,13 +399,13 @@ export class UserService {
   /**
    * Admin: Update username (bypass one-time restriction)
    */
-  async adminUpdateUsername(userId: string, username: string) {
+  async adminUpdateUsername(userId: string, username: string | null) {
     try {
       return await db.user.update({
         where: { id: userId },
         data: {
-          username: username.toLowerCase(),
-          usernameSetAt: new Date(),
+          username: username ? username.toLowerCase() : null,
+          usernameSetAt: username ? new Date() : null,
         },
       });
     } catch (error: any) {
