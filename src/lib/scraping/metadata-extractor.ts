@@ -275,7 +275,7 @@ export class MetadataExtractor {
           success: false,
           error: {
             type: 'captcha_detected',
-            message: 'Bot detection triggered. Manual entry required.',
+            message: "Ah crap, this website has fancy tools to stop us from reading it. You'll have to enter the info manually.",
             url: sanitizedUrl,
             partial: {
               domain: parsedUrl.hostname,

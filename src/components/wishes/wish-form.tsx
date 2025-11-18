@@ -278,43 +278,43 @@ export function WishForm({
         // Show user-friendly error message
         if (type === 'captcha_detected') {
           toast({
-            title: 'Manual entry required',
-            description: `${partial?.siteName || 'This site'} requires manual details`,
+            title: "Ah crap, fancy anti-bot tools detected",
+            description: `${partial?.siteName || 'This site'} has security that blocks us. You'll need to enter the price and details yourself.`,
             variant: 'destructive',
             duration: 5000,
           });
         } else if (type === 'timeout') {
           toast({
-            title: 'Slow response',
-            description: 'The site took too long to respond',
+            title: 'Site took too long to respond',
+            description: "The website was really slow. You'll need to add the price and details manually.",
             variant: 'destructive',
             duration: 5000,
           });
         } else if (type === 'parse_error') {
           toast({
-            title: 'Limited details available',
-            description: `Could not extract full details from ${partial?.siteName || 'this site'}`,
+            title: "Couldn't read the page details",
+            description: `We saved your link, but couldn't grab the price or description from ${partial?.siteName || 'this site'}. You can add those yourself.`,
             variant: 'destructive',
             duration: 5000,
           });
         } else if (type === 'network_error') {
           toast({
-            title: 'Site unavailable',
-            description: 'The site could not be reached',
+            title: "Couldn't reach that website",
+            description: "The site might be down or blocking us. You'll need to add the price and details manually.",
             variant: 'destructive',
             duration: 5000,
           });
         } else if (type === 'invalid_url') {
           toast({
-            title: 'Invalid URL',
-            description: 'The URL could not be validated',
+            title: 'Hmm, that URL looks weird',
+            description: "We'll save it anyway - just add the price and details yourself.",
             variant: 'destructive',
             duration: 5000,
           });
         } else {
           toast({
-            title: 'Could not extract product details',
-            description: 'Some sites block automated scraping. Please enter the details manually - your URL is still saved!',
+            title: "Couldn't grab the details automatically",
+            description: 'Some sites block us from reading their pages. No worries - just enter the price and details yourself!',
             variant: 'destructive',
             duration: 5000,
           });

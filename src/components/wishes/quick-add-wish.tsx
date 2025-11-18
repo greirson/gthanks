@@ -116,28 +116,28 @@ export function QuickAddWish({ className, onSuccess }: QuickAddWishProps) {
 
               if (type === 'captcha_detected') {
                 toast({
-                  title: 'Manual entry required',
-                  description: `${partial?.siteName || 'This site'} requires manual details. Wish added with URL.`,
+                  title: "Ah crap, fancy anti-bot tools detected",
+                  description: `${partial?.siteName || 'This site'} has security that blocks us. Wish saved - you can add the price and details yourself.`,
                 });
               } else if (type === 'timeout') {
                 toast({
-                  title: 'Slow response',
-                  description: 'The site took too long to respond. Wish added with URL.',
+                  title: 'Site took too long to respond',
+                  description: 'The website was really slow. Wish saved with the link - you can add details yourself.',
                 });
               } else if (type === 'parse_error') {
                 toast({
-                  title: 'Limited details available',
-                  description: `Could not extract full details from ${partial?.siteName || 'this site'}. Wish added with URL.`,
+                  title: "Couldn't read the page details",
+                  description: `We saved the link for you, but couldn't grab the price or description from ${partial?.siteName || 'this site'}. You can add those yourself.`,
                 });
               } else if (type === 'network_error') {
                 toast({
-                  title: 'Site unavailable',
-                  description: 'The site could not be reached. Wish added with URL.',
+                  title: "Couldn't reach that website",
+                  description: "The site might be down or blocking us. We saved the link - you'll need to add the price and details manually.",
                 });
               } else if (type === 'invalid_url') {
                 toast({
-                  title: 'Invalid URL',
-                  description: 'The URL could not be validated. Wish added anyway.',
+                  title: 'Hmm, that URL looks weird',
+                  description: 'We saved it anyway - you can fix the link and add details yourself.',
                 });
               } else {
               }
