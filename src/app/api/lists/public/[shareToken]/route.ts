@@ -16,7 +16,7 @@ export async function GET(
   try {
     // Rate limiting - prevent abuse
     const clientIdentifier = getClientIdentifier(request);
-    const rateLimitResult = rateLimiter.check('public-list-access', clientIdentifier);
+    const rateLimitResult = await rateLimiter.check('public-list-access', clientIdentifier);
 
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
@@ -69,7 +69,7 @@ export async function POST(
   try {
     // Rate limiting - prevent brute force password attempts (stricter limit)
     const clientIdentifier = getClientIdentifier(request);
-    const rateLimitResult = rateLimiter.check('public-list-password', clientIdentifier);
+    const rateLimitResult = await rateLimiter.check('public-list-password', clientIdentifier);
 
     if (!rateLimitResult.allowed) {
       return NextResponse.json(

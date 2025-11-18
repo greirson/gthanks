@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
   try {
     // Check rate limit before processing
     const identifier = getClientIdentifier(request);
-    const rateLimitResult = rateLimiter.check('email-add', identifier);
+    const rateLimitResult = await rateLimiter.check('email-add', identifier);
 
     if (!rateLimitResult.allowed) {
       return NextResponse.json(

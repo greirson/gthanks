@@ -42,7 +42,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Check rate limit per user
-    const userRateLimitResult = rateLimiter.check('username-set', user.id);
+    const userRateLimitResult = await rateLimiter.check('username-set', user.id);
     if (!userRateLimitResult.allowed) {
       return NextResponse.json(
         { error: 'Too many requests. Please try again later.' },
@@ -55,7 +55,7 @@ export async function PUT(request: NextRequest) {
 
     // Check rate limit per IP
     const identifier = getClientIdentifier(request);
-    const ipRateLimitResult = rateLimiter.check('username-set-ip', identifier);
+    const ipRateLimitResult = await rateLimiter.check('username-set-ip', identifier);
     if (!ipRateLimitResult.allowed) {
       return NextResponse.json(
         { error: 'Too many requests. Please try again later.' },

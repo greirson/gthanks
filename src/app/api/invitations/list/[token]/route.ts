@@ -32,7 +32,7 @@ export async function POST(request: NextRequest, { params }: { params: { token: 
   try {
     // Rate limiting - prevent brute force attempts
     const clientIdentifier = getClientIdentifier(request);
-    const rateLimitResult = rateLimiter.check('invitation-accept', clientIdentifier);
+    const rateLimitResult = await rateLimiter.check('invitation-accept', clientIdentifier);
 
     if (!rateLimitResult.allowed) {
       return NextResponse.json(

@@ -40,7 +40,7 @@ export async function POST(
 ) {
   // Rate limiting - prevent abuse (declare outside try-catch for error handler access)
   const clientIdentifier = getClientIdentifier(request);
-  const rateLimitResult = rateLimiter.check('public-reservation', clientIdentifier);
+  const rateLimitResult = await rateLimiter.check('public-reservation', clientIdentifier);
 
   if (!rateLimitResult.allowed) {
     return NextResponse.json(

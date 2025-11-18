@@ -16,7 +16,7 @@ export async function POST(request: NextRequest, { params }: { params: { listId:
   try {
     // Rate limiting - prevent email bombing
     const clientIdentifier = getClientIdentifier(request);
-    const rateLimitResult = rateLimiter.check('co-manager-invite', clientIdentifier);
+    const rateLimitResult = await rateLimiter.check('co-manager-invite', clientIdentifier);
 
     if (!rateLimitResult.allowed) {
       return NextResponse.json(

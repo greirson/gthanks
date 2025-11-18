@@ -43,7 +43,7 @@ export async function middleware(request: NextRequest) {
 
     if (!isExcludedEndpoint) {
       const clientId = getClientIdentifier(request);
-      const result = rateLimiter.check('global-api', clientId);
+      const result = await rateLimiter.check('global-api', clientId);
 
       if (!result.allowed) {
         return NextResponse.json(

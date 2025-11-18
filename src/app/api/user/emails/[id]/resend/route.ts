@@ -8,7 +8,7 @@ import { getClientIdentifier, getRateLimitHeaders, rateLimiter } from '@/lib/rat
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   // 1. Rate limiting
   const identifier = getClientIdentifier(req);
-  const rateLimitResult = rateLimiter.check('email-resend', identifier);
+  const rateLimitResult = await rateLimiter.check('email-resend', identifier);
 
   if (!rateLimitResult.allowed) {
     return NextResponse.json(

@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
   try {
     // Check rate limit before processing
     const identifier = getClientIdentifier(request);
-    const rateLimitResult = rateLimiter.check('email-verify', identifier);
+    const rateLimitResult = await rateLimiter.check('email-verify', identifier);
 
     if (!rateLimitResult.allowed) {
       return NextResponse.redirect(
