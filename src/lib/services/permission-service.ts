@@ -19,6 +19,8 @@ export interface PermissionResult {
  * Centralized permission service for all resources in the application
  *
  * Business Rules:
+ * - System admins have full access to all resources for moderation purposes
+ * - Suspended users are denied all access (except admins cannot be suspended)
  * - Owners have full permissions on their resources
  * - List admins can edit lists but not delete them
  * - Group members can view shared lists but cannot edit them
@@ -28,6 +30,12 @@ export interface PermissionResult {
 export class PermissionService {
   /**
    * Check if a user can perform an action on a resource
+   *
+   * Admin Override Behavior:
+   * - Admins bypass all permission checks for moderation tasks
+   * - Admins can delete abusive content, help users with access issues
+   * - Admin actions should be logged for audit purposes (future enhancement)
+   * - Suspended users are denied access (suspendedAt is set)
    */
   async can(
     userId: string | undefined,
@@ -35,10 +43,36 @@ export class PermissionService {
     resource: Resource,
     context?: { password?: string }
   ): Promise<PermissionResult> {
+    // Anonymous users - limited permissions
     if (!userId) {
       return this.checkAnonymousPermission(action, resource, context);
     }
 
+    // Check user status and admin privileges
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: {
+        isAdmin: true,
+        role: true,
+        suspendedAt: true,
+      },
+    });
+
+    if (!user) {
+      return { allowed: false, reason: 'User not found' };
+    }
+
+    // Suspended users are denied all access
+    if (user.suspendedAt || user.role === 'suspended') {
+      return { allowed: false, reason: 'Account suspended' };
+    }
+
+    // Admin override - admins have full access to all resources for moderation
+    if (user.isAdmin || user.role === 'admin') {
+      return { allowed: true };
+    }
+
+    // Regular users - check normal permissions
     switch (resource.type) {
       case 'list':
         return this.checkListPermission(userId, action, resource.id, context);

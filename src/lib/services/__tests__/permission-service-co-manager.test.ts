@@ -51,9 +51,28 @@ describe('PermissionService Co-Manager Tests', () => {
   const listId = 'list-123';
   const wishId = 'wish-456';
 
+  // Helper function to mock non-admin user
+  const mockNonAdminUser = (userId: string) => {
+    mockUserFindUnique.mockResolvedValueOnce({
+      id: userId,
+      isAdmin: false,
+      role: 'user',
+      suspendedAt: null,
+    } as any);
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
     jest.resetAllMocks();
+    
+    // Default: mock users as non-admin by default
+    // Tests can override this with mockUserFindUnique.mockResolvedValueOnce()
+    mockUserFindUnique.mockResolvedValue({
+      id: 'default-user',
+      isAdmin: false,
+      role: 'user',
+      suspendedAt: null,
+    } as any);
   });
 
   describe('Co-Manager Permission Tests', () => {
