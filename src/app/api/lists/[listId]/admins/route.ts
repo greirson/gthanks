@@ -3,7 +3,6 @@ import { z } from 'zod';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getCurrentUser } from '@/lib/auth-utils';
-import { db } from '@/lib/db';
 import {
   AppError,
   ForbiddenError,
@@ -12,8 +11,7 @@ import {
   getUserFriendlyError,
 } from '@/lib/errors';
 import { rateLimiter, getRateLimitHeaders, getClientIdentifier } from '@/lib/rate-limiter';
-import { permissionService } from '@/lib/services/permission-service';
-import { ListInvitationService } from '@/lib/services/list-invitation.service';
+import { listInvitationService } from '@/lib/services/list-invitation.service';
 import { logger } from '@/lib/services/logger';
 
 interface RouteParams {
@@ -59,44 +57,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const { listId } = params;
 
-    // Verify user has permission to view this list (any list access allows viewing admins)
-    await permissionService.require(user.id, 'view', { type: 'list', id: listId });
+    // Use service to get co-managers with all details
+    const admins = await listInvitationService.getListCoManagers(listId, user.id);
 
-    // Retrieve all co-managers with user details and metadata
-    const admins = await db.listAdmin.findMany({
-      where: { listId },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-          },
-        },
-      },
-      orderBy: { addedAt: 'asc' },
-    });
-
-    // Get the addedBy user details for each admin
-    const adminUserIds = admins.map((admin) => admin.addedBy);
-    const addedByUsers = await db.user.findMany({
-      where: { id: { in: adminUserIds } },
-      select: { id: true, name: true },
-    });
-
-    // Create a map for quick lookup
-    const addedByUsersMap = new Map(addedByUsers.map((user) => [user.id, user]));
-
-    // Transform the response to match the required format
-    const transformedAdmins = admins.map((admin) => ({
-      userId: admin.userId,
-      user: admin.user,
-      addedAt: admin.addedAt,
-      addedBy: addedByUsersMap.get(admin.addedBy) || { id: admin.addedBy, name: null },
-    }));
-
-    return NextResponse.json({ admins: transformedAdmins });
+    return NextResponse.json({ admins });
   } catch (error) {
     logger.error({ error: error }, 'GET /api/lists/[listId]/admins error');
 
@@ -201,7 +165,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Use the invitation service which handles both existing and non-existing users
-    const listInvitationService = new ListInvitationService(db);
     const result = await listInvitationService.createInvitation(listId, email, user.id);
 
     if (result.directlyAdded) {

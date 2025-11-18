@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth-utils';
+// eslint-disable-next-line local-rules/no-direct-db-import -- Read-only complex aggregation query using groupBy, distinct, and multiple transformations. This analytics-style query is better suited for direct database access than service layer abstraction.
 import { db } from '@/lib/db';
 import { getUserFriendlyError } from '@/lib/errors';
 import { logger } from '@/lib/services/logger';
