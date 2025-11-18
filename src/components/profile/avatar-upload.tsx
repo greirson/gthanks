@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 import { useState } from 'react';
@@ -23,6 +24,8 @@ export function AvatarUpload({
   userEmail,
   onAvatarChange,
 }: AvatarUploadProps) {
+  const router = useRouter();
+  const [localAvatar, setLocalAvatar] = useState(currentAvatar);
   const [isOpen, setIsOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -34,7 +37,7 @@ export function AvatarUpload({
             id: userId,
             name: userName || null,
             email: userEmail || null,
-            avatarUrl: currentAvatar || null,
+            avatarUrl: localAvatar || null,
           }}
           size="2xl"
         />
@@ -50,7 +53,7 @@ export function AvatarUpload({
         open={isOpen}
         onOpenChange={setIsOpen}
         mode="user"
-        currentImage={currentAvatar}
+        currentImage={localAvatar}
         onSave={async (file) => {
           setIsUploading(true);
           try {
@@ -64,7 +67,16 @@ export function AvatarUpload({
 
             if (uploadResponse.ok) {
               const result = await uploadResponse.json();
+
+              // Optimistic update - instant UI change
+              setLocalAvatar(result.avatarUrl || '');
+
+              // Callback for backward compatibility
               onAvatarChange?.(result.avatarUrl || '');
+
+              // Refresh server component data
+              router.refresh();
+
               toast.success('Photo updated successfully');
             } else {
               const error = await uploadResponse.json();
