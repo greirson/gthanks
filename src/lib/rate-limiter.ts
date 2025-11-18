@@ -264,17 +264,48 @@ export function getRateLimitHeaders(result: ReturnType<typeof rateLimiter.check>
   };
 }
 
+/**
+ * Extracts client IP address from request headers for rate limiting.
+ *
+ * SECURITY: Uses trusted headers in priority order to prevent IP spoofing:
+ * 1. CF-Connecting-IP (Cloudflare - most trusted)
+ * 2. X-Real-IP (Nginx/most proxies - set by proxy, not client)
+ * 3. X-Forwarded-For LAST IP (rightmost = closest to server)
+ *
+ * IMPORTANT: Ensure your reverse proxy/CDN is configured to:
+ * - Set CF-Connecting-IP (Cloudflare) or X-Real-IP (Nginx)
+ * - Properly forward client IPs in X-Forwarded-For
+ *
+ * Attack Prevention: Using the first IP in X-Forwarded-For is vulnerable to spoofing
+ * because clients can set arbitrary values. The last IP is set by the proxy closest
+ * to our server and cannot be manipulated by the client.
+ *
+ * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-For
+ * @see https://adam-p.ca/blog/2022/03/x-forwarded-for/
+ */
 export function getClientIdentifier(request: Request): string {
-  // Use X-Forwarded-For for production deployments behind proxies
-  const forwarded = request.headers.get('x-forwarded-for');
-  if (forwarded) {
-    return forwarded.split(',')[0].trim();
+  // Priority 1: Cloudflare-specific header (most trusted)
+  const cfConnecting = request.headers.get('cf-connecting-ip');
+  if (cfConnecting) {
+    return cfConnecting.trim();
   }
 
-  // Fallback to other headers
-  return (
-    request.headers.get('x-real-ip') ||
-    request.headers.get('cf-connecting-ip') || // Cloudflare
-    'unknown'
-  );
+  // Priority 2: X-Real-IP (set by proxy, cannot be spoofed by client)
+  const realIp = request.headers.get('x-real-ip');
+  if (realIp) {
+    return realIp.trim();
+  }
+
+  // Priority 3: X-Forwarded-For - use LAST IP (closest to server)
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) {
+    const ips = forwarded.split(',').map(ip => ip.trim());
+    // Use the LAST IP in the chain (rightmost = closest to our server)
+    // Example: "client-ip, proxy1-ip, proxy2-ip" -> use "proxy2-ip"
+    return ips[ips.length - 1];
+  }
+
+  // Fallback: Log warning and return unknown
+  console.warn('[RateLimiter] Could not determine client IP address');
+  return 'unknown';
 }
