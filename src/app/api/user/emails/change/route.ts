@@ -4,8 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getCurrentUser } from '@/lib/auth-utils';
 import { getUserFriendlyError } from '@/lib/errors';
-import { db } from '@/lib/db';
-import { generateVerificationToken, sendVerificationEmail } from '@/lib/email-verification';
+import { userService } from '@/lib/services/user-service';
 import { rateLimiter, getRateLimitHeaders, getClientIdentifier } from '@/lib/rate-limiter';
 import { logger } from '@/lib/services/logger';
 
@@ -70,43 +69,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const data = ChangeEmailSchema.parse(body);
 
-    // 4. Create email record (will auto-promote after verification)
-    // Database unique constraints will prevent duplicates atomically
+    // 4. Add email using service layer
+    // Service handles: creation, verification token generation, email sending, and rollback on failure
     try {
-      const userEmail = await db.userEmail.create({
-        data: {
-          userId: user.id,
-          email: data.email,
-          isPrimary: false, // Will be promoted to primary after verification
-          isVerified: false,
-        },
-      });
-
-      // 5. Generate verification token
-      const token = await generateVerificationToken(userEmail.id);
-
-      // 6. Send verification email with special message indicating it will become primary
-      try {
-        await sendVerificationEmail(
-          data.email,
-          token,
-          'Verify this email to make it your primary email address'
-        );
-      } catch (emailError) {
-        // If email sending fails, delete the UserEmail record and return error
-        await db.userEmail.delete({
-          where: { id: userEmail.id },
-        });
-
-        logger.error({ error: emailError }, 'Failed to send verification email');
-        return NextResponse.json(
-          {
-            error: getUserFriendlyError('INTERNAL_ERROR', 'Failed to send verification email. Please try again.'),
-            code: 'INTERNAL_ERROR',
-          },
-          { status: 500, headers: getRateLimitHeaders(rateLimitResult) }
-        );
-      }
+      const userEmail = await userService.addEmail(user.id, data.email, true);
 
       return NextResponse.json(
         {
@@ -124,14 +90,25 @@ export async function POST(request: NextRequest) {
         { headers: getRateLimitHeaders(rateLimitResult) }
       );
     } catch (createError: any) {
-      // Handle Prisma unique constraint violation
-      if (createError.code === 'P2002') {
+      // Handle service layer errors
+      if (createError.message?.includes('already in use')) {
         return NextResponse.json(
           {
             error: getUserFriendlyError('ALREADY_EXISTS', 'Email already in use'),
             code: 'ALREADY_EXISTS',
           },
           { status: 400, headers: getRateLimitHeaders(rateLimitResult) }
+        );
+      }
+
+      if (createError.message?.includes('Failed to send verification email')) {
+        logger.error({ error: createError }, 'Failed to send verification email');
+        return NextResponse.json(
+          {
+            error: getUserFriendlyError('INTERNAL_ERROR', 'Failed to send verification email. Please try again.'),
+            code: 'INTERNAL_ERROR',
+          },
+          { status: 500, headers: getRateLimitHeaders(rateLimitResult) }
         );
       }
 

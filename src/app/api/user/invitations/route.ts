@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 
 import { authOptions } from '@/lib/auth';
 import { getUserFriendlyError } from '@/lib/errors';
+// eslint-disable-next-line local-rules/no-direct-db-import -- Read-only query with complex joins (group, inviter, counts) and pagination
 import { db } from '@/lib/db';
 import { logger } from '@/lib/services/logger';
 
@@ -20,6 +21,12 @@ import { logger } from '@/lib/services/logger';
  * // Get current user's pending invitations
  * GET /api/user/invitations
  * // Returns: [{ id: "inv123", email: "user@example.com", group: {...}, inviter: {...}, createdAt: "..." }]
+ *
+ * @note Direct database access is acceptable here:
+ *       - Read-only query (no writes)
+ *       - Complex joins with nested includes (group, inviter, member counts)
+ *       - Pagination and filtering
+ *       - No permission checks needed beyond authentication (user's own invitations)
  *
  * @see {@link getCurrentUser} for authentication details
  * @see {@link db.groupInvitation} for database query with relations

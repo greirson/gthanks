@@ -323,7 +323,7 @@ export class UserService {
   async updateTheme(userId: string, theme: 'light' | 'dark' | 'system') {
     return db.user.update({
       where: { id: userId },
-      data: { theme },
+      data: { themePreference: theme },
     });
   }
 
@@ -344,11 +344,12 @@ export class UserService {
     data: Prisma.UserPreferenceUpdateInput
   ) {
     // Upsert to create if doesn't exist
+    const { user: _user, ...createData } = data as any;
     return db.userPreference.upsert({
       where: { userId },
       create: {
-        userId,
-        ...data,
+        user: { connect: { id: userId } },
+        ...createData,
       },
       update: data,
     });
@@ -358,7 +359,10 @@ export class UserService {
    * Complete user profile (onboarding)
    */
   async completeProfile(userId: string, data: { name?: string; username?: string }) {
-    const updateData: Prisma.UserUpdateInput = {};
+    const updateData: Prisma.UserUpdateInput = {
+      isOnboardingComplete: true, // Mark onboarding as complete
+      updatedAt: new Date(),
+    };
 
     if (data.name) {
       updateData.name = data.name;
