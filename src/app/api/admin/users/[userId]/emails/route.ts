@@ -64,7 +64,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     const { userId } = params;
-    const body = await request.json();
+    const body: unknown = await request.json();
 
     // Validate input
     const { email, sendVerification } = AddEmailSchema.parse(body);
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     // Check if user exists
     try {
       await userService.getUserById(userId);
-    } catch (error) {
+    } catch {
       return NextResponse.json(
         { error: getUserFriendlyError('NOT_FOUND', 'User not found'), code: 'NOT_FOUND' },
         { status: 404 }
@@ -84,9 +84,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     try {
       // Add email without sending verification (we'll send custom admin message)
       newEmail = await userService.addEmail(userId, email, false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Handle conflict error from service
-      if (error.message?.includes('already in use')) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('already in use')) {
         return NextResponse.json(
           {
             error: getUserFriendlyError('CONFLICT', 'Email already exists for this user'),

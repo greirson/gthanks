@@ -38,9 +38,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         message: 'Email set as primary successfully',
         email: updatedEmail,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Handle NotFoundError
-      if (error.message?.includes('not found')) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('not found')) {
         return NextResponse.json(
           { error: getUserFriendlyError('NOT_FOUND', 'Email not found'), code: 'NOT_FOUND' },
           { status: 404 }
@@ -48,10 +49,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       }
 
       // Handle ValidationError (must be verified)
-      if (error.message?.includes('verified')) {
+      if (errorMessage.includes('verified')) {
         return NextResponse.json(
           {
-            error: getUserFriendlyError('VALIDATION_ERROR', error.message),
+            error: getUserFriendlyError('VALIDATION_ERROR', errorMessage),
             code: 'VALIDATION_ERROR',
           },
           { status: 400 }

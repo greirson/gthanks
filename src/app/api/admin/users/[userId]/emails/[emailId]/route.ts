@@ -33,9 +33,10 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     try {
       await userService.deleteEmail(userId, emailId);
       return NextResponse.json({ success: true, message: 'Email removed successfully' });
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Handle NotFoundError
-      if (error.message?.includes('not found')) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('not found')) {
         return NextResponse.json(
           { error: getUserFriendlyError('NOT_FOUND', 'Email not found'), code: 'NOT_FOUND' },
           { status: 404 }
@@ -43,10 +44,10 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       }
 
       // Handle ValidationError (safety checks)
-      if (error.message?.includes('Cannot remove')) {
+      if (errorMessage.includes('Cannot remove')) {
         return NextResponse.json(
           {
-            error: getUserFriendlyError('VALIDATION_ERROR', error.message),
+            error: getUserFriendlyError('VALIDATION_ERROR', errorMessage),
             code: 'VALIDATION_ERROR',
           },
           { status: 400 }

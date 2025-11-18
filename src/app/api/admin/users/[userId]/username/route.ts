@@ -53,13 +53,13 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const { userId } = params;
 
     // Parse and validate request body
-    const body = await request.json();
+    const body: unknown = await request.json();
     const data = UpdateUsernameSchema.parse(body);
 
     // Verify user exists
     try {
       await userService.getUserById(userId);
-    } catch (error) {
+    } catch {
       throw new NotFoundError('User not found');
     }
 
@@ -76,9 +76,10 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
           canUseVanityUrls: updatedUser.canUseVanityUrls,
         },
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Handle ConflictError from service
-      if (error instanceof ConflictError || error?.message?.includes('already')) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (error instanceof ConflictError || errorMessage.includes('already')) {
         throw new ConflictError('Username already taken by another user');
       }
       throw error;

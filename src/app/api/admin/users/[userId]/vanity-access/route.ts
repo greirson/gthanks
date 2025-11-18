@@ -27,12 +27,15 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     const { userId } = params;
-    const body = (await request.json()) as {
-      canUseVanityUrls: boolean;
-    };
+    const body: unknown = await request.json();
 
-    // Validate input
-    if (typeof body.canUseVanityUrls !== 'boolean') {
+    // Validate input - type guard
+    if (
+      !body ||
+      typeof body !== 'object' ||
+      !('canUseVanityUrls' in body) ||
+      typeof (body as { canUseVanityUrls: unknown }).canUseVanityUrls !== 'boolean'
+    ) {
       return NextResponse.json(
         {
           error: getUserFriendlyError('VALIDATION_ERROR', 'canUseVanityUrls must be a boolean'),
@@ -42,8 +45,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       );
     }
 
+    // Type assertion is now safe after validation
+    const validatedBody = body as { canUseVanityUrls: boolean };
+
     // Update user vanity URL access using service
-    const updatedUser = await userService.setVanityAccess(userId, body.canUseVanityUrls);
+    const updatedUser = await userService.setVanityAccess(userId, validatedBody.canUseVanityUrls);
 
     // Create audit log
     AdminService.createAuditLog(
@@ -51,8 +57,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       'UPDATE',
       'USER_VANITY_ACCESS',
       userId,
-      { canUseVanityUrls: !body.canUseVanityUrls },
-      { canUseVanityUrls: body.canUseVanityUrls },
+      { canUseVanityUrls: !validatedBody.canUseVanityUrls },
+      { canUseVanityUrls: validatedBody.canUseVanityUrls },
       { endpoint: `/api/admin/users/${userId}/vanity-access` },
       request.headers.get('x-forwarded-for') || undefined,
       request.headers.get('user-agent') || undefined
@@ -66,7 +72,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         username: updatedUser.username,
         canUseVanityUrls: updatedUser.canUseVanityUrls,
       },
-      message: `Vanity URL access ${body.canUseVanityUrls ? 'enabled' : 'disabled'} successfully`,
+      message: `Vanity URL access ${validatedBody.canUseVanityUrls ? 'enabled' : 'disabled'} successfully`,
     });
   } catch (error) {
     logger.error({ error: error }, 'Admin vanity access toggle error');
