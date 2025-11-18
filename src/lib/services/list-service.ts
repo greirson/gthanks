@@ -544,6 +544,37 @@ export class ListService {
   }
 
   /**
+   * Bulk remove wishes from list
+   */
+  async bulkRemoveWishesFromList(
+    listId: string,
+    wishIds: string[],
+    userId: string
+  ): Promise<{ removed: number }> {
+    // Use centralized permission service
+    await permissionService.require(userId, 'edit', { type: 'list', id: listId });
+
+    // Validate input
+    if (!Array.isArray(wishIds) || wishIds.length === 0) {
+      throw new ValidationError('wishIds must be a non-empty array');
+    }
+
+    // Remove wishes from list in a transaction
+    const result = await db.$transaction(async (tx) => {
+      const deleteResult = await tx.listWish.deleteMany({
+        where: {
+          listId,
+          wishId: { in: wishIds },
+        },
+      });
+
+      return deleteResult;
+    });
+
+    return { removed: result.count };
+  }
+
+  /**
    * Create reservation (for anonymous users)
    */
   async createReservation(

@@ -3,9 +3,9 @@ import { z } from 'zod';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getCurrentUser } from '@/lib/auth-utils';
-import { db } from '@/lib/db';
-import { getUserFriendlyError } from '@/lib/errors';
+import { ForbiddenError, NotFoundError, ValidationError, getUserFriendlyError } from '@/lib/errors';
 import { logger } from '@/lib/services/logger';
+import { listService } from '@/lib/services/list-service';
 
 interface RouteParams {
   params: { listId: string };
@@ -77,51 +77,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   }
 
   try {
-    // Verify the list exists and user has permission
-    const list = await db.list.findUnique({
-      where: { id: listId },
-      include: {
-        admins: {
-          select: { userId: true },
-        },
-      },
-    });
-
-    if (!list) {
-      return NextResponse.json(
-        { error: getUserFriendlyError('NOT_FOUND', 'List not found'), code: 'NOT_FOUND' },
-        { status: 404 }
-      );
-    }
-
-    // Check if user is owner or admin
-    const isOwner = list.ownerId === user.id;
-    const isAdmin = list.admins.some((admin) => admin.userId === user.id);
-
-    if (!isOwner && !isAdmin) {
-      return NextResponse.json(
-        {
-          error: getUserFriendlyError('FORBIDDEN', 'You do not have permission to modify this list'),
-          code: 'FORBIDDEN',
-        },
-        { status: 403 }
-      );
-    }
-
-    // Remove wishes from this specific list in a transaction
-    const result = await db.$transaction(async (tx) => {
-      const deleteResult = await tx.listWish.deleteMany({
-        where: {
-          listId: listId,
-          wishId: { in: wishIds },
-        },
-      });
-
-      return deleteResult;
-    });
+    // Use list service for bulk removal (includes permission check)
+    const result = await listService.bulkRemoveWishesFromList(listId, wishIds, user.id);
 
     // Return appropriate response based on results
-    if (result.count === 0) {
+    if (result.removed === 0) {
       return NextResponse.json({
         removed: 0,
         message: 'No wishes were found in this list',
@@ -129,10 +89,42 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     return NextResponse.json({
-      removed: result.count,
-      message: `Removed ${result.count} wish${result.count === 1 ? '' : 'es'} from list`,
+      removed: result.removed,
+      message: `Removed ${result.removed} wish${result.removed === 1 ? '' : 'es'} from list`,
     });
   } catch (error) {
+    // Handle validation errors
+    if (error instanceof ValidationError) {
+      return NextResponse.json(
+        {
+          error: getUserFriendlyError('VALIDATION_ERROR', error.message),
+          code: 'VALIDATION_ERROR',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Handle permission errors from centralized service
+    if (error instanceof ForbiddenError) {
+      return NextResponse.json(
+        {
+          error: getUserFriendlyError('FORBIDDEN', error.message),
+          code: 'FORBIDDEN',
+        },
+        { status: 403 }
+      );
+    }
+
+    if (error instanceof NotFoundError) {
+      return NextResponse.json(
+        {
+          error: getUserFriendlyError('NOT_FOUND', error.message),
+          code: 'NOT_FOUND',
+        },
+        { status: 404 }
+      );
+    }
+
     logger.error({ error: error }, 'Error bulk removing wishes from list');
     return NextResponse.json(
       { error: 'Something went wrong. Please try again', code: 'INTERNAL_ERROR' },
