@@ -118,7 +118,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     // Parse and validate request body
-    const body = await request.json();
+    const body = (await request.json()) as unknown;
     const data = ListUpdateSchema.parse(body);
 
     // Update list

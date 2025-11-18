@@ -43,7 +43,7 @@ export async function POST(request: NextRequest, { params }: { params: { listId:
       );
     }
 
-    const body = await request.json();
+    const body = (await request.json()) as unknown;
     const { email } = createInvitationSchema.parse(body);
 
     const result = await listInvitationService.createInvitation(

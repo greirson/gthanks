@@ -86,8 +86,10 @@ export async function POST(
     }
 
     // Extract password from request body
-    const body = await request.json();
-    const { password } = body;
+    const body = (await request.json()) as unknown;
+    const password = typeof body === 'object' && body !== null && 'password' in body
+      ? (body as { password: unknown }).password
+      : undefined;
 
     if (!password || typeof password !== 'string') {
       return NextResponse.json(

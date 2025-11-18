@@ -64,7 +64,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const { listId } = params;
 
     // Parse and validate request body
-    const body = await request.json();
+    const body = (await request.json()) as unknown;
     const data = SetSlugSchema.parse(body);
 
     // Set slug via service (includes permission check)

@@ -58,7 +58,7 @@ export async function POST(
 
   try {
     // Parse and validate request body
-    const body = await request.json();
+    const body = (await request.json()) as unknown;
     const validatedData = ReservationCreateSchema.parse(body);
 
     // Create reservation via share token

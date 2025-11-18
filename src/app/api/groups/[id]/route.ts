@@ -54,7 +54,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     // Parse and validate request body
-    const body = await request.json();
+    const body = (await request.json()) as unknown;
     const data = GroupUpdateSchema.parse(body);
 
     // Update group

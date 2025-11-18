@@ -46,7 +46,7 @@ export async function GET() {
     });
 
     // Transform and deduplicate members
-    const uniqueMembers = groupMembers.map((gm: any) => ({
+    const uniqueMembers = groupMembers.map((gm) => ({
       id: gm.user.id,
       name: gm.user.name,
       email: gm.user.email,
@@ -66,17 +66,17 @@ export async function GET() {
 
     // Create a map of user ID to group count
     const countMap = new Map(
-      memberGroupCounts.map((item: any) => [item.userId, item._count.groupId])
+      memberGroupCounts.map((item) => [item.userId, item._count.groupId])
     );
 
     // Enhance members with group count
-    const membersWithCount = uniqueMembers.map((member: any) => ({
+    const membersWithCount = uniqueMembers.map((member) => ({
       ...member,
       groupCount: countMap.get(member.id) || 0,
     }));
 
     // Sort by name for better UX
-    membersWithCount.sort((a: any, b: any) => {
+    membersWithCount.sort((a, b) => {
       const nameA = a.name || a.email;
       const nameB = b.name || b.email;
       return nameA.localeCompare(nameB);
