@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    const body = (await request.json()) as unknown;
     const validatedData = onboardingSchema.parse(body);
 
     // Complete profile using service layer (sets name and marks onboarding complete)

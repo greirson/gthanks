@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    const body = (await request.json()) as unknown;
     const data = SetPrimaryEmailSchema.parse(body);
 
     // Use service layer

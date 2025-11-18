@@ -104,7 +104,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    const body = (await request.json()) as unknown;
     const data = UpdateProfileSchema.parse(body);
 
     await UserProfileService.updateProfile(user.id, data);

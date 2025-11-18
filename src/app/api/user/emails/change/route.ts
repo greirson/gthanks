@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 3. Validation
-    const body = await request.json();
+    const body = (await request.json()) as unknown;
     const data = ChangeEmailSchema.parse(body);
 
     // 4. Add email using service layer
@@ -89,9 +89,11 @@ export async function POST(request: NextRequest) {
         },
         { headers: getRateLimitHeaders(rateLimitResult) }
       );
-    } catch (createError: any) {
+    } catch (createError: unknown) {
       // Handle service layer errors
-      if (createError.message?.includes('already in use')) {
+      const err = createError instanceof Error ? createError : new Error(String(createError));
+
+      if (err.message.includes('already in use')) {
         return NextResponse.json(
           {
             error: getUserFriendlyError('ALREADY_EXISTS', 'Email already in use'),
@@ -101,8 +103,8 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      if (createError.message?.includes('Failed to send verification email')) {
-        logger.error({ error: createError }, 'Failed to send verification email');
+      if (err.message.includes('Failed to send verification email')) {
+        logger.error({ error: err }, 'Failed to send verification email');
         return NextResponse.json(
           {
             error: getUserFriendlyError('INTERNAL_ERROR', 'Failed to send verification email. Please try again.'),
@@ -113,7 +115,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Re-throw other errors to be handled by outer catch
-      throw createError;
+      throw err;
     }
   } catch (error) {
     if (error instanceof z.ZodError) {

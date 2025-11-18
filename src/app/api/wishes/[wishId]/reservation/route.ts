@@ -79,10 +79,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const user = await getCurrentUser();
-    const body = await request.json();
+    const body = (await request.json()) as unknown;
 
-    // Add wishId to body
-    const dataWithWishId = { ...body, wishId: params.wishId };
+    // Add wishId to body - spread unknown type into object for validation
+    const dataWithWishId =
+      typeof body === 'object' && body !== null
+        ? { ...(body as Record<string, unknown>), wishId: params.wishId }
+        : { wishId: params.wishId };
 
     // Validate
     const validatedData = ReservationCreateSchema.parse(dataWithWishId);

@@ -37,7 +37,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Parse and validate request body
-    const body = await request.json();
+    const body = (await request.json()) as unknown;
     const data = UpdateProfileSettingsSchema.parse(body);
 
     // Use service layer

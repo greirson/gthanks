@@ -25,8 +25,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { name, avatarUrl, username } = body;
+    const body = (await request.json()) as unknown;
+
+    // Type guard for request body
+    if (typeof body !== 'object' || body === null) {
+      return NextResponse.json(
+        {
+          error: getUserFriendlyError('VALIDATION_ERROR', 'Invalid request body'),
+          code: 'VALIDATION_ERROR',
+        },
+        { status: 400 }
+      );
+    }
+
+    const requestBody = body as { name?: unknown; avatarUrl?: unknown; username?: unknown };
+    const { name, avatarUrl, username } = requestBody;
 
     // Validate required fields
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
@@ -51,7 +64,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate avatarUrl if provided
+    // Validate avatarUrl if provided (currently not used, but validated for future use)
     if (avatarUrl !== undefined && avatarUrl !== null) {
       if (typeof avatarUrl !== 'string') {
         return NextResponse.json(
@@ -81,10 +94,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Validate username if provided
+    let validatedUsername: string | undefined;
+    if (username !== undefined && username !== null) {
+      if (typeof username !== 'string') {
+        return NextResponse.json(
+          {
+            error: getUserFriendlyError('VALIDATION_ERROR', 'Username must be a string'),
+            code: 'VALIDATION_ERROR',
+          },
+          { status: 400 }
+        );
+      }
+      validatedUsername = username;
+    }
+
     // Use service layer
     const updatedUser = await userService.completeProfile(user.id, {
       name: trimmedName,
-      username,
+      username: validatedUsername,
     });
 
     logger.info(
