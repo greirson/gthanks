@@ -142,11 +142,11 @@ export default function ListsPage() {
   };
 
   const handleEdit = (list: ListWithDetails | ListWithOwner) => {
-    setEditingList(list as any);
+    setEditingList(list as ListWithDetails);
   };
 
   const handleShare = (list: ListWithDetails | ListWithOwner) => {
-    setSharingList(list as any);
+    setSharingList(list as ListWithDetails);
   };
 
   return (

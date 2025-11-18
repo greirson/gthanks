@@ -87,13 +87,15 @@ export function UserEmailManager({ userId, userEmails, userName }: UserEmailMana
         body: JSON.stringify({ email: newEmail, sendVerification }),
       });
 
-      const data = await response.json();
+      const data: { email?: UserEmail; error?: string } = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to add email');
+        throw new Error(data.error ?? 'Failed to add email');
       }
 
-      setEmails([...emails, data.email]);
+      if (data.email) {
+        setEmails([...emails, data.email]);
+      }
       setNewEmail('');
       showMessage(
         'success',
@@ -113,10 +115,10 @@ export function UserEmailManager({ userId, userEmails, userName }: UserEmailMana
         method: 'DELETE',
       });
 
-      const data = await response.json();
+      const data: { error?: string } = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to remove email');
+        throw new Error(data.error ?? 'Failed to remove email');
       }
 
       setEmails(emails.filter((e) => e.id !== emailId));
@@ -136,10 +138,10 @@ export function UserEmailManager({ userId, userEmails, userName }: UserEmailMana
         method: 'POST',
       });
 
-      const data = await response.json();
+      const data: { error?: string } = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to set primary email');
+        throw new Error(data.error ?? 'Failed to set primary email');
       }
 
       // Update emails list
@@ -164,10 +166,10 @@ export function UserEmailManager({ userId, userEmails, userName }: UserEmailMana
         method: 'POST',
       });
 
-      const data = await response.json();
+      const data: { error?: string } = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to resend verification email');
+        throw new Error(data.error ?? 'Failed to resend verification email');
       }
 
       showMessage('success', 'Verification email sent. User should check their inbox.');
@@ -183,7 +185,9 @@ export function UserEmailManager({ userId, userEmails, userName }: UserEmailMana
 
   const canRemoveEmail = (email: UserEmail): boolean => {
     // Cannot remove if it's the only email
-    if (emails.length === 1) {return false;}
+    if (emails.length === 1) {
+      return false;
+    }
     // Cannot remove if it's the only verified email and is primary
     const verifiedEmails = emails.filter((e) => e.isVerified);
     return !(email.isPrimary && verifiedEmails.length === 1);
@@ -325,7 +329,7 @@ export function UserEmailManager({ userId, userEmails, userName }: UserEmailMana
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
-                    handleAddEmail();
+                    void handleAddEmail();
                   }
                 }}
                 disabled={loading !== null}

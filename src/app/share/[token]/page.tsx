@@ -68,14 +68,14 @@ export default function PublicListPage({ params }: PageProps) {
       try {
         const response = await fetch('/api/user/profile');
         if (response.ok) {
-          const userData = await response.json();
+          const userData: { id: string } = await response.json();
           setCurrentUserId(userData.id);
         }
       } catch {
         // User is not logged in, keep currentUserId as null
       }
     };
-    fetchCurrentUser();
+    void fetchCurrentUser();
   }, []);
 
   // Check if we need password - more robust detection
@@ -187,7 +187,7 @@ export default function PublicListPage({ params }: PageProps) {
         <div className="text-center">
           <h1 className="mb-4 text-2xl font-bold">List not found</h1>
           <p className="mb-6 text-muted-foreground">
-            The list you{"'"}re looking for doesn{"'"}t exist or is no longer available.
+            The list you&apos;re looking for doesn&apos;t exist or is no longer available.
           </p>
         </div>
       </div>
@@ -231,12 +231,12 @@ export default function PublicListPage({ params }: PageProps) {
               <h3 className="mb-1 font-medium text-foreground">
                 {currentUserId === list.owner.id
                   ? 'Viewing Your Wishlist'
-                  : `Viewing ${list.owner.name}'s Wishlist`}
+                  : `Viewing ${list.owner.name}&apos;s Wishlist`}
               </h3>
               <p className="text-sm text-muted-foreground">
                 {currentUserId === list.owner.id ? (
                   <>
-                    This is how others see your wishlist. They can reserve items, but you can't
+                    This is how others see your wishlist. They can reserve items, but you can&apos;t
                     reserve your own wishes.
                   </>
                 ) : (
@@ -262,7 +262,7 @@ export default function PublicListPage({ params }: PageProps) {
             isOwner: currentUserId === list.owner.id,
           })) || []
         }
-        onReserve={handleReserveWish as any}
+        onReserve={(wish: Wish) => handleReserveWish(wish)}
         reservedWishIds={
           reservations
             ? Object.keys(reservations).filter((wishId) => reservations[wishId].isReserved)
@@ -274,13 +274,15 @@ export default function PublicListPage({ params }: PageProps) {
       />
 
       {/* Reservation Dialog */}
-      <ReservationDialog
-        wish={selectedWish as any}
-        open={showReservationDialog}
-        onOpenChange={setShowReservationDialog}
-        shareToken={params.token}
-        isAuthenticated={false}
-      />
+      {selectedWish && (
+        <ReservationDialog
+          wish={selectedWish}
+          open={showReservationDialog}
+          onOpenChange={setShowReservationDialog}
+          shareToken={params.token}
+          isAuthenticated={false}
+        />
+      )}
     </div>
   );
 }

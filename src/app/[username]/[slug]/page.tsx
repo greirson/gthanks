@@ -72,11 +72,11 @@ async function fetchListByVanityUrl(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Failed to fetch list' }));
-    throw new Error(error.error || 'Failed to fetch list');
+    const error: { error?: string } = await response.json().catch(() => ({ error: 'Failed to fetch list' }));
+    throw new Error(error.error ?? 'Failed to fetch list');
   }
 
-  return response.json();
+  return response.json() as Promise<ListResponse>;
 }
 
 export default function PublicListVanityUrlPage() {
@@ -106,7 +106,7 @@ export default function PublicListVanityUrlPage() {
       try {
         const response = await fetch('/api/user/profile');
         if (response.ok) {
-          const userData = await response.json();
+          const userData: { id: string } = await response.json();
           setCurrentUserId(userData.id);
         }
       } catch {
@@ -226,7 +226,7 @@ export default function PublicListVanityUrlPage() {
               <p className="text-muted-foreground">This list requires a password to view</p>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handlePasswordSubmit} className="space-y-4">
+              <form onSubmit={(e) => void handlePasswordSubmit(e)} className="space-y-4">
                 <div>
                   <Label htmlFor="password">Password</Label>
                   <Input
@@ -271,7 +271,7 @@ export default function PublicListVanityUrlPage() {
         <div className="text-center">
           <h1 className="mb-4 text-2xl font-bold">List not found</h1>
           <p className="mb-6 text-muted-foreground">
-            The list you{"'"}re looking for doesn{"'"}t exist or is no longer available.
+            The list you&apos;re looking for doesn&apos;t exist or is no longer available.
           </p>
         </div>
       </div>
@@ -339,12 +339,12 @@ export default function PublicListVanityUrlPage() {
                 <p className="text-sm text-muted-foreground">
                   {currentUserId === list.owner.id ? (
                     <>
-                      This is how others see your wishlist. They can reserve items, but you can't
+                      This is how others see your wishlist. They can reserve items, but you can&apos;t
                       reserve your own wishes.
                     </>
                   ) : (
                     <>
-                      Click the "Reserve" button on any item you plan to buy. Your name stays hidden from {list.owner.name} until after the gift is given. This prevents duplicate gifts!
+                      Click the &quot;Reserve&quot; button on any item you plan to buy. Your name stays hidden from {list.owner.name} until after the gift is given. This prevents duplicate gifts!
                     </>
                   )}
                 </p>
@@ -380,7 +380,7 @@ export default function PublicListVanityUrlPage() {
             isOwner: currentUserId === list.owner.id,
           })) || []
         }
-        onReserve={handleReserveWish as any}
+        onReserve={(wish: Wish) => handleReserveWish(wish)}
         reservedWishIds={
           reservations
             ? Object.keys(reservations).filter((wishId) => reservations[wishId].isReserved)
@@ -392,13 +392,15 @@ export default function PublicListVanityUrlPage() {
       />
 
       {/* Reservation Dialog */}
-      <ReservationDialog
-        wish={selectedWish as any}
-        open={showReservationDialog}
-        onOpenChange={setShowReservationDialog}
-        shareToken={list.shareToken || undefined}
-        isAuthenticated={false}
-      />
+      {selectedWish && (
+        <ReservationDialog
+          wish={selectedWish}
+          open={showReservationDialog}
+          onOpenChange={setShowReservationDialog}
+          shareToken={list.shareToken ?? undefined}
+          isAuthenticated={false}
+        />
+      )}
     </div>
   );
 }

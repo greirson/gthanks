@@ -15,7 +15,9 @@ export default function AcceptInvitationPage() {
   useEffect(() => {
     async function acceptInvitation() {
       // Wait for auth to load
-      if (status === 'loading') {return;}
+      if (status === 'loading') {
+        return;
+      }
 
       // Redirect to login if not authenticated
       if (status === 'unauthenticated') {
@@ -32,11 +34,11 @@ export default function AcceptInvitationPage() {
         });
 
         if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error || 'Failed to accept invitation');
+          const data: { error?: string } = await response.json();
+          throw new Error(data.error ?? 'Failed to accept invitation');
         }
 
-        const data = await response.json();
+        const data: { group: { name: string } } = await response.json();
         setGroupName(data.group.name);
 
         // Redirect to groups page after a brief delay
@@ -49,7 +51,7 @@ export default function AcceptInvitationPage() {
       }
     }
 
-    acceptInvitation();
+    void acceptInvitation();
   }, [status, params.token, router]);
 
   if (status === 'loading' || loading) {
@@ -86,7 +88,7 @@ export default function AcceptInvitationPage() {
         <div className="mb-4 text-4xl">✓</div>
         <h1 className="mb-2 text-xl font-semibold text-green-900">Invitation Accepted!</h1>
         <p className="mb-4 text-green-700">
-          You've successfully joined <strong>{groupName}</strong>
+          You&apos;ve successfully joined <strong>{groupName}</strong>
         </p>
         <p className="text-sm text-green-600">Redirecting to groups...</p>
       </div>
