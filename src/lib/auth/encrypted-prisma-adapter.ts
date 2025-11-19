@@ -96,7 +96,8 @@ export function createEncryptedPrismaAdapter(): Adapter {
 
       // Use base adapter's linkAccount with enhanced data
       if (baseAdapter.linkAccount) {
-        return baseAdapter.linkAccount(accountData);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return
+        return baseAdapter.linkAccount(accountData) as Promise<AdapterAccount>;
       }
 
       // Fallback: direct database creation if adapter doesn't expose linkAccount

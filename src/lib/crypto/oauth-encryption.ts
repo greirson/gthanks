@@ -137,7 +137,7 @@ export function decryptToken(encrypted: string, iv: string): string {
     decrypted += decipher.final('utf8');
 
     return decrypted;
-  } catch (_error) {
+  } catch {
     // SECURITY: Don't log the encrypted data or error details to prevent leaking token info
     logger.error('Failed to decrypt OAuth token (invalid key, tampered data, or corrupted IV)');
     throw new Error('Token decryption failed');
