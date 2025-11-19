@@ -338,6 +338,35 @@ const authOptions: NextAuthOptions = {
           if (existingUser) {
             // User exists with this email - link the OAuth account
             try {
+              // Import encryption utilities for manual account creation
+              const { encryptToken } = await import('@/lib/crypto/oauth-encryption');
+
+              // Encrypt tokens before storage
+              let encryptedAccessToken: string | null = null;
+              let encryptedRefreshToken: string | null = null;
+              let tokenIv: string | null = null;
+
+              if (account.access_token) {
+                try {
+                  const encrypted = encryptToken(account.access_token);
+                  encryptedAccessToken = encrypted.encrypted;
+                  tokenIv = encrypted.iv;
+                } catch (encryptError) {
+                  logger.error('Failed to encrypt access token during manual account linking', encryptError);
+                  // Continue with plaintext on encryption failure
+                }
+              }
+
+              if (account.refresh_token && tokenIv) {
+                try {
+                  const encrypted = encryptToken(account.refresh_token);
+                  encryptedRefreshToken = encrypted.encrypted;
+                } catch (encryptError) {
+                  logger.error('Failed to encrypt refresh token during manual account linking', encryptError);
+                  // Continue with plaintext on encryption failure
+                }
+              }
+
               await db.account.create({
                 data: {
                   userId: existingUser.id,
@@ -351,6 +380,9 @@ const authOptions: NextAuthOptions = {
                   scope: account.scope ?? null,
                   id_token: account.id_token ?? null,
                   session_state: account.session_state ?? null,
+                  encryptedAccessToken,
+                  encryptedRefreshToken,
+                  tokenIv,
                 },
               });
 
