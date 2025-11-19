@@ -1,7 +1,6 @@
 'use client';
 
 import { Wish as ApiWish } from '@/lib/validators/api-responses/wishes';
-import { Wish } from '@prisma/client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Eye, Lock } from 'lucide-react';
 
