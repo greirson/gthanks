@@ -4,6 +4,7 @@ import { getCurrentUser } from '@/lib/auth-utils';
 import { getUserFriendlyError } from '@/lib/errors';
 import { imageProcessor } from '@/lib/services/image-processor';
 import { logger } from '@/lib/services/logger';
+import { rateLimiter, getRateLimitHeaders } from '@/lib/rate-limiter';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
@@ -44,6 +45,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: getUserFriendlyError('UNAUTHORIZED'), code: 'UNAUTHORIZED' },
         { status: 401 }
+      );
+    }
+
+    // Apply rate limit (user-based for authenticated endpoint)
+    const rateLimitResult = await rateLimiter.check('image-upload', user.id);
+
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Too many requests. Please wait a moment and try again',
+          code: 'RATE_LIMIT_EXCEEDED',
+          retryAfter: rateLimitResult.retryAfter,
+        },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateLimitResult),
+        }
       );
     }
 

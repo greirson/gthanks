@@ -37,6 +37,8 @@ Global rate limiting has been implemented to protect all API routes from abuse a
 | username-set | 1 hour | 5 | Username updates (per user) |
 | username-set-ip | 1 hour | 10 | Username updates (per IP) |
 | slug-set | 1 hour | 10 | Slug updates |
+| **metadata-extract** | 1 minute | 5 | Web scraping (expensive network I/O) |
+| **image-upload** | 1 hour | 10 | Image processing (CPU-intensive) |
 
 ## Excluded Endpoints
 

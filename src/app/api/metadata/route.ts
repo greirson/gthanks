@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { metadataExtractor } from '@/lib/scraping/metadata-extractor';
+import { rateLimiter, getClientIdentifier, getRateLimitHeaders } from '@/lib/rate-limiter';
 
 const MetadataRequestSchema = z.object({
   url: z.string().url(),
@@ -33,6 +34,24 @@ const MetadataRequestSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
+    // Apply rate limit (IP-based for anonymous endpoint)
+    const ip = getClientIdentifier(request);
+    const rateLimitResult = await rateLimiter.check('metadata-extract', ip);
+
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Too many requests. Please wait a moment and try again',
+          code: 'RATE_LIMIT_EXCEEDED',
+          retryAfter: rateLimitResult.retryAfter,
+        },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateLimitResult),
+        }
+      );
+    }
+
     const body = (await request.json()) as unknown;
     const { url } = MetadataRequestSchema.parse(body);
 

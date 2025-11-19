@@ -294,6 +294,17 @@ rateLimiter.configure('slug-set', {
   maxRequests: 10, // 10 slug updates per hour per user
 });
 
+// Expensive endpoint rate limits
+rateLimiter.configure('metadata-extract', {
+  windowMs: 60 * 1000, // 1 minute
+  maxRequests: 5, // 5 requests per minute per IP (web scraping is expensive)
+});
+
+rateLimiter.configure('image-upload', {
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 10, // 10 uploads per hour per user (image processing is CPU-intensive)
+});
+
 export function getRateLimitHeaders(result: Awaited<ReturnType<typeof rateLimiter.check>>) {
   return {
     'X-RateLimit-Limit': result.limit.toString(),
