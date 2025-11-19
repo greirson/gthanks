@@ -47,7 +47,7 @@ export function GiftCardItem({
         "bg-secondary/50 hover:bg-secondary/70 transition-colors",
         "border border-secondary-foreground/10",
         "min-w-0 max-w-full",
-        "h-14" // Fixed height for uniform pill sizes
+        "h-11" // Fixed height for uniform pill sizes (44px)
       )}
     >
       {/* Favicon */}
