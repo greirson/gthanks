@@ -1,4 +1,4 @@
-import { PrismaAdapter } from '@next-auth/prisma-adapter';
+import { createEncryptedPrismaAdapter } from '@/lib/auth/encrypted-prisma-adapter';
 
 import { type Account, type NextAuthOptions, type User as NextAuthUser } from 'next-auth';
 import { type AdapterUser } from 'next-auth/adapters';
@@ -23,7 +23,7 @@ import { UserProfileService } from '@/lib/services/user-profile';
 import { sanitizeRedirectUrl } from '@/lib/utils/url-validation';
 
 const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(db),
+  adapter: createEncryptedPrismaAdapter(),
   providers: [
     EmailProvider({
       from: process.env.EMAIL_FROM || 'noreply@localhost',
