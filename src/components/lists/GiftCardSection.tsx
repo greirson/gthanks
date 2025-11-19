@@ -6,14 +6,8 @@ import { Plus, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { GiftCardItem } from './GiftCardItem';
-import { AddGiftCardDialog } from './AddGiftCardDialog';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import {
-  GiftCard,
-  useAddGiftCardDialog,
-  useEditGiftCardDialog,
-  useRemoveGiftCardDialog,
-} from './hooks/useGiftCardDialogs';
+import { ManageGiftCardsDialog } from './ManageGiftCardsDialog';
+import { useManageGiftCardsDialog, type GiftCard } from './hooks/useManageGiftCardsDialog';
 import { listsApi } from '@/lib/api/lists';
 import { useDebounce } from '@/hooks/use-debounce';
 
@@ -34,9 +28,7 @@ export function GiftCardSection({
   const [giftCards, setGiftCards] = useState<GiftCard[]>(initialCards || []);
   const debouncedGiftCards = useDebounce(giftCards, 500); // Auto-save after 500ms
 
-  const addDialog = useAddGiftCardDialog();
-  const editDialog = useEditGiftCardDialog();
-  const removeDialog = useRemoveGiftCardDialog();
+  const manageDialog = useManageGiftCardsDialog(giftCards);
 
   // Update mutation
   const updateMutation = useMutation({
@@ -71,30 +63,24 @@ export function GiftCardSection({
     setGiftCards(initialCards || []);
   }, [initialCards]);
 
-  const handleAdd = useCallback((card: GiftCard) => {
-    if (giftCards.length >= 8) {
+  const handleManageCards = useCallback(async (updatedCards: GiftCard[]) => {
+    try {
+      await updateMutation.mutateAsync(updatedCards);
+      setGiftCards(updatedCards);
+      onUpdate?.(updatedCards);
       toast({
-        title: 'Maximum cards reached',
-        description: 'You can only have up to 8 gift cards per list',
+        title: 'Gift cards updated',
+        description: 'Your gift card preferences have been saved',
+      });
+    } catch (error) {
+      console.error('Failed to update gift cards:', error);
+      toast({
+        title: 'Failed to save',
+        description: 'Please try again',
         variant: 'destructive',
       });
-      return;
     }
-    setGiftCards([...giftCards, card]);
-  }, [giftCards, toast]);
-
-  const handleEdit = useCallback((card: GiftCard, index: number) => {
-    const updatedCards = [...giftCards];
-    updatedCards[index] = card;
-    setGiftCards(updatedCards);
-    editDialog.close();
-  }, [giftCards, editDialog]);
-
-  const handleRemove = useCallback((index: number) => {
-    const updatedCards = giftCards.filter((_, i) => i !== index);
-    setGiftCards(updatedCards);
-    removeDialog.close();
-  }, [giftCards, removeDialog]);
+  }, [updateMutation, onUpdate, toast]);
 
   // Hide entire section when no gift cards (Fix #1)
   if (!giftCards || giftCards.length === 0) {
@@ -105,19 +91,20 @@ export function GiftCardSection({
           <Button
             variant="outline"
             size="sm"
-            onClick={addDialog.open}
+            onClick={manageDialog.open}
             className="gap-2"
           >
             <CreditCard className="h-4 w-4" />
-            Add Gift Card
+            Manage Gift Cards
           </Button>
 
-          {/* Add Dialog */}
-          <AddGiftCardDialog
-            isOpen={addDialog.isOpen}
-            onOpenChange={addDialog.close}
-            onAdd={handleAdd}
-            existingCards={giftCards}
+          {/* Manage Dialog */}
+          <ManageGiftCardsDialog
+            isOpen={manageDialog.isOpen}
+            cards={giftCards}
+            onClose={manageDialog.handleClose}
+            onSave={handleManageCards}
+            dialogProps={manageDialog.dialogProps}
           />
         </div>
       );
@@ -137,11 +124,11 @@ export function GiftCardSection({
           <Button
             variant="ghost"
             size="sm"
-            onClick={addDialog.open}
+            onClick={manageDialog.open}
             disabled={giftCards.length >= 8}
           >
             <Plus className="h-4 w-4 mr-1" />
-            Add
+            Manage Gift Cards
           </Button>
         )}
       </div>
@@ -151,46 +138,17 @@ export function GiftCardSection({
           <GiftCardItem
             key={`${card.name}-${index}`}
             card={card}
-            index={index}
-            isOwner={canEdit}
-            onEdit={canEdit ? editDialog.open : undefined}
-            onRemove={canEdit ? removeDialog.open : undefined}
           />
         ))}
       </div>
 
-      {/* Add Dialog */}
-      <AddGiftCardDialog
-        isOpen={addDialog.isOpen}
-        onOpenChange={addDialog.close}
-        onAdd={handleAdd}
-        existingCards={giftCards}
-      />
-
-      {/* Edit Dialog - reuse Add dialog with edit mode */}
-      {editDialog.editingCard && (
-        <AddGiftCardDialog
-          isOpen={editDialog.isOpen}
-          onOpenChange={editDialog.close}
-          onAdd={(card) => handleEdit(card, editDialog.editingIndex)}
-          existingCards={giftCards}
-        />
-      )}
-
-      {/* Remove Confirmation Dialog */}
-      <ConfirmDialog
-        open={removeDialog.isOpen}
-        onOpenChange={removeDialog.close}
-        title="Remove Gift Card"
-        description={`Are you sure you want to remove "${removeDialog.cardToRemove?.card.name}"?`}
-        confirmText="Remove"
-        cancelText="Cancel"
-        onConfirm={() => {
-          if (removeDialog.cardToRemove) {
-            handleRemove(removeDialog.cardToRemove.index);
-          }
-        }}
-        variant="destructive"
+      {/* Manage Dialog */}
+      <ManageGiftCardsDialog
+        isOpen={manageDialog.isOpen}
+        cards={giftCards}
+        onClose={manageDialog.handleClose}
+        onSave={handleManageCards}
+        dialogProps={manageDialog.dialogProps}
       />
     </div>
   );
