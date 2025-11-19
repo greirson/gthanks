@@ -5,7 +5,6 @@ export interface GiftCard {
   name: string;
   url: string;
   amount?: number;
-  currency?: string;
 }
 
 /**

@@ -96,12 +96,37 @@ export function GiftCardSection({
     removeDialog.close();
   }, [giftCards, removeDialog]);
 
-  if (!canEdit && (!giftCards || giftCards.length === 0)) {
-    return null; // Don't show empty section to non-owners
+  // Hide entire section when no gift cards (Fix #1)
+  if (!giftCards || giftCards.length === 0) {
+    // Only show Add button for owners when there are no cards
+    if (canEdit) {
+      return (
+        <div className="mb-12"> {/* Fix #3: Increased spacing */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={addDialog.open}
+            className="gap-2"
+          >
+            <CreditCard className="h-4 w-4" />
+            Add Gift Card
+          </Button>
+
+          {/* Add Dialog */}
+          <AddGiftCardDialog
+            isOpen={addDialog.isOpen}
+            onOpenChange={addDialog.close}
+            onAdd={handleAdd}
+            existingCards={giftCards}
+          />
+        </div>
+      );
+    }
+    return null; // Don't show anything for non-owners
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 mb-12"> {/* Fix #3: Increased spacing from mb-8 to mb-12 */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
           <CreditCard className="h-4 w-4" />
@@ -121,37 +146,18 @@ export function GiftCardSection({
         )}
       </div>
 
-      {giftCards.length > 0 ? (
-        <div className="flex flex-wrap gap-2">
-          {giftCards.map((card, index) => (
-            <GiftCardItem
-              key={`${card.name}-${index}`}
-              card={card}
-              index={index}
-              isOwner={canEdit}
-              onEdit={canEdit ? editDialog.open : undefined}
-              onRemove={canEdit ? removeDialog.open : undefined}
-            />
-          ))}
-        </div>
-      ) : (
-        canEdit && (
-          <div className="py-8 px-4 text-center border-2 border-dashed border-border rounded-lg">
-            <CreditCard className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground mb-3">
-              No gift cards added yet
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={addDialog.open}
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Add Gift Card
-            </Button>
-          </div>
-        )
-      )}
+      <div className="flex flex-wrap gap-2">
+        {giftCards.map((card, index) => (
+          <GiftCardItem
+            key={`${card.name}-${index}`}
+            card={card}
+            index={index}
+            isOwner={canEdit}
+            onEdit={canEdit ? editDialog.open : undefined}
+            onRemove={canEdit ? removeDialog.open : undefined}
+          />
+        ))}
+      </div>
 
       {/* Add Dialog */}
       <AddGiftCardDialog

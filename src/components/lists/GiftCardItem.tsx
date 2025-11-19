@@ -23,17 +23,11 @@ function getFaviconUrl(url: string): string {
   }
 }
 
-function formatCurrency(amount: number | undefined, currency: string = 'USD'): string {
+function formatAmount(amount: number | undefined): string {
   if (!amount) return '';
   
-  const formatter = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  });
-  
-  return formatter.format(amount);
+  // Simple $ prefix format
+  return `$${amount.toFixed(2).replace(/\.00$/, '')}`;
 }
 
 export function GiftCardItem({ 
@@ -82,7 +76,7 @@ export function GiftCardItem({
         </span>
         {card.amount && (
           <span className="text-sm text-muted-foreground whitespace-nowrap">
-            {formatCurrency(card.amount, card.currency)}
+            {formatAmount(card.amount)}
           </span>
         )}
       </a>

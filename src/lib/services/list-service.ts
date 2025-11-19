@@ -148,7 +148,7 @@ export class ListService {
       name: String(card.name || '').slice(0, 200),
       url: String(card.url || ''),
       amount: card.amount ? Number(card.amount) : undefined,
-      currency: card.currency ? String(card.currency).slice(0, 3) : 'USD'
+      
     })).filter(card => card.name && card.url);
   }
 

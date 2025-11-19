@@ -374,18 +374,6 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
             shareToken={list.shareToken}
           />
 
-          {/* Gift Cards Section */}
-          <GiftCardSection
-            listId={list.id}
-            giftCards={
-              typeof list.giftCardPreferences === 'string' 
-                ? JSON.parse(list.giftCardPreferences || '[]')
-                : (list.giftCardPreferences || [])
-            }
-            canEdit={list.canEdit ?? false}
-          />
-
-
           {/* Controls Bar - Filter button and View toggle */}
           <WishControlsBar
             isHydrated={isHydrated}
@@ -397,6 +385,17 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
             showSelectButton={!!list.isOwner}
             isSelectionMode={isSelectionMode}
             onToggleSelection={toggleSelectionMode}
+          />
+
+          {/* Gift Cards Section */}
+          <GiftCardSection
+            listId={list.id}
+            giftCards={
+              typeof list.giftCardPreferences === 'string' 
+                ? JSON.parse(list.giftCardPreferences || '[]')
+                : (list.giftCardPreferences || [])
+            }
+            canEdit={list.canEdit ?? false}
           />
 
           {/* Desktop Wishes Display */}

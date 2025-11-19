@@ -34,7 +34,6 @@ export function AddGiftCardDialog({
   const [name, setName] = useState('');
   const [url, setUrl] = useState('');
   const [amount, setAmount] = useState('');
-  const [currency, setCurrency] = useState('USD');
   const nameInputRef = useRef<HTMLInputElement>(null);
 
   // Focus on name input when dialog opens
@@ -92,7 +91,6 @@ export function AddGiftCardDialog({
       name: name.trim(),
       url: url.trim(),
       amount: amount ? parseFloat(amount) : undefined,
-      currency: currency || 'USD',
     };
 
     onAdd(newCard);
@@ -101,7 +99,6 @@ export function AddGiftCardDialog({
     setName('');
     setUrl('');
     setAmount('');
-    setCurrency('USD');
     onOpenChange(false);
   };
 
@@ -109,7 +106,6 @@ export function AddGiftCardDialog({
     setName('');
     setUrl('');
     setAmount('');
-    setCurrency('USD');
     onOpenChange(false);
   };
 
@@ -152,36 +148,17 @@ export function AddGiftCardDialog({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="amount">Amount (optional)</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="25.00"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="currency">Currency</Label>
-                <select
-                  id="currency"
-                  value={currency}
-                  onChange={(e) => setCurrency(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="USD">USD</option>
-                  <option value="EUR">EUR</option>
-                  <option value="GBP">GBP</option>
-                  <option value="CAD">CAD</option>
-                  <option value="AUD">AUD</option>
-                  <option value="JPY">JPY</option>
-                </select>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="amount">Amount (optional)</Label>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                min="0"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="25.00"
+              />
             </div>
 
             {existingCards.length >= 8 && (
