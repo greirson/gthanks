@@ -67,6 +67,25 @@ pnpm format                # Prettier
 
 ### 3. Commit Your Changes
 
+**Pre-Commit Checks (Automatic):**
+
+When you commit, the following checks run automatically:
+1. **lint-staged** - Auto-fixes formatting and lint issues on changed files
+2. **TypeScript type check** - Ensures no type errors exist
+3. **ESLint** - Ensures no linting errors exist
+
+If any check fails, the commit will be blocked. Fix the errors and try again.
+
+**Bypassing Pre-Commit Checks (Emergency Only):**
+
+```bash
+# Only use in emergencies (hotfixes, deployment blockers)
+git commit --no-verify -m "hotfix: critical production fix"
+
+# Note: You must still fix the errors before creating a PR
+# CI/CD will catch the issues if you bypass locally
+```
+
 **Commit Message Format:**
 
 ```
@@ -522,6 +541,42 @@ pnpm db:studio
 ---
 
 ## Troubleshooting
+
+### Pre-Commit Hook Failures
+
+**TypeScript Errors:**
+```bash
+# See all type errors
+pnpm typecheck
+
+# Fix each error manually
+# Common issues:
+# - Missing type annotations
+# - Type mismatches
+# - Import errors
+```
+
+**ESLint Errors:**
+```bash
+# Auto-fix issues
+pnpm lint:fix
+
+# Check remaining issues
+pnpm lint
+
+# Common issues:
+# - Unused variables
+# - Missing dependencies in useEffect
+# - Service layer violations
+```
+
+**Emergency Bypass (Use Sparingly):**
+```bash
+# Only for critical situations
+git commit --no-verify -m "hotfix: emergency fix"
+
+# Remember: You must fix errors before PR
+```
 
 ### PR Checks Failing
 
