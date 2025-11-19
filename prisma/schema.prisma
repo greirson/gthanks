@@ -179,6 +179,7 @@ model List {
   shareToken      String?  @unique
   slug            String? // Slug for vanity URLs (unique per owner)
   hideFromProfile Boolean  @default(false) // Hide from public profile
+  giftCardPreferences String?  @default("[]") // JSON string of gift card links: {name, url, amount?, currency?}
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
