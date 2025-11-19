@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X, ExternalLink, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -24,7 +24,7 @@ function getFaviconUrl(url: string): string {
 }
 
 function formatAmount(amount: number | undefined): string {
-  if (!amount) return '';
+  if (!amount) {return '';}
   
   // Simple $ prefix format
   return `$${amount.toFixed(2).replace(/\.00$/, '')}`;
@@ -43,10 +43,11 @@ export function GiftCardItem({
   return (
     <div
       className={cn(
-        "group relative inline-flex items-center gap-2 px-3 py-2 rounded-full",
+        "group relative inline-flex items-center gap-2 px-3 rounded-full",
         "bg-secondary/50 hover:bg-secondary/70 transition-colors",
         "border border-secondary-foreground/10",
-        "min-w-0 max-w-full"
+        "min-w-0 max-w-full",
+        "h-14" // Fixed height for uniform pill sizes
       )}
     >
       {/* Favicon */}
@@ -58,7 +59,7 @@ export function GiftCardItem({
           onError={() => setFaviconError(true)}
         />
       )}
-      
+
       {/* Link icon fallback */}
       {(!faviconUrl || faviconError) && (
         <ExternalLink className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
@@ -75,7 +76,7 @@ export function GiftCardItem({
           {card.name}
         </span>
         {card.amount && (
-          <span className="text-sm text-muted-foreground whitespace-nowrap">
+          <span className="text-sm text-muted-foreground whitespace-nowrap flex-shrink-0">
             {formatAmount(card.amount)}
           </span>
         )}

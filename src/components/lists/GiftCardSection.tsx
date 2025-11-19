@@ -72,10 +72,10 @@ export function GiftCardSection({
   }, [initialCards]);
 
   const handleAdd = useCallback((card: GiftCard) => {
-    if (giftCards.length >= 10) {
+    if (giftCards.length >= 8) {
       toast({
         title: 'Maximum cards reached',
-        description: 'You can only have up to 10 gift cards per list',
+        description: 'You can only have up to 8 gift cards per list',
         variant: 'destructive',
       });
       return;
@@ -138,7 +138,7 @@ export function GiftCardSection({
             variant="ghost"
             size="sm"
             onClick={addDialog.open}
-            disabled={giftCards.length >= 10}
+            disabled={giftCards.length >= 8}
           >
             <Plus className="h-4 w-4 mr-1" />
             Add
@@ -146,7 +146,7 @@ export function GiftCardSection({
         )}
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
         {giftCards.map((card, index) => (
           <GiftCardItem
             key={`${card.name}-${index}`}

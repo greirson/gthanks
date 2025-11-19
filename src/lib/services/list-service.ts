@@ -138,9 +138,9 @@ export class ListService {
       throw new ValidationError('Gift card preferences must be an array');
     }
 
-    // Max 10 gift cards
-    if (parsed.length > 10) {
-      throw new ValidationError('Maximum 10 gift cards allowed per list');
+    // Max 8 gift cards
+    if (parsed.length > 8) {
+      throw new ValidationError('Maximum 8 gift cards allowed per list');
     }
 
     // Validate each gift card
