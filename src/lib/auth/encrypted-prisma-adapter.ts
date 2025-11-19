@@ -21,7 +21,7 @@
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { type Adapter, type AdapterAccount } from 'next-auth/adapters';
 
-import { encryptToken, safeRetrieveToken } from '@/lib/crypto/oauth-encryption';
+import { encryptToken } from '@/lib/crypto/oauth-encryption';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/services/logger';
 
