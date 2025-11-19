@@ -28,7 +28,18 @@ const authOptions: NextAuthOptions = {
     EmailProvider({
       from: process.env.EMAIL_FROM || 'noreply@localhost',
       maxAge: 15 * 60, // 15 minutes
-      sendVerificationRequest: async ({ identifier: email, url }) => {
+      // Server config is required by EmailProvider constructor even when using
+      // custom sendVerificationRequest. These values are not used for sending
+      // but must be present to prevent initialization errors.
+      server: {
+        host: process.env.SMTP_HOST || 'localhost',
+        port: Number(process.env.SMTP_PORT) || 587,
+        auth: {
+          user: process.env.SMTP_USER || '',
+          pass: process.env.SMTP_PASS || '',
+        },
+      },
+      sendVerificationRequest: async ({ identifier: email, url, provider }) => {
         const emailService = createEmailService();
 
         await emailService.send({
@@ -600,6 +611,36 @@ const authOptions: NextAuthOptions = {
     signIn: '/auth/login',
     error: '/auth/error',
     verifyRequest: '/auth/verify-request',
+  },
+  // Cookie configuration for localhost development
+  // __Host- and __Secure- prefixes require HTTPS, which breaks on localhost
+  cookies: {
+    sessionToken: {
+      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+    callbackUrl: {
+      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.callback-url`,
+      options: {
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+    csrfToken: {
+      name: `${process.env.NODE_ENV === 'production' ? '__Host-' : ''}next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
   },
 };
 

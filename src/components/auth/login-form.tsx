@@ -33,7 +33,6 @@ interface LoginFormProps {
 export function LoginForm({ availableProviders, oauthConfig }: LoginFormProps) {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -90,29 +89,20 @@ export function LoginForm({ availableProviders, oauthConfig }: LoginFormProps) {
 
     try {
       // Use NextAuth email provider
+      // NOTE: Do NOT use redirect: false with email provider - it breaks email sending
+      // NextAuth email provider requires full page redirect to trigger sendVerificationRequest
       const callbackUrl = searchParams.get('callbackUrl') || `${window.location.origin}/wishes`;
-      const result = await signIn('email', {
+      await signIn('email', {
         email,
-        redirect: false,
         callbackUrl,
       });
-
-      if (result?.error) {
-        throw new Error('Failed to send login link');
-      }
-
-      setIsSuccess(true);
-      toast({
-        title: 'Success!',
-        description: 'Check your email for the login link',
-      });
+      // Page will redirect to /auth/verify-request after email is sent
     } catch (error) {
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to send login link',
         variant: 'destructive',
       });
-    } finally {
       setIsLoading(false);
     }
   };
@@ -131,9 +121,8 @@ export function LoginForm({ availableProviders, oauthConfig }: LoginFormProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {!isSuccess ? (
-            <div className={hasAnyOAuthProvider ? 'space-y-6' : ''}>
-              {/* OAuth Buttons - Only show if providers are available */}
+          <div className={hasAnyOAuthProvider ? 'space-y-6' : ''}>
+            {/* OAuth Buttons - Only show if providers are available */}
               {hasAnyOAuthProvider && (
                 <>
                   <div className="space-y-3">
@@ -259,24 +248,6 @@ export function LoginForm({ availableProviders, oauthConfig }: LoginFormProps) {
                 </ThemeButton>
               </form>
             </div>
-          ) : (
-            <div className="space-y-4 text-center">
-              <div className="text-success">✓</div>
-              <p>Check your email for the login link!</p>
-              <p className="text-sm text-muted-foreground">
-                Didn&apos;t receive it? Check your spam folder or{' '}
-                <button
-                  onClick={() => {
-                    setIsSuccess(false);
-                    setEmail('');
-                  }}
-                  className="text-primary underline"
-                >
-                  try again
-                </button>
-              </p>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>
