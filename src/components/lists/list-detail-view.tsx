@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { ViewToggle } from '@/components/ui/view-toggle';
 
 import { AddWishTabDialog } from '@/components/lists/add-wish-tab-dialog';
+import { GiftCardSection } from '@/components/lists/GiftCardSection';
 import { ListHeader } from '@/components/lists/list-header';
 import { ListDetailTopNav } from '@/components/lists/list-detail-top-nav';
 import { ListDetailWishesSection } from '@/components/lists/list-detail-wishes-section';
@@ -373,6 +374,18 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
             shareToken={list.shareToken}
           />
 
+          {/* Gift Cards Section */}
+          <GiftCardSection
+            listId={list.id}
+            giftCards={
+              typeof list.giftCardPreferences === 'string' 
+                ? JSON.parse(list.giftCardPreferences || '[]')
+                : (list.giftCardPreferences || [])
+            }
+            canEdit={list.canEdit ?? false}
+          />
+
+
           {/* Controls Bar - Filter button and View toggle */}
           <WishControlsBar
             isHydrated={isHydrated}
@@ -451,6 +464,18 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
             shareToken={list.shareToken}
             className="mb-4"
           />
+
+          {/* Gift Cards Section - Mobile */}
+          <GiftCardSection
+            listId={list.id}
+            giftCards={
+              typeof list.giftCardPreferences === 'string' 
+                ? JSON.parse(list.giftCardPreferences || '[]')
+                : (list.giftCardPreferences || [])
+            }
+            canEdit={list.canEdit ?? false}
+          />
+
 
           {/* Mobile Selection Controls */}
           {isSelectionMode && list.isOwner && (

@@ -100,7 +100,7 @@ export const GiftCardSchema = z.object({
   name: z.string().min(1).max(200),
   url: z.string().url('Invalid URL format'),
   amount: z.number().positive().optional(),
-  currency: z.string().length(3).default('USD')
+  currency: z.string().length(3).optional()
 });
 
 // List update schema with gift cards

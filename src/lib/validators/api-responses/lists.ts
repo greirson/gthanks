@@ -4,6 +4,7 @@ import { UnifiedPaginatedResponseSchema } from '@/lib/validators/pagination';
 import { flexibleDateSchema } from '@/lib/validators/helpers/date-schema';
 
 // List schema for API responses
+// List schema for API responses
 export const ListSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -13,6 +14,7 @@ export const ListSchema = z.object({
   shareToken: z.string().nullable(),
   slug: z.string().nullable(),
   hideFromProfile: z.boolean(),
+  giftCardPreferences: z.string().nullable().optional(), // JSON string of gift cards
   ownerId: z.string(),
   createdAt: flexibleDateSchema(),
   updatedAt: flexibleDateSchema(),
