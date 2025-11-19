@@ -95,8 +95,19 @@ export const ListCreateSchema = z.object({
   hideFromProfile: z.boolean().default(false),
 });
 
-// List update schema
-export const ListUpdateSchema = ListCreateSchema.partial();
+// Gift card schema
+export const GiftCardSchema = z.object({
+  name: z.string().min(1).max(200),
+  url: z.string().url('Invalid URL format'),
+  amount: z.number().positive().optional(),
+  currency: z.string().length(3).default('USD')
+});
+
+// List update schema with gift cards
+export const ListUpdateSchema = ListCreateSchema.partial().extend({
+  giftCardPreferences: z.array(GiftCardSchema).max(10).optional()
+});
+
 
 // Add wish to list schema
 export const AddWishToListSchema = z.object({

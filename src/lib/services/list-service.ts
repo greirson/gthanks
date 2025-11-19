@@ -115,6 +115,45 @@ export class ListService {
   }
 
   /**
+   * Validate gift card preferences structure
+   */
+  private validateGiftCardPreferences(giftCardPreferences: any): any[] {
+    // Handle null, undefined, or empty string
+    if (!giftCardPreferences || giftCardPreferences === '[]') {
+      return [];
+    }
+
+    // Parse if it's a string
+    let parsed: any;
+    try {
+      parsed = typeof giftCardPreferences === 'string' 
+        ? JSON.parse(giftCardPreferences) 
+        : giftCardPreferences;
+    } catch {
+      throw new ValidationError('Invalid gift card preferences format');
+    }
+
+    // Validate it's an array
+    if (!Array.isArray(parsed)) {
+      throw new ValidationError('Gift card preferences must be an array');
+    }
+
+    // Max 10 gift cards
+    if (parsed.length > 10) {
+      throw new ValidationError('Maximum 10 gift cards allowed per list');
+    }
+
+    // Validate each gift card
+    return parsed.map((card: any) => ({
+      name: String(card.name || '').slice(0, 200),
+      url: String(card.url || ''),
+      amount: card.amount ? Number(card.amount) : undefined,
+      currency: card.currency ? String(card.currency).slice(0, 3) : 'USD'
+    })).filter(card => card.name && card.url);
+  }
+
+
+  /**
    * Update list details
    */
   async updateList(listId: string, data: ListUpdateInput, userId: string): Promise<ListWithOwner> {
@@ -153,6 +192,12 @@ export class ListService {
     if (hashedPassword !== undefined) {
       updateData.password = hashedPassword;
     }
+    // Handle gift card preferences
+    if ('giftCardPreferences' in data && data.giftCardPreferences !== undefined) {
+      const validated = this.validateGiftCardPreferences(data.giftCardPreferences);
+      updateData.giftCardPreferences = JSON.stringify(validated);
+    }
+
 
     // Handle share token generation/removal based on visibility change
     if (data.visibility === 'public' || data.visibility === 'password') {
