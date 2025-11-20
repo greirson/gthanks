@@ -111,17 +111,23 @@ export class GroupListSharingService {
     const page = options?.page || 1;
     const limit = options?.limit || 20;
 
+    const whereClause: {
+      groupId: string;
+      list?: { name: { contains: string } };
+    } = {
+      groupId: groupId,
+    };
+
+    if (options?.search) {
+      whereClause.list = {
+        name: {
+          contains: options.search,
+        },
+      };
+    }
+
     const listGroups = await this.db.listGroup.findMany({
-      where: {
-        groupId: groupId,
-        ...(options?.search && {
-          list: {
-            name: {
-              contains: options.search,
-            },
-          },
-        }),
-      } as any,
+      where: whereClause,
       include: {
         list: {
           include: {

@@ -27,6 +27,18 @@ interface AvatarUploadProps {
   onAvatarChange?: (newAvatarUrl: string | null) => void;
 }
 
+interface ApiErrorResponse {
+  error: string;
+}
+
+interface AvatarUploadResponse {
+  avatarUrl: string;
+}
+
+function isApiErrorResponse(data: unknown): data is ApiErrorResponse {
+  return typeof data === 'object' && data !== null && 'error' in data && typeof data.error === 'string';
+}
+
 export function AvatarUpload({
   currentAvatar,
   userName,
@@ -77,8 +89,9 @@ export function AvatarUpload({
         router.refresh();
         toast.success('Photo removed successfully');
       } else {
-        const error = await response.json();
-        toast.error(error.error || 'Failed to remove photo');
+        const error = await response.json() as ApiErrorResponse;
+        const errorMessage = isApiErrorResponse(error) ? error.error : 'Failed to remove photo';
+        toast.error(errorMessage);
       }
     } catch {
       toast.error('Something went wrong');
@@ -167,7 +180,7 @@ export function AvatarUpload({
             });
 
             if (uploadResponse.ok) {
-              const result = await uploadResponse.json();
+              const result = await uploadResponse.json() as AvatarUploadResponse;
 
               // Optimistic update - instant UI change
               setLocalAvatar(result.avatarUrl || '');
@@ -180,8 +193,9 @@ export function AvatarUpload({
 
               toast.success('Photo updated successfully');
             } else {
-              const error = await uploadResponse.json();
-              toast.error(error.error || 'Failed to upload photo');
+              const error = await uploadResponse.json() as ApiErrorResponse;
+              const errorMessage = isApiErrorResponse(error) ? error.error : 'Failed to upload photo';
+              toast.error(errorMessage);
             }
           } catch {
             toast.error('Something went wrong');
@@ -205,7 +219,7 @@ export function AvatarUpload({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="min-h-[44px]">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRemove} disabled={isUploading} className="min-h-[44px]">
+            <AlertDialogAction onClick={() => void handleRemove()} disabled={isUploading} className="min-h-[44px]">
               {isUploading ? 'Removing...' : 'Remove'}
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -48,8 +48,14 @@ export class UserService {
       });
 
       return updatedUser;
-    } catch (error: any) {
-      if (error?.code === 'P2002' && error?.meta?.target?.includes('username')) {
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002' &&
+        error.meta?.['target'] &&
+        Array.isArray(error.meta['target']) &&
+        error.meta['target'].includes('username')
+      ) {
         throw new ConflictError('Username just taken by another user');
       }
       throw error;
@@ -121,8 +127,8 @@ export class UserService {
       }
 
       return userEmail;
-    } catch (error: any) {
-      if (error?.code === 'P2002') {
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
         throw new ConflictError('Email already in use');
       }
       throw error;
@@ -344,13 +350,19 @@ export class UserService {
     data: Prisma.UserPreferenceUpdateInput
   ) {
     // Upsert to create if doesn't exist
-    const { user: _user, ...createData } = data as any;
+    // Extract user field if present (for create)
+    const createData: Prisma.UserPreferenceCreateInput = {
+      user: { connect: { id: userId } },
+      ...(typeof data === 'object' && data !== null
+        ? Object.fromEntries(
+            Object.entries(data).filter(([key]) => key !== 'user')
+          )
+        : {}),
+    };
+
     return db.userPreference.upsert({
       where: { userId },
-      create: {
-        user: { connect: { id: userId } },
-        ...createData,
-      },
+      create: createData,
       update: data,
     });
   }
@@ -378,8 +390,14 @@ export class UserService {
         where: { id: userId },
         data: updateData,
       });
-    } catch (error: any) {
-      if (error?.code === 'P2002' && error?.meta?.target?.includes('username')) {
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002' &&
+        error.meta?.['target'] &&
+        Array.isArray(error.meta['target']) &&
+        error.meta['target'].includes('username')
+      ) {
         throw new ConflictError('Username already taken');
       }
       throw error;
@@ -412,8 +430,14 @@ export class UserService {
           usernameSetAt: username ? new Date() : null,
         },
       });
-    } catch (error: any) {
-      if (error?.code === 'P2002' && error?.meta?.target?.includes('username')) {
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002' &&
+        error.meta?.['target'] &&
+        Array.isArray(error.meta['target']) &&
+        error.meta['target'].includes('username')
+      ) {
         throw new ConflictError('Username already in use');
       }
       throw error;

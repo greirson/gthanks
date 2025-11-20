@@ -1,10 +1,11 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { Check, Copy, Plus, Share, Trash, Mail, Users } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -125,13 +126,13 @@ export function ListSharingDialog({ list, open, onOpenChange }: ListSharingDialo
       if (!response.ok) {
         throw new Error('Failed to fetch co-managers');
       }
-      const data = await response.json();
+      const data = (await response.json()) as { admins: CoManagerWithDetails[] };
       return data.admins || [];
     },
     enabled: open && list.isOwner,
   });
 
-  const coManagers: CoManagerWithDetails[] = coManagersData || [];
+  const coManagers = useMemo<CoManagerWithDetails[]>(() => coManagersData || [], [coManagersData]);
 
   // Unified access list combining owner, co-managers, and groups
   const accessItems = useMemo(() => {
@@ -272,11 +273,11 @@ export function ListSharingDialog({ list, open, onOpenChange }: ListSharingDialo
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = (await response.json()) as { error?: string };
         throw new Error(errorData.error || 'Failed to add co-manager');
       }
 
-      return response.json();
+      return response.json() as Promise<CoManagerWithDetails>;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['list-admins', list.id] });
@@ -306,11 +307,11 @@ export function ListSharingDialog({ list, open, onOpenChange }: ListSharingDialo
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = (await response.json()) as { error?: string };
         throw new Error(errorData.error || 'Failed to remove co-manager');
       }
 
-      return response.json();
+      return response.json() as Promise<{ success: boolean }>;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['list-admins', list.id] });
@@ -548,7 +549,7 @@ export function ListSharingDialog({ list, open, onOpenChange }: ListSharingDialo
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={handleCopyShareLink}
+                            onClick={() => void handleCopyShareLink()}
                             className="flex-shrink-0"
                           >
                             {copyTokenSuccess ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
@@ -569,7 +570,7 @@ export function ListSharingDialog({ list, open, onOpenChange }: ListSharingDialo
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={handleCopyVanityUrl}
+                              onClick={() => void handleCopyVanityUrl()}
                               className="flex-shrink-0"
                             >
                               {copyVanitySuccess ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
@@ -608,7 +609,7 @@ export function ListSharingDialog({ list, open, onOpenChange }: ListSharingDialo
               <CardContent>
                 {isLoadingCoManagers || isLoadingSharedGroups ? (
                   <div className="space-y-3">
-                    {[...Array(3)].map((_, i) => (
+                    {Array.from({ length: 3 }).map((_, i) => (
                       <div
                         key={i}
                         className="flex animate-pulse items-center justify-between rounded-lg bg-secondary p-3"

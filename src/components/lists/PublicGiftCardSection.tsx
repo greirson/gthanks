@@ -21,7 +21,7 @@ export function PublicGiftCardSection({ list }: PublicGiftCardSectionProps) {
   let giftCards: GiftCard[] = [];
   try {
     if (list.giftCardPreferences) {
-      giftCards = JSON.parse(list.giftCardPreferences);
+      giftCards = JSON.parse(list.giftCardPreferences) as GiftCard[];
     }
   } catch (error) {
     console.error(`Failed to parse gift card preferences for list ${list.id}:`, error);

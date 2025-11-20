@@ -36,9 +36,11 @@ export function InvitationsModal({ className }: InvitationsModalProps) {
         }
         throw new Error('Failed to fetch invitations');
       }
-      const data = await response.json();
+      const data = (await response.json()) as
+        | { invitations: unknown[] }
+        | unknown[];
       // API returns { invitations: [...], pagination: {...} }, extract invitations array
-      return data.invitations || data;
+      return Array.isArray(data) ? data : (data.invitations);
     },
     refetchInterval: 30000, // Refetch every 30 seconds
   });
@@ -51,7 +53,9 @@ export function InvitationsModal({ className }: InvitationsModalProps) {
       if (!response.ok) {
         throw new Error('Failed to fetch preferences');
       }
-      return response.json();
+      return response.json() as Promise<{
+        preferences?: { autoAcceptGroupInvitations?: boolean };
+      }>;
     },
   });
 
@@ -68,7 +72,9 @@ export function InvitationsModal({ className }: InvitationsModalProps) {
         throw new Error('Failed to update preferences');
       }
 
-      return response.json();
+      return response.json() as Promise<{
+        preferences: { autoAcceptGroupInvitations: boolean };
+      }>;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['user-preferences'] });

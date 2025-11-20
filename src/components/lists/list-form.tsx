@@ -423,7 +423,7 @@ export function ListForm({ list, onSuccess, onCancel, onDirtyStateChange, onOpen
               <div className="space-y-0.5">
                 <Label htmlFor="hideFromProfile">Hide from public profile</Label>
                 <p className="text-xs text-muted-foreground">
-                  List will still be accessible via its URL but won't appear on /{username}
+                  List will still be accessible via its URL but won&apos;t appear on /{username}
                 </p>
               </div>
               <Switch

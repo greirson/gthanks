@@ -29,7 +29,7 @@ export function useManageGiftCardsDialog(initialCards: GiftCard[]) {
   }, []);
 
   const updateCard = useCallback(
-    (index: number, field: keyof GiftCard, value: any) => {
+    (index: number, field: keyof GiftCard, value: string) => {
       setCards((prev) => {
         const updated = [...prev];
         updated[index] = { ...updated[index], [field]: value };

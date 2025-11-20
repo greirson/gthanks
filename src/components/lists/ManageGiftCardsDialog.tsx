@@ -19,7 +19,11 @@ interface ManageGiftCardsDialogProps {
   cards: GiftCard[];
   onClose: () => void;
   onSave: (cards: GiftCard[]) => void;
-  dialogProps?: any; // From usePreventUnsavedClose hook
+  dialogProps?: {
+    onOpenAutoFocus?: (event: Event) => void;
+    onInteractOutside?: (event: Event) => void;
+    onEscapeKeyDown?: (event: KeyboardEvent) => void;
+  }; // From usePreventUnsavedClose hook
 }
 
 /**
@@ -49,7 +53,7 @@ export function ManageGiftCardsDialog({
     if (isOpen) {
       dialog.resetCards();
     }
-  }, [isOpen, dialog.resetCards]);
+  }, [isOpen, dialog]);
 
   // Cleanup auto-save timeout on unmount
   useEffect(() => {

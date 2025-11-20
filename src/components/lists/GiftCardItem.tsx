@@ -34,6 +34,7 @@ export function GiftCardItem({ card }: GiftCardItemProps) {
     >
       {/* Favicon */}
       {faviconUrl && !faviconError && (
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={faviconUrl}
           alt=""

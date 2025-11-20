@@ -13,6 +13,20 @@ interface NameFormProps {
   currentName: string | null;
 }
 
+interface ApiErrorResponse {
+  error: string;
+}
+
+interface UpdateProfileResponse {
+  profile: {
+    name: string;
+  };
+}
+
+function isApiErrorResponse(data: unknown): data is ApiErrorResponse {
+  return typeof data === 'object' && data !== null && 'error' in data && typeof data.error === 'string';
+}
+
 export function NameForm({ currentName }: NameFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -31,12 +45,18 @@ export function NameForm({ currentName }: NameFormProps) {
         body: JSON.stringify({ name: newName }),
       });
 
+      const responseData = await res.json() as UpdateProfileResponse | ApiErrorResponse;
+
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to update name');
+        const errorMessage = isApiErrorResponse(responseData) ? responseData.error : 'Failed to update name';
+        throw new Error(errorMessage);
       }
 
-      return res.json();
+      if (!('profile' in responseData)) {
+        throw new Error('Invalid response format');
+      }
+
+      return responseData;
     },
     onSuccess: async (data) => {
       // Update the NextAuth session with new name

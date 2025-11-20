@@ -31,7 +31,7 @@ export function ProfileVisibilityToggle({ username, initialValue }: ProfileVisib
 
   const toggleMutation = useMutation({
     mutationFn: vanityApi.setProfileVisibility,
-    onMutate: async (newValue) => {
+    onMutate: (newValue) => {
       // Optimistically update UI
       setIsEnabled(newValue);
     },

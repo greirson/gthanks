@@ -8,6 +8,12 @@
 
 import { PrismaClient } from '@prisma/client';
 
+// Type for Prisma transaction client
+type TransactionClient = Omit<
+  PrismaClient,
+  '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'
+>;
+
 /**
  * Ensures a user has exactly one primary email
  *
@@ -23,7 +29,7 @@ import { PrismaClient } from '@prisma/client';
  * @throws Error if trying to unset the only primary email
  */
 export async function ensureOnePrimaryEmail(
-  tx: any,
+  tx: PrismaClient | TransactionClient,
   userId: string,
   emailId: string,
   isPrimary: boolean
@@ -95,7 +101,7 @@ export async function validateUserPrimaryEmail(
  * @returns Promise<void>
  */
 export async function syncUserEmailWithPrimary(
-  tx: any,
+  tx: PrismaClient | TransactionClient,
   userId: string
 ): Promise<void> {
   const primaryEmail = await tx.userEmail.findFirst({

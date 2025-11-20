@@ -420,7 +420,7 @@ export function UnifiedWishCard({
             <AlertDialogHeader>
               <AlertDialogTitle>Delete wish?</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete "{wish.title}"? This action cannot be undone.
+                Are you sure you want to delete &quot;{wish.title}&quot;? This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -687,7 +687,7 @@ export function UnifiedWishCard({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete wish?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{wish.title}"? This action cannot be undone.
+              Are you sure you want to delete &quot;{wish.title}&quot;? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

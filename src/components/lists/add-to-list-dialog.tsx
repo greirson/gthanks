@@ -93,7 +93,7 @@ export function AddToListDialog({ wishId, open, onOpenChange }: AddToListDialogP
         <div className="space-y-3">
           {isLoading && (
             <>
-              {[...Array(3)].map((_, i) => (
+              {Array.from({ length: 3 }).map((_, i) => (
                 <Card key={i}>
                   <CardHeader className="pb-3">
                     <Skeleton className="h-4 w-3/4" />

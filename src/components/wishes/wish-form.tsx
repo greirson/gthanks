@@ -90,6 +90,7 @@ export function WishForm({
   // Notify parent of dirty state changes
   useEffect(() => {
     onDirtyStateChange?.(isDirty);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDirty]); // onDirtyStateChange is stable (setState function) - no need in deps
 
   // Load user's lists for list selection
@@ -370,19 +371,23 @@ export function WishForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) {return;}
+    if (!validateForm()) {
+      return;
+    }
 
+    // At this point validateForm ensures title exists and is not empty
     const dataToSubmit = {
       ...formData,
-      title: formData.title!,
+      title: formData.title ?? '',
       wishLevel: formData.wishLevel || 1,
     } as WishCreateInput | WishUpdateInput;
 
     // Clean up empty strings and convert to null
     Object.keys(dataToSubmit).forEach((key) => {
       const typedKey = key as keyof typeof dataToSubmit;
-      if (dataToSubmit[typedKey] === '') {
-        (dataToSubmit as any)[typedKey] = null;
+      const value = dataToSubmit[typedKey];
+      if (value === '') {
+        (dataToSubmit as Record<string, unknown>)[typedKey] = null;
       }
     });
 
@@ -396,7 +401,12 @@ export function WishForm({
   const isPending = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form
+      onSubmit={(e) => {
+        void handleSubmit(e);
+      }}
+      className="space-y-6"
+    >
       {/* URL Field with Fetch Button */}
       <div className="space-y-2">
         <Label htmlFor="url">Product URL</Label>
@@ -412,7 +422,6 @@ export function WishForm({
             disabled={createMutation.isPending || updateMutation.isPending}
             aria-invalid={errors.url ? 'true' : 'false'}
             aria-describedby={errors.url ? 'url-error' : undefined}
-            autoFocus
           />
           <Button
             type="button"
@@ -434,7 +443,7 @@ export function WishForm({
           </p>
         )}
         <p className="text-xs text-muted-foreground">
-          Paste a product URL and click "Fetch" to auto-fill details
+          Paste a product URL and click &quot;Fetch&quot; to auto-fill details
         </p>
       </div>
 
@@ -471,7 +480,7 @@ export function WishForm({
             Price
             {priceFetchFailed && (
               <span className="ml-2 text-xs text-muted-foreground font-normal">
-                couldn't fetch price from site :(
+                couldn&apos;t fetch price from site :(
               </span>
             )}
           </Label>

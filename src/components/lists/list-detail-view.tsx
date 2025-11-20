@@ -10,6 +10,7 @@ import { ViewToggle } from '@/components/ui/view-toggle';
 
 import { AddWishTabDialog } from '@/components/lists/add-wish-tab-dialog';
 import { GiftCardSection } from '@/components/lists/GiftCardSection';
+import type { GiftCard } from '@/components/lists/hooks/useManageGiftCardsDialog';
 import { ListHeader } from '@/components/lists/list-header';
 import { ListDetailTopNav } from '@/components/lists/list-detail-top-nav';
 import { ListDetailWishesSection } from '@/components/lists/list-detail-wishes-section';
@@ -167,14 +168,11 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
   // Convert reservations to array of wish IDs that are reserved
   const reservedWishIds = useMemo(() => {
     if (!reservations) {
-      console.log('No reservations data yet');
       return [];
     }
-    console.log('Reservations from API:', reservations);
     const reserved = Object.entries(reservations)
       .filter(([_, res]) => res.isReserved)
       .map(([wishId]) => wishId);
-    console.log('Reserved wish IDs:', reserved);
     return reserved;
   }, [reservations]);
 
@@ -362,7 +360,12 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
             onAddWish={() => addWishDialog.open()}
             onEditList={() => editListDialog.open()}
             onShare={() => sharingDialog.open()}
-            onPublicView={getPublicUrl() ? () => window.open(getPublicUrl()!, '_blank') : undefined}
+            onPublicView={getPublicUrl() ? () => {
+              const url = getPublicUrl();
+              if (url) {
+                window.open(url, '_blank');
+              }
+            } : undefined}
           />
 
           {/* List Header - Centered */}
@@ -392,8 +395,8 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
             listId={list.id}
             giftCards={
               typeof list.giftCardPreferences === 'string'
-                ? JSON.parse(list.giftCardPreferences || '[]')
-                : (list.giftCardPreferences || [])
+                ? (JSON.parse(list.giftCardPreferences || '[]') as GiftCard[])
+                : (list.giftCardPreferences as GiftCard[] | undefined) || []
             }
             canEdit={list.canEdit ?? false}
             onUpdate={() => {
@@ -472,8 +475,8 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
             listId={list.id}
             giftCards={
               typeof list.giftCardPreferences === 'string'
-                ? JSON.parse(list.giftCardPreferences || '[]')
-                : (list.giftCardPreferences || [])
+                ? (JSON.parse(list.giftCardPreferences || '[]') as GiftCard[])
+                : (list.giftCardPreferences as GiftCard[] | undefined) || []
             }
             canEdit={list.canEdit ?? false}
             onUpdate={() => {
@@ -576,7 +579,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
             <DialogDescription>Update your list details and settings.</DialogDescription>
           </DialogHeader>
           <ListForm
-            list={list as any}
+            list={list}
             onSuccess={() => editListDialog.close()}
             onCancel={() => editListDialog.close()}
             onDirtyStateChange={(dirty) => editListDialog.setIsDirty(dirty)}
@@ -630,7 +633,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
 
       {/* Sharing Dialog */}
       <ListSharingDialog
-        list={list as any}
+        list={list}
         open={sharingDialog.isOpen}
         onOpenChange={(open) => {
           sharingDialog.setOpen(open);

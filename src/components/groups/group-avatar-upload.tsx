@@ -88,7 +88,7 @@ export function GroupAvatarUpload({
 
         toast.success('Photo removed successfully');
       } else {
-        const error = await response.json();
+        const error = (await response.json()) as { error?: string };
         toast.error(error.error || 'Failed to remove photo');
       }
     } catch {
@@ -190,7 +190,7 @@ export function GroupAvatarUpload({
             });
 
             if (uploadResponse.ok) {
-              const result = await uploadResponse.json();
+              const result = (await uploadResponse.json()) as { avatarUrl?: string };
               setLocalAvatarUrl(result.avatarUrl);
               onAvatarChange?.(result.avatarUrl || '');
 
@@ -202,7 +202,7 @@ export function GroupAvatarUpload({
 
               toast.success('Group photo updated successfully');
             } else {
-              const error = await uploadResponse.json();
+              const error = (await uploadResponse.json()) as { error?: string };
               toast.error(error.error || 'Failed to upload photo');
             }
           } catch {
@@ -227,7 +227,7 @@ export function GroupAvatarUpload({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="min-h-[44px]">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRemove} disabled={isUploading} className="min-h-[44px]">
+            <AlertDialogAction onClick={() => void handleRemove()} disabled={isUploading} className="min-h-[44px]">
               {isUploading ? 'Removing...' : 'Remove'}
             </AlertDialogAction>
           </AlertDialogFooter>

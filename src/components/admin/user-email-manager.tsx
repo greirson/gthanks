@@ -87,7 +87,7 @@ export function UserEmailManager({ userId, userEmails, userName }: UserEmailMana
         body: JSON.stringify({ email: newEmail, sendVerification }),
       });
 
-      const data: { email?: UserEmail; error?: string } = await response.json();
+      const data = (await response.json()) as { email?: UserEmail; error?: string };
 
       if (!response.ok) {
         throw new Error(data.error ?? 'Failed to add email');
@@ -115,7 +115,7 @@ export function UserEmailManager({ userId, userEmails, userName }: UserEmailMana
         method: 'DELETE',
       });
 
-      const data: { error?: string } = await response.json();
+      const data = (await response.json()) as { error?: string };
 
       if (!response.ok) {
         throw new Error(data.error ?? 'Failed to remove email');
@@ -138,7 +138,7 @@ export function UserEmailManager({ userId, userEmails, userName }: UserEmailMana
         method: 'POST',
       });
 
-      const data: { error?: string } = await response.json();
+      const data = (await response.json()) as { error?: string };
 
       if (!response.ok) {
         throw new Error(data.error ?? 'Failed to set primary email');
@@ -166,7 +166,7 @@ export function UserEmailManager({ userId, userEmails, userName }: UserEmailMana
         method: 'POST',
       });
 
-      const data: { error?: string } = await response.json();
+      const data = (await response.json()) as { error?: string };
 
       if (!response.ok) {
         throw new Error(data.error ?? 'Failed to resend verification email');
@@ -267,7 +267,7 @@ export function UserEmailManager({ userId, userEmails, userName }: UserEmailMana
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleSetPrimary(email.id)}
+                      onClick={() => void handleSetPrimary(email.id)}
                       disabled={loading !== null}
                     >
                       {loading === `primary-${email.id}` ? 'Setting...' : 'Make Primary'}
@@ -278,7 +278,7 @@ export function UserEmailManager({ userId, userEmails, userName }: UserEmailMana
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => handleResendVerification(email.id)}
+                      onClick={() => void handleResendVerification(email.id)}
                       disabled={loading !== null}
                     >
                       {loading === `resend-${email.id}` ? 'Sending...' : 'Resend Verification'}
@@ -336,7 +336,7 @@ export function UserEmailManager({ userId, userEmails, userName }: UserEmailMana
                 className="flex-1"
               />
               <Button
-                onClick={handleAddEmail}
+                onClick={() => void handleAddEmail()}
                 disabled={loading !== null || !newEmail.trim()}
                 className="sm:w-auto w-full"
               >
@@ -368,7 +368,7 @@ export function UserEmailManager({ userId, userEmails, userName }: UserEmailMana
         confirmText="Remove"
         cancelText="Cancel"
         variant="destructive"
-        onConfirm={() => handleRemoveEmail(confirmDialog.emailId)}
+        onConfirm={() => void handleRemoveEmail(confirmDialog.emailId)}
       />
     </div>
   );

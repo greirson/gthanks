@@ -41,7 +41,7 @@ export function GiftCardSection({
     onSuccess: () => {
       // Silent success - auto-save
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         title: 'Failed to save gift cards',
         description: error.message || 'Please try again',
@@ -56,6 +56,7 @@ export function GiftCardSection({
       updateMutation.mutate(debouncedGiftCards);
       onUpdate?.(debouncedGiftCards);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedGiftCards]);
 
   // Sync with prop changes
@@ -91,7 +92,7 @@ export function GiftCardSection({
           <Button
             variant="outline"
             size="sm"
-            onClick={manageDialog.open}
+            onClick={() => manageDialog.open()}
             className="gap-2"
           >
             <CreditCard className="h-4 w-4" />
@@ -103,7 +104,7 @@ export function GiftCardSection({
             isOpen={manageDialog.isOpen}
             cards={giftCards}
             onClose={manageDialog.handleClose}
-            onSave={handleManageCards}
+            onSave={(cards) => void handleManageCards(cards)}
             dialogProps={manageDialog.dialogProps}
           />
         </div>
@@ -124,7 +125,7 @@ export function GiftCardSection({
           <Button
             variant="ghost"
             size="sm"
-            onClick={manageDialog.open}
+            onClick={() => manageDialog.open()}
             disabled={giftCards.length >= 8}
           >
             <Plus className="h-4 w-4 mr-1" />
@@ -147,7 +148,7 @@ export function GiftCardSection({
         isOpen={manageDialog.isOpen}
         cards={giftCards}
         onClose={manageDialog.handleClose}
-        onSave={handleManageCards}
+        onSave={(cards) => void handleManageCards(cards)}
         dialogProps={manageDialog.dialogProps}
       />
     </div>

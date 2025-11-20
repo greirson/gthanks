@@ -63,7 +63,7 @@ export function ListGroupShares({ listId, onRemove }: ListGroupSharesProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {[...Array(2)].map((_, i) => (
+            {Array.from({ length: 2 }).map((_, i) => (
               <div
                 key={i}
                 className="flex animate-pulse items-center justify-between rounded bg-secondary p-2"

@@ -117,18 +117,21 @@ export class ListService {
   /**
    * Validate gift card preferences structure
    */
-  private validateGiftCardPreferences(giftCardPreferences: any): any[] {
+  private validateGiftCardPreferences(
+    giftCardPreferences: unknown
+  ): Array<{ name: string; url: string }> {
     // Handle null, undefined, or empty string
     if (!giftCardPreferences || giftCardPreferences === '[]') {
       return [];
     }
 
     // Parse if it's a string
-    let parsed: any;
+    let parsed: unknown;
     try {
-      parsed = typeof giftCardPreferences === 'string' 
-        ? JSON.parse(giftCardPreferences) 
-        : giftCardPreferences;
+      parsed =
+        typeof giftCardPreferences === 'string'
+          ? JSON.parse(giftCardPreferences)
+          : giftCardPreferences;
     } catch {
       throw new ValidationError('Invalid gift card preferences format');
     }
@@ -144,10 +147,20 @@ export class ListService {
     }
 
     // Validate each gift card
-    return parsed.map((card: any) => ({
-      name: String(card.name || '').slice(0, 14),
-      url: String(card.url || ''),
-    })).filter(card => card.name && card.url);
+    return parsed
+      .map((card: unknown) => {
+        if (typeof card !== 'object' || card === null) {
+          return null;
+        }
+        const cardObj = card as Record<string, unknown>;
+        const name = typeof cardObj.name === 'string' ? cardObj.name : '';
+        const url = typeof cardObj.url === 'string' ? cardObj.url : '';
+        return {
+          name: name.slice(0, 14),
+          url: url,
+        };
+      })
+      .filter((card): card is { name: string; url: string } => card !== null && card.name !== '' && card.url !== '');
   }
 
 
@@ -931,8 +944,14 @@ export class ListService {
       });
 
       return updatedList as ListWithOwner;
-    } catch (error: any) {
-      if (error?.code === 'P2002' && error?.meta?.target?.includes('slug')) {
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002' &&
+        error.meta?.['target'] &&
+        Array.isArray(error.meta['target']) &&
+        error.meta['target'].includes('slug')
+      ) {
         throw new ConflictError('Slug is already in use by another of your lists');
       }
       throw error;

@@ -28,6 +28,22 @@ interface Message {
   text: string;
 }
 
+interface ApiErrorResponse {
+  error: string;
+}
+
+interface AddEmailResponse {
+  email: UserEmail;
+}
+
+interface ApiSuccessResponse {
+  message: string;
+}
+
+function isApiErrorResponse(data: unknown): data is ApiErrorResponse {
+  return typeof data === 'object' && data !== null && 'error' in data && typeof data.error === 'string';
+}
+
 export function EmailManager({ userEmails }: EmailManagerProps) {
   const [emails, setEmails] = useState<UserEmail[]>(userEmails);
   const [newEmail, setNewEmail] = useState('');
@@ -78,15 +94,18 @@ export function EmailManager({ userEmails }: EmailManagerProps) {
         body: JSON.stringify({ email: newEmail }),
       });
 
-      const data = await response.json();
+      const data = await response.json() as AddEmailResponse | ApiErrorResponse;
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to add email');
+        const errorMessage = isApiErrorResponse(data) ? data.error : 'Failed to add email';
+        throw new Error(errorMessage);
       }
 
-      setEmails([...emails, data.email]);
-      setNewEmail('');
-      showMessage('success', 'Email added successfully. Please check your inbox to verify.');
+      if ('email' in data) {
+        setEmails([...emails, data.email]);
+        setNewEmail('');
+        showMessage('success', 'Email added successfully. Please check your inbox to verify.');
+      }
     } catch (_error) {
       showMessage('error', _error instanceof Error ? _error.message : 'Failed to add email');
     } finally {
@@ -101,10 +120,11 @@ export function EmailManager({ userEmails }: EmailManagerProps) {
         method: 'DELETE',
       });
 
-      const data = await response.json();
+      const data = await response.json() as ApiSuccessResponse | ApiErrorResponse;
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to remove email');
+        const errorMessage = isApiErrorResponse(data) ? data.error : 'Failed to remove email';
+        throw new Error(errorMessage);
       }
 
       setEmails(emails.filter((e) => e.id !== emailId));
@@ -126,10 +146,11 @@ export function EmailManager({ userEmails }: EmailManagerProps) {
         body: JSON.stringify({ emailId }),
       });
 
-      const data = await response.json();
+      const data = await response.json() as ApiSuccessResponse | ApiErrorResponse;
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to set primary email');
+        const errorMessage = isApiErrorResponse(data) ? data.error : 'Failed to set primary email';
+        throw new Error(errorMessage);
       }
 
       // Update emails list
@@ -154,10 +175,11 @@ export function EmailManager({ userEmails }: EmailManagerProps) {
         method: 'POST',
       });
 
-      const data = await response.json();
+      const data = await response.json() as ApiSuccessResponse | ApiErrorResponse;
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to resend verification email');
+        const errorMessage = isApiErrorResponse(data) ? data.error : 'Failed to resend verification email';
+        throw new Error(errorMessage);
       }
 
       showMessage('success', 'Verification email sent. Please check your inbox.');
@@ -238,7 +260,7 @@ export function EmailManager({ userEmails }: EmailManagerProps) {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => handleSetPrimary(email.id)}
+                  onClick={() => void handleSetPrimary(email.id)}
                   disabled={loading !== null}
                 >
                   {loading === `primary-${email.id}` ? 'Setting...' : 'Make Primary'}
@@ -249,7 +271,7 @@ export function EmailManager({ userEmails }: EmailManagerProps) {
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => handleResendVerification(email.id)}
+                  onClick={() => void handleResendVerification(email.id)}
                   disabled={loading !== null}
                 >
                   {loading === `resend-${email.id}` ? 'Sending...' : 'Resend Verification'}
@@ -300,14 +322,14 @@ export function EmailManager({ userEmails }: EmailManagerProps) {
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
-                handleAddEmail();
+                void handleAddEmail();
               }
             }}
             disabled={loading !== null}
             className="flex-1"
           />
           <Button
-            onClick={handleAddEmail}
+            onClick={() => void handleAddEmail()}
             disabled={loading !== null || !newEmail.trim()}
             className="sm:w-auto w-full"
           >
@@ -330,7 +352,7 @@ export function EmailManager({ userEmails }: EmailManagerProps) {
         confirmText="Remove"
         cancelText="Cancel"
         variant="destructive"
-        onConfirm={() => handleRemoveEmail(confirmDialog.emailId)}
+        onConfirm={() => void handleRemoveEmail(confirmDialog.emailId)}
       />
     </div>
   );

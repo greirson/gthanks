@@ -3,7 +3,6 @@
 import { Filter, Grid2x2, List, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 
 export type ViewMode = 'list' | 'grid';
