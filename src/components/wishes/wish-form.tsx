@@ -4,7 +4,7 @@ import { Wish } from '@/lib/validators/api-responses/wishes';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { simplifyProductUrl } from '@/lib/utils/url-simplification';
 
 import { Button } from '@/components/ui/button';
@@ -42,6 +42,7 @@ export function WishForm({
   const [isExtractingMetadata, setIsExtractingMetadata] = useState(false);
   const [priceFetchFailed, setPriceFetchFailed] = useState(false);
   const [selectedListIds, setSelectedListIds] = useState<string[]>(defaultListId ? [defaultListId] : []);
+  const initialListIdsRef = useRef<string[]>([]);
   const isEditing = Boolean(wish);
 
   // Form state
@@ -75,7 +76,16 @@ export function WishForm({
   );
 
   // Track form dirty state
-  const { isDirty } = useFormDirtyState(initialFormData, formData);
+  const { isDirty: isFormDataDirty } = useFormDirtyState(initialFormData, formData);
+
+  // Check if lists have changed from their initial state
+  const areListsDirty = useMemo(() => {
+    const initial = [...initialListIdsRef.current].sort();
+    const current = [...selectedListIds].sort();
+    return JSON.stringify(initial) !== JSON.stringify(current);
+  }, [selectedListIds]);
+
+  const isDirty = isFormDataDirty || areListsDirty;
 
   // Notify parent of dirty state changes
   useEffect(() => {
@@ -83,11 +93,30 @@ export function WishForm({
   }, [isDirty]); // onDirtyStateChange is stable (setState function) - no need in deps
 
   // Load user's lists for list selection
-  const { data: listsData } = useQuery({
+  const { data: listsData, isLoading: isLoadingLists } = useQuery({
     queryKey: ['lists'],
     queryFn: () => listsApi.getLists(),
     enabled: showListSelection,
   });
+
+  // Load wish's current lists (edit mode only)
+  const wishListsQuery = useQuery({
+    queryKey: ['wish-lists', wish?.id],
+    queryFn: async () => {
+      if (!wish?.id) {return [];}
+      return wishesApi.getWishLists(wish.id);
+    },
+    enabled: !!wish?.id && showListSelection,
+  });
+
+  // Initialize selected lists from wish's current lists (edit mode)
+  useEffect(() => {
+    if (wishListsQuery.isSuccess && wishListsQuery.data) {
+      const ids = wishListsQuery.data.map(list => list.id);
+      setSelectedListIds(ids);
+      initialListIdsRef.current = ids;
+    }
+  }, [wishListsQuery.isSuccess, wishListsQuery.data]);
 
   // Create mutation
   const createMutation = useMutation({
@@ -128,6 +157,14 @@ export function WishForm({
     mutationFn: async (data: WishUpdateInput) => {
       if (!wish?.id) {throw new Error('Wish ID is required');}
       const updatedWish = await wishesApi.updateWish(wish.id, data);
+
+      // Update list memberships transactionally
+      if (showListSelection) {
+        await wishesApi.updateWishMemberships(wish.id, {
+          listIds: selectedListIds
+        });
+      }
+
       return updatedWish;
     },
     onSuccess: () => {
@@ -135,7 +172,12 @@ export function WishForm({
         title: 'Wish updated',
         description: 'Your wish has been updated successfully.',
       });
+      // Invalidate all relevant queries
       void queryClient.invalidateQueries({ queryKey: ['wishes'] });
+      if (wish?.id) {
+        void queryClient.invalidateQueries({ queryKey: ['wish', wish.id] });
+        void queryClient.invalidateQueries({ queryKey: ['wish-lists', wish.id] });
+      }
       void queryClient.invalidateQueries({ queryKey: ['lists'] });
       onSuccess?.();
     },
@@ -536,27 +578,37 @@ export function WishForm({
       </div>
 
       {/* List Selection - Multi-select with checkboxes */}
-      {showListSelection && listsData && 'items' in listsData && Array.isArray(listsData.items) && listsData.items.length > 0 && (
+      {showListSelection && (
         <div className="space-y-2">
           <Label>Add to Lists</Label>
-          <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3">
-            {listsData.items.map((list) => (
-              <div key={list.id} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`list-${list.id}`}
-                  checked={selectedListIds.includes(list.id)}
-                  onCheckedChange={(checked) => handleListToggle(list.id, checked as boolean)}
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                />
-                <Label
-                  htmlFor={`list-${list.id}`}
-                  className="text-sm font-normal cursor-pointer flex-1"
-                >
-                  {list.name} ({list._count.wishes} wishes)
-                </Label>
-              </div>
-            ))}
-          </div>
+          {isLoadingLists && (
+            <p className="text-sm text-muted-foreground">Loading lists...</p>
+          )}
+          {listsData && 'items' in listsData && Array.isArray(listsData.items) && listsData.items.length > 0 && (
+            <fieldset
+              disabled={createMutation.isPending || updateMutation.isPending}
+              className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3"
+            >
+              {listsData.items.map((list) => (
+                <div key={list.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`list-${list.id}`}
+                    checked={selectedListIds.includes(list.id)}
+                    onCheckedChange={(checked) => handleListToggle(list.id, checked as boolean)}
+                  />
+                  <Label
+                    htmlFor={`list-${list.id}`}
+                    className="text-sm font-normal cursor-pointer flex-1"
+                  >
+                    {list.name} ({list._count.wishes} wishes)
+                  </Label>
+                </div>
+              ))}
+            </fieldset>
+          )}
+          {listsData && 'items' in listsData && Array.isArray(listsData.items) && listsData.items.length === 0 && (
+            <p className="text-sm text-muted-foreground">No lists available. Create a list first.</p>
+          )}
           {selectedListIds.length > 0 && (
             <p className="text-xs text-muted-foreground">
               Selected {selectedListIds.length} list{selectedListIds.length !== 1 ? 's' : ''}

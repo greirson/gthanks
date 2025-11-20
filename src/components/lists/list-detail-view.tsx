@@ -615,6 +615,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
             {editWishDialog.editingWish && (
               <WishForm
                 wish={editWishDialog.editingWish}
+                showListSelection={true}
                 onSuccess={() => {
                   editWishDialog.close();
                   void queryClient.invalidateQueries({ queryKey: ['lists', listId] });

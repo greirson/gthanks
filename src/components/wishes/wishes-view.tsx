@@ -360,6 +360,7 @@ export function WishesView() {
             <DialogBody>
               <WishForm
                 wish={editingWish}
+                showListSelection={true}
                 onSuccess={() => {
                   setShowEditWishDialog(false);
                   setEditingWish(null);
