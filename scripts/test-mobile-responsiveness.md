@@ -1,8 +1,8 @@
 # Mobile Responsiveness Test Checklist
 
-**Test Date:** ****\_****
-**Tester:** ****\_****
-**App Version:** ****\_****
+**Test Date:** \***\*\_\*\***
+**Tester:** \***\*\_\*\***
+**App Version:** \***\*\_\*\***
 
 ## Setup
 
@@ -40,9 +40,9 @@
 
 **ARIA Labels found:**
 
-- Menu button (closed): ******\_\_\_******
-- Menu button (opened): ******\_\_\_******
-- aria-expanded: ******\_\_\_******
+- Menu button (closed): **\*\***\_\_\_**\*\***
+- Menu button (opened): **\*\***\_\_\_**\*\***
+- aria-expanded: **\*\***\_\_\_**\*\***
 
 **Issues found:**
 
@@ -251,6 +251,6 @@
 
 ## Sign-off
 
-**Tested by:** ********\_\_\_********
-**Date:** ********\_\_\_********
+**Tested by:** **\*\*\*\***\_\_\_**\*\*\*\***
+**Date:** **\*\*\*\***\_\_\_**\*\*\*\***
 **Status:** ☐ Approved ☐ Needs Fixes
