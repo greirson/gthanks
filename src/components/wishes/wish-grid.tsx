@@ -38,14 +38,14 @@ export function WishGrid({
 }: WishGridProps) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {Array.from({ length: 8 }).map((_, i) => (
           <Card key={i} className="overflow-hidden">
-            <Skeleton className="h-48 w-full" />
-            <div className="space-y-2 p-4">
-              <Skeleton className="h-6 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-              <Skeleton className="h-10 w-full" />
+            <Skeleton className="aspect-square w-full" />
+            <div className="space-y-1 p-3">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-3 w-3/4" />
+              <Skeleton className="h-6 w-1/2" />
             </div>
           </Card>
         ))}
@@ -55,25 +55,29 @@ export function WishGrid({
 
   if (wishes.length === 0) {
     return (
-      <div className="py-12 text-center">
-        <p className="text-gray-500">No wishes yet</p>
+      <div className="rounded-lg border-2 border-dashed border-gray-200 p-12 text-center">
+        <div className="mx-auto mb-4 text-4xl">✨</div>
+        <h3 className="mb-2 text-lg font-medium text-gray-900">No wishes yet</h3>
+        <p className="text-sm text-gray-500">
+          Create your first wish to start building your wishlist.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
       {wishes.map((wish, index) => (
         <UnifiedWishCard
           key={wish.id}
-          variant="comfortable"
+          variant="compact"
           wish={wish}
           onEdit={onEdit}
           onDelete={onDelete}
           onReserve={onReserve}
           isReserved={reservedWishIds.includes(wish.id)}
           showAddToList={showAddToList}
-          priority={index < 4} // Prioritize first 4 images for LCP optimization
+          priority={index < 6} // Prioritize first 6 images for grid
           isSelectionMode={isSelectionMode}
           isSelected={selectedWishIds.has(wish.id)}
           onToggleSelection={onToggleSelection}

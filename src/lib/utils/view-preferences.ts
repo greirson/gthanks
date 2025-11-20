@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react';
 
-export type ViewMode = 'list' | 'compact' | 'comfortable';
+export type ViewMode = 'list' | 'grid';
 
 /**
  * Hook to manage view mode preference
@@ -21,12 +21,29 @@ export function useViewPreference(storageKey: string, defaultMode: ViewMode): [V
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem(storageKey);
-      if (stored && ['list', 'compact', 'comfortable'].includes(stored)) {
-        setViewMode(stored as ViewMode);
+
+      // Migration: convert old values to new system
+      let migratedMode: ViewMode;
+      if (stored === 'compact' || stored === 'comfortable') {
+        migratedMode = 'grid';
+      } else if (stored === 'list') {
+        migratedMode = 'list';
+      } else if (stored && ['list', 'grid'].includes(stored)) {
+        migratedMode = stored as ViewMode;
+      } else {
+        migratedMode = defaultMode;
       }
+
+      setViewMode(migratedMode);
+
+      // Save migrated value back to localStorage
+      if (stored !== migratedMode) {
+        localStorage.setItem(storageKey, migratedMode);
+      }
+
       setIsHydrated(true);
     }
-  }, [storageKey]);
+  }, [storageKey, defaultMode]);
 
   // Update preference handler
   const updateViewMode = (mode: ViewMode) => {

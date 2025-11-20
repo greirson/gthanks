@@ -46,8 +46,8 @@ export default function GroupsPage() {
   const [isDesktopFilterOpen, setIsDesktopFilterOpen] = useState(false);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
-  // View mode state - default to compact for better space efficiency
-  const [viewMode, setViewMode, isHydrated] = useViewPreference('viewMode.groups', 'compact');
+  // View mode state - default to grid for better space efficiency
+  const [viewMode, setViewMode, isHydrated] = useViewPreference('viewMode.groups', 'grid');
 
   // Unsaved close prevention for create dialog
   const createCloseHandler = usePreventUnsavedClose(isCreateFormDirty, () => {
@@ -514,7 +514,6 @@ export default function GroupsPage() {
                 onDelete={handleDelete}
                 onManage={handleManage}
                 viewMode={viewMode}
-                isFilterOpen={isDesktopFilterOpen}
               />
             </div>
           </div>

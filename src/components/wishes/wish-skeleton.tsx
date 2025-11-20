@@ -3,10 +3,10 @@
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 
 interface WishSkeletonProps {
-  variant?: 'comfortable' | 'compact' | 'list';
+  variant?: 'grid' | 'list';
 }
 
-export function WishSkeleton({ variant = 'comfortable' }: WishSkeletonProps) {
+export function WishSkeleton({ variant = 'grid' }: WishSkeletonProps) {
   if (variant === 'list') {
     return (
       <Card className="overflow-hidden">
@@ -24,50 +24,31 @@ export function WishSkeleton({ variant = 'comfortable' }: WishSkeletonProps) {
     );
   }
 
-  if (variant === 'compact') {
-    return (
-      <Card className="overflow-hidden">
-        <div className="aspect-square animate-pulse bg-muted" />
-        <CardContent className="p-3 space-y-2">
-          <div className="h-4 w-full animate-pulse rounded bg-muted" />
-          <div className="h-3 w-1/3 animate-pulse rounded bg-muted" />
-        </CardContent>
-        <CardFooter className="p-3 pt-0">
-          <div className="h-8 w-full animate-pulse rounded bg-muted" />
-        </CardFooter>
-      </Card>
-    );
-  }
-
-  // comfortable variant
+  // grid variant
   return (
     <Card className="overflow-hidden">
-      <div className="aspect-square animate-pulse bg-muted sm:aspect-video" />
-      <CardContent className="p-4 space-y-3">
-        <div className="h-5 w-full animate-pulse rounded bg-muted" />
-        <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
-        <div className="h-3 w-full animate-pulse rounded bg-muted" />
-        <div className="h-3 w-2/3 animate-pulse rounded bg-muted" />
+      <div className="aspect-square animate-pulse bg-muted" />
+      <CardContent className="p-3 space-y-2">
+        <div className="h-4 w-full animate-pulse rounded bg-muted" />
+        <div className="h-3 w-1/3 animate-pulse rounded bg-muted" />
       </CardContent>
-      <CardFooter className="p-4 pt-0">
-        <div className="h-10 w-full animate-pulse rounded bg-muted" />
+      <CardFooter className="p-3 pt-0">
+        <div className="h-8 w-full animate-pulse rounded bg-muted" />
       </CardFooter>
     </Card>
   );
 }
 
-export function WishesLoadingSkeleton({ 
-  variant = 'comfortable',
-  count = 8 
-}: { 
-  variant?: 'comfortable' | 'compact' | 'list';
+export function WishesLoadingSkeleton({
+  variant = 'grid',
+  count = 8
+}: {
+  variant?: 'grid' | 'list';
   count?: number;
 }) {
-  const gridClass = variant === 'list' 
+  const gridClass = variant === 'list'
     ? 'space-y-3'
-    : variant === 'compact'
-    ? 'grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'
-    : 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
+    : 'grid grid-cols-2 gap-3 md:grid-cols-4';
 
   return (
     <div className={gridClass}>

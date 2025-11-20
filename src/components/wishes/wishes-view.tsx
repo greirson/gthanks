@@ -44,8 +44,8 @@ export function WishesView() {
   const [editingWish, setEditingWish] = useState<Wish | null>(null);
   const [deletingWish, setDeletingWish] = useState<Wish | null>(null);
 
-  // View mode state - default to compact for better space efficiency
-  const [viewMode, setViewMode, isHydrated] = useViewPreference('viewMode.wishes', 'compact');
+  // View mode state - default to grid for better space efficiency
+  const [viewMode, setViewMode, isHydrated] = useViewPreference('viewMode.wishes', 'grid');
 
   // Use React Query to fetch wishes data with loading state
   const { data: wishesData, isLoading } = useWishesQuery();

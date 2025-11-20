@@ -69,8 +69,8 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
   const [isDesktopFilterOpen, setIsDesktopFilterOpen] = useState(false);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
-  // View mode state - using standardized modes
-  const [viewMode, setViewMode, isHydrated] = useViewPreference('viewMode.listDetail', 'comfortable');
+  // View mode state - using standardized modes (list or grid)
+  const [viewMode, setViewMode, isHydrated] = useViewPreference('viewMode.listDetail', 'grid');
 
   // Selection mode state
   const [selectedWishIds, setSelectedWishIds] = useState<Set<string>>(new Set());

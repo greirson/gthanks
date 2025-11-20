@@ -19,7 +19,6 @@ interface GroupCardCompactProps {
   onEdit?: (group: GroupWithCountsResponse) => void;
   onDelete?: (group: GroupWithCountsResponse) => void;
   onManage?: (group: GroupWithCountsResponse) => void;
-  viewMode?: 'compact' | 'comfortable';
 }
 
 export function GroupCardCompact({
@@ -27,10 +26,7 @@ export function GroupCardCompact({
   onEdit,
   onDelete,
   onManage,
-  viewMode = 'compact',
 }: GroupCardCompactProps) {
-  const isCompact = viewMode === 'compact';
-
   const handleManageClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onManage?.(group);
@@ -38,40 +34,29 @@ export function GroupCardCompact({
 
   return (
     <Card
-      className={cn(
-        'group cursor-pointer transition-all hover:shadow-md',
-        isCompact ? 'p-3' : 'p-4'
-      )}
+      className="group cursor-pointer p-3 transition-all hover:shadow-md"
       onClick={handleManageClick}
     >
       <div className="flex items-start justify-between gap-3">
         {/* Left: Avatar + Title + Description */}
         <div className="flex min-w-0 flex-1 items-start gap-3">
-          <GroupAvatar group={group} size={isCompact ? 'sm' : 'md'} className="shrink-0" />
+          <GroupAvatar group={group} size="sm" className="shrink-0" />
           <div className="min-w-0 flex-1">
-            <h3 className={cn('truncate font-semibold', isCompact ? 'text-sm' : 'text-base')}>
+            <h3 className="truncate text-sm font-semibold">
               {group.name}
             </h3>
-            {group.description && !isCompact && (
-              <p className="mt-0.5 truncate text-sm text-muted-foreground">{group.description}</p>
-            )}
 
-            {/* Metadata row - inline for compact mode */}
-            <div
-              className={cn(
-                'flex items-center gap-3 text-muted-foreground',
-                isCompact ? 'mt-1 text-xs' : 'mt-2 text-sm'
-              )}
-            >
+            {/* Metadata row */}
+            <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
               {/* Members */}
               <span className="flex items-center gap-1">
-                <Users className={isCompact ? 'h-3 w-3' : 'h-3.5 w-3.5'} />
+                <Users className="h-3 w-3" />
                 {group._count.members}
               </span>
 
               {/* Lists */}
               <span className="flex items-center gap-1">
-                <FileText className={isCompact ? 'h-3 w-3' : 'h-3.5 w-3.5'} />
+                <FileText className="h-3 w-3" />
                 {group._count.lists}
               </span>
             </div>
@@ -84,13 +69,10 @@ export function GroupCardCompact({
             <Button
               variant="ghost"
               size="icon"
-              className={cn(
-                'shrink-0 opacity-0 transition-opacity group-hover:opacity-100',
-                isCompact ? 'h-7 w-7' : 'h-8 w-8'
-              )}
+              className="h-7 w-7 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
               onClick={(e) => e.stopPropagation()}
             >
-              <MoreVertical className={isCompact ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
+              <MoreVertical className="h-3.5 w-3.5" />
               <span className="sr-only">Group options</span>
             </Button>
           </DropdownMenuTrigger>

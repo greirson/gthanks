@@ -1,12 +1,10 @@
 'use client';
 
 import React from 'react';
-import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ListWithDetails } from '@/lib/services/list-service';
 import { ListWithOwner } from '@/lib/validators/api-responses/lists';
-import { ListCard } from './list-card';
 import { ListCardCompact } from './list-card-compact';
 import { ListListView } from './list-list-view';
 import { EmptyListState } from './empty-list-state';
@@ -19,7 +17,6 @@ interface ListGridProps {
   onShare?: (list: ListWithDetails | ListWithOwner) => void;
   isLoading?: boolean;
   viewMode?: ListViewMode;
-  isFilterOpen?: boolean;
   currentUserId?: string;
 }
 
@@ -29,8 +26,7 @@ export function ListGrid({
   onDelete,
   onShare,
   isLoading = false,
-  viewMode = 'compact',
-  isFilterOpen = false,
+  viewMode = 'grid',
   currentUserId,
 }: ListGridProps) {
   if (isLoading) {
@@ -76,73 +72,19 @@ export function ListGrid({
     );
   }
 
-  // Grid views - responsive with filter awareness
-  const getGridClasses = () => {
-    if (viewMode === 'compact') {
-      // Compact grid - more items per row
-      if (isFilterOpen) {
-        // When filter is open on desktop, reduce columns
-        return cn(
-          'grid gap-3',
-          'grid-cols-1', // Mobile: always 1 column
-          'sm:grid-cols-2', // Small tablets: 2 columns
-          'lg:grid-cols-2', // Desktop with filter: 2 columns
-          'xl:grid-cols-3' // Large desktop with filter: 3 columns
-        );
-      }
-      return cn(
-        'grid gap-3',
-        'grid-cols-1', // Mobile: always 1 column
-        'sm:grid-cols-2', // Small tablets: 2 columns
-        'md:grid-cols-2', // Medium: 2 columns
-        'lg:grid-cols-3', // Desktop: 3 columns
-        'xl:grid-cols-4' // Large desktop: 4 columns
-      );
-    } else {
-      // Comfortable grid - fewer items, more space
-      if (isFilterOpen) {
-        return cn(
-          'grid gap-4',
-          'grid-cols-1', // Mobile: always 1 column
-          'sm:grid-cols-1', // Small tablets: 1 column
-          'lg:grid-cols-2', // Desktop with filter: 2 columns
-          'xl:grid-cols-2' // Large desktop with filter: 2 columns
-        );
-      }
-      return cn(
-        'grid gap-4',
-        'grid-cols-1', // Mobile: always 1 column
-        'sm:grid-cols-1', // Small tablets: 1 column
-        'md:grid-cols-2', // Medium: 2 columns
-        'lg:grid-cols-3', // Desktop: 3 columns
-        'xl:grid-cols-3' // Large desktop: 3 columns
-      );
-    }
-  };
-
+  // Grid view - unified responsive grid: 2 columns mobile, 4 columns desktop
   return (
-    <div className={getGridClasses()} role="grid" aria-label={`Grid of ${lists.length} lists`}>
-      {lists.map((list) =>
-        viewMode === 'compact' ? (
-          <ListCardCompact
-            key={list.id}
-            list={list as ListWithOwner}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onShare={onShare}
-            viewMode="compact"
-            currentUserId={currentUserId}
-          />
-        ) : (
-          <ListCard
-            key={list.id}
-            list={list as ListWithDetails}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onShare={onShare}
-          />
-        )
-      )}
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-4" role="grid" aria-label={`Grid of ${lists.length} lists`}>
+      {lists.map((list) => (
+        <ListCardCompact
+          key={list.id}
+          list={list as ListWithOwner}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onShare={onShare}
+          currentUserId={currentUserId}
+        />
+      ))}
     </div>
   );
 }

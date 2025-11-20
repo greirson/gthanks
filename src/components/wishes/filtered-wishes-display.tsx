@@ -43,7 +43,7 @@ export function FilteredWishesDisplay({
 }: FilteredWishesDisplayProps) {
   const [isDesktopFilterOpen, setIsDesktopFilterOpen] = useState(!compactFilters);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-  const [viewMode, setViewMode] = useViewPreference('viewMode.publicList', 'compact');
+  const [viewMode, setViewMode] = useViewPreference('viewMode.publicList', 'grid');
 
   // Use the filter hook
   const {

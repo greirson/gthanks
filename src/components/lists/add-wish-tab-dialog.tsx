@@ -286,7 +286,7 @@ export function AddWishTabDialog({
                           // Disable already-added wishes for selection
                           isOwner: w.isAvailable,
                         }))}
-                        viewMode="compact"
+                        viewMode="grid"
                         isSelectionMode={true}
                         selectedWishIds={selectedWishIds}
                         onToggleSelection={(wishId) => {

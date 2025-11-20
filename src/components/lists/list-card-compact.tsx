@@ -9,7 +9,6 @@ import {
   Users,
   UserPlus,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,7 +29,6 @@ interface ListCardCompactProps {
   onEdit?: (list: ListWithOwner) => void;
   onShare?: (list: ListWithOwner) => void;
   onDelete?: (list: ListWithOwner) => void;
-  viewMode?: 'compact' | 'comfortable';
   currentUserId?: string;
 }
 
@@ -39,11 +37,9 @@ export function ListCardCompact({
   onEdit,
   onShare,
   onDelete,
-  viewMode = 'compact',
   currentUserId,
 }: ListCardCompactProps) {
   const router = useRouter();
-  const isCompact = viewMode === 'compact';
   const isOwner = currentUserId ? list.ownerId === currentUserId : false;
   const isSharedWithUser =
     !isOwner && list.admins?.some((admin) => admin.user.id === currentUserId);
@@ -66,12 +62,9 @@ export function ListCardCompact({
       return (
         <Badge
           variant="secondary"
-          className={cn(
-            'flex shrink-0 items-center gap-1 border border-info/30 bg-info/10 text-info dark:border-info/40 dark:bg-info/5',
-            isCompact ? 'h-5 px-1.5 text-[10px]' : 'text-xs'
-          )}
+          className="flex h-5 shrink-0 items-center gap-1 border border-info/30 bg-info/10 px-1.5 text-[10px] text-info dark:border-info/40 dark:bg-info/5"
         >
-          <UserPlus className={isCompact ? 'h-2.5 w-2.5' : 'h-3 w-3'} />
+          <UserPlus className="h-2.5 w-2.5" />
           Shared with you
         </Badge>
       );
@@ -81,12 +74,9 @@ export function ListCardCompact({
       return (
         <Badge
           variant="secondary"
-          className={cn(
-            'flex shrink-0 items-center gap-1 border border-success/30 bg-success/10 text-success dark:border-success/40 dark:bg-success/5',
-            isCompact ? 'h-5 px-1.5 text-[10px]' : 'text-xs'
-          )}
+          className="flex h-5 shrink-0 items-center gap-1 border border-success/30 bg-success/10 px-1.5 text-[10px] text-success dark:border-success/40 dark:bg-success/5"
         >
-          <Users className={isCompact ? 'h-2.5 w-2.5' : 'h-3 w-3'} />
+          <Users className="h-2.5 w-2.5" />
           {adminCount} {adminCount === 1 ? 'person' : 'people'}
         </Badge>
       );
@@ -97,39 +87,25 @@ export function ListCardCompact({
 
   return (
     <Card
-      className={cn(
-        'group cursor-pointer transition-all hover:shadow-md',
-        isCompact ? 'p-3' : 'p-4'
-      )}
+      className="group cursor-pointer p-3 transition-all hover:shadow-md"
       onClick={handleClick}
     >
       <div className="flex items-start justify-between gap-3">
         {/* Left: Title + Description */}
         <div className="min-w-0 flex-1">
           <div className="flex items-start gap-2">
-            <h3
-              className={cn('flex-1 truncate font-semibold', isCompact ? 'text-sm' : 'text-base')}
-            >
+            <h3 className="flex-1 truncate text-sm font-semibold">
               {list.name}
             </h3>
             {getSharingBadge()}
           </div>
 
-          {list.description && !isCompact && (
-            <p className="mt-0.5 truncate text-sm text-muted-foreground">{list.description}</p>
-          )}
-
-          {/* Metadata row - inline for compact mode */}
-          <div
-            className={cn(
-              'flex items-center gap-3 text-muted-foreground',
-              isCompact ? 'mt-1.5 text-xs' : 'mt-2 text-sm'
-            )}
-          >
+          {/* Metadata row - compact inline layout */}
+          <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
             {/* Visibility Badge */}
             <Badge
               variant={list.visibility === 'private' ? 'secondary' : 'outline'}
-              className={cn('gap-1', isCompact && 'h-5 px-1.5 text-[10px]')}
+              className="h-5 gap-1 px-1.5 text-[10px]"
             >
               {getVisibilityIcon(list.visibility, 'h-2.5 w-2.5')}
               {list.visibility}
@@ -137,14 +113,14 @@ export function ListCardCompact({
 
             {/* Items count */}
             <span className="flex items-center gap-1">
-              <FileText className={isCompact ? 'h-3 w-3' : 'h-3.5 w-3.5'} />
+              <FileText className="h-3 w-3" />
               {list._count?.wishes || 0}
             </span>
 
             {/* Share status */}
             {list.shareToken && (
               <span className="flex items-center gap-1">
-                <Share2 className={isCompact ? 'h-3 w-3' : 'h-3.5 w-3.5'} />
+                <Share2 className="h-3 w-3" />
                 <span className="hidden sm:inline">Shared</span>
               </span>
             )}
@@ -152,20 +128,15 @@ export function ListCardCompact({
             {/* Owner - only show if not owner */}
             {!isOwner && list.owner && (
               <span className="flex max-w-[120px] items-center gap-1 truncate">
-                <User className={isCompact ? 'h-3 w-3' : 'h-3.5 w-3.5'} />
+                <User className="h-3 w-3" />
                 <span className="truncate">
                   {list.owner.name || list.owner.email?.split('@')[0]}
                 </span>
               </span>
             )}
 
-            {/* Updated time - only show on hover or comfortable mode */}
-            <span
-              className={cn(
-                'ml-auto flex items-center gap-1',
-                isCompact && 'hidden group-hover:flex'
-              )}
-            >
+            {/* Updated time - show on hover */}
+            <span className="ml-auto hidden items-center gap-1 group-hover:flex">
               <Calendar className="h-3 w-3" />
               {formatRelativeTime(list.updatedAt)}
             </span>
@@ -178,13 +149,10 @@ export function ListCardCompact({
             <Button
               variant="ghost"
               size="icon"
-              className={cn(
-                'shrink-0 opacity-0 transition-opacity group-hover:opacity-100',
-                isCompact ? 'h-7 w-7' : 'h-8 w-8'
-              )}
+              className="h-7 w-7 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
               onClick={(e) => e.stopPropagation()}
             >
-              <MoreVertical className={isCompact ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
+              <MoreVertical className="h-3.5 w-3.5" />
               <span className="sr-only">List options</span>
             </Button>
           </DropdownMenuTrigger>
