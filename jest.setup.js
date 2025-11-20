@@ -9,6 +9,29 @@ import { TextDecoder, TextEncoder } from 'util';
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
+// Mock @prisma/client Prisma namespace FIRST (before any Prisma usage)
+// This ensures instanceof checks work correctly in service layer
+class PrismaClientKnownRequestError extends Error {
+  constructor(message, { code, clientVersion, meta }) {
+    super(message);
+    this.name = 'PrismaClientKnownRequestError';
+    this.code = code;
+    this.clientVersion = clientVersion || '5.22.0';
+    this.meta = meta || {};
+  }
+}
+
+jest.mock('@prisma/client', () => {
+  const actual = jest.requireActual('@prisma/client');
+  return {
+    ...actual,
+    Prisma: {
+      ...actual.Prisma,
+      PrismaClientKnownRequestError,
+    },
+  };
+});
+
 // Add setImmediate polyfill for Node.js compatibility
 if (typeof global.setImmediate === 'undefined') {
   global.setImmediate = (callback, ...args) => {
@@ -110,17 +133,15 @@ const mockDb = {
           (u) => u.id !== args.where.id && u.username?.toLowerCase() === args.data.username.toLowerCase()
         );
         if (duplicateUsername) {
-          // Create a Prisma unique constraint error
-          const error = Object.create(Error.prototype);
-          error.code = 'P2002';
-          error.meta = { target: ['username'] };
-          error.clientVersion = '5.22.0';
-          error.message = 'Unique constraint failed on the fields: (`username`)';
-          // Make it an instance of PrismaClientKnownRequestError by setting constructor name
-          Object.defineProperty(error, 'constructor', {
-            value: class PrismaClientKnownRequestError extends Error {},
-            writable: false,
-          });
+          // Create a proper Prisma unique constraint error using the mocked class
+          const error = new PrismaClientKnownRequestError(
+            'Unique constraint failed on the fields: (`username`)',
+            {
+              code: 'P2002',
+              clientVersion: '5.22.0',
+              meta: { target: ['username'] },
+            }
+          );
           return Promise.reject(error);
         }
       }
@@ -695,17 +716,15 @@ const mockDb = {
                  l.slug?.toLowerCase() === args.data.slug.toLowerCase()
         );
         if (duplicateSlug) {
-          // Create a Prisma unique constraint error
-          const error = Object.create(Error.prototype);
-          error.code = 'P2002';
-          error.meta = { target: ['slug', 'ownerId'] };
-          error.clientVersion = '5.22.0';
-          error.message = 'Unique constraint failed on the fields: (`slug`,`ownerId`)';
-          // Make it an instance of PrismaClientKnownRequestError by setting constructor name
-          Object.defineProperty(error, 'constructor', {
-            value: class PrismaClientKnownRequestError extends Error {},
-            writable: false,
-          });
+          // Create a proper Prisma unique constraint error using the mocked class
+          const error = new PrismaClientKnownRequestError(
+            'Unique constraint failed on the fields: (`slug`,`ownerId`)',
+            {
+              code: 'P2002',
+              clientVersion: '5.22.0',
+              meta: { target: ['slug', 'ownerId'] },
+            }
+          );
           return Promise.reject(error);
         }
       }
