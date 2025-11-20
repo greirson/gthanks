@@ -41,6 +41,18 @@ jobs:
             exit 0
           fi
 
+          # Check for v0.0.1 tag (initial production release - no data to migrate)
+          if git describe --tags --exact-match 2>/dev/null | grep -q "^v0\.0\.1$"; then
+            echo "✅ v0.0.1 initial release - skipping migration safety check (no production data)"
+            exit 0
+          fi
+
+          # Check commit message for v0.0.1 marker (for untagged commits)
+          if git log -1 --pretty=%B | grep -qi "v0\.0\.1\|Release v0\.0\.1"; then
+            echo "✅ v0.0.1 initial release commit - skipping migration safety check"
+            exit 0
+          fi
+
           # Get diff of schema.prisma
           git diff origin/${{ github.base_ref }} HEAD -- prisma/schema.prisma > schema-diff.txt
 
