@@ -10,7 +10,7 @@ test.describe('Gift Cards', () => {
 
   test('should add, edit, and remove gift cards', async ({ page }) => {
     // Login and create a list
-    await createAndLoginUser(page, 'test@example.com', 'Test User');
+    await createAndLoginUser(page, { email: 'test@example.com', name: 'Test User' });
     const listId = await createList(page, 'Test List', 'Test description');
 
     // Navigate to list detail
@@ -53,7 +53,7 @@ test.describe('Gift Cards', () => {
   });
 
   test('should enforce maximum 10 gift cards limit', async ({ page }) => {
-    await createAndLoginUser(page, 'test@example.com', 'Test User');
+    await createAndLoginUser(page, { email: 'test@example.com', name: 'Test User' });
     const listId = await createList(page, 'Test List', 'Test description');
     await page.goto(`/lists/${listId}`);
 
@@ -79,7 +79,7 @@ test.describe('Gift Cards', () => {
     // Set mobile viewport (iPhone SE)
     await page.setViewportSize({ width: 375, height: 667 });
 
-    await createAndLoginUser(page, 'test@example.com', 'Test User');
+    await createAndLoginUser(page, { email: 'test@example.com', name: 'Test User' });
     const listId = await createList(page, 'Test List', 'Test description');
     await page.goto(`/lists/${listId}`);
 
@@ -102,7 +102,7 @@ test.describe('Gift Cards', () => {
 
   test('authenticated owner sees edit mode on their own list', async ({ page }) => {
     // Create user and login
-    await createAndLoginUser(page, 'owner@example.com', 'List Owner');
+    await createAndLoginUser(page, { email: 'owner@example.com', name: 'List Owner' });
     const listId = await createList(page, 'My Gift Card List', 'Test description');
 
     // Navigate to list detail
@@ -136,7 +136,7 @@ test.describe('Gift Cards', () => {
 
   test('other authenticated users see read-only mode', async ({ page, context }) => {
     // Create User A and login
-    const userA = await createAndLoginUser(page, 'owner@example.com', 'List Owner');
+    const userA = await createAndLoginUser(page, { email: 'owner@example.com', name: 'List Owner' });
     const listId = await createList(page, 'Public Gift Card List', 'Shared list');
 
     // Add a gift card as owner
@@ -160,7 +160,7 @@ test.describe('Gift Cards', () => {
 
     // Create User B in a new context
     await context.clearCookies();
-    const userB = await createAndLoginUser(page, 'viewer@example.com', 'Viewer User');
+    const userB = await createAndLoginUser(page, { email: 'viewer@example.com', name: 'Viewer User' });
 
     // Navigate to User A's list as User B
     await page.goto(`/lists/${listId}`);
