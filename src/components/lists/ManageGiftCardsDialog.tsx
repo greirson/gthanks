@@ -57,11 +57,17 @@ export function ManageGiftCardsDialog({
     // Only reset when transitioning from closed to open
     if (isOpen && !wasOpenRef.current) {
       dialog.resetCards();
+
+      // Auto-add empty card if there are 0 cards (better UX)
+      if (initialCards.length === 0) {
+        dialog.addCard();
+      }
+
       wasOpenRef.current = true;
     } else if (!isOpen && wasOpenRef.current) {
       wasOpenRef.current = false;
     }
-  }, [isOpen]); // Only depend on isOpen, not dialog.resetCards
+  }, [isOpen, initialCards.length, dialog.resetCards, dialog.addCard]); // Added dependencies for auto-add logic
 
   // Cleanup auto-save timeout on unmount
   useEffect(() => {
