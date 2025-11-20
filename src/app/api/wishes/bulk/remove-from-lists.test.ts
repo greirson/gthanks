@@ -50,7 +50,15 @@ describe('POST /api/wishes/bulk/remove-from-lists', () => {
       method: 'POST',
     });
     // Mock the json() method
-    request.json = jest.fn().mockResolvedValue({ wishIds: ['1', '2', '3'] });
+    request.json = jest
+      .fn()
+      .mockResolvedValue({
+        wishIds: [
+          '00000000-0000-0000-0000-000000000001',
+          '00000000-0000-0000-0000-000000000002',
+          '00000000-0000-0000-0000-000000000003',
+        ],
+      });
 
     const response = await POST(request);
     const data = (await response.json()) as { error: string };
@@ -66,7 +74,15 @@ describe('POST /api/wishes/bulk/remove-from-lists', () => {
       method: 'POST',
     });
     // Mock the json() method
-    request.json = jest.fn().mockResolvedValue({ notWishIds: ['1', '2', '3'] });
+    request.json = jest
+      .fn()
+      .mockResolvedValue({
+        notWishIds: [
+          '00000000-0000-0000-0000-000000000001',
+          '00000000-0000-0000-0000-000000000002',
+          '00000000-0000-0000-0000-000000000003',
+        ],
+      });
 
     const response = await POST(request);
     const data = (await response.json()) as { error: string };
@@ -93,7 +109,11 @@ describe('POST /api/wishes/bulk/remove-from-lists', () => {
 
   it('prevents users from removing wishes they do not own', async () => {
     const userId = 'user-1';
-    const wishIds = ['wish-1', 'wish-2', 'wish-3'];
+    const wishIds = [
+      '00000000-0000-0000-0000-000000000001',
+      '00000000-0000-0000-0000-000000000002',
+      '00000000-0000-0000-0000-000000000003',
+    ];
 
     mockGetCurrentUser.mockResolvedValueOnce(createMockUser(userId));
 
@@ -117,7 +137,11 @@ describe('POST /api/wishes/bulk/remove-from-lists', () => {
 
   it('allows users to remove their wishes from all lists at once', async () => {
     const userId = 'user-1';
-    const wishIds = ['wish-1', 'wish-2', 'wish-3'];
+    const wishIds = [
+      '00000000-0000-0000-0000-000000000001',
+      '00000000-0000-0000-0000-000000000002',
+      '00000000-0000-0000-0000-000000000003',
+    ];
 
     mockGetCurrentUser.mockResolvedValueOnce(createMockUser(userId));
 
@@ -144,7 +168,10 @@ describe('POST /api/wishes/bulk/remove-from-lists', () => {
 
   it('gracefully handles removal requests for wishes not in any lists', async () => {
     const userId = 'user-1';
-    const wishIds = ['wish-1', 'wish-2'];
+    const wishIds = [
+      '00000000-0000-0000-0000-000000000001',
+      '00000000-0000-0000-0000-000000000002',
+    ];
 
     mockGetCurrentUser.mockResolvedValueOnce(createMockUser(userId));
 
@@ -169,7 +196,10 @@ describe('POST /api/wishes/bulk/remove-from-lists', () => {
 
   it('provides error feedback when bulk removal encounters database issues', async () => {
     const userId = 'user-1';
-    const wishIds = ['wish-1', 'wish-2'];
+    const wishIds = [
+      '00000000-0000-0000-0000-000000000001',
+      '00000000-0000-0000-0000-000000000002',
+    ];
 
     mockGetCurrentUser.mockResolvedValueOnce(createMockUser(userId));
 

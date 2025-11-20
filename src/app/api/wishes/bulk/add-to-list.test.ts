@@ -50,7 +50,16 @@ describe('POST /api/wishes/bulk/add-to-list', () => {
       method: 'POST',
     });
     // Mock the json() method
-    request.json = jest.fn().mockResolvedValue({ wishIds: ['1', '2', '3'], listId: 'list-1' });
+    request.json = jest
+      .fn()
+      .mockResolvedValue({
+        wishIds: [
+          '00000000-0000-0000-0000-000000000001',
+          '00000000-0000-0000-0000-000000000002',
+          '00000000-0000-0000-0000-000000000003',
+        ],
+        listId: '00000000-0000-0000-0000-000000000011',
+      });
 
     const response = await POST(request);
     const data = (await response.json()) as { error: string };
@@ -66,7 +75,15 @@ describe('POST /api/wishes/bulk/add-to-list', () => {
       method: 'POST',
     });
     // Mock the json() method
-    request.json = jest.fn().mockResolvedValue({ wishIds: ['1', '2', '3'] });
+    request.json = jest
+      .fn()
+      .mockResolvedValue({
+        wishIds: [
+          '00000000-0000-0000-0000-000000000001',
+          '00000000-0000-0000-0000-000000000002',
+          '00000000-0000-0000-0000-000000000003',
+        ],
+      });
 
     const response = await POST(request);
     const data = (await response.json()) as { error: string };
@@ -82,7 +99,9 @@ describe('POST /api/wishes/bulk/add-to-list', () => {
       method: 'POST',
     });
     // Mock the json() method
-    request.json = jest.fn().mockResolvedValue({ wishIds: [], listId: 'list-1' });
+    request.json = jest
+      .fn()
+      .mockResolvedValue({ wishIds: [], listId: '00000000-0000-0000-0000-000000000011' });
 
     const response = await POST(request);
     const data = (await response.json()) as { error: string };
@@ -93,8 +112,11 @@ describe('POST /api/wishes/bulk/add-to-list', () => {
 
   it('prevents users from adding wishes to lists they do not own', async () => {
     const userId = 'user-1';
-    const listId = 'list-1';
-    const wishIds = ['wish-1', 'wish-2'];
+    const listId = '00000000-0000-0000-0000-000000000011';
+    const wishIds = [
+      '00000000-0000-0000-0000-000000000001',
+      '00000000-0000-0000-0000-000000000002',
+    ];
 
     mockGetCurrentUser.mockResolvedValueOnce(createMockUser(userId));
 
@@ -118,8 +140,12 @@ describe('POST /api/wishes/bulk/add-to-list', () => {
 
   it('prevents users from adding wishes they do not own to their lists', async () => {
     const userId = 'user-1';
-    const listId = 'list-1';
-    const wishIds = ['wish-1', 'wish-2', 'wish-3'];
+    const listId = '00000000-0000-0000-0000-000000000011';
+    const wishIds = [
+      '00000000-0000-0000-0000-000000000001',
+      '00000000-0000-0000-0000-000000000002',
+      '00000000-0000-0000-0000-000000000003',
+    ];
 
     mockGetCurrentUser.mockResolvedValueOnce(createMockUser(userId));
 
@@ -143,8 +169,12 @@ describe('POST /api/wishes/bulk/add-to-list', () => {
 
   it('avoids duplicate entries when adding wishes already in a list', async () => {
     const userId = 'user-1';
-    const listId = 'list-1';
-    const wishIds = ['wish-1', 'wish-2', 'wish-3'];
+    const listId = '00000000-0000-0000-0000-000000000011';
+    const wishIds = [
+      '00000000-0000-0000-0000-000000000001',
+      '00000000-0000-0000-0000-000000000002',
+      '00000000-0000-0000-0000-000000000003',
+    ];
 
     mockGetCurrentUser.mockResolvedValueOnce(createMockUser(userId));
 
@@ -174,8 +204,11 @@ describe('POST /api/wishes/bulk/add-to-list', () => {
 
   it('informs users when all selected wishes are already in the list', async () => {
     const userId = 'user-1';
-    const listId = 'list-1';
-    const wishIds = ['wish-1', 'wish-2'];
+    const listId = '00000000-0000-0000-0000-000000000011';
+    const wishIds = [
+      '00000000-0000-0000-0000-000000000001',
+      '00000000-0000-0000-0000-000000000002',
+    ];
 
     mockGetCurrentUser.mockResolvedValueOnce(createMockUser(userId));
 
@@ -202,8 +235,11 @@ describe('POST /api/wishes/bulk/add-to-list', () => {
 
   it('provides error feedback when bulk addition encounters database issues', async () => {
     const userId = 'user-1';
-    const listId = 'list-1';
-    const wishIds = ['wish-1', 'wish-2'];
+    const listId = '00000000-0000-0000-0000-000000000011';
+    const wishIds = [
+      '00000000-0000-0000-0000-000000000001',
+      '00000000-0000-0000-0000-000000000002',
+    ];
 
     mockGetCurrentUser.mockResolvedValueOnce(createMockUser(userId));
 

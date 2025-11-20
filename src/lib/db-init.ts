@@ -83,10 +83,15 @@ async function performDatabaseInitialization(): Promise<void> {
 
   try {
     // Check if database tables exist by trying to query the User table
-    const { db } = await import('./db');
-    await db.user.findFirst();
-    // Database tables already exist
-    return;
+    // Use a temporary PrismaClient to avoid circular dependency
+    const tempDb = new PrismaClient();
+    try {
+      await tempDb.user.findFirst();
+      // Database tables already exist
+      return;
+    } finally {
+      await tempDb.$disconnect();
+    }
   } catch (error: unknown) {
     // Check if error is because tables don't exist
     const err = error as { code?: string; message?: string };
@@ -172,9 +177,14 @@ async function performDatabaseInitialization(): Promise<void> {
  */
 export async function isDatabaseReady(): Promise<boolean> {
   try {
-    const { db } = await import('./db');
-    await db.user.findFirst();
-    return true;
+    // Use a temporary PrismaClient to avoid circular dependency
+    const tempDb = new PrismaClient();
+    try {
+      await tempDb.user.findFirst();
+      return true;
+    } finally {
+      await tempDb.$disconnect();
+    }
   } catch {
     return false;
   }

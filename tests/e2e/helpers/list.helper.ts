@@ -14,26 +14,32 @@ export async function createList(
 ): Promise<string> {
   // Navigate to lists page
   await page.goto('/lists');
-  
+
   // Click create button
   await page.getByRole('button', { name: /create list/i }).click();
-  
+
   // Fill form
   await page.getByLabel(/name/i).fill(name);
   if (description) {
     await page.getByLabel(/description/i).fill(description);
   }
-  
+
+  // Listen for the API response to capture the list ID
+  const responsePromise = page.waitForResponse(
+    (response) => response.url().includes('/api/lists') && response.request().method() === 'POST'
+  );
+
   // Submit form
   await page.getByRole('button', { name: /create/i }).click();
-  
-  // Wait for navigation to list detail page
-  await page.waitForURL(/\/lists\/.+/);
-  
-  // Extract list ID from URL
-  const url = page.url();
-  const listId = url.split('/lists/')[1].split('?')[0];
-  
+
+  // Wait for API response and extract list ID
+  const response = await responsePromise;
+  const responseBody = await response.json();
+  const listId = responseBody.id;
+
+  // Wait for dialog to close (form submission success)
+  await page.waitForSelector('[role="dialog"]', { state: 'detached', timeout: 5000 });
+
   return listId;
 }
 

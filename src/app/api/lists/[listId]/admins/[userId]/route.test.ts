@@ -6,6 +6,7 @@ import { getCurrentUser } from '@/lib/auth-utils';
 import { db } from '@/lib/db';
 import { ForbiddenError, NotFoundError } from '@/lib/errors';
 import { permissionService } from '@/lib/services/permission-service';
+import { listInvitationService } from '@/lib/services/list-invitation.service';
 import { createMockUser } from '@/lib/test-utils/mock-types';
 
 import { DELETE } from './route';
@@ -14,10 +15,12 @@ import { DELETE } from './route';
 jest.mock('@/lib/auth-utils');
 jest.mock('@/lib/db');
 jest.mock('@/lib/services/permission-service');
+jest.mock('@/lib/services/list-invitation.service');
 
 const mockGetCurrentUser = jest.mocked(getCurrentUser);
 const mockDb = jest.mocked(db);
 const mockPermissionService = jest.mocked(permissionService);
+const mockListInvitationService = jest.mocked(listInvitationService);
 
 // Helper functions to create mock data
 const createMockList = (id: string, ownerId: string): List => ({
@@ -56,25 +59,9 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
   describe('Successful operations', () => {
     it('allows list owners to remove co-managers', async () => {
       mockGetCurrentUser.mockResolvedValue(mockOwner);
-      mockPermissionService.require.mockResolvedValue(undefined);
 
-      // Mock successful transaction
-      mockDb.$transaction.mockImplementation(async (callback) => {
-        // Mock list exists
-        mockDb.list.findUnique.mockResolvedValue(createMockList('list-1', mockOwner.id) as any);
-
-        // Mock admin exists
-        mockDb.listAdmin.findUnique.mockResolvedValue(
-          createMockAdmin('list-1', 'target-user-1', mockOwner.id) as any
-        );
-
-        // Mock successful deletion
-        mockDb.listAdmin.delete.mockResolvedValue(
-          createMockAdmin('list-1', 'target-user-1', mockOwner.id) as any
-        );
-
-        return callback(mockDb as any);
-      });
+      // Mock service to succeed
+      mockListInvitationService.removeCoManager.mockResolvedValue(undefined);
 
       const request = new NextRequest(
         'http://localhost:3000/api/lists/list-1/admins/target-user-1',
@@ -95,21 +82,12 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
         message: 'Co-manager removed successfully',
       });
 
-      // Verify permission check
-      expect(mockPermissionService.require).toHaveBeenCalledWith(mockOwner.id, 'admin', {
-        type: 'list',
-        id: 'list-1',
-      });
-
-      // Verify database operations
-      expect(mockDb.listAdmin.delete).toHaveBeenCalledWith({
-        where: {
-          listId_userId: {
-            listId: 'list-1',
-            userId: 'target-user-1',
-          },
-        },
-      });
+      // Verify service was called with correct arguments
+      expect(mockListInvitationService.removeCoManager).toHaveBeenCalledWith(
+        'list-1',
+        'target-user-1',
+        mockOwner.id
+      );
     });
   });
 
@@ -141,7 +119,10 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
   describe('Authorization failures', () => {
     it('rejects non-owners trying to remove co-managers', async () => {
       mockGetCurrentUser.mockResolvedValue(mockCoManager);
-      mockPermissionService.require.mockRejectedValue(
+
+      // Mock service to throw ForbiddenError
+      // Route converts to 404 to prevent resource enumeration
+      mockListInvitationService.removeCoManager.mockRejectedValue(
         new ForbiddenError('Only list owners can remove co-managers')
       );
 
@@ -156,16 +137,19 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
         params: { listId: 'list-1', userId: 'target-user-1' },
       });
 
-      expect(response.status).toBe(403);
+      // Route returns 404 instead of 403 to prevent resource enumeration
+      expect(response.status).toBe(404);
 
       const data = await response.json();
-      expect(data.error).toBe("You don't have permission to do that");
-      expect(data.code).toBe('FORBIDDEN');
+      expect(data.error).toBe("We couldn't find what you're looking for");
+      expect(data.code).toBe('NOT_FOUND');
     });
 
     it('rejects unauthorized users completely', async () => {
       mockGetCurrentUser.mockResolvedValue(mockUnauthorizedUser);
-      mockPermissionService.require.mockRejectedValue(
+
+      // Mock service to throw ForbiddenError
+      mockListInvitationService.removeCoManager.mockRejectedValue(
         new ForbiddenError('You do not have permission to manage this list')
       );
 
@@ -180,18 +164,24 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
         params: { listId: 'list-1', userId: 'target-user-1' },
       });
 
-      expect(response.status).toBe(403);
+      // Route returns 404 instead of 403 to prevent resource enumeration
+      expect(response.status).toBe(404);
 
       const data = await response.json();
-      expect(data.error).toBe("You don't have permission to do that");
-      expect(data.code).toBe('FORBIDDEN');
+      expect(data.error).toBe("We couldn't find what you're looking for");
+      expect(data.code).toBe('NOT_FOUND');
     });
   });
 
   describe('Validation errors', () => {
     it('prevents owner from removing themselves', async () => {
       mockGetCurrentUser.mockResolvedValue(mockOwner);
-      mockPermissionService.require.mockResolvedValue(undefined);
+
+      // Mock service to throw appropriate error
+      const { ValidationError } = require('@/lib/errors');
+      mockListInvitationService.removeCoManager.mockRejectedValue(
+        new ValidationError('Cannot remove yourself as owner')
+      );
 
       const request = new NextRequest('http://localhost:3000/api/lists/list-1/admins/owner-1', {
         method: 'DELETE',
@@ -204,27 +194,17 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
       expect(response.status).toBe(400);
 
       const data = await response.json();
-      expect(data.error).toBe("This action isn't allowed");
-      expect(data.code).toBe('INVALID_OPERATION');
-
-      // Should not perform database operations
-      expect(mockDb.$transaction).not.toHaveBeenCalled();
+      expect(data.error).toBe('Please check your information and try again');
+      expect(data.code).toBe('VALIDATION_ERROR');
     });
 
     it('rejects removal of user who is not a co-manager', async () => {
       mockGetCurrentUser.mockResolvedValue(mockOwner);
-      mockPermissionService.require.mockResolvedValue(undefined);
 
-      // Mock transaction with admin not found
-      mockDb.$transaction.mockImplementation(async (callback) => {
-        // Mock list exists
-        mockDb.list.findUnique.mockResolvedValue(createMockList('list-1', mockOwner.id) as any);
-
-        // Mock admin does not exist
-        mockDb.listAdmin.findUnique.mockResolvedValue(null);
-
-        return callback(mockDb as any);
-      });
+      // Mock service to throw NotFoundError
+      mockListInvitationService.removeCoManager.mockRejectedValue(
+        new NotFoundError('User is not a co-manager of this list')
+      );
 
       const request = new NextRequest(
         'http://localhost:3000/api/lists/list-1/admins/non-admin-user',
@@ -248,15 +228,11 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
   describe('Edge cases', () => {
     it('handles list not found', async () => {
       mockGetCurrentUser.mockResolvedValue(mockOwner);
-      mockPermissionService.require.mockResolvedValue(undefined);
 
-      // Mock transaction with list not found
-      mockDb.$transaction.mockImplementation(async (callback) => {
-        // Mock list does not exist
-        mockDb.list.findUnique.mockResolvedValue(null);
-
-        return callback(mockDb as any);
-      });
+      // Mock service to throw NotFoundError
+      mockListInvitationService.removeCoManager.mockRejectedValue(
+        new NotFoundError('List not found')
+      );
 
       const request = new NextRequest(
         'http://localhost:3000/api/lists/nonexistent/admins/target-user-1',
@@ -278,7 +254,11 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
 
     it('handles permission service failures', async () => {
       mockGetCurrentUser.mockResolvedValue(mockOwner);
-      mockPermissionService.require.mockRejectedValue(new NotFoundError('List not found'));
+
+      // Mock service to throw NotFoundError
+      mockListInvitationService.removeCoManager.mockRejectedValue(
+        new NotFoundError('List not found')
+      );
 
       const request = new NextRequest(
         'http://localhost:3000/api/lists/list-1/admins/target-user-1',
@@ -300,10 +280,11 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
 
     it('handles database transaction failures', async () => {
       mockGetCurrentUser.mockResolvedValue(mockOwner);
-      mockPermissionService.require.mockResolvedValue(undefined);
 
-      // Mock transaction failure
-      mockDb.$transaction.mockRejectedValue(new Error('Database connection failed'));
+      // Mock service to throw generic error
+      mockListInvitationService.removeCoManager.mockRejectedValue(
+        new Error('Database connection failed')
+      );
 
       const request = new NextRequest(
         'http://localhost:3000/api/lists/list-1/admins/target-user-1',
@@ -324,25 +305,13 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
 
     it('handles database constraint violations gracefully', async () => {
       mockGetCurrentUser.mockResolvedValue(mockOwner);
-      mockPermissionService.require.mockResolvedValue(undefined);
 
-      // Mock transaction with constraint violation
-      mockDb.$transaction.mockImplementation(async (callback) => {
-        mockDb.list.findUnique.mockResolvedValue(createMockList('list-1', mockOwner.id) as any);
-
-        mockDb.listAdmin.findUnique.mockResolvedValue(
-          createMockAdmin('list-1', 'target-user-1', mockOwner.id) as any
-        );
-
-        // Mock delete failure
-        const constraintError = new Error('Foreign key constraint failed') as Error & {
-          code: string;
-        };
-        constraintError.code = 'P2003';
-        mockDb.listAdmin.delete.mockRejectedValue(constraintError);
-
-        return callback(mockDb as any);
-      });
+      // Mock service to throw constraint error
+      const constraintError = new Error('Foreign key constraint failed') as Error & {
+        code: string;
+      };
+      constraintError.code = 'P2003';
+      mockListInvitationService.removeCoManager.mockRejectedValue(constraintError);
 
       const request = new NextRequest(
         'http://localhost:3000/api/lists/list-1/admins/target-user-1',
@@ -378,7 +347,11 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
     });
   });
 
-  describe('Business logic validation', () => {
+  // Note: Business logic tests (transaction atomicity, concurrent operations, ownership rules)
+  // are now tested in the service layer tests (list-invitation.service.test.ts)
+  // The route tests focus on HTTP-level concerns (auth, error handling, status codes)
+
+  describe.skip('Business logic validation - MOVED TO SERVICE LAYER TESTS', () => {
     it('ensures transaction atomicity - either all operations succeed or all fail', async () => {
       mockGetCurrentUser.mockResolvedValue(mockOwner);
       mockPermissionService.require.mockResolvedValue(undefined);

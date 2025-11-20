@@ -64,7 +64,10 @@ describe('Bulk Wish Deletion API', () => {
       mockGetCurrentUser.mockResolvedValue(mockUser);
       mockWishService.deleteWishes.mockResolvedValue({ deleted: 2 });
 
-      const wishIds = ['wish1', 'wish2'];
+      const wishIds = [
+        '00000000-0000-0000-0000-000000000001',
+        '00000000-0000-0000-0000-000000000002',
+      ];
       const request = new NextRequest('http://localhost:3000/api/wishes/bulk/delete', {
         method: 'POST',
       });
@@ -85,7 +88,11 @@ describe('Bulk Wish Deletion API', () => {
     it('prevents users from deleting wishes they do not own', async () => {
       mockGetCurrentUser.mockResolvedValue(mockUser);
 
-      const wishIds = ['wish1', 'wish2', 'wish3'];
+      const wishIds = [
+        '00000000-0000-0000-0000-000000000001',
+        '00000000-0000-0000-0000-000000000002',
+        '00000000-0000-0000-0000-000000000003',
+      ];
       const request = new NextRequest('http://localhost:3000/api/wishes/bulk/delete', {
         method: 'POST',
       });

@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getCurrentUser } from '@/lib/auth-utils';
-import { db } from '@/lib/db';
 import { AppError, ForbiddenError, NotFoundError, getUserFriendlyError } from '@/lib/errors';
-import { permissionService } from '@/lib/services/permission-service';
 import { logger } from '@/lib/services/logger';
+import { wishService } from '@/lib/services/wish-service';
 import { serializePrismaResponse } from '@/lib/utils/date-serialization';
 
 interface RouteParams {
@@ -49,69 +48,8 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Verify user owns the wish using permission service (MANDATORY)
-    await permissionService.require(user.id, 'view', { type: 'wish', id: wishId });
-
-    // Verify wish exists
-    const wish = await db.wish.findUnique({
-      where: { id: wishId },
-      select: { id: true, ownerId: true },
-    });
-
-    if (!wish) {
-      throw new NotFoundError('Wish not found');
-    }
-
-    // Get all lists this wish belongs to (filtered to user's own lists)
-    const listWishes = await db.listWish.findMany({
-      where: {
-        wishId,
-        list: {
-          ownerId: user.id,
-        },
-      },
-      include: {
-        list: {
-          include: {
-            owner: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatarUrl: true,
-              },
-            },
-            _count: {
-              select: {
-                wishes: true,
-                admins: true,
-              },
-            },
-            admins: {
-              include: {
-                user: {
-                  select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    avatarUrl: true,
-                  },
-                },
-              },
-              orderBy: {
-                addedAt: 'asc',
-              },
-            },
-          },
-        },
-      },
-      orderBy: {
-        addedAt: 'desc',
-      },
-    });
-
-    // Extract just the list data with wish count
-    const lists = listWishes.map((lw) => lw.list);
+    // Use service layer to get lists containing this wish
+    const lists = await wishService.getWishLists(wishId, user.id);
 
     return NextResponse.json(serializePrismaResponse(lists));
   } catch (error) {

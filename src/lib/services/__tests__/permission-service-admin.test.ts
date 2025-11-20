@@ -257,6 +257,7 @@ describe('PermissionService Admin Override Tests', () => {
       } as any);
 
       mockListFindUnique.mockResolvedValueOnce({
+        id: listId,
         ownerId: 'other-user',
         visibility: 'private',
         password: null,
@@ -269,7 +270,8 @@ describe('PermissionService Admin Override Tests', () => {
       });
 
       expect(result.allowed).toBe(false);
-      expect(result.reason).toBe('Insufficient permissions');
+      // Private lists return "List not found" to prevent enumeration
+      expect(result.reason).toBe('List not found');
       expect(mockListFindUnique).toHaveBeenCalled();
     });
 
