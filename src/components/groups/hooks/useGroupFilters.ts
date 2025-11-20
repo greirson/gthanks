@@ -11,6 +11,7 @@ export interface GroupFilterState {
   search: string;
   selectedMembers: string[];
   showAdminOnly: boolean;
+  [key: string]: unknown;
 }
 
 // Enhanced group type with current user role

@@ -34,6 +34,7 @@ export interface FilterState {
   cost: PriceRange;
   sort: SortOption;
   search: string;
+  [key: string]: unknown;
 }
 
 // LocalStorage key for persisting filters

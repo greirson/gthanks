@@ -579,7 +579,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
             <DialogDescription>Update your list details and settings.</DialogDescription>
           </DialogHeader>
           <ListForm
-            list={list}
+            list={list as any}
             onSuccess={() => editListDialog.close()}
             onCancel={() => editListDialog.close()}
             onDirtyStateChange={(dirty) => editListDialog.setIsDirty(dirty)}
@@ -633,7 +633,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
 
       {/* Sharing Dialog */}
       <ListSharingDialog
-        list={list}
+        list={list as any}
         open={sharingDialog.isOpen}
         onOpenChange={(open) => {
           sharingDialog.setOpen(open);

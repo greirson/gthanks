@@ -17,6 +17,7 @@ export interface ListFilterState {
   ownership: OwnershipFilter;
   itemCount: ItemCountRange;
   sort: ListSortOption;
+  [key: string]: unknown;
 }
 
 const DEFAULT_FILTER_STATE: ListFilterState = {

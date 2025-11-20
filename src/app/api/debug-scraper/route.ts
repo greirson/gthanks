@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
       clearTimeout(timeoutId);
 
       debugInfo.fetchEndTime = Date.now();
-      debugInfo.fetchDuration = debugInfo.fetchEndTime - debugInfo.fetchStartTime;
+      debugInfo.fetchDuration = (debugInfo.fetchEndTime as number) - (debugInfo.fetchStartTime as number);
 
       // Capture response details
       debugInfo.response = {
@@ -154,7 +154,7 @@ export async function GET(request: NextRequest) {
     const extractionResult = await metadataExtractor.extractWithDetails(url);
 
     debugInfo.extractionEndTime = Date.now();
-    debugInfo.extractionDuration = debugInfo.extractionEndTime - debugInfo.extractionStartTime;
+    debugInfo.extractionDuration = (debugInfo.extractionEndTime as number) - (debugInfo.extractionStartTime as number);
 
     debugInfo.extractionResult = extractionResult;
     debugInfo.metadata = extractionResult.data || null;
