@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getCurrentAdmin } from '@/lib/auth-admin';
-import { db } from '@/lib/db';
+import { userService } from '@/lib/services/user-service';
 import { getUserFriendlyError } from '@/lib/errors';
 import { logger } from '@/lib/services/logger';
 
@@ -29,77 +29,33 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     const { userId, emailId } = params;
 
-    // Fetch the email to verify it exists and belongs to user
-    const userEmail = await db.userEmail.findFirst({
-      where: {
-        id: emailId,
-        userId,
-      },
-    });
+    // Delete email using service (includes all safety checks)
+    try {
+      await userService.deleteEmail(userId, emailId);
+      return NextResponse.json({ success: true, message: 'Email removed successfully' });
+    } catch (error: unknown) {
+      // Handle NotFoundError
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('not found')) {
+        return NextResponse.json(
+          { error: getUserFriendlyError('NOT_FOUND', 'Email not found'), code: 'NOT_FOUND' },
+          { status: 404 }
+        );
+      }
 
-    if (!userEmail) {
-      return NextResponse.json(
-        { error: getUserFriendlyError('NOT_FOUND', 'Email not found'), code: 'NOT_FOUND' },
-        { status: 404 }
-      );
+      // Handle ValidationError (safety checks)
+      if (errorMessage.includes('Cannot remove')) {
+        return NextResponse.json(
+          {
+            error: getUserFriendlyError('VALIDATION_ERROR', errorMessage),
+            code: 'VALIDATION_ERROR',
+          },
+          { status: 400 }
+        );
+      }
+
+      throw error;
     }
-
-    // Safety check: Cannot delete the only email
-    const emailCount = await db.userEmail.count({
-      where: { userId },
-    });
-
-    if (emailCount === 1) {
-      return NextResponse.json(
-        {
-          error: getUserFriendlyError(
-            'VALIDATION_ERROR',
-            'Cannot remove the only email address'
-          ),
-          code: 'VALIDATION_ERROR',
-        },
-        { status: 400 }
-      );
-    }
-
-    // Safety check: Cannot delete the only verified email
-    const verifiedCount = await db.userEmail.count({
-      where: { userId, isVerified: true },
-    });
-
-    if (verifiedCount === 1 && userEmail.isVerified) {
-      return NextResponse.json(
-        {
-          error: getUserFriendlyError(
-            'VALIDATION_ERROR',
-            'Cannot remove the only verified email address'
-          ),
-          code: 'VALIDATION_ERROR',
-        },
-        { status: 400 }
-      );
-    }
-
-    // Safety check: Cannot delete primary email
-    if (userEmail.isPrimary) {
-      return NextResponse.json(
-        {
-          error: getUserFriendlyError(
-            'VALIDATION_ERROR',
-            'Cannot remove primary email. Set another email as primary first.'
-          ),
-          code: 'VALIDATION_ERROR',
-        },
-        { status: 400 }
-      );
-    }
-
-    // Delete email
-    await db.userEmail.delete({
-      where: { id: emailId },
-    });
-
-    return NextResponse.json({ success: true, message: 'Email removed successfully' });
   } catch (error) {
     logger.error({ error: error }, 'Admin delete email error');
     return NextResponse.json(

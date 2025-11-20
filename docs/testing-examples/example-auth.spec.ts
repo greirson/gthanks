@@ -33,7 +33,6 @@ test.describe('Authentication Flow (Example)', () => {
     // 2. Click send magic link button
     // 3. Verify success message
     // 4. Check that email was sent (requires email testing setup)
-
     // Example:
     // await page.fill('input[type="email"]', 'test@example.com');
     // await page.click('button[type="submit"]');
@@ -43,7 +42,6 @@ test.describe('Authentication Flow (Example)', () => {
   test.skip('OAuth login with Google', async ({ page }) => {
     // TODO: Implement OAuth test
     // Note: OAuth testing requires test accounts or mocking
-
     // Example:
     // await page.click('button[data-provider="google"]');
     // Handle OAuth redirect...
@@ -55,7 +53,6 @@ test.describe('Authentication Flow (Example)', () => {
     // 1. Login user
     // 2. Verify redirect to dashboard
     // 3. Verify user session is active
-
     // Example:
     // await loginUser(page, 'test@example.com');
     // await expect(page).toHaveURL(/.*dashboard/);
@@ -67,21 +64,17 @@ test.describe('Authentication Flow (Example)', () => {
     // 2. Click logout
     // 3. Verify redirect to login page
     // 4. Verify session is ended
-
     // Example:
     // await loginUser(page, 'test@example.com');
     // await page.click('[data-testid="logout-button"]');
     // await expect(page).toHaveURL(/.*auth\/login/);
   });
 
-  test.skip('prevents access to protected routes when not authenticated', async ({
-    page,
-  }) => {
+  test.skip('prevents access to protected routes when not authenticated', async ({ page }) => {
     // TODO: Implement protected route test
     // 1. Try to access protected route
     // 2. Verify redirect to login
     // 3. Verify redirect includes return URL
-
     // Example:
     // await page.goto('/wishes');
     // await expect(page).toHaveURL(/.*auth\/login/);

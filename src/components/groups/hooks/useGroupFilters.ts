@@ -11,6 +11,7 @@ export interface GroupFilterState {
   search: string;
   selectedMembers: string[];
   showAdminOnly: boolean;
+  [key: string]: unknown;
 }
 
 // Enhanced group type with current user role
@@ -99,22 +100,31 @@ export function useGroupFilters(
   }, [filterState]);
 
   // Filter update functions
-  const setSearch = useCallback((search: string) => {
-    setFilterState((prev) => ({ ...prev, search }));
-  }, []);
+  const setSearch = useCallback(
+    (search: string) => {
+      setFilterState((prev) => ({ ...prev, search }));
+    },
+    [setFilterState]
+  );
 
-  const setSelectedMembers = useCallback((selectedMembers: string[]) => {
-    setFilterState((prev) => ({ ...prev, selectedMembers }));
-  }, []);
+  const setSelectedMembers = useCallback(
+    (selectedMembers: string[]) => {
+      setFilterState((prev) => ({ ...prev, selectedMembers }));
+    },
+    [setFilterState]
+  );
 
-  const setShowAdminOnly = useCallback((showAdminOnly: boolean) => {
-    setFilterState((prev) => ({ ...prev, showAdminOnly }));
-  }, []);
+  const setShowAdminOnly = useCallback(
+    (showAdminOnly: boolean) => {
+      setFilterState((prev) => ({ ...prev, showAdminOnly }));
+    },
+    [setFilterState]
+  );
 
   // Reset filters
   const resetFilters = useCallback(() => {
     setFilterState(DEFAULT_FILTER_STATE);
-  }, []);
+  }, [setFilterState]);
 
   // Check if filters are active
   const hasActiveFilters = activeFilterCount > 0;

@@ -5,7 +5,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentAdmin } from '@/lib/auth-admin';
 import { getErrorMessage, getUserFriendlyError } from '@/lib/errors';
 import { AdminService } from '@/lib/services/admin-service';
-import type { UserSuspensionRequest } from '@/types/admin-api';
 import { logger } from '@/lib/services/logger';
 
 interface RouteParams {
@@ -42,7 +41,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const body = (await request.json()) as UserSuspensionRequest;
+    const body: unknown = await request.json();
     const { reason } = SuspendSchema.parse(body);
 
     // Suspend user

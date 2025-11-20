@@ -264,10 +264,7 @@ export async function waitForElementToDisappear(
  * @param page - Playwright page instance
  * @param timeoutMs - Timeout in milliseconds (default: 10000)
  */
-export async function waitForLoadingComplete(
-  page: Page,
-  timeoutMs: number = 10000
-): Promise<void> {
+export async function waitForLoadingComplete(page: Page, timeoutMs: number = 10000): Promise<void> {
   // Common loading spinner selectors
   const spinnerSelectors = [
     '[data-loading="true"]',

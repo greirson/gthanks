@@ -52,19 +52,19 @@ src/components/
 
 ### Radix UI Components Used
 
-| Component | Purpose | Key Features |
-|-----------|---------|--------------|
-| Dialog | Modals and overlays | Focus trap, ESC to close |
-| Dropdown Menu | Action menus | Keyboard navigation, nested menus |
-| Toast | Notifications | Auto-dismiss, swipe to dismiss |
-| Select | Dropdowns | Searchable, keyboard navigation |
-| Checkbox | Multiple choice | Indeterminate state |
-| Radio Group | Single choice | Keyboard navigation |
-| Switch | Toggle settings | Accessible label association |
-| Slider | Range inputs | Multi-thumb support |
-| Progress | Loading indicators | Determinate/indeterminate |
-| Tabs | Content switching | Keyboard navigation |
-| Avatar | User images | Fallback initials |
+| Component     | Purpose             | Key Features                      |
+| ------------- | ------------------- | --------------------------------- |
+| Dialog        | Modals and overlays | Focus trap, ESC to close          |
+| Dropdown Menu | Action menus        | Keyboard navigation, nested menus |
+| Toast         | Notifications       | Auto-dismiss, swipe to dismiss    |
+| Select        | Dropdowns           | Searchable, keyboard navigation   |
+| Checkbox      | Multiple choice     | Indeterminate state               |
+| Radio Group   | Single choice       | Keyboard navigation               |
+| Switch        | Toggle settings     | Accessible label association      |
+| Slider        | Range inputs        | Multi-thumb support               |
+| Progress      | Loading indicators  | Determinate/indeterminate         |
+| Tabs          | Content switching   | Keyboard navigation               |
+| Avatar        | User images         | Fallback initials                 |
 
 ### Example: Button Component
 
@@ -128,7 +128,7 @@ export { Button, buttonVariants };
 Use Tailwind utilities for most styling:
 
 ```tsx
-<div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+<div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
   <h3 className="text-lg font-semibold text-gray-900">Wish Title</h3>
   <span className="text-sm text-gray-500">$299.99</span>
 </div>
@@ -161,7 +161,9 @@ Mobile-first responsive utilities:
 
 ```tsx
 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-  {wishes.map(wish => <WishCard key={wish.id} wish={wish} />)}
+  {wishes.map((wish) => (
+    <WishCard key={wish.id} wish={wish} />
+  ))}
 </div>
 ```
 
@@ -170,7 +172,7 @@ Mobile-first responsive utilities:
 Use next-themes for dark mode:
 
 ```tsx
-<div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+<div className="bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100">
   <h1 className="text-2xl font-bold">My Wishes</h1>
 </div>
 ```
@@ -302,10 +304,7 @@ Always use semantic HTML elements:
 Provide ARIA labels for screen readers:
 
 ```tsx
-<button
-  aria-label="Delete wish"
-  onClick={() => deleteWish(wish.id)}
->
+<button aria-label="Delete wish" onClick={() => deleteWish(wish.id)}>
   <TrashIcon />
 </button>
 ```
@@ -368,9 +367,9 @@ export function WishListSkeleton() {
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
       {[...Array(6)].map((_, i) => (
         <div key={i} className="animate-pulse">
-          <div className="h-48 bg-gray-200 rounded-lg" />
-          <div className="mt-2 h-4 bg-gray-200 rounded w-3/4" />
-          <div className="mt-1 h-4 bg-gray-200 rounded w-1/2" />
+          <div className="h-48 rounded-lg bg-gray-200" />
+          <div className="mt-2 h-4 w-3/4 rounded bg-gray-200" />
+          <div className="mt-1 h-4 w-1/2 rounded bg-gray-200" />
         </div>
       ))}
     </div>
@@ -438,12 +437,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div className="p-4 text-center">
-          <h2 className="text-xl font-semibold text-red-600">
-            Something went wrong
-          </h2>
-          <p className="mt-2 text-gray-600">
-            Please try refreshing the page.
-          </p>
+          <h2 className="text-xl font-semibold text-red-600">Something went wrong</h2>
+          <p className="mt-2 text-gray-600">Please try refreshing the page.</p>
         </div>
       );
     }
@@ -498,7 +493,7 @@ export default async function WishesPage() {
 }
 
 // ✅ Client Component (interactive)
-'use client';
+('use client');
 
 export function WishForm({ wish }: WishFormProps) {
   const [title, setTitle] = useState(wish?.title ?? '');

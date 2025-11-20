@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getCurrentUser } from '@/lib/auth-utils';
 import { getUserFriendlyError } from '@/lib/errors';
-import { db } from '@/lib/db';
+import { userService } from '@/lib/services/user-service';
 import { logger } from '@/lib/services/logger';
 
 const onboardingSchema = z.object({
@@ -22,29 +22,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    const body = (await request.json()) as unknown;
     const validatedData = onboardingSchema.parse(body);
 
-    // Update user with name and mark onboarding as complete
-    const updatedUser = await db.user.update({
-      where: { id: user.id },
-      data: {
-        name: validatedData.name,
-        isOnboardingComplete: true,
-        updatedAt: new Date(),
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        image: true,
-        isOnboardingComplete: true,
-      },
+    // Complete profile using service layer (sets name and marks onboarding complete)
+    const updatedUser = await userService.completeProfile(user.id, {
+      name: validatedData.name,
     });
 
     return NextResponse.json({
       success: true,
-      user: updatedUser,
+      user: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        image: updatedUser.image,
+        isOnboardingComplete: updatedUser.isOnboardingComplete,
+      },
     });
   } catch (error) {
     logger.error({ error: error }, 'Onboarding completion error');

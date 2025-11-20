@@ -23,6 +23,7 @@ docker compose up -d
 ```
 
 **What you get:**
+
 - Single container deployment
 - SQLite database (stored in `./data/gthanks.db`)
 - Simple backup: `cp data/gthanks.db backup.db`
@@ -44,6 +45,7 @@ docker compose -f docker-compose.postgres.yml up -d
 ```
 
 **What you get:**
+
 - Separate PostgreSQL container
 - Production-grade database with connection pooling
 - Better performance for high traffic (100s-1000s of users)
@@ -112,7 +114,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - NODE_ENV=production
       - DATABASE_URL=file:./data/gthanks.db
@@ -147,7 +149,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://gthanks:${POSTGRES_PASSWORD}@postgres:5432/gthanks
@@ -178,7 +180,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U gthanks"]
+      test: ['CMD-SHELL', 'pg_isready -U gthanks']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -193,17 +195,20 @@ volumes:
 gthanks Docker images work on all modern platforms:
 
 **Supported Platforms:**
+
 - Apple Silicon (M1/M2/M3/M4 Macs)
 - Intel/AMD (x86_64)
 - Linux ARM64
 - Linux AMD64
 
 **Key Features:**
+
 - Automatic platform detection
 - Runtime Prisma Client generation (handles SQLite/PostgreSQL detection)
 - No manual configuration needed
 
 The included `docker-entrypoint.sh` script automatically:
+
 1. Detects database type from `DATABASE_URL`
 2. Updates Prisma schema provider if needed
 3. Generates appropriate Prisma Client
@@ -260,11 +265,13 @@ docker compose up -d
 ### Database Migrations
 
 Migrations run automatically on container startup via `docker-entrypoint.sh`. The script:
+
 1. Generates Prisma Client
 2. Runs `prisma db push` to apply schema changes
 3. Starts the application
 
 **Manual migration (if needed):**
+
 ```bash
 docker compose exec app npx prisma db push
 ```
@@ -351,11 +358,11 @@ services:
   app:
     image: gthanks:latest
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.gthanks.rule=Host(`gthanks.yourdomain.com`)"
-      - "traefik.http.routers.gthanks.entrypoints=websecure"
-      - "traefik.http.routers.gthanks.tls.certresolver=letsencrypt"
-      - "traefik.http.services.gthanks.loadbalancer.server.port=3000"
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.gthanks.rule=Host(`gthanks.yourdomain.com`)'
+      - 'traefik.http.routers.gthanks.entrypoints=websecure'
+      - 'traefik.http.routers.gthanks.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.gthanks.loadbalancer.server.port=3000'
     networks:
       - traefik
 
@@ -509,9 +516,9 @@ services:
     deploy:
       replicas: 3
     environment:
-      - DATABASE_URL=postgresql://...  # Managed database
-      - REDIS_URL=redis://redis:6379   # For rate limiting
-      - UPLOAD_BUCKET=s3://gthanks-uploads  # S3 storage
+      - DATABASE_URL=postgresql://... # Managed database
+      - REDIS_URL=redis://redis:6379 # For rate limiting
+      - UPLOAD_BUCKET=s3://gthanks-uploads # S3 storage
 ```
 
 ## Migration from SQLite to PostgreSQL
@@ -521,6 +528,7 @@ See [DATABASE_MIGRATION.md](./DATABASE_MIGRATION.md) for detailed migration inst
 ## Support
 
 For deployment issues:
+
 - Check logs: `docker compose logs app`
 - Review health check: `curl http://localhost:3000/api/health`
 - Open GitHub issue: https://github.com/yourusername/gthanks/issues

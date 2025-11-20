@@ -9,68 +9,13 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/components/ui/use-toast';
+import { getCroppedImg } from '@/lib/utils/image-crop';
 
 interface AvatarCropProps {
   value?: string; // Current avatar URL
   onChange: (avatarUrl: string) => void;
   disabled?: boolean;
   className?: string;
-}
-
-/**
- * Get cropped image from canvas
- */
-function getCroppedImg(
-  imageSrc: string,
-  pixelCrop: Area,
-  rotation = 0
-): Promise<{ file: Blob; url: string }> {
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.src = imageSrc;
-    image.onload = () => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-
-      if (!ctx) {
-        reject(new Error('Failed to get canvas context'));
-        return;
-      }
-
-      const maxSize = Math.max(image.width, image.height);
-      const safeArea = 2 * ((maxSize / 2) * Math.sqrt(2));
-
-      canvas.width = safeArea;
-      canvas.height = safeArea;
-
-      ctx.translate(safeArea / 2, safeArea / 2);
-      ctx.rotate((rotation * Math.PI) / 180);
-      ctx.translate(-safeArea / 2, -safeArea / 2);
-
-      ctx.drawImage(image, safeArea / 2 - image.width / 2, safeArea / 2 - image.height / 2);
-
-      const data = ctx.getImageData(0, 0, safeArea, safeArea);
-
-      canvas.width = pixelCrop.width;
-      canvas.height = pixelCrop.height;
-
-      ctx.putImageData(
-        data,
-        Math.round(0 - safeArea / 2 + image.width / 2 - pixelCrop.x),
-        Math.round(0 - safeArea / 2 + image.height / 2 - pixelCrop.y)
-      );
-
-      canvas.toBlob((blob) => {
-        if (!blob) {
-          reject(new Error('Failed to create blob'));
-          return;
-        }
-        const url = URL.createObjectURL(blob);
-        resolve({ file: blob, url });
-      }, 'image/jpeg');
-    };
-    image.onerror = () => reject(new Error('Failed to load image'));
-  });
 }
 
 export function AvatarCrop({ value, onChange, disabled = false, className }: AvatarCropProps) {
@@ -88,7 +33,9 @@ export function AvatarCrop({ value, onChange, disabled = false, className }: Ava
   const handleFileSelect = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
-      if (!file) {return;}
+      if (!file) {
+        return;
+      }
 
       // Validate file type
       const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -123,7 +70,9 @@ export function AvatarCrop({ value, onChange, disabled = false, className }: Ava
   );
 
   const handleCropAndUpload = useCallback(async () => {
-    if (!selectedImage || !croppedAreaPixels) {return;}
+    if (!selectedImage || !croppedAreaPixels) {
+      return;
+    }
 
     setIsUploading(true);
 
@@ -163,49 +112,6 @@ export function AvatarCrop({ value, onChange, disabled = false, className }: Ava
     }
   }, [selectedImage, croppedAreaPixels, onChange, toast]);
 
-  const handleUseAsIs = useCallback(async () => {
-    if (!selectedImage) {return;}
-
-    setIsUploading(true);
-
-    try {
-      // Convert base64 to blob
-      const response = await fetch(selectedImage);
-      const blob = await response.blob();
-
-      const formData = new FormData();
-      formData.append('avatar', blob, 'avatar.jpg');
-
-      const uploadResponse = await fetch('/api/user/avatar', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!uploadResponse.ok) {
-        const errorData = (await uploadResponse.json()) as { error?: string };
-        throw new Error(errorData.error || 'Upload failed');
-      }
-
-      const result = (await uploadResponse.json()) as { avatarUrl: string };
-
-      onChange(result.avatarUrl);
-      setSelectedImage(null);
-
-      toast({
-        title: 'Photo uploaded',
-        description: 'Your profile photo has been updated.',
-      });
-    } catch (error) {
-      toast({
-        title: 'Upload failed',
-        description: error instanceof Error ? error.message : 'Failed to upload photo',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsUploading(false);
-    }
-  }, [selectedImage, onChange, toast]);
-
   const handleCancel = useCallback(() => {
     setSelectedImage(null);
     setCrop({ x: 0, y: 0 });
@@ -244,6 +150,9 @@ export function AvatarCrop({ value, onChange, disabled = false, className }: Ava
         {/* Zoom Slider */}
         <div className="mt-4">
           <Label className="text-sm text-muted-foreground">Zoom</Label>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Move the photo with your finger. Use the slider to zoom.
+          </p>
           <Slider
             value={[zoom]}
             min={1}
@@ -259,27 +168,20 @@ export function AvatarCrop({ value, onChange, disabled = false, className }: Ava
         <div className="mt-6 flex flex-col gap-2 sm:flex-row">
           <Button
             type="button"
-            onClick={handleCropAndUpload}
+            onClick={() => {
+              void handleCropAndUpload();
+            }}
             disabled={isUploading}
             className="min-h-[44px] flex-1"
           >
-            {isUploading ? 'Uploading...' : 'Crop & Upload'}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleUseAsIs}
-            disabled={isUploading}
-            className="min-h-[44px] flex-1"
-          >
-            Use As-Is
+            {isUploading ? 'Uploading...' : 'Save Photo'}
           </Button>
           <Button
             type="button"
             variant="ghost"
             onClick={handleCancel}
             disabled={isUploading}
-            className="min-h-[44px]"
+            className="min-h-[44px] flex-1"
           >
             Cancel
           </Button>

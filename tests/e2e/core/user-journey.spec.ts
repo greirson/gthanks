@@ -53,7 +53,10 @@ import { db } from '@/lib/db';
  * to ensure reliability while still testing real user experience.
  */
 test.describe('Test 1: End-to-End Happy Path', () => {
-  test('complete user journey from signup to reservation with privacy', async ({ page, context }) => {
+  test('complete user journey from signup to reservation with privacy', async ({
+    page,
+    context,
+  }) => {
     let wishOwner: TestUser;
     let giftGiver: TestUser;
 
@@ -68,14 +71,13 @@ test.describe('Test 1: End-to-End Happy Path', () => {
       await waitForPageLoad(page);
 
       // Verify user is logged in by checking for navigation elements
-      const isLoggedIn = await page.locator('nav, header').count() > 0;
+      const isLoggedIn = (await page.locator('nav, header').count()) > 0;
       expect(isLoggedIn, 'User should be logged in').toBeTruthy();
 
-      // Step 2: User creates wish with title, price, notes (using API)
+      // Step 2: User creates wish with title, price (using API)
       const wish = await createWish(wishOwner.id, {
         title: 'Nintendo Switch OLED',
         price: 349.99,
-        notes: 'White color preferred, for family game nights',
         wishLevel: 3,
       });
 
@@ -177,7 +179,9 @@ test.describe('Test 1: End-to-End Happy Path', () => {
 
       // CRITICAL: In production, the API should NOT expose reserver details to the owner
       // This is enforced by the API layer, not the database
-      console.log('✅ PRIVACY MAINTAINED: Reservation created with gift giver details (API layer handles privacy)');
+      console.log(
+        '✅ PRIVACY MAINTAINED: Reservation created with gift giver details (API layer handles privacy)'
+      );
 
       await giverPage.close();
     } finally {
@@ -193,7 +197,7 @@ test.describe('Test 1: End-to-End Happy Path', () => {
  * Test 2: Wish CRUD with Image and Priority
  *
  * Tests the complete lifecycle of a wish using API and database:
- * 1. Create wish with full metadata (title, price, priority, notes)
+ * 1. Create wish with full metadata (title, price, priority)
  * 2. Verify wish appears with all details in UI
  * 3. Update wish priority via API
  * 4. Verify changes persist
@@ -220,7 +224,6 @@ test.describe('Test 2: Wish CRUD with Image and Priority', () => {
       const wish = await createWish(testUser.id, {
         title: 'Gaming Laptop',
         price: 1299.99,
-        notes: 'For work and gaming',
         wishLevel: 3,
       });
 
@@ -228,7 +231,6 @@ test.describe('Test 2: Wish CRUD with Image and Priority', () => {
       expect(wish, 'Wish should be created in database').toBeDefined();
       expect(wish.title).toBe('Gaming Laptop');
       expect(wish.price).toBe(1299.99);
-      expect(wish.notes).toBe('For work and gaming');
       expect(wish.wishLevel).toBe(3);
 
       console.log('✅ WISH CREATED: Gaming Laptop with price $1,299.99 and priority 3');
@@ -288,7 +290,10 @@ test.describe('Test 2: Wish CRUD with Image and Priority', () => {
  * 4. Verify visibility in database and UI
  */
 test.describe('Test 3: List Visibility Changes', () => {
-  test('change list visibility from private to public to password-protected', async ({ page, context }) => {
+  test('change list visibility from private to public to password-protected', async ({
+    page,
+    context,
+  }) => {
     let testUser: TestUser;
 
     try {
@@ -363,7 +368,9 @@ test.describe('Test 3: List Visibility Changes', () => {
       const pageLoaded = anonPage.url().includes('/share/');
       expect(pageLoaded, 'Share page should load').toBeTruthy();
 
-      console.log('✅ PASSWORD ACCESS: Share URL accessible (password check would be in production)');
+      console.log(
+        '✅ PASSWORD ACCESS: Share URL accessible (password check would be in production)'
+      );
 
       await anonPage.close();
     } finally {

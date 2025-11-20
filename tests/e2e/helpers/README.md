@@ -47,9 +47,11 @@ test('complete user flow', async ({ page }) => {
 ### 1. Authentication Helpers (`auth.helper.ts`)
 
 #### `createAndLoginUser(page, userData)`
+
 Create a new test user and automatically log them in (bypasses magic link).
 
 **Parameters:**
+
 - `page`: Playwright page instance
 - `userData`: Object with `email`, `name`, optional `isAdmin` and `role`
 
@@ -65,6 +67,7 @@ const user = await createAndLoginUser(page, {
 ```
 
 #### `loginAsUser(page, email)`
+
 Login an existing user by email.
 
 ```typescript
@@ -72,6 +75,7 @@ const user = await loginAsUser(page, 'existing@example.com');
 ```
 
 #### `createTestUsers()`
+
 Create multiple test users with different roles (owner, member, admin, giver).
 
 ```typescript
@@ -79,6 +83,7 @@ const { owner, member, admin, giver } = await createTestUsers();
 ```
 
 #### `logout(page)`
+
 Logout the current user.
 
 ```typescript
@@ -86,6 +91,7 @@ await logout(page);
 ```
 
 #### `isLoggedIn(page)`
+
 Check if a user is currently logged in.
 
 ```typescript
@@ -93,6 +99,7 @@ const loggedIn = await isLoggedIn(page); // returns boolean
 ```
 
 #### `getSessionToken(page)`
+
 Get the current session token from cookies.
 
 ```typescript
@@ -100,6 +107,7 @@ const token = await getSessionToken(page); // returns string | null
 ```
 
 #### `waitForAuth(page, timeoutMs?)`
+
 Wait for authentication to complete after login actions.
 
 ```typescript
@@ -111,9 +119,11 @@ await waitForAuth(page, 5000);
 ### 2. Database Helpers (`database.helper.ts`)
 
 #### `createWish(userId, wishData)`
+
 Create a test wish for a user.
 
 **Parameters:**
+
 - `userId`: User ID who owns the wish
 - `wishData`: Object with wish properties
 
@@ -132,6 +142,7 @@ const wish = await createWish(user.id, {
 ```
 
 #### `createList(userId, listData)`
+
 Create a test list for a user.
 
 ```typescript
@@ -143,6 +154,7 @@ const list = await createList(user.id, {
 ```
 
 #### `createGroup(userId, groupData)`
+
 Create a test group with the user as admin.
 
 ```typescript
@@ -154,6 +166,7 @@ const group = await createGroup(user.id, {
 ```
 
 #### `addWishToList(wishId, listId, wishLevel?)`
+
 Add a wish to a list.
 
 ```typescript
@@ -161,6 +174,7 @@ await addWishToList(wish.id, list.id, 2); // wishLevel optional
 ```
 
 #### `addUserToGroup(userId, groupId, role?)`
+
 Add a user to a group.
 
 ```typescript
@@ -168,6 +182,7 @@ await addUserToGroup(user.id, group.id, 'member'); // role: 'member' | 'admin'
 ```
 
 #### `shareListWithGroup(listId, groupId, sharedBy)`
+
 Share a list with a group.
 
 ```typescript
@@ -175,6 +190,7 @@ await shareListWithGroup(list.id, group.id, owner.id);
 ```
 
 #### `createReservation(wishId, reserverEmail?, reserverName?)`
+
 Create a gift reservation.
 
 ```typescript
@@ -182,6 +198,7 @@ await createReservation(wish.id, 'giver@example.com', 'John Doe');
 ```
 
 #### `seedTestData()`
+
 Create a complete test scenario with users, wishes, lists, and groups.
 
 ```typescript
@@ -193,6 +210,7 @@ const { users, wishes, list, group } = await seedTestData();
 ```
 
 #### `cleanupTestData(userIds?)`
+
 Clean up test data. Pass user IDs to clean specific users, or omit to clean ALL data.
 
 **⚠️ WARNING:** Calling without arguments will delete ALL data in the database!
@@ -206,6 +224,7 @@ await cleanupTestData();
 ```
 
 #### `resetDatabase(seedAfter?)`
+
 Full database reset, optionally seed fresh data after cleanup.
 
 ```typescript
@@ -571,16 +590,19 @@ await page.fill('input', 'value');
 ## Debugging Tips
 
 ### 1. Use UI Mode (Recommended)
+
 ```bash
 npx playwright test --ui
 ```
 
 ### 2. Use Debug Mode
+
 ```bash
 npx playwright test --debug
 ```
 
 ### 3. Take Screenshots
+
 ```typescript
 import { takeScreenshot } from './helpers';
 
@@ -588,6 +610,7 @@ await takeScreenshot(page, 'before-error');
 ```
 
 ### 4. Check Database State
+
 ```typescript
 import { getDatabaseCounts } from './helpers';
 
@@ -596,6 +619,7 @@ console.log('Database state:', counts);
 ```
 
 ### 5. Run Single Test
+
 ```bash
 npx playwright test sample.spec.ts:23
 ```

@@ -59,7 +59,9 @@ async function generateSessionToken(email: string) {
   console.log(`  Name:  next-auth.session-token`);
   console.log(`  Value: ${sessionToken}`);
   console.log('\nTo use in browser console:');
-  console.log(`  document.cookie = "next-auth.session-token=${sessionToken}; path=/; max-age=604800"`);
+  console.log(
+    `  document.cookie = "next-auth.session-token=${sessionToken}; path=/; max-age=604800"`
+  );
   console.log('\nThen refresh the page.\n');
 }
 

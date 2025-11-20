@@ -8,6 +8,12 @@
 
 import { PrismaClient } from '@prisma/client';
 
+// Type for Prisma transaction client
+type TransactionClient = Omit<
+  PrismaClient,
+  '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'
+>;
+
 /**
  * Ensures a user has exactly one primary email
  *
@@ -23,7 +29,7 @@ import { PrismaClient } from '@prisma/client';
  * @throws Error if trying to unset the only primary email
  */
 export async function ensureOnePrimaryEmail(
-  tx: any,
+  tx: PrismaClient | TransactionClient,
   userId: string,
   emailId: string,
   isPrimary: boolean
@@ -71,10 +77,7 @@ export async function ensureOnePrimaryEmail(
  * @param userId - User ID
  * @returns Promise<boolean> - True if valid, false otherwise
  */
-export async function validateUserPrimaryEmail(
-  db: PrismaClient,
-  userId: string
-): Promise<boolean> {
+export async function validateUserPrimaryEmail(db: PrismaClient, userId: string): Promise<boolean> {
   const primaryCount = await db.userEmail.count({
     where: {
       userId,
@@ -95,7 +98,7 @@ export async function validateUserPrimaryEmail(
  * @returns Promise<void>
  */
 export async function syncUserEmailWithPrimary(
-  tx: any,
+  tx: PrismaClient | TransactionClient,
   userId: string
 ): Promise<void> {
   const primaryEmail = await tx.userEmail.findFirst({
@@ -122,10 +125,7 @@ export async function syncUserEmailWithPrimary(
  * @param userId - User ID
  * @returns Promise<UserEmail | null>
  */
-export async function getPrimaryEmail(
-  db: PrismaClient,
-  userId: string
-) {
+export async function getPrimaryEmail(db: PrismaClient, userId: string) {
   return await db.userEmail.findFirst({
     where: {
       userId,
@@ -239,10 +239,7 @@ export async function updateEmailPrimaryStatus(
  * @returns Promise<void>
  * @throws Error if trying to delete the only email or primary email
  */
-export async function deleteUserEmail(
-  db: PrismaClient,
-  emailId: string
-): Promise<void> {
+export async function deleteUserEmail(db: PrismaClient, emailId: string): Promise<void> {
   return await db.$transaction(async (tx) => {
     // Get the email
     const email = await tx.userEmail.findUnique({

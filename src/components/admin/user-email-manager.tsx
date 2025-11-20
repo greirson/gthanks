@@ -87,13 +87,15 @@ export function UserEmailManager({ userId, userEmails, userName }: UserEmailMana
         body: JSON.stringify({ email: newEmail, sendVerification }),
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as { email?: UserEmail; error?: string };
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to add email');
+        throw new Error(data.error ?? 'Failed to add email');
       }
 
-      setEmails([...emails, data.email]);
+      if (data.email) {
+        setEmails([...emails, data.email]);
+      }
       setNewEmail('');
       showMessage(
         'success',
@@ -113,10 +115,10 @@ export function UserEmailManager({ userId, userEmails, userName }: UserEmailMana
         method: 'DELETE',
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as { error?: string };
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to remove email');
+        throw new Error(data.error ?? 'Failed to remove email');
       }
 
       setEmails(emails.filter((e) => e.id !== emailId));
@@ -136,10 +138,10 @@ export function UserEmailManager({ userId, userEmails, userName }: UserEmailMana
         method: 'POST',
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as { error?: string };
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to set primary email');
+        throw new Error(data.error ?? 'Failed to set primary email');
       }
 
       // Update emails list
@@ -164,10 +166,10 @@ export function UserEmailManager({ userId, userEmails, userName }: UserEmailMana
         method: 'POST',
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as { error?: string };
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to resend verification email');
+        throw new Error(data.error ?? 'Failed to resend verification email');
       }
 
       showMessage('success', 'Verification email sent. User should check their inbox.');
@@ -183,7 +185,9 @@ export function UserEmailManager({ userId, userEmails, userName }: UserEmailMana
 
   const canRemoveEmail = (email: UserEmail): boolean => {
     // Cannot remove if it's the only email
-    if (emails.length === 1) {return false;}
+    if (emails.length === 1) {
+      return false;
+    }
     // Cannot remove if it's the only verified email and is primary
     const verifiedEmails = emails.filter((e) => e.isVerified);
     return !(email.isPrimary && verifiedEmails.length === 1);
@@ -224,13 +228,13 @@ export function UserEmailManager({ userId, userEmails, userName }: UserEmailMana
             {sortedEmails.map((email) => (
               <div
                 key={email.id}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-lg border bg-card"
+                className="flex flex-col justify-between gap-3 rounded-lg border bg-card p-4 sm:flex-row sm:items-center"
               >
-                <div className="flex items-start gap-3 min-w-0 flex-1">
-                  <Mail className="h-5 w-5 mt-0.5 text-muted-foreground flex-shrink-0" />
+                <div className="flex min-w-0 flex-1 items-start gap-3">
+                  <Mail className="mt-0.5 h-5 w-5 flex-shrink-0 text-muted-foreground" />
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                      <p className="font-medium text-sm break-all">{email.email}</p>
+                    <div className="mb-1 flex flex-wrap items-center gap-2">
+                      <p className="break-all text-sm font-medium">{email.email}</p>
                       {email.isPrimary && (
                         <Badge variant="default" className="flex-shrink-0">
                           Primary
@@ -243,12 +247,12 @@ export function UserEmailManager({ userId, userEmails, userName }: UserEmailMana
                       )}
                       {email.isVerified && !email.isPrimary && (
                         <Badge variant="secondary" className="flex-shrink-0">
-                          <Shield className="h-3 w-3 mr-1" />
+                          <Shield className="mr-1 h-3 w-3" />
                           Verified
                         </Badge>
                       )}
                     </div>
-                    <div className="text-xs text-muted-foreground space-y-0.5">
+                    <div className="space-y-0.5 text-xs text-muted-foreground">
                       {email.verifiedAt && (
                         <p>Verified {new Date(email.verifiedAt).toLocaleDateString()}</p>
                       )}
@@ -263,7 +267,7 @@ export function UserEmailManager({ userId, userEmails, userName }: UserEmailMana
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleSetPrimary(email.id)}
+                      onClick={() => void handleSetPrimary(email.id)}
                       disabled={loading !== null}
                     >
                       {loading === `primary-${email.id}` ? 'Setting...' : 'Make Primary'}
@@ -274,7 +278,7 @@ export function UserEmailManager({ userId, userEmails, userName }: UserEmailMana
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => handleResendVerification(email.id)}
+                      onClick={() => void handleResendVerification(email.id)}
                       disabled={loading !== null}
                     >
                       {loading === `resend-${email.id}` ? 'Sending...' : 'Resend Verification'}
@@ -316,7 +320,7 @@ export function UserEmailManager({ userId, userEmails, userName }: UserEmailMana
           {/* Add Email Form */}
           <div className="space-y-3">
             <h3 className="text-sm font-medium">Add New Email</h3>
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <Input
                 type="email"
                 placeholder="new-email@example.com"
@@ -325,21 +329,21 @@ export function UserEmailManager({ userId, userEmails, userName }: UserEmailMana
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
-                    handleAddEmail();
+                    void handleAddEmail();
                   }
                 }}
                 disabled={loading !== null}
                 className="flex-1"
               />
               <Button
-                onClick={handleAddEmail}
+                onClick={() => void handleAddEmail()}
                 disabled={loading !== null || !newEmail.trim()}
-                className="sm:w-auto w-full"
+                className="w-full sm:w-auto"
               >
                 {loading === 'add' ? 'Adding...' : 'Add Email'}
               </Button>
             </div>
-            <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
               <input
                 type="checkbox"
                 checked={sendVerification}
@@ -356,15 +360,13 @@ export function UserEmailManager({ userId, userEmails, userName }: UserEmailMana
       {/* Confirm Remove Dialog */}
       <ConfirmDialog
         open={confirmDialog.open}
-        onOpenChange={(open) =>
-          setConfirmDialog({ open, emailId: '', email: '' })
-        }
+        onOpenChange={(open) => setConfirmDialog({ open, emailId: '', email: '' })}
         title="Remove Email Address"
         description={`Are you sure you want to remove ${confirmDialog.email}? This action cannot be undone.`}
         confirmText="Remove"
         cancelText="Cancel"
         variant="destructive"
-        onConfirm={() => handleRemoveEmail(confirmDialog.emailId)}
+        onConfirm={() => void handleRemoveEmail(confirmDialog.emailId)}
       />
     </div>
   );

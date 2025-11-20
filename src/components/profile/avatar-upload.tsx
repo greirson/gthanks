@@ -1,18 +1,22 @@
 'use client';
 
-import { Upload, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
-import { Button } from '@/components/ui/button';
+import { AvatarCropDialog } from '@/components/ui/avatar-crop-dialog';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 import { UserAvatar } from '@/components/ui/user-avatar';
 
 interface AvatarUploadProps {
@@ -20,7 +24,21 @@ interface AvatarUploadProps {
   userName?: string;
   userId: string;
   userEmail: string;
-  onAvatarChange?: (newAvatarUrl: string) => void;
+  onAvatarChange?: (newAvatarUrl: string | null) => void;
+}
+
+interface ApiErrorResponse {
+  error: string;
+}
+
+interface AvatarUploadResponse {
+  avatarUrl: string;
+}
+
+function isApiErrorResponse(data: unknown): data is ApiErrorResponse {
+  return (
+    typeof data === 'object' && data !== null && 'error' in data && typeof data.error === 'string'
+  );
 }
 
 export function AvatarUpload({
@@ -30,11 +48,13 @@ export function AvatarUpload({
   userEmail,
   onAvatarChange,
 }: AvatarUploadProps) {
+  const router = useRouter();
+  const [localAvatar, setLocalAvatar] = useState<string | null | undefined>(currentAvatar);
   const [isOpen, setIsOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -43,76 +63,47 @@ export function AvatarUpload({
     }
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file');
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Please select a JPEG, PNG, GIF, or WebP image.');
       return;
     }
 
-    // Validate file size (2MB max)
+    // Validate file size (2MB)
     if (file.size > 2 * 1024 * 1024) {
       toast.error('Image must be less than 2MB');
       return;
     }
 
-    // Store File object directly
+    // Store file and open dialog
     setSelectedFile(file);
-
-    // Create blob URL for preview (efficient, CSP-compliant)
-    setPreview(URL.createObjectURL(file));
+    setIsOpen(true);
   };
 
-  const handleUpload = async () => {
-    if (!selectedFile) {
-      return;
-    }
-
+  const handleRemove = async () => {
     setIsUploading(true);
     try {
-      // Create FormData directly from File (File IS a Blob - no conversion!)
-      const formData = new FormData();
-      formData.append('avatar', selectedFile, selectedFile.name);
-
-      // Upload to API
-      const uploadResponse = await fetch('/api/user/avatar', {
-        method: 'POST',
-        body: formData,
+      const response = await fetch('/api/user/avatar', {
+        method: 'DELETE',
       });
 
-      if (uploadResponse.ok) {
-        const result = (await uploadResponse.json()) as { avatarUrl?: string };
-        onAvatarChange?.(result.avatarUrl || '');
-        toast.success('Avatar updated successfully');
-        setIsOpen(false);
-        setPreview(null);
-        setSelectedFile(null); // Clear selected file
+      if (response.ok) {
+        setLocalAvatar(null);
+        onAvatarChange?.(null);
+        router.refresh();
+        toast.success('Photo removed successfully');
       } else {
-        const error = (await uploadResponse.json()) as { error?: string };
-        toast.error(error.error || 'Failed to upload avatar');
+        const error = (await response.json()) as ApiErrorResponse;
+        const errorMessage = isApiErrorResponse(error) ? error.error : 'Failed to remove photo';
+        toast.error(errorMessage);
       }
     } catch {
       toast.error('Something went wrong');
     } finally {
       setIsUploading(false);
+      setShowRemoveConfirm(false);
     }
   };
-
-  const handleCancel = () => {
-    setPreview(null);
-    setSelectedFile(null);
-    setIsOpen(false);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  // Cleanup preview when component unmounts or preview changes
-  useEffect(() => {
-    return () => {
-      if (preview && preview.startsWith('blob:')) {
-        URL.revokeObjectURL(preview);
-      }
-    };
-  }, [preview]);
 
   return (
     <>
@@ -122,101 +113,128 @@ export function AvatarUpload({
             id: userId,
             name: userName || null,
             email: userEmail || null,
-            avatarUrl: currentAvatar || null,
+            avatarUrl: localAvatar || null,
           }}
           size="2xl"
         />
-        <div>
-          <Button type="button" variant="outline" size="sm" onClick={() => setIsOpen(true)}>
-            Change Avatar
+        <div className="flex flex-col gap-2">
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/gif,image/webp"
+            onChange={handleFileSelect}
+            className="hidden"
+            disabled={isUploading}
+          />
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className="min-h-[44px]"
+          >
+            Change Photo
           </Button>
-          <p className="mt-1 text-xs text-muted-foreground">JPG, PNG or GIF. Max size 2MB.</p>
+
+          {/* Remove Photo button - only show if avatar exists */}
+          {localAvatar && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowRemoveConfirm(true)}
+              disabled={isUploading}
+              className="min-h-[44px]"
+            >
+              Remove Photo
+            </Button>
+          )}
+
+          <p className="text-xs text-muted-foreground">JPG, PNG or GIF. Max size 2MB.</p>
         </div>
       </div>
 
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Upload Avatar</DialogTitle>
-            <DialogDescription>
-              Choose a new profile picture. It will be cropped to a square.
-            </DialogDescription>
-          </DialogHeader>
+      <AvatarCropDialog
+        open={isOpen}
+        onOpenChange={(open) => {
+          setIsOpen(open);
+          if (!open) {
+            // Clear selected file when dialog closes
+            setSelectedFile(null);
+            if (fileInputRef.current) {
+              fileInputRef.current.value = '';
+            }
+          }
+        }}
+        mode="user"
+        currentImage={localAvatar || undefined}
+        preSelectedFile={selectedFile ?? undefined}
+        onSave={async (file) => {
+          setIsUploading(true);
+          try {
+            const formData = new FormData();
+            formData.append('avatar', file, 'avatar.jpg');
 
-          <div className="space-y-4">
-            {/* File Input */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
+            const uploadResponse = await fetch('/api/user/avatar', {
+              method: 'POST',
+              body: formData,
+            });
 
-            {/* Upload Area */}
-            {!preview ? (
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    fileInputRef.current?.click();
-                  }
-                }}
-                role="button"
-                tabIndex={0}
-                className="cursor-pointer rounded-lg border-2 border-dashed p-8 text-center transition-colors hover:border-muted-foreground/50"
-              >
-                <Upload className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
-                <p className="text-sm text-muted-foreground">Click to select an image</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {/* Preview */}
-                <div className="flex justify-center">
-                  <div className="relative">
-                    <UserAvatar
-                      user={{
-                        id: userId,
-                        name: 'Preview',
-                        email: userEmail || null,
-                        avatarUrl: preview,
-                      }}
-                      size="3xl"
-                    />
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="absolute -right-2 -top-2"
-                      onClick={handleCancel}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </div>
+            if (uploadResponse.ok) {
+              const result = (await uploadResponse.json()) as AvatarUploadResponse;
 
-                {/* Actions */}
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex-1"
-                  >
-                    Choose Different
-                  </Button>
-                  <Button
-                    onClick={() => void handleUpload()}
-                    disabled={isUploading}
-                    className="flex-1"
-                  >
-                    {isUploading ? 'Uploading...' : 'Upload'}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+              // Optimistic update - instant UI change
+              setLocalAvatar(result.avatarUrl || '');
+
+              // Callback for backward compatibility
+              onAvatarChange?.(result.avatarUrl || '');
+
+              // Refresh server component data
+              router.refresh();
+
+              toast.success('Photo updated successfully');
+            } else {
+              const error = (await uploadResponse.json()) as ApiErrorResponse;
+              const errorMessage = isApiErrorResponse(error)
+                ? error.error
+                : 'Failed to upload photo';
+              toast.error(errorMessage);
+            }
+          } catch {
+            toast.error('Something went wrong');
+          } finally {
+            setIsUploading(false);
+          }
+        }}
+        shape="circle"
+        entityName={userName || 'Profile'}
+        disabled={isUploading}
+      />
+
+      {/* Remove confirmation dialog */}
+      <AlertDialog open={showRemoveConfirm} onOpenChange={setShowRemoveConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Photo?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove your profile photo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="min-h-[44px]">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => void handleRemove()}
+              disabled={isUploading}
+              className="min-h-[44px]"
+            >
+              {isUploading ? 'Removing...' : 'Remove'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

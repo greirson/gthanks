@@ -44,8 +44,8 @@ export default function ListsPage() {
   const [isDesktopFilterOpen, setIsDesktopFilterOpen] = useState(false);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
-  // View mode state - default to compact for better space efficiency
-  const [viewMode, setViewMode] = useViewPreference('viewMode.lists', 'compact');
+  // View mode state - default to grid for better space efficiency
+  const [viewMode, setViewMode] = useViewPreference('viewMode.lists', 'grid');
 
   // Unsaved close prevention for create dialog
   const createCloseHandler = usePreventUnsavedClose(isCreateFormDirty, () => {
@@ -142,11 +142,11 @@ export default function ListsPage() {
   };
 
   const handleEdit = (list: ListWithDetails | ListWithOwner) => {
-    setEditingList(list as any);
+    setEditingList(list as ListWithDetails);
   };
 
   const handleShare = (list: ListWithDetails | ListWithOwner) => {
-    setSharingList(list as any);
+    setSharingList(list as ListWithDetails);
   };
 
   return (
@@ -249,7 +249,6 @@ export default function ListsPage() {
               onShare={handleShare}
               isLoading={isLoading}
               viewMode={viewMode}
-              isFilterOpen={isDesktopFilterOpen}
               currentUserId={session?.user?.id}
             />
           </div>

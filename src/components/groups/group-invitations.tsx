@@ -115,17 +115,21 @@ export function GroupInvitations({ groupId, currentUserRole }: GroupInvitationsP
 
   const handleSendInvitations = () => {
     // Parse and validate all email inputs
-    const allInputs = inviteEmails.split(',').map(e => e.trim()).filter(e => e);
-    const validEmails = allInputs.filter(email => EMAIL_REGEX.test(email));
+    const allInputs = inviteEmails
+      .split(',')
+      .map((e) => e.trim())
+      .filter((e) => e);
+    const validEmails = allInputs.filter((email) => EMAIL_REGEX.test(email));
     const invalidCount = allInputs.length - validEmails.length;
 
     // Check if we have any valid emails
     if (validEmails.length === 0) {
       toast({
         title: 'Invalid Email Format',
-        description: allInputs.length > 0
-          ? `${invalidCount} invalid email${invalidCount !== 1 ? 's' : ''} found. Please check the format (e.g., user@example.com)`
-          : 'Please enter at least one email address',
+        description:
+          allInputs.length > 0
+            ? `${invalidCount} invalid email${invalidCount !== 1 ? 's' : ''} found. Please check the format (e.g., user@example.com)`
+            : 'Please enter at least one email address',
         variant: 'destructive',
       });
       return;

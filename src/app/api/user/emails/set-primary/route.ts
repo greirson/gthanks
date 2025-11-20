@@ -4,8 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getCurrentUser } from '@/lib/auth-utils';
 import { getUserFriendlyError } from '@/lib/errors';
-import { db } from '@/lib/db';
-import { ensureOnePrimaryEmail, syncUserEmailWithPrimary } from '@/lib/utils/email-constraints';
+import { userService } from '@/lib/services/user-service';
 import { logger } from '@/lib/services/logger';
 
 const SetPrimaryEmailSchema = z.object({
@@ -31,8 +30,7 @@ const SetPrimaryEmailSchema = z.object({
  *
  * @see {@link getCurrentUser} for unified authentication
  * @see {@link SetPrimaryEmailSchema} for request validation
- * @see {@link ensureOnePrimaryEmail} for constraint enforcement
- * @see {@link syncUserEmailWithPrimary} for User.email sync
+ * @see {@link userService.setPrimaryEmail} for service implementation
  */
 export async function POST(request: NextRequest) {
   try {
@@ -44,44 +42,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    const body = (await request.json()) as unknown;
     const data = SetPrimaryEmailSchema.parse(body);
 
-    // Use transaction to ensure atomic operation
-    const result = await db.$transaction(async (tx) => {
-      // Get the email to verify ownership and verification status
-      const email = await tx.userEmail.findUnique({
-        where: { id: data.emailId },
-      });
-
-      if (!email) {
-        throw new Error('EMAIL_NOT_FOUND');
-      }
-
-      // Check if email belongs to the authenticated user
-      if (email.userId !== user.id) {
-        throw new Error('FORBIDDEN');
-      }
-
-      // Check if email is verified
-      if (!email.isVerified) {
-        throw new Error('EMAIL_NOT_VERIFIED');
-      }
-
-      // Ensure only one primary email (unset all others)
-      await ensureOnePrimaryEmail(tx, user.id, data.emailId, true);
-
-      // Update this email to be primary
-      const updatedEmail = await tx.userEmail.update({
-        where: { id: data.emailId },
-        data: { isPrimary: true },
-      });
-
-      // Sync User.email with the new primary email
-      await syncUserEmailWithPrimary(tx, user.id);
-
-      return updatedEmail;
-    });
+    // Use service layer
+    const result = await userService.setPrimaryEmail(user.id, data.emailId);
 
     return NextResponse.json({
       success: true,
@@ -104,32 +69,6 @@ export async function POST(request: NextRequest) {
         },
         { status: 400 }
       );
-    }
-
-    if (error instanceof Error) {
-      switch (error.message) {
-        case 'EMAIL_NOT_FOUND':
-          return NextResponse.json(
-            { error: getUserFriendlyError('NOT_FOUND', 'Email not found'), code: 'NOT_FOUND' },
-            { status: 404 }
-          );
-        case 'FORBIDDEN':
-          return NextResponse.json(
-            {
-              error: getUserFriendlyError('FORBIDDEN', 'You do not have permission to modify this email'),
-              code: 'FORBIDDEN',
-            },
-            { status: 403 }
-          );
-        case 'EMAIL_NOT_VERIFIED':
-          return NextResponse.json(
-            {
-              error: getUserFriendlyError('VALIDATION_ERROR', 'Email must be verified before setting as primary'),
-              code: 'VALIDATION_ERROR',
-            },
-            { status: 400 }
-          );
-      }
     }
 
     logger.error({ error: error }, 'Set primary email error');

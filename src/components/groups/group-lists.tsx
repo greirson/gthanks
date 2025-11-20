@@ -189,7 +189,7 @@ export function GroupLists({ groupId, currentUserRole, useSearchMode = false }: 
         <CardTitle className="flex items-center justify-between">
           <span>Shared Lists ({lists.length})</span>
           {isAdmin && !useSearchMode && (
-            <div className="hidden md:flex items-center gap-2">
+            <div className="hidden items-center gap-2 md:flex">
               <Input
                 placeholder="List IDs (comma-separated)"
                 value={newListIds}
@@ -225,7 +225,7 @@ export function GroupLists({ groupId, currentUserRole, useSearchMode = false }: 
             </div>
           )
         ) : (
-          <div className="pb-24 md:pb-0 space-y-3">
+          <div className="space-y-3 pb-24 md:pb-0">
             {lists.map((list) => (
               <div
                 key={list.id}

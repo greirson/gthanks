@@ -29,9 +29,7 @@
 
 -
 -
--
-
----
+- ***
 
 ## Database Changes
 
@@ -46,7 +44,9 @@
 <summary>Database Migration Details (if applicable)</summary>
 
 ### Schema Changes
+
 <!-- Describe schema changes -->
+
 ```prisma
 // Example:
 model NewTable {
@@ -56,12 +56,16 @@ model NewTable {
 ```
 
 ### Migration Steps
+
 <!-- List steps to apply migration -->
+
 1.
 2.
 
 ### Rollback Plan
+
 <!-- Describe how to revert database changes -->
+
 1.
 2.
 
@@ -80,12 +84,15 @@ model NewTable {
 <summary>Breaking Changes Details (if applicable)</summary>
 
 ### What breaks?
+
 <!-- Describe what functionality is affected -->
 
 ### Migration path for users
+
 <!-- How should users/developers update their code? -->
 
 ### Deprecation warnings added?
+
 - [ ] Yes
 - [ ] No (explain why)
 
@@ -109,12 +116,14 @@ model NewTable {
 <!-- List the manual tests you performed -->
 
 **Test Case 1:**
+
 - Step 1:
 - Step 2:
 - Expected:
 - Actual: ✓ Pass
 
 **Test Case 2:**
+
 - Step 1:
 - Expected:
 - Actual: ✓ Pass
@@ -203,12 +212,14 @@ docker compose logs app | grep -i error
 <!-- Describe how to rollback if deployment fails -->
 
 **Rollback trigger:**
+
 - Health check fails
 - Authentication broken
 - Critical feature broken
 - Error rate > 5%
 
 **Rollback commands:**
+
 ```bash
 # Option 1: Revert commit
 git checkout production
@@ -225,6 +236,7 @@ docker compose up -d
 ```
 
 **Post-rollback:**
+
 - [ ] Verify health check passes
 - [ ] Run smoke tests
 - [ ] Document what went wrong
@@ -247,12 +259,15 @@ Relates to #
 <!-- Add screenshots for UI changes -->
 
 ### Before
+
 <!-- Screenshot of old UI -->
 
 ### After
+
 <!-- Screenshot of new UI -->
 
 ### Mobile (375px)
+
 <!-- Screenshot of mobile viewport -->
 
 ---

@@ -11,9 +11,11 @@ This test suite covers the most critical end-to-end user workflows in the gthank
 ## Tests Covered
 
 ### 1. End-to-End Happy Path
+
 **Purpose**: Verifies the complete user journey that prevents duplicate gifts
 
 **Steps**:
+
 1. New user signs up
 2. Creates a wish with title, price, notes, and priority (3 stars)
 3. Creates a wishlist "My Wishlist"
@@ -25,15 +27,18 @@ This test suite covers the most critical end-to-end user workflows in the gthank
 9. **CRITICAL**: Verifies reservation privacy is maintained (owner cannot see who reserved)
 
 **Key Assertions**:
+
 - All data entities created successfully (wish, list, group)
 - Relationships established correctly (list-wish, list-group, user-group)
 - Reservation created with gift giver details
 - Privacy maintained at database level
 
 ### 2. Wish CRUD with Image and Priority
+
 **Purpose**: Tests the complete lifecycle of wish management
 
 **Steps**:
+
 1. Create wish with full metadata:
    - Title: "Gaming Laptop"
    - Price: $1,299.99
@@ -46,15 +51,18 @@ This test suite covers the most critical end-to-end user workflows in the gthank
 6. Verify removal from all lists (cascading delete)
 
 **Key Assertions**:
+
 - Wish created with correct metadata
 - Priority updates correctly
 - Wish deleted from database
 - ListWish junction records also deleted
 
 ### 3. List Visibility Changes
+
 **Purpose**: Tests different list visibility modes and access controls
 
 **Steps**:
+
 1. Create private list
 2. Assert list is private with no share token
 3. Change to public via API
@@ -64,15 +72,18 @@ This test suite covers the most critical end-to-end user workflows in the gthank
 7. Verify share URL is accessible
 
 **Key Assertions**:
+
 - Visibility transitions work correctly (private → public → password)
 - Share token generated when needed
 - Password hashed in database
 - List owner retains access regardless of visibility
 
 ### 4. Co-Admin Workflow
+
 **Purpose**: Tests list co-administration and permission boundaries
 
 **Steps**:
+
 1. Owner creates list
 2. Owner adds User B as co-admin
 3. Verify co-admin record exists in database
@@ -83,6 +94,7 @@ This test suite covers the most critical end-to-end user workflows in the gthank
 8. Verify co-admin record removed
 
 **Key Assertions**:
+
 - ListAdmin junction table records created/deleted correctly
 - Co-admin can edit list
 - List ownerId remains unchanged
@@ -99,6 +111,7 @@ These tests use a **hybrid approach** combining database operations and API call
 - **Verification**: Database queries to verify state
 
 **Why This Approach?**
+
 - **Reliable**: Avoids flaky UI interactions that depend on exact selectors
 - **Fast**: Database operations are much faster than UI automation
 - **Focused**: Tests business logic and data integrity, not UI implementation details

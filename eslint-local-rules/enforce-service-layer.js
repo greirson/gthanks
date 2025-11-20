@@ -9,8 +9,7 @@ module.exports = {
       meta: {
         type: 'problem',
         docs: {
-          description:
-            'Disallow direct db imports in API routes - use service layer instead',
+          description: 'Disallow direct db imports in API routes - use service layer instead',
           category: 'Best Practices',
           recommended: true,
         },
@@ -50,8 +49,7 @@ module.exports = {
       meta: {
         type: 'problem',
         docs: {
-          description:
-            'Require use of permissionService for authorization checks',
+          description: 'Require use of permissionService for authorization checks',
           category: 'Security',
           recommended: true,
         },
@@ -64,10 +62,7 @@ module.exports = {
       create(context) {
         // Only check files in src/app/api/**
         const filename = context.getFilename();
-        if (
-          !filename.includes('/app/api/') ||
-          filename.includes('permission-service')
-        ) {
+        if (!filename.includes('/app/api/') || filename.includes('permission-service')) {
           return {};
         }
 
@@ -79,8 +74,7 @@ module.exports = {
               const leftText = context.getSourceCode().getText(node.left);
               const rightText = context.getSourceCode().getText(node.right);
 
-              const hasOwnerIdCheck =
-                leftText.includes('ownerId') || rightText.includes('ownerId');
+              const hasOwnerIdCheck = leftText.includes('ownerId') || rightText.includes('ownerId');
               const hasUserIdCheck =
                 leftText.includes('user.id') ||
                 rightText.includes('user.id') ||

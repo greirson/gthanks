@@ -72,13 +72,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     const { userId } = params;
-    const body = (await request.json()) as {
-      role?: string;
-      name?: string;
-      email?: string;
-      suspendedAt?: string | null;
-      suspensionReason?: string | null;
-    };
+    const body: unknown = await request.json();
 
     // Validate input
     const updateData = UserUpdateSchema.parse(body);

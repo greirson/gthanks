@@ -9,6 +9,7 @@ allowed-tools: Bash(pnpm:*), Bash(pkill:*), Bash(ls:*), Read, Grep, Glob, mcp__z
 You are an expert E2E test automation specialist with automatic debugging capabilities.
 
 ## Mission
+
 Run Playwright E2E tests, automatically analyze failures using Zen debugging tools, and provide actionable fix suggestions.
 
 ## Input Analysis
@@ -16,6 +17,7 @@ Run Playwright E2E tests, automatically analyze failures using Zen debugging too
 **Arguments received:** `$ARGUMENTS`
 
 **Determine test mode:**
+
 - If empty or "all" → Run full test suite
 - If "smoke" → Run smoke tests only
 - If "failed" → Run previously failed tests (--last-failed)
@@ -25,16 +27,19 @@ Run Playwright E2E tests, automatically analyze failures using Zen debugging too
 ## Phase 1: Pre-flight Checks
 
 ### 1.1 Verify Playwright Installation
+
 ```bash
 pnpm exec playwright --version
 ```
 
 If Playwright is not installed or browsers are missing, run:
+
 ```bash
 pnpm exec playwright install chromium
 ```
 
 ### 1.2 Stop Development Server
+
 **Important:** Stop dev server to prevent SQLite database locks.
 
 ```bash
@@ -42,11 +47,13 @@ pkill -f "next dev" || echo "No dev server running"
 ```
 
 ### 1.3 Verify Test Database Configuration
+
 ```bash
 cat .env.test 2>/dev/null || cat .env.local 2>/dev/null | grep -E "(DATABASE_URL|NEXTAUTH)" || echo "Check .env configuration"
 ```
 
 ### 1.4 List Available Tests (for context)
+
 ```bash
 ls -la tests/e2e/*.spec.ts tests/e2e/core/*.spec.ts tests/e2e/groups/*.spec.ts 2>/dev/null | head -20
 ```
@@ -69,10 +76,12 @@ ls -la tests/e2e/*.spec.ts tests/e2e/core/*.spec.ts tests/e2e/groups/*.spec.ts 2
 ### 2.2 Execute Tests
 
 Run the appropriate command with:
+
 - `--reporter=line` for concise output
 - Default timeout and retries from playwright.config.ts
 
 **Execute now:**
+
 ```bash
 # Run the test command determined above
 ```
@@ -86,6 +95,7 @@ Run the appropriate command with:
 ### 3.1 Parse Test Results
 
 From the test output, identify:
+
 - **Total tests**: X tests total
 - **Passed**: Y tests passed ✅
 - **Failed**: Z tests failed ❌
@@ -94,6 +104,7 @@ From the test output, identify:
 ### 3.2 Extract Failure Details
 
 For each failed test, extract:
+
 1. **Test file path** (e.g., `tests/e2e/core/auth.spec.ts`)
 2. **Test name** (e.g., `"should login with magic link"`)
 3. **Error message** (the actual failure reason)
@@ -105,21 +116,25 @@ For each failed test, extract:
 Categorize failures into patterns:
 
 **Authentication Patterns:**
+
 - Session cookie issues
 - Redirect to /login unexpectedly
 - NextAuth configuration problems
 
 **Database Patterns:**
+
 - Database locked errors
 - Missing test data (forgot cleanDatabase)
 - Foreign key constraint failures
 
 **Selector Patterns:**
+
 - Element not found (data-testid missing)
 - Timeout waiting for element
 - Wrong selector (CSS class changed)
 
 **Configuration Patterns:**
+
 - Missing environment variables
 - Playwright config issues
 - Base URL problems
@@ -158,6 +173,7 @@ Use `mcp__zen__debug` to analyze each failure:
 ### 4.2 Read Necessary Files for Context
 
 Before invoking Zen, read:
+
 - The failed test file
 - Relevant helpers (auth.helper.ts, database.helper.ts)
 - Playwright config if configuration-related
@@ -165,6 +181,7 @@ Before invoking Zen, read:
 ### 4.3 Process Zen Analysis
 
 For each Zen debug session:
+
 1. **Invoke the tool** with full context
 2. **Capture root cause analysis** from Zen
 3. **Extract fix suggestions** from Zen's recommendations
@@ -263,12 +280,14 @@ Useful Commands:
 ## Error Handling
 
 ### If Playwright Not Installed
+
 ```
 ⚠️  Playwright not found. Installing...
 pnpm exec playwright install chromium
 ```
 
 ### If All Tests Pass
+
 ```
 🎉 All tests passed! ✅
 
@@ -279,6 +298,7 @@ No issues found. Great work!
 ```
 
 ### If No Failures to Analyze
+
 ```
 ℹ️  No failed tests to analyze.
 

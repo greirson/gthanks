@@ -3,7 +3,17 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
-import { CheckCircle, Edit, Link2, Mail, MoreVertical, Search, Shield, User, XCircle } from 'lucide-react';
+import {
+  CheckCircle,
+  Edit,
+  Link2,
+  Mail,
+  MoreVertical,
+  Search,
+  Shield,
+  User,
+  XCircle,
+} from 'lucide-react';
 
 import { useCallback, useState } from 'react';
 
@@ -342,7 +352,9 @@ export function UserManagement() {
               <Mail className="mr-2 h-4 w-4" />
               Manage Emails
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => void handleToggleVanityAccess(user.id, user.canUseVanityUrls)}>
+            <DropdownMenuItem
+              onClick={() => void handleToggleVanityAccess(user.id, user.canUseVanityUrls)}
+            >
               <Link2 className="mr-2 h-4 w-4" />
               {user.canUseVanityUrls ? 'Disable' : 'Enable'} Vanity URLs
             </DropdownMenuItem>
@@ -586,7 +598,9 @@ export function UserManagement() {
                       <Button
                         variant={user.canUseVanityUrls ? 'default' : 'outline'}
                         size="sm"
-                        onClick={() => void handleToggleVanityAccess(user.id, user.canUseVanityUrls)}
+                        onClick={() =>
+                          void handleToggleVanityAccess(user.id, user.canUseVanityUrls)
+                        }
                         className="touch-target-enhanced"
                       >
                         {user.canUseVanityUrls ? 'Enabled' : 'Disabled'}
@@ -638,7 +652,11 @@ export function UserManagement() {
                             <Mail className="mr-2 h-4 w-4" />
                             Manage Emails
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => void handleToggleVanityAccess(user.id, user.canUseVanityUrls)}>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              void handleToggleVanityAccess(user.id, user.canUseVanityUrls)
+                            }
+                          >
                             <Link2 className="mr-2 h-4 w-4" />
                             {user.canUseVanityUrls ? 'Disable' : 'Enable'} Vanity URLs
                           </DropdownMenuItem>
@@ -753,7 +771,7 @@ export function UserManagement() {
       {/* Email Management Dialog */}
       {emailDialogOpen && selectedUserForEmail && (
         <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Manage Email Addresses</DialogTitle>
               <DialogDescription>

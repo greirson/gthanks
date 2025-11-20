@@ -7,6 +7,7 @@ import { AppError } from '@/lib/errors';
 import { reservationService } from '@/lib/services/reservation-service';
 import { ReservationCreateSchema } from '@/lib/validators/reservation';
 import { logger } from '@/lib/services/logger';
+import { rateLimiter, getClientIdentifier, getRateLimitHeaders } from '@/lib/rate-limiter';
 
 /**
  * Handles POST requests for creating new reservations
@@ -43,6 +44,25 @@ import { logger } from '@/lib/services/logger';
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
+
+    // Apply rate limit - use IP for anonymous, user ID for authenticated
+    const identifier = user ? user.id : getClientIdentifier(request);
+    const rateLimitResult = await rateLimiter.check('public-reservation', identifier);
+
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Too many requests. Please wait a moment and try again',
+          code: 'RATE_LIMIT_EXCEEDED',
+          retryAfter: rateLimitResult.retryAfter,
+        },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateLimitResult),
+        }
+      );
+    }
+
     const body = (await request.json()) as {
       listId: string;
       wishId: string;

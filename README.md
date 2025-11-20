@@ -97,6 +97,7 @@ Automated deployment helpers are available in the `scripts/` directory:
 ### Full Deployment Guide
 
 See `docs/DOCKER_DEPLOYMENT.md` for complete deployment documentation including:
+
 - Reverse proxy setup (Nginx, Traefik)
 - SSL/TLS configuration
 - Scaling considerations

@@ -15,7 +15,6 @@ test.describe('Edge Cases and Error Handling (Example)', () => {
     // 4. Verify error message is shown
     // 5. Restore connection
     // 6. Verify app recovers
-
     // Example using Playwright's network simulation:
     // await page.route('**/*', route => route.abort());
     // await page.click('[data-testid="save-wish"]');
@@ -29,7 +28,6 @@ test.describe('Edge Cases and Error Handling (Example)', () => {
     // 3. Verify validation errors are shown
     // 4. Fix errors
     // 5. Verify submission succeeds
-
     // Example:
     // await page.goto('/wishes/new');
     // await page.click('button[type="submit"]');
@@ -41,7 +39,6 @@ test.describe('Edge Cases and Error Handling (Example)', () => {
     // 1. Create wish with very long title/description
     // 2. Verify text is saved
     // 3. Verify UI handles display properly (truncation, etc.)
-
     // Example:
     // const longText = 'A'.repeat(10000);
     // await page.fill('input[name="title"]', longText);
@@ -54,7 +51,6 @@ test.describe('Edge Cases and Error Handling (Example)', () => {
     // 1. Input text with special characters (<script>, emojis, etc.)
     // 2. Verify text is properly escaped/sanitized
     // 3. Verify no XSS vulnerabilities
-
     // Example:
     // await page.fill('input[name="title"]', '<script>alert("XSS")</script>');
     // Verify script doesn't execute
@@ -66,7 +62,6 @@ test.describe('Edge Cases and Error Handling (Example)', () => {
     // 2. Try to reserve same wish simultaneously
     // 3. Verify only one succeeds
     // 4. Verify database consistency
-
     // This requires multiple page contexts
   });
 
@@ -76,7 +71,6 @@ test.describe('Edge Cases and Error Handling (Example)', () => {
     // 2. Delete the list (via API or admin)
     // 3. Try to access the list URL
     // 4. Verify appropriate error message or redirect
-
     // Example:
     // await page.goto('/lists/deleted-list-id');
     // await expect(page.getByText(/list not found/i)).toBeVisible();
@@ -89,7 +83,6 @@ test.describe('Edge Cases and Error Handling (Example)', () => {
     // 3. Try to perform authenticated action
     // 4. Verify redirect to login
     // 5. Verify return URL is preserved
-
     // Example:
     // await loginUser(page, 'user@example.com');
     // // Force session expiration
@@ -103,7 +96,6 @@ test.describe('Edge Cases and Error Handling (Example)', () => {
     // 2. Navigate to list
     // 3. Verify page loads within acceptable time
     // 4. Verify filtering/sorting works
-
     // Example:
     // await createManyWishes(page, 200);
     // const startTime = Date.now();
@@ -118,7 +110,6 @@ test.describe('Edge Cases and Error Handling (Example)', () => {
     // 2. View wish
     // 3. Verify placeholder image is shown
     // 4. Verify app doesn't break
-
     // Example:
     // await page.goto('/wishes/with-broken-image');
     // const img = page.locator('img[alt*="wish"]');
@@ -131,7 +122,6 @@ test.describe('Edge Cases and Error Handling (Example)', () => {
     // 2. Verify rate limiting kicks in
     // 3. Verify appropriate error message
     // 4. Wait and verify access is restored
-
     // Example:
     // for (let i = 0; i < 100; i++) {
     //   await page.goto('/api/wishes');

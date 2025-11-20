@@ -1,0 +1,191 @@
+diff --git a/.gitignore b/.gitignore
+index 97ead52..431eb3f 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -8,6 +8,7 @@ node_modules/
+ out/
+ build/
+ dist/
++data/
+ 
+ # Environment variables
+ .env
+diff --git a/Dockerfile b/Dockerfile
+index ae3658a..c53be6e 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -96,8 +96,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
+ ENV HOME=/app
+ ENV npm_config_cache=/tmp/.npm
+ 
+-# Create data directory for SQLite (if used)
+-RUN mkdir -p /app/data && chown nextjs:nodejs /app/data
++# Create data directory for SQLite (if used) and uploads directory
++RUN mkdir -p /app/data /app/uploads && chown nextjs:nodejs /app/data /app/uploads
+ 
+ # Expose port
+ EXPOSE 3000
+diff --git a/scripts/ensure-db.js b/scripts/ensure-db.js
+index f536e40..e050be7 100644
+--- a/scripts/ensure-db.js
++++ b/scripts/ensure-db.js
+@@ -16,10 +16,28 @@ try {
+   // dotenv might not be available in all environments
+ }
+ 
+-const DATABASE_URL = process.env.DATABASE_URL || 'file:./prisma/dev2.db';
++/**
++ * Resolves DATABASE_URL relative paths to absolute paths from project root.
++ * This ensures consistent behavior with the Next.js runtime.
++ */
++function resolveDatabaseUrl(url) {
++  if (!url) return url;
++
++  // Check if it's a SQLite file URL with a relative path
++  if (url.startsWith('file:./') || url.startsWith('file:../')) {
++    const relativePath = url.replace('file:', '');
++    const absolutePath = path.resolve(process.cwd(), relativePath);
++    return `file:${absolutePath}`;
++  }
++
++  return url;
++}
++
++const DATABASE_URL = resolveDatabaseUrl(process.env.DATABASE_URL || 'file:./data/gthanks.db');
+ 
+ async function ensureDatabase() {
+   console.log('[DB] Checking database initialization...');
++  console.log('[DB] Using database:', DATABASE_URL);
+ 
+   // For SQLite, ensure the directory exists
+   if (DATABASE_URL.startsWith('file:')) {
+diff --git a/src/app/api/images/[filename]/route.ts b/src/app/api/images/[filename]/route.ts
+index e1d0815..bed19e7 100644
+--- a/src/app/api/images/[filename]/route.ts
++++ b/src/app/api/images/[filename]/route.ts
+@@ -33,7 +33,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
+     }
+ 
+     // Build the file path using STORAGE_PATH env var if set
+-    const uploadsDir = process.env.STORAGE_PATH || path.join(process.cwd(), 'public', 'uploads', 'items');
++    const uploadsDir = process.env.STORAGE_PATH || path.join(process.cwd(), 'uploads');
+     const filePath = path.join(uploadsDir, filename);
+ 
+     // Read the file directly (no TOCTOU vulnerability)
+diff --git a/src/lib/db-init.ts b/src/lib/db-init.ts
+index bdd1fe8..e7d32b4 100644
+--- a/src/lib/db-init.ts
++++ b/src/lib/db-init.ts
+@@ -3,6 +3,23 @@ import * as fs from 'fs';
+ import * as path from 'path';
+ import { PrismaClient } from '@prisma/client';
+ 
++/**
++ * Resolves DATABASE_URL relative paths to absolute paths from project root.
++ * This ensures consistent behavior regardless of where Prisma is invoked from.
++ */
++function resolveDatabaseUrl(url: string | undefined): string | undefined {
++  if (!url) {return url;}
++
++  // Check if it's a SQLite file URL with a relative path
++  if (url.startsWith('file:./') || url.startsWith('file:../')) {
++    const relativePath = url.replace('file:', '');
++    const absolutePath = path.resolve(process.cwd(), relativePath);
++    return `file:${absolutePath}`;
++  }
++
++  return url;
++}
++
+ /**
+  * Database initialization status tracking
+  */
+@@ -84,7 +101,13 @@ async function performDatabaseInitialization(): Promise<void> {
+   try {
+     // Check if database tables exist by trying to query the User table
+     // Use a temporary PrismaClient to avoid circular dependency
+-    const tempDb = new PrismaClient();
++    const tempDb = new PrismaClient({
++      datasources: {
++        db: {
++          url: resolveDatabaseUrl(databaseUrl),
++        },
++      },
++    });
+     try {
+       await tempDb.user.findFirst();
+       // Database tables already exist
+@@ -152,7 +175,13 @@ async function performDatabaseInitialization(): Promise<void> {
+       // Verify initialization was successful
+       try {
+         // Create a temporary client for verification
+-        const verifyDb = new PrismaClient();
++        const verifyDb = new PrismaClient({
++          datasources: {
++            db: {
++              url: resolveDatabaseUrl(databaseUrl),
++            },
++          },
++        });
+         try {
+           await verifyDb.user.findFirst();
+           // Database verification successful
+@@ -178,7 +207,14 @@ async function performDatabaseInitialization(): Promise<void> {
+ export async function isDatabaseReady(): Promise<boolean> {
+   try {
+     // Use a temporary PrismaClient to avoid circular dependency
+-    const tempDb = new PrismaClient();
++    const databaseUrl = process.env.DATABASE_URL || 'file:./data/gthanks.db';
++    const tempDb = new PrismaClient({
++      datasources: {
++        db: {
++          url: resolveDatabaseUrl(databaseUrl),
++        },
++      },
++    });
+     try {
+       await tempDb.user.findFirst();
+       return true;
+diff --git a/src/lib/db.ts b/src/lib/db.ts
+index 05ef57b..7acb791 100644
+--- a/src/lib/db.ts
++++ b/src/lib/db.ts
+@@ -1,11 +1,29 @@
+ import { PrismaClient } from '@prisma/client';
+ import { ensureDatabaseInitialized } from './db-init';
++import path from 'path';
+ 
+ const globalForPrisma = globalThis as unknown as {
+   prisma: PrismaClient | undefined;
+   dbInitPromise: Promise<void> | undefined;
+ };
+ 
++/**
++ * Resolves DATABASE_URL relative paths to absolute paths from project root.
++ * This ensures consistent behavior regardless of where Prisma is invoked from.
++ */
++function resolveDatabaseUrl(url: string | undefined): string | undefined {
++  if (!url) {return url;}
++
++  // Check if it's a SQLite file URL with a relative path
++  if (url.startsWith('file:./') || url.startsWith('file:../')) {
++    const relativePath = url.replace('file:', '');
++    const absolutePath = path.resolve(process.cwd(), relativePath);
++    return `file:${absolutePath}`;
++  }
++
++  return url;
++}
++
+ // Initialize database on first import
+ if (!globalForPrisma.dbInitPromise && typeof window === 'undefined') {
+   globalForPrisma.dbInitPromise = ensureDatabaseInitialized().catch((error) => {
+@@ -19,7 +37,7 @@ export const db =
+   new PrismaClient({
+     datasources: {
+       db: {
+-        url: process.env.DATABASE_URL,
++        url: resolveDatabaseUrl(process.env.DATABASE_URL),
+       },
+     },
+     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],

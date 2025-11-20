@@ -8,16 +8,16 @@ import { countActiveFilters } from '../activeFilterCount';
 import { getStoredFilters, saveFilters } from '../filterStorage';
 
 describe('searchUtils', () => {
-  it('filters items by text search across multiple fields', () => {
+  it('filters items by text search on title field', () => {
     const items = [
-      { id: 1, title: 'Birthday Gift', notes: 'For mom' },
-      { id: 2, title: 'Christmas Present', notes: 'For dad' },
-      { id: 3, title: 'Anniversary', notes: 'Gift for wife' },
+      { id: 1, title: 'Birthday Gift' },
+      { id: 2, title: 'Christmas Present' },
+      { id: 3, title: 'Anniversary' },
     ];
 
-    const result = applySearchFilter(items, 'gift', ['title', 'notes']);
-    expect(result).toHaveLength(2);
-    expect(result.map(i => i.id)).toEqual([1, 3]);
+    const result = applySearchFilter(items, 'gift', ['title']);
+    expect(result).toHaveLength(1);
+    expect(result.map((i) => i.id)).toEqual([1]);
   });
 
   it('returns all items when query is empty', () => {
@@ -28,13 +28,13 @@ describe('searchUtils', () => {
 
   it('handles null/undefined field values gracefully', () => {
     const items = [
-      { id: 1, title: 'Test', notes: null as string | null },
-      { id: 2, title: null as string | null, notes: 'Gift' },
+      { id: 1, title: 'Test Item', description: null as string | null },
+      { id: 2, title: null as string | null, description: 'Gift' },
     ];
 
-    const result = applySearchFilter(items, 'gift', ['title', 'notes']);
+    const result = applySearchFilter(items, 'test', ['title']);
     expect(result).toHaveLength(1);
-    expect(result[0].id).toBe(2);
+    expect(result[0].id).toBe(1);
   });
 });
 

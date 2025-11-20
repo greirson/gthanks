@@ -73,6 +73,7 @@ E2E tests use a **real test database** (SQLite in dev, PostgreSQL in prod).
 **Environment Setup:**
 
 1. **Environment Variables** (`.env.test` or `.env.local`):
+
 ```bash
 # Test database (isolated from dev)
 DATABASE_URL="file:./data/test.db"
@@ -89,6 +90,7 @@ EMAIL_FROM="test@gthanks.app"
 2. **Database Helpers** (already implemented):
 
 The project includes `helpers/database.helper.ts` and `helpers/database.ts` with:
+
 - `cleanDatabase()` - Clear all test data
 - `createTestUser()` - Create test users
 - `createTestWish()` - Create test wishes
@@ -97,6 +99,7 @@ The project includes `helpers/database.helper.ts` and `helpers/database.ts` with
 - `createTestReservation()` - Create reservations
 
 **Usage Example:**
+
 ```typescript
 import { cleanDatabase, createTestUser, createTestWish } from './helpers/database.helper';
 
@@ -115,6 +118,7 @@ test('create wish', async ({ page }) => {
 ### Database Cleanup Strategy
 
 **Option 1: Clean Before Each Test (Recommended)**
+
 ```typescript
 test.beforeEach(async () => {
   await cleanDatabase();
@@ -122,6 +126,7 @@ test.beforeEach(async () => {
 ```
 
 **Option 2: Clean After Each Test**
+
 ```typescript
 test.afterEach(async () => {
   await cleanDatabase();
@@ -129,6 +134,7 @@ test.afterEach(async () => {
 ```
 
 **Option 3: Manual Cleanup**
+
 ```typescript
 test('specific test', async () => {
   await cleanDatabase();
@@ -143,12 +149,14 @@ test('specific test', async () => {
 The project includes comprehensive auth helpers in `helpers/auth.helper.ts`:
 
 **Available Functions:**
+
 - `createAuthenticatedSession(email: string)` - Create user and session
 - `loginAsUser(page, email: string)` - Login via session cookie
 - `logout(page)` - Clear session
 - `isAuthenticated(page)` - Check auth status
 
 **Usage Example:**
+
 ```typescript
 import { loginAsUser, logout } from './helpers/auth.helper';
 
@@ -311,7 +319,7 @@ export const testUsers = {
 
 export const testWishes = {
   wish1: { title: 'Book: Clean Code', price: 39.99, wishLevel: 3 },
-  wish2: { title: 'Wireless Mouse', price: 25.00, wishLevel: 2 },
+  wish2: { title: 'Wireless Mouse', price: 25.0, wishLevel: 2 },
 };
 
 // In test file
@@ -331,6 +339,7 @@ test('create wish from fixture', async ({ page }) => {
 ### Common Issues and Solutions
 
 **Issue: Tests timing out**
+
 ```bash
 # Problem: Default timeout too short
 # Solution: Increase timeout in playwright.config.ts
@@ -344,6 +353,7 @@ test('slow test', async ({ page }) => {
 ```
 
 **Issue: Element not found**
+
 ```typescript
 // ❌ Problem: Element not rendered yet
 await page.click('.my-button'); // Fails if not ready
@@ -360,6 +370,7 @@ await page.click('[data-testid="my-button"]');
 ```
 
 **Issue: Database locked (SQLite)**
+
 ```bash
 # Problem: Multiple processes accessing same DB
 # Solution 1: Stop dev server before E2E tests
@@ -371,22 +382,27 @@ DATABASE_URL="file:./data/test-e2e.db" pnpm exec playwright test
 ```
 
 **Issue: Session cookie not working**
+
 ```typescript
 // ❌ Problem: Wrong cookie configuration
-await context.addCookies([{
-  name: 'wrong-name', // Wrong
-  domain: '127.0.0.1', // Wrong
-}]);
+await context.addCookies([
+  {
+    name: 'wrong-name', // Wrong
+    domain: '127.0.0.1', // Wrong
+  },
+]);
 
 // ✅ Solution: Use correct Next-Auth cookie
-await context.addCookies([{
-  name: 'next-auth.session-token',
-  domain: 'localhost',
-  path: '/',
-  httpOnly: true,
-  sameSite: 'Lax',
-  expires: Date.now() / 1000 + 30 * 24 * 60 * 60
-}]);
+await context.addCookies([
+  {
+    name: 'next-auth.session-token',
+    domain: 'localhost',
+    path: '/',
+    httpOnly: true,
+    sameSite: 'Lax',
+    expires: Date.now() / 1000 + 30 * 24 * 60 * 60,
+  },
+]);
 
 // ✅ Better: Use auth helper (handles this automatically)
 import { loginAsUser } from './helpers/auth.helper';
@@ -394,6 +410,7 @@ await loginAsUser(page, 'test@example.com');
 ```
 
 **Issue: Test flakiness (random failures)**
+
 ```typescript
 // ❌ Problem: Race conditions
 await page.click('.button');
@@ -416,6 +433,7 @@ await page.click('.next-button');
 ```
 
 **Issue: Playwright browsers not installed**
+
 ```bash
 # Error: browserType.launch: Executable doesn't exist
 # Solution: Install browsers
@@ -475,10 +493,10 @@ test('debug example', async ({ page }) => {
   console.log('Element text:', text);
 
   // Log all console messages
-  page.on('console', msg => console.log('PAGE LOG:', msg.text()));
+  page.on('console', (msg) => console.log('PAGE LOG:', msg.text()));
 
   // Log all page errors
-  page.on('pageerror', err => console.log('PAGE ERROR:', err.message));
+  page.on('pageerror', (err) => console.log('PAGE ERROR:', err.message));
 
   // Wait for manual inspection
   await page.waitForTimeout(5000); // 5 seconds (use sparingly)
@@ -490,6 +508,7 @@ test('debug example', async ({ page }) => {
 ### Interactive Debugging
 
 **Playwright Inspector (Best for Single Test):**
+
 ```bash
 pnpm exec playwright test auth.spec.ts --debug
 
@@ -502,6 +521,7 @@ pnpm exec playwright test auth.spec.ts --debug
 ```
 
 **Playwright UI Mode (Best for Development):**
+
 ```bash
 pnpm exec playwright test --ui
 
@@ -516,6 +536,7 @@ pnpm exec playwright test --ui
 ```
 
 **Headed Mode (Best for Quick Visual Check):**
+
 ```bash
 pnpm exec playwright test --headed
 
@@ -549,8 +570,8 @@ pnpm exec playwright show-trace trace.zip
 ```typescript
 test('with debug logging', async ({ page }) => {
   // Enable console log capture
-  page.on('console', msg => console.log('PAGE LOG:', msg.text()));
-  page.on('pageerror', err => console.log('PAGE ERROR:', err.message));
+  page.on('console', (msg) => console.log('PAGE LOG:', msg.text()));
+  page.on('pageerror', (err) => console.log('PAGE ERROR:', err.message));
 
   // Add custom logging
   console.log('Step 1: Navigate to page');
@@ -562,15 +583,15 @@ test('with debug logging', async ({ page }) => {
   // Take screenshot at specific point
   await page.screenshot({
     path: `debug-${Date.now()}.png`,
-    fullPage: true
+    fullPage: true,
   });
 
   // Log network requests
-  page.on('request', request => {
+  page.on('request', (request) => {
     console.log('REQUEST:', request.method(), request.url());
   });
 
-  page.on('response', response => {
+  page.on('response', (response) => {
     console.log('RESPONSE:', response.status(), response.url());
   });
 });
@@ -694,21 +715,25 @@ pnpm exec playwright test
 **Before Running Tests:**
 
 1. **Check Playwright installation:**
+
 ```bash
 pnpm exec playwright --version
 ```
 
 2. **Install browsers if needed:**
+
 ```bash
 pnpm exec playwright install chromium
 ```
 
 3. **Verify test database config:**
+
 ```bash
 cat .env.test || cat .env.local | grep DATABASE_URL
 ```
 
 4. **Stop dev server (to avoid DB lock):**
+
 ```bash
 pkill -f "next dev" || true
 ```
@@ -716,22 +741,26 @@ pkill -f "next dev" || true
 **Running Tests:**
 
 1. **Run all tests:**
+
 ```bash
 pnpm exec playwright test
 ```
 
 2. **If tests fail, examine output:**
+
 ```bash
 # Check terminal output for error messages
 # Look for failed test names and error details
 ```
 
 3. **View test report:**
+
 ```bash
 pnpm exec playwright show-report
 ```
 
 4. **Check screenshots (on failure):**
+
 ```bash
 ls -la test-results/
 ```
@@ -748,6 +777,7 @@ ls -la test-results/
    - `feature-name.spec.ts`
 
 3. **Import helpers:**
+
 ```typescript
 import { cleanDatabase, createTestUser } from '../helpers/database.helper';
 import { loginAsUser } from '../helpers/auth.helper';
@@ -761,6 +791,7 @@ import { loginAsUser } from '../helpers/auth.helper';
    - Add clear assertions
 
 5. **Test locally before committing:**
+
 ```bash
 pnpm exec playwright test new-feature.spec.ts --headed
 ```
@@ -768,22 +799,26 @@ pnpm exec playwright test new-feature.spec.ts --headed
 **Debugging Failed Tests:**
 
 1. **Run single test with UI:**
+
 ```bash
 pnpm exec playwright test failing-test.spec.ts --ui
 ```
 
 2. **Check screenshot:**
+
 ```bash
 ls test-results/
 open test-results/failing-test-*/test-failed-1.png
 ```
 
 3. **View trace (if available):**
+
 ```bash
 pnpm exec playwright show-trace test-results/*/trace.zip
 ```
 
 4. **Add `page.pause()` for manual inspection:**
+
 ```typescript
 test('debug this', async ({ page }) => {
   await page.goto('/path');
@@ -801,12 +836,14 @@ test('debug this', async ({ page }) => {
 When writing tests, use selectors in this order:
 
 1. **BEST: data-testid attributes**
+
 ```typescript
 await page.click('[data-testid="submit-button"]');
 await page.locator('[data-testid="wish-item"]').count();
 ```
 
 2. **GOOD: Accessible roles and labels**
+
 ```typescript
 await page.getByRole('button', { name: 'Submit' }).click();
 await page.getByLabel('Email').fill('test@example.com');
@@ -814,12 +851,14 @@ await page.getByPlaceholder('Enter your name').fill('Test User');
 ```
 
 3. **OK: Text content**
+
 ```typescript
 await page.getByText('Sign In').click();
 await page.locator('button:has-text("Submit")').click();
 ```
 
 4. **AVOID: CSS classes or IDs (brittle)**
+
 ```typescript
 // ❌ Avoid - classes may change
 await page.click('.btn-primary');
@@ -832,6 +871,7 @@ await page.click('[data-testid="submit-button"]');
 ### Code Examples for Common Tasks
 
 **Complete Wishlist Flow:**
+
 ```typescript
 import { test, expect } from '@playwright/test';
 import { cleanDatabase, createTestUser, createTestGroup } from '../helpers/database.helper';
@@ -886,6 +926,7 @@ test('complete wishlist flow', async ({ page, context }) => {
 ```
 
 **Test Error Handling:**
+
 ```typescript
 test('shows validation errors', async ({ page }) => {
   await page.goto('/wishlists/new');
@@ -903,6 +944,7 @@ test('shows validation errors', async ({ page }) => {
 ```
 
 **Test with Multiple Users:**
+
 ```typescript
 test('multiple users interact', async ({ browser }) => {
   // Create two separate contexts (sessions)
@@ -936,6 +978,7 @@ test('multiple users interact', async ({ browser }) => {
 ## Best Practices
 
 ### DO:
+
 - ✅ Use `data-testid` attributes for reliable selectors
 - ✅ Clean database before each test (`test.beforeEach`)
 - ✅ Use Playwright's built-in auto-waiting (`.click()`, `expect()`)
@@ -949,6 +992,7 @@ test('multiple users interact', async ({ browser }) => {
 - ✅ Group related tests in `describe` blocks
 
 ### DON'T:
+
 - ❌ Use brittle CSS class selectors (`.btn-primary`)
 - ❌ Share state between tests
 - ❌ Use `waitForTimeout` (use `waitForSelector` instead)
@@ -965,6 +1009,7 @@ test('multiple users interact', async ({ browser }) => {
 Following gthanks MVP principles:
 
 **Ship Fast, Test Critical:**
+
 - Run tests in parallel (default)
 - Focus on chromium browser (default)
 - Retry flaky tests automatically (configured)
@@ -973,6 +1018,7 @@ Following gthanks MVP principles:
 **Critical Paths Only (MVP Priority):**
 
 **High Priority** (Must Test):
+
 1. User signup/login (magic link)
 2. Create wishlist
 3. Add/edit/delete wishes
@@ -983,6 +1029,7 @@ Following gthanks MVP principles:
 8. Unreserve wish
 
 **Low Priority** (Post-MVP):
+
 - Performance testing
 - Load testing
 - Accessibility testing
@@ -1012,6 +1059,7 @@ tests/e2e/
 ### Playwright Config (`playwright.config.ts`)
 
 Key settings:
+
 ```typescript
 {
   testDir: './tests/e2e',
@@ -1042,6 +1090,7 @@ pnpm exec playwright test --project=webkit
 ## File Paths Reference (Absolute Paths)
 
 **Important Absolute Paths:**
+
 - **Test directory**: `/Users/greir/projects/gthanks-dev/tests/e2e/`
 - **Config file**: `/Users/greir/projects/gthanks-dev/playwright.config.ts`
 - **Auth helper**: `/Users/greir/projects/gthanks-dev/tests/e2e/helpers/auth.helper.ts`
@@ -1057,38 +1106,45 @@ pnpm exec playwright test --project=webkit
 **Getting Started:**
 
 1. **Verify installation:**
+
 ```bash
 pnpm exec playwright --version
 ```
 
 2. **Install browsers (if needed):**
+
 ```bash
 pnpm exec playwright install chromium
 ```
 
 3. **Run smoke tests:**
+
 ```bash
 pnpm exec playwright test smoke.spec.ts --headed
 ```
 
 4. **Open UI mode:**
+
 ```bash
 pnpm exec playwright test --ui
 ```
 
 5. **Explore existing tests:**
+
 ```bash
 ls /Users/greir/projects/gthanks-dev/tests/e2e/core/
 cat /Users/greir/projects/gthanks-dev/tests/e2e/smoke.spec.ts
 ```
 
 6. **Create new test:**
+
 ```bash
 # Choose appropriate directory:
 touch /Users/greir/projects/gthanks-dev/tests/e2e/core/my-feature.spec.ts
 ```
 
 7. **Run your test:**
+
 ```bash
 pnpm exec playwright test my-feature.spec.ts --ui
 ```
@@ -1096,6 +1152,7 @@ pnpm exec playwright test my-feature.spec.ts --ui
 ## Additional Resources
 
 **Documentation:**
+
 - Playwright Official: https://playwright.dev/
 - Integration Tests: `/Users/greir/projects/gthanks-dev/tests/README.md`
 - Project Guidelines: `/Users/greir/projects/gthanks-dev/CLAUDE.md`

@@ -7,6 +7,7 @@ This directory contains comprehensive end-to-end tests for critical high-risk ar
 ### Purpose
 
 Tests the application's behavior under challenging conditions:
+
 - **Performance**: Bulk operations with 50+ items
 - **Validation**: Comprehensive form error handling
 - **Responsiveness**: Mobile layout across different viewports
@@ -18,6 +19,7 @@ Tests the application's behavior under challenging conditions:
 **Scenario**: Create, select, and delete 50 wishes
 
 **Steps**:
+
 1. Create 50 test wishes in the database (in batches of 10)
 2. Navigate to wishes page and verify page loads
 3. Enter selection mode
@@ -26,6 +28,7 @@ Tests the application's behavior under challenging conditions:
 6. Verify operation completes successfully
 
 **Assertions**:
+
 - Page loads with all 50 wishes visible
 - Bulk selection completes without UI freeze
 - Total operation time < 15 seconds (performance threshold)
@@ -34,6 +37,7 @@ Tests the application's behavior under challenging conditions:
 - UI remains responsive throughout
 
 **Performance Metrics Tracked**:
+
 - Wish creation time
 - Page navigation time
 - Selection time
@@ -47,19 +51,23 @@ Tests the application's behavior under challenging conditions:
 **Forms Tested**:
 
 ##### Wish Creation Form
+
 - Submit empty form → "Title required" error
 - Clear title field after entry → Validation triggers
 - Enter invalid price (text) → Number validation
 
 ##### List Creation Form
+
 - Submit empty name → "Name required" error
 - Enter special characters → Validation or acceptance
 
 ##### Email Invitation Form
+
 - Enter invalid email → "Invalid email" error
 - Enter valid email → Error clears, form submits
 
 **Assertions**:
+
 - Error messages display immediately
 - Validation triggers on field blur
 - Invalid inputs blocked or sanitized
@@ -71,6 +79,7 @@ Tests the application's behavior under challenging conditions:
 **Scenario**: iPhone SE responsive testing (portrait and landscape)
 
 **Portrait Mode (375x667)**:
+
 - Navigation menu accessible
 - Wish cards display without overflow
 - Form inputs usable (no text cutoff)
@@ -78,6 +87,7 @@ Tests the application's behavior under challenging conditions:
 - Wish creation succeeds on mobile
 
 **Landscape Mode (667x375)**:
+
 - Layout adapts correctly
 - No horizontal overflow
 - All content accessible
@@ -85,6 +95,7 @@ Tests the application's behavior under challenging conditions:
 - Touch targets properly spaced
 
 **Additional Tests**:
+
 - Scroll behavior
 - Touch target spacing
 - Content visibility in both orientations
@@ -120,12 +131,12 @@ pnpm test:e2e:chromium tests/e2e/edge-cases/high-risk.spec.ts
 
 Expected performance metrics (on reasonable hardware):
 
-| Operation | Expected Time | Maximum Time |
-|-----------|---------------|--------------|
-| Create 50 wishes | < 5 seconds | 10 seconds |
-| Page load with 50 items | < 3 seconds | 5 seconds |
-| Select all 50 items | < 1 second | 2 seconds |
-| Bulk delete 50 items | < 5 seconds | 10 seconds |
+| Operation                | Expected Time    | Maximum Time   |
+| ------------------------ | ---------------- | -------------- |
+| Create 50 wishes         | < 5 seconds      | 10 seconds     |
+| Page load with 50 items  | < 3 seconds      | 5 seconds      |
+| Select all 50 items      | < 1 second       | 2 seconds      |
+| Bulk delete 50 items     | < 5 seconds      | 10 seconds     |
 | **Total bulk operation** | **< 10 seconds** | **15 seconds** |
 
 ### Known Limitations

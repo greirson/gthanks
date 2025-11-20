@@ -1,7 +1,7 @@
 /**
  * Simple in-memory rate limiter for MVP with memory exhaustion protection
  * For production, use Redis-based distributed rate limiting
- * 
+ *
  * Security enhancement: Added MAX_ENTRIES limit with LRU eviction to prevent
  * memory exhaustion attacks where attackers create unlimited entries.
  */
@@ -19,7 +19,12 @@ interface RateLimitConfig {
 class SimpleRateLimiter {
   private storage = new Map<string, RateLimitEntry>();
   private configs = new Map<string, RateLimitConfig>();
-  
+  /**
+   * Lock map to prevent race conditions with concurrent requests.
+   * Ensures atomic increment operations when multiple requests arrive simultaneously.
+   */
+  private locks = new Map<string, Promise<void>>();
+
   /**
    * Maximum number of entries to store in memory.
    * Prevents memory exhaustion attacks by limiting storage size.
@@ -27,11 +32,11 @@ class SimpleRateLimiter {
    * - Assuming 100 unique IPs per minute
    * - With 1-hour windows, that's 6,000 entries
    * - Leaves buffer for burst traffic and multiple rate limit categories
-   * 
+   *
    * For production with higher traffic, use Redis-based rate limiting.
    */
   private readonly MAX_ENTRIES = 10000;
-  
+
   /**
    * Counter to track cleanup frequency.
    * Cleanup runs every 100 checks to balance performance and memory usage.
@@ -43,22 +48,56 @@ class SimpleRateLimiter {
     this.configs.set(category, config);
   }
 
-  check(
+  async check(
     category: string,
     identifier: string
-  ): {
+  ): Promise<{
     allowed: boolean;
     limit: number;
     remaining: number;
     resetTime: number;
     retryAfter?: number;
-  } {
+  }> {
+    const key = `${category}:${identifier}`;
+
+    // Wait for any existing operation on this key to complete
+    if (this.locks.has(key)) {
+      await this.locks.get(key);
+    }
+
+    // Create lock for this operation
+    let resolveLock: () => void;
+    const lockPromise = new Promise<void>((resolve) => {
+      resolveLock = resolve;
+    });
+    this.locks.set(key, lockPromise);
+
+    try {
+      const result = await this._performCheck(category, identifier, key);
+      return result;
+    } finally {
+      // Remove lock when done
+      this.locks.delete(key);
+      resolveLock!();
+    }
+  }
+
+  private async _performCheck(
+    category: string,
+    identifier: string,
+    key: string
+  ): Promise<{
+    allowed: boolean;
+    limit: number;
+    remaining: number;
+    resetTime: number;
+    retryAfter?: number;
+  }> {
     const config = this.configs.get(category);
     if (!config) {
       throw new Error(`Rate limit configuration not found for category: ${category}`);
     }
 
-    const key = `${category}:${identifier}`;
     const now = Date.now();
     const resetTime = now + config.windowMs;
 
@@ -97,7 +136,7 @@ class SimpleRateLimiter {
       };
     }
 
-    // Increment counter
+    // Atomic increment (now protected by lock)
     entry.count++;
     this.storage.set(key, entry);
 
@@ -118,7 +157,7 @@ class SimpleRateLimiter {
   private cleanup() {
     const now = Date.now();
     let expiredCount = 0;
-    
+
     // Phase 1: Remove expired entries
     for (const [key, entry] of this.storage.entries()) {
       if (entry.resetTime <= now) {
@@ -131,24 +170,25 @@ class SimpleRateLimiter {
     if (this.storage.size > this.MAX_ENTRIES) {
       // Sort entries by resetTime (oldest first) for LRU eviction
       // This ensures we remove the least recently used entries
-      const sortedEntries = Array.from(this.storage.entries())
-        .sort(([, a], [, b]) => a.resetTime - b.resetTime);
-      
+      const sortedEntries = Array.from(this.storage.entries()).sort(
+        ([, a], [, b]) => a.resetTime - b.resetTime
+      );
+
       // Calculate how many entries to remove
       const entriesToRemove = this.storage.size - this.MAX_ENTRIES;
       const toDelete = sortedEntries.slice(0, entriesToRemove);
-      
+
       // Remove the oldest entries
       for (const [key] of toDelete) {
         this.storage.delete(key);
       }
-      
+
       // Log eviction event for monitoring (helps detect potential attacks)
       if (toDelete.length > 0) {
         console.warn(
           `[RateLimiter] Security: Evicted ${toDelete.length} entries due to MAX_ENTRIES limit (${this.MAX_ENTRIES}). ` +
-          `This may indicate a memory exhaustion attack or unusually high traffic. ` +
-          `Expired: ${expiredCount}, Total evicted: ${toDelete.length}, Current size: ${this.storage.size}`
+            `This may indicate a memory exhaustion attack or unusually high traffic. ` +
+            `Expired: ${expiredCount}, Total evicted: ${toDelete.length}, Current size: ${this.storage.size}`
         );
       }
     }
@@ -255,7 +295,18 @@ rateLimiter.configure('slug-set', {
   maxRequests: 10, // 10 slug updates per hour per user
 });
 
-export function getRateLimitHeaders(result: ReturnType<typeof rateLimiter.check>) {
+// Expensive endpoint rate limits
+rateLimiter.configure('metadata-extract', {
+  windowMs: 60 * 1000, // 1 minute
+  maxRequests: 5, // 5 requests per minute per IP (web scraping is expensive)
+});
+
+rateLimiter.configure('image-upload', {
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 10, // 10 uploads per hour per user (image processing is CPU-intensive)
+});
+
+export function getRateLimitHeaders(result: Awaited<ReturnType<typeof rateLimiter.check>>) {
   return {
     'X-RateLimit-Limit': result.limit.toString(),
     'X-RateLimit-Remaining': result.remaining.toString(),
@@ -264,17 +315,48 @@ export function getRateLimitHeaders(result: ReturnType<typeof rateLimiter.check>
   };
 }
 
+/**
+ * Extracts client IP address from request headers for rate limiting.
+ *
+ * SECURITY: Uses trusted headers in priority order to prevent IP spoofing:
+ * 1. CF-Connecting-IP (Cloudflare - most trusted)
+ * 2. X-Real-IP (Nginx/most proxies - set by proxy, not client)
+ * 3. X-Forwarded-For LAST IP (rightmost = closest to server)
+ *
+ * IMPORTANT: Ensure your reverse proxy/CDN is configured to:
+ * - Set CF-Connecting-IP (Cloudflare) or X-Real-IP (Nginx)
+ * - Properly forward client IPs in X-Forwarded-For
+ *
+ * Attack Prevention: Using the first IP in X-Forwarded-For is vulnerable to spoofing
+ * because clients can set arbitrary values. The last IP is set by the proxy closest
+ * to our server and cannot be manipulated by the client.
+ *
+ * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-For
+ * @see https://adam-p.ca/blog/2022/03/x-forwarded-for/
+ */
 export function getClientIdentifier(request: Request): string {
-  // Use X-Forwarded-For for production deployments behind proxies
-  const forwarded = request.headers.get('x-forwarded-for');
-  if (forwarded) {
-    return forwarded.split(',')[0].trim();
+  // Priority 1: Cloudflare-specific header (most trusted)
+  const cfConnecting = request.headers.get('cf-connecting-ip');
+  if (cfConnecting) {
+    return cfConnecting.trim();
   }
 
-  // Fallback to other headers
-  return (
-    request.headers.get('x-real-ip') ||
-    request.headers.get('cf-connecting-ip') || // Cloudflare
-    'unknown'
-  );
+  // Priority 2: X-Real-IP (set by proxy, cannot be spoofed by client)
+  const realIp = request.headers.get('x-real-ip');
+  if (realIp) {
+    return realIp.trim();
+  }
+
+  // Priority 3: X-Forwarded-For - use LAST IP (closest to server)
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) {
+    const ips = forwarded.split(',').map((ip) => ip.trim());
+    // Use the LAST IP in the chain (rightmost = closest to our server)
+    // Example: "client-ip, proxy1-ip, proxy2-ip" -> use "proxy2-ip"
+    return ips[ips.length - 1];
+  }
+
+  // Fallback: Log warning and return unknown
+  console.warn('[RateLimiter] Could not determine client IP address');
+  return 'unknown';
 }

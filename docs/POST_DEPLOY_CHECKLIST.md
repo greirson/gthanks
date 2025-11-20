@@ -78,6 +78,7 @@ echo "All health checks passed! ✓"
 ```
 
 **Run it:**
+
 ```bash
 chmod +x scripts/post-deploy-health.sh
 ./scripts/post-deploy-health.sh https://your-domain.com
@@ -434,16 +435,19 @@ Deployment is successful if all of the following are true:
 Continue monitoring for the next 24 hours:
 
 **First Hour:**
+
 - Check logs every 10 minutes
 - Monitor error rate
 - Watch for unusual patterns
 
 **First 6 Hours:**
+
 - Check logs hourly
 - Monitor user reports (email, support)
 - Review Sentry dashboard (if configured)
 
 **First 24 Hours:**
+
 - Check logs every 4 hours
 - Monitor performance metrics
 - Review user feedback

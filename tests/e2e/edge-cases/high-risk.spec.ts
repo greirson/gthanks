@@ -47,9 +47,7 @@ test.describe('High-Risk Areas', () => {
     await db.$disconnect();
   });
 
-  test('Bulk Operations Performance - Create, Select, and Delete 50 Wishes', async ({
-    page,
-  }) => {
+  test('Bulk Operations Performance - Create, Select, and Delete 50 Wishes', async ({ page }) => {
     const startTime = Date.now();
 
     // Step 1: Create and login user
@@ -69,7 +67,6 @@ test.describe('High-Risk Areas', () => {
       wishPromises.push(
         createWish(user.id, {
           title: `Test Wish ${i}`,
-          notes: `This is test wish number ${i} for bulk operations`,
           price: 10 + i,
           wishLevel: (i % 3) + 1, // Rotate between wish levels 1, 2, 3
         })
@@ -124,9 +121,7 @@ test.describe('High-Risk Areas', () => {
     const selectAllStart = Date.now();
 
     // Click the "Select All" button in the bulk actions bar
-    const selectAllButton = page
-      .locator('[role="toolbar"] button[title="Select All"]')
-      .first();
+    const selectAllButton = page.locator('[role="toolbar"] button[title="Select All"]').first();
     await selectAllButton.click();
 
     // Wait a moment for all selections to register
@@ -328,7 +323,9 @@ test.describe('High-Risk Areas', () => {
     await waitForLoadingComplete(page);
 
     // Look for invite/share button
-    const inviteButton = page.locator('button:has-text("Invite"), button:has-text("Share")').first();
+    const inviteButton = page
+      .locator('button:has-text("Invite"), button:has-text("Share")')
+      .first();
 
     if (await inviteButton.isVisible()) {
       await inviteButton.click();
@@ -411,7 +408,10 @@ test.describe('High-Risk Areas', () => {
     const mobileMenuButton = page.locator(
       '[data-testid="mobile-menu-button"], button[aria-label*="menu" i], button[aria-label*="navigation" i]'
     );
-    const hasMobileMenu = await mobileMenuButton.first().isVisible().catch(() => false);
+    const hasMobileMenu = await mobileMenuButton
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     // Alternative: check for hamburger icon or nav toggle
     const hamburgerIcon = page.locator('button:has(svg), [role="button"]:has(svg)').first();
@@ -430,7 +430,9 @@ test.describe('High-Risk Areas', () => {
     if (cardCount === 0) {
       console.log('data-testid selector not found, using fallback...');
       // Look for Card components with visible text that match our test wishes
-      wishCards = page.locator('[class*="Card"]:visible, div[class*="gap"] > div[class*="rounded"]');
+      wishCards = page.locator(
+        '[class*="Card"]:visible, div[class*="gap"] > div[class*="rounded"]'
+      );
       cardCount = await wishCards.count();
       console.log(`Found ${cardCount} potential wish cards via fallback selector`);
     }
@@ -453,7 +455,10 @@ test.describe('High-Risk Areas', () => {
       console.log(`Current URL: ${page.url()}`);
 
       // Check if page is showing empty state
-      const emptyStateText = await page.locator('text=No wishes yet').isVisible().catch(() => false);
+      const emptyStateText = await page
+        .locator('text=No wishes yet')
+        .isVisible()
+        .catch(() => false);
       console.log(`Showing empty state: ${emptyStateText}`);
 
       throw new Error('No wish cards found on mobile viewport');
@@ -481,17 +486,26 @@ test.describe('High-Risk Areas', () => {
 
     // Open wish creation form
     // On mobile, the button might just show a "+" icon, so we try multiple selectors
-    let createButton = page.locator('button:has-text("Create Wish"), button:has-text("Add Wish"), button[title*="Add"], button[aria-label*="Add"], button:has(svg)').filter({ has: page.locator('[class*="Plus"]') }).first();
+    let createButton = page
+      .locator(
+        'button:has-text("Create Wish"), button:has-text("Add Wish"), button[title*="Add"], button[aria-label*="Add"], button:has(svg)'
+      )
+      .filter({ has: page.locator('[class*="Plus"]') })
+      .first();
 
     // Fallback: look for the + button or "Create Wish" text
     let isVisible = await createButton.isVisible().catch(() => false);
     if (!isVisible) {
-      createButton = page.locator('button:has-text("Add"), [role="button"]:has-text("Add")').first();
+      createButton = page
+        .locator('button:has-text("Add"), [role="button"]:has-text("Add")')
+        .first();
       isVisible = await createButton.isVisible().catch(() => false);
     }
 
     if (!isVisible) {
-      console.log('✓ Create button not found on mobile (expected for reduced UI), skipping form test');
+      console.log(
+        '✓ Create button not found on mobile (expected for reduced UI), skipping form test'
+      );
     } else {
       await createButton.click();
       await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
@@ -555,7 +569,9 @@ test.describe('High-Risk Areas', () => {
     // Fallback: look for card elements if data-testid not found
     if (landscapeCardCount === 0) {
       console.log('(Landscape) data-testid selector not found, using fallback...');
-      landscapeCards = page.locator('[class*="Card"]:visible, div[class*="gap"] > div[class*="rounded"]');
+      landscapeCards = page.locator(
+        '[class*="Card"]:visible, div[class*="gap"] > div[class*="rounded"]'
+      );
       landscapeCardCount = await landscapeCards.count();
       console.log(`(Landscape) Found ${landscapeCardCount} potential wish cards via fallback`);
     }

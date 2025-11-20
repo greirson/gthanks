@@ -9,6 +9,7 @@ This directory contains background job functions that run on a schedule via Verc
 **Purpose**: Deletes expired MagicLink and VerificationToken records from the database.
 
 **Why**:
+
 - Prevents security risks from expired tokens remaining in the database
 - Reduces database bloat from accumulating old records
 - Magic links expire after 15 minutes but tokens stay in DB indefinitely without cleanup
@@ -22,17 +23,21 @@ This directory contains background job functions that run on a schedule via Verc
 ## Testing Locally
 
 ### Test the cleanup function directly:
+
 ```bash
 npx tsx scripts/test-cleanup-cron.ts
 ```
 
 ### Test the API endpoint:
+
 1. Set CRON_SECRET environment variable:
+
    ```bash
    export CRON_SECRET="test-secret-123"
    ```
 
 2. Start the dev server:
+
    ```bash
    pnpm dev
    ```
@@ -43,6 +48,7 @@ npx tsx scripts/test-cleanup-cron.ts
    ```
 
 ### Manual API test with curl:
+
 ```bash
 curl -X GET http://localhost:3000/api/cron/cleanup-tokens \
   -H "Authorization: Bearer YOUR_CRON_SECRET"
@@ -51,6 +57,7 @@ curl -X GET http://localhost:3000/api/cron/cleanup-tokens \
 ## Production Setup
 
 1. **Add CRON_SECRET to Vercel**:
+
    ```bash
    vercel env add CRON_SECRET
    # Enter a secure random value (use: openssl rand -base64 32)
@@ -58,12 +65,15 @@ curl -X GET http://localhost:3000/api/cron/cleanup-tokens \
 
 2. **Deploy with vercel.json**:
    The `vercel.json` file in the project root configures the cron schedule:
+
    ```json
    {
-     "crons": [{
-       "path": "/api/cron/cleanup-tokens",
-       "schedule": "0 0 * * *"
-     }]
+     "crons": [
+       {
+         "path": "/api/cron/cleanup-tokens",
+         "schedule": "0 0 * * *"
+       }
+     ]
    }
    ```
 
@@ -76,10 +86,12 @@ curl -X GET http://localhost:3000/api/cron/cleanup-tokens \
 ## Cron Schedule Format
 
 The schedule uses standard cron syntax:
+
 - `0 0 * * *` = Daily at midnight UTC
 - Format: `minute hour day month dayOfWeek`
 
 Examples:
+
 - `0 0 * * *` = Daily at midnight
 - `0 */6 * * *` = Every 6 hours
 - `0 0 * * 0` = Weekly on Sunday at midnight

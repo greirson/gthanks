@@ -15,7 +15,6 @@ test.describe('Group Sharing (Example)', () => {
     // 3. Click create group
     // 4. Fill in group details
     // 5. Verify group is created
-
     // Example flow:
     // await loginUser(page, 'user@example.com');
     // await page.goto('/groups');
@@ -32,7 +31,6 @@ test.describe('Group Sharing (Example)', () => {
     // 3. Add member email
     // 4. Verify invitation sent
     // 5. Verify member receives invitation
-
     // Example flow:
     // await loginUser(page, 'admin@example.com');
     // await page.goto('/groups/[group-id]/settings');
@@ -48,7 +46,6 @@ test.describe('Group Sharing (Example)', () => {
     // 3. View invitations
     // 4. Accept invitation
     // 5. Verify user is now in group
-
     // Example flow:
     // await loginUser(page, 'member@example.com');
     // await page.goto('/invitations');
@@ -63,7 +60,6 @@ test.describe('Group Sharing (Example)', () => {
     // 3. Select group to share with
     // 4. Click share
     // 5. Verify list is shared with group
-
     // Example flow:
     // await loginUser(page, 'owner@example.com');
     // await page.goto('/lists/[list-id]/settings');
@@ -79,7 +75,6 @@ test.describe('Group Sharing (Example)', () => {
     // 3. Navigate to groups or shared lists
     // 4. Verify list is visible
     // 5. Verify member can view wishes
-
     // Example flow:
     // await loginUser(page, 'member@example.com');
     // await page.goto('/groups/[group-id]/lists');
@@ -88,9 +83,7 @@ test.describe('Group Sharing (Example)', () => {
     // await expect(page.locator('[data-testid="wish-list"]')).toBeVisible();
   });
 
-  test.skip('group members can reserve wishes from shared lists', async ({
-    page,
-  }) => {
+  test.skip('group members can reserve wishes from shared lists', async ({ page }) => {
     // TODO: Implement cross-feature test (groups + reservations)
     // 1. Setup: Share list with group
     // 2. Login as group member
@@ -98,7 +91,6 @@ test.describe('Group Sharing (Example)', () => {
     // 4. Reserve a wish
     // 5. Verify reservation is recorded
     // 6. Verify list owner cannot see the reservation
-
     // Example flow:
     // await loginUser(page, 'member@example.com');
     // await page.goto('/groups/[group-id]/lists/[list-id]');
@@ -113,7 +105,6 @@ test.describe('Group Sharing (Example)', () => {
     // 3. Remove a member
     // 4. Verify member is removed
     // 5. Verify member no longer has access to shared lists
-
     // Example flow:
     // await loginUser(page, 'admin@example.com');
     // await page.goto('/groups/[group-id]/members');
@@ -129,7 +120,6 @@ test.describe('Group Sharing (Example)', () => {
     // 4. Verify they can only see group A lists
     // 5. Login as member of group B
     // 6. Verify they can only see group B lists
-
     // This tests that groups are properly isolated
   });
 });

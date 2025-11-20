@@ -9,16 +9,19 @@ This is a quick reference for setting up PostgreSQL for production. For detailed
 Choose a provider and copy your connection string:
 
 **Neon** (Serverless, Free Tier)
+
 ```
 https://neon.tech → New Project → Copy connection string
 ```
 
 **Supabase** (Free Tier)
+
 ```
 https://supabase.com → New Project → Settings → Database → Connection Pooling
 ```
 
 **Railway** (Pay-as-you-go)
+
 ```
 https://railway.app → New → PostgreSQL → Variables → DATABASE_URL
 ```
@@ -35,6 +38,7 @@ Edit `prisma/schema.prisma` line 17:
 ### 3. Set Environment Variable
 
 Production environment:
+
 ```env
 DATABASE_URL=postgresql://user:password@host:5432/gthanks?schema=public
 ```
@@ -56,17 +60,21 @@ pnpm prisma studio
 ## Environment-Specific Configuration
 
 ### Local Development (SQLite)
+
 ```env
 DATABASE_URL=file:./data/gthanks.db
 ```
+
 ```prisma
 provider = "sqlite"
 ```
 
 ### Production (PostgreSQL)
+
 ```env
 DATABASE_URL=postgresql://user:pass@host:5432/gthanks?schema=public
 ```
+
 ```prisma
 provider = "postgresql"
 ```
@@ -74,21 +82,25 @@ provider = "postgresql"
 ## Common Connection Strings
 
 ### Neon
+
 ```
 postgresql://user:pass@ep-xxx.us-east-1.aws.neon.tech/gthanks?sslmode=require
 ```
 
 ### Supabase (with pooling)
+
 ```
 postgresql://postgres:pass@db.xxx.supabase.co:6543/postgres?pgbouncer=true
 ```
 
 ### Railway
+
 ```
 postgresql://postgres:pass@containers-us-west-xxx.railway.app:6543/railway
 ```
 
 ### Docker (local testing)
+
 ```bash
 docker run -d \
   --name postgres \
@@ -104,30 +116,37 @@ DATABASE_URL=postgresql://postgres:yourpass@localhost:5432/gthanks
 ## Troubleshooting
 
 ### Schema validation fails
+
 **Error**: `the URL must start with the protocol postgresql://`
 
 **Fix**: Make sure both `prisma/schema.prisma` provider AND DATABASE_URL match:
+
 - provider = "postgresql" → DATABASE_URL must start with postgresql://
 - provider = "sqlite" → DATABASE_URL must start with file:
 
 ### Connection refused
+
 **Error**: `Can't reach database server`
 
 **Fix**:
+
 1. Check firewall/network settings
 2. Verify connection string is correct
 3. Ensure database is running
 4. For cloud providers, check IP allowlist
 
 ### SSL required
+
 **Error**: `SSL connection required`
 
 **Fix**: Add to connection string:
+
 ```
 ?sslmode=require
 ```
 
 ### Too many connections
+
 **Error**: `remaining connection slots reserved`
 
 **Fix**: Use connection pooling (port 6543 for Supabase, pooled connection for Neon)

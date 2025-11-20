@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getCurrentUser } from '@/lib/auth-utils';
-import { db } from '@/lib/db';
 import { AppError, ForbiddenError, NotFoundError, getUserFriendlyError } from '@/lib/errors';
 import { rateLimiter, getRateLimitHeaders, getClientIdentifier } from '@/lib/rate-limiter';
-import { permissionService } from '@/lib/services/permission-service';
+import { listInvitationService } from '@/lib/services/list-invitation.service';
 import { logger } from '@/lib/services/logger';
 
 interface RouteParams {
@@ -38,7 +37,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     // Rate limiting - prevent spam removal
     const clientIdentifier = getClientIdentifier(request);
-    const rateLimitResult = rateLimiter.check('co-manager-remove', clientIdentifier);
+    const rateLimitResult = await rateLimiter.check('co-manager-remove', clientIdentifier);
 
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
@@ -65,59 +64,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     const { listId, userId: targetUserId } = params;
 
-    // Verify user has permission to manage this list (only owners can remove co-managers)
-    await permissionService.require(user.id, 'admin', { type: 'list', id: listId });
-
-    // Prevent owner from removing themselves
-    if (targetUserId === user.id) {
-      return NextResponse.json(
-        {
-          error: getUserFriendlyError('INVALID_OPERATION', 'Cannot remove yourself from the list'),
-          code: 'INVALID_OPERATION',
-        },
-        {
-          status: 400,
-          headers: getRateLimitHeaders(rateLimitResult),
-        }
-      );
-    }
-
-    // Use transaction to ensure data consistency
-    await db.$transaction(async (tx) => {
-      // Verify list exists
-      const list = await tx.list.findUnique({
-        where: { id: listId },
-        select: { id: true, name: true, ownerId: true },
-      });
-
-      if (!list) {
-        throw new NotFoundError('List not found');
-      }
-
-      // Check if target user is actually a co-manager
-      const existingAdmin = await tx.listAdmin.findUnique({
-        where: {
-          listId_userId: {
-            listId,
-            userId: targetUserId,
-          },
-        },
-      });
-
-      if (!existingAdmin) {
-        throw new NotFoundError('User is not a co-manager of this list');
-      }
-
-      // Remove user as co-manager
-      await tx.listAdmin.delete({
-        where: {
-          listId_userId: {
-            listId,
-            userId: targetUserId,
-          },
-        },
-      });
-    });
+    // Use service to remove co-manager (handles all validation and permission checks)
+    await listInvitationService.removeCoManager(listId, targetUserId, user.id);
 
     return NextResponse.json(
       {
@@ -131,17 +79,11 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   } catch (error) {
     logger.error({ error: error }, 'DELETE /api/lists/[listId]/admins/[userId] error');
 
-    if (error instanceof NotFoundError) {
+    // Return 404 for both NotFoundError and ForbiddenError to prevent resource enumeration
+    if (error instanceof NotFoundError || error instanceof ForbiddenError) {
       return NextResponse.json(
-        { error: getUserFriendlyError('NOT_FOUND', error.message), code: 'NOT_FOUND' },
+        { error: getUserFriendlyError('NOT_FOUND'), code: 'NOT_FOUND' },
         { status: 404 }
-      );
-    }
-
-    if (error instanceof ForbiddenError) {
-      return NextResponse.json(
-        { error: getUserFriendlyError('FORBIDDEN', error.message), code: 'FORBIDDEN' },
-        { status: 403 }
       );
     }
 

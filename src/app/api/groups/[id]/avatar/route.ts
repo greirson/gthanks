@@ -2,6 +2,7 @@ import { fileTypeFromBuffer } from 'file-type';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getCurrentUser } from '@/lib/auth-utils';
+// eslint-disable-next-line local-rules/no-direct-db-import -- Avatar file operations require direct db access for metadata; read-only queries with no business logic
 import { db } from '@/lib/db';
 import { getUserFriendlyError } from '@/lib/errors';
 import { groupService } from '@/lib/services/group/group.service';
@@ -29,7 +30,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     if (!file) {
       return NextResponse.json(
-        { error: getUserFriendlyError('VALIDATION_ERROR', 'No file provided'), code: 'VALIDATION_ERROR' },
+        {
+          error: getUserFriendlyError('VALIDATION_ERROR', 'No file provided'),
+          code: 'VALIDATION_ERROR',
+        },
         { status: 400 }
       );
     }
@@ -42,7 +46,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (buffer.length > MAX_AVATAR_SIZE) {
       return NextResponse.json(
         {
-          error: getUserFriendlyError('VALIDATION_ERROR', 'Avatar image too large. Maximum size is 2MB.'),
+          error: getUserFriendlyError(
+            'VALIDATION_ERROR',
+            'Avatar image too large. Maximum size is 2MB.'
+          ),
           code: 'VALIDATION_ERROR',
         },
         { status: 400 }
@@ -174,6 +181,83 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     logger.error({ error: error }, 'Avatar serving error');
     return NextResponse.json(
       { error: 'Something went wrong. Please try again', code: 'INTERNAL_ERROR' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * DELETE /api/groups/[id]/avatar - Removes the group's avatar
+ *
+ * @description Deletes the group's avatar file from the filesystem and sets avatarUrl to null.
+ * Only group admins can delete the group avatar.
+ */
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json(
+        { error: getUserFriendlyError('UNAUTHORIZED'), code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
+    }
+
+    const groupId = params.id;
+
+    // Check permissions - user must be group admin
+    try {
+      await groupService.requireAdmin(groupId, user.id);
+    } catch {
+      return NextResponse.json(
+        {
+          error: getUserFriendlyError('FORBIDDEN', 'You must be a group admin to remove the photo'),
+          code: 'FORBIDDEN',
+        },
+        { status: 403 }
+      );
+    }
+
+    // Get current avatar URL from database
+    const group = await db.group.findUnique({
+      where: { id: groupId },
+      select: { avatarUrl: true },
+    });
+
+    if (!group) {
+      return NextResponse.json(
+        { error: getUserFriendlyError('NOT_FOUND', 'Group not found'), code: 'NOT_FOUND' },
+        { status: 404 }
+      );
+    }
+
+    // Delete file if it exists (only if it's a local upload, not a data URL)
+    if (group.avatarUrl && group.avatarUrl.startsWith('/api/images/')) {
+      try {
+        await imageProcessor.deleteImage(group.avatarUrl);
+      } catch (error) {
+        // File might already be deleted, log but continue anyway
+        logger.warn(
+          { error: error, avatarUrl: group.avatarUrl },
+          'Failed to delete group avatar file'
+        );
+      }
+    }
+
+    // Set avatarUrl to null in database
+    await db.group.update({
+      where: { id: groupId },
+      data: { avatarUrl: null },
+    });
+
+    // Return 204 No Content
+    return new NextResponse(null, { status: 204 });
+  } catch (error) {
+    logger.error({ error: error }, 'Error deleting group avatar');
+    return NextResponse.json(
+      {
+        error: getUserFriendlyError('INTERNAL_ERROR', 'Failed to delete avatar'),
+        code: 'INTERNAL_ERROR',
+      },
       { status: 500 }
     );
   }

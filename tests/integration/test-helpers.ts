@@ -19,7 +19,7 @@ export function createMockRequest(
   } = {}
 ): NextRequest {
   const fullUrl = new URL(url, 'http://localhost:3000');
-  
+
   // Add search params if provided
   if (options.searchParams) {
     Object.entries(options.searchParams).forEach(([key, value]) => {
@@ -53,16 +53,12 @@ export function createMockRequest(
 /**
  * Sets up authentication context for tests
  */
-export function mockAuthenticatedUser(user: {
-  id: string;
-  email: string;
-  name?: string;
-}) {
+export function mockAuthenticatedUser(user: { id: string; email: string; name?: string }) {
   // Set test headers that auth-utils will recognize
   (global as { mockHeaders?: Map<string, string> }).mockHeaders = new Map([
     ['X-Test-User-Id', user.id],
     ['X-Test-User-Email', user.email],
-    ['X-Test-User-Name', user.name || '']
+    ['X-Test-User-Name', user.name || ''],
   ]);
 
   // Also update getCurrentUser mock if needed
@@ -78,7 +74,7 @@ export function mockAuthenticatedUser(user: {
       isAdmin: false,
       createdAt: new Date(),
       lastLoginAt: null,
-      authMethod: 'session'
+      authMethod: 'session',
     });
   }
 }
@@ -106,16 +102,16 @@ export async function createTestScenario(db: any) {
     data: {
       id: 'owner-' + timestamp,
       email: 'owner@test.com',
-      name: 'List Owner'
-    }
+      name: 'List Owner',
+    },
   });
 
   const giver = await db.user.create({
     data: {
       id: 'giver-' + timestamp,
       email: 'giver@test.com',
-      name: 'Gift Giver'
-    }
+      name: 'Gift Giver',
+    },
   });
 
   // Create group
@@ -123,8 +119,8 @@ export async function createTestScenario(db: any) {
     data: {
       id: 'group-' + timestamp,
       name: 'Test Family',
-      description: 'Test family group'
-    }
+      description: 'Test family group',
+    },
   });
 
   // Add users to group
@@ -132,16 +128,16 @@ export async function createTestScenario(db: any) {
     data: {
       userId: owner.id,
       groupId: group.id,
-      role: 'admin'
-    }
+      role: 'admin',
+    },
   });
 
   await db.userGroup.create({
     data: {
       userId: giver.id,
       groupId: group.id,
-      role: 'member'
-    }
+      role: 'member',
+    },
   });
 
   // Create list
@@ -150,8 +146,8 @@ export async function createTestScenario(db: any) {
       id: 'list-' + timestamp,
       name: 'Birthday Wishlist',
       description: 'My birthday wishes',
-      ownerId: owner.id
-    }
+      ownerId: owner.id,
+    },
   });
 
   // Share list with group
@@ -159,8 +155,8 @@ export async function createTestScenario(db: any) {
     data: {
       listId: list.id,
       groupId: group.id,
-      sharedBy: owner.id
-    }
+      sharedBy: owner.id,
+    },
   });
 
   // Create wishes
@@ -173,8 +169,8 @@ export async function createTestScenario(db: any) {
         url: 'https://example.com/clean-code',
         price: 39.99,
         wishLevel: 2,
-        ownerId: owner.id
-      }
+        ownerId: owner.id,
+      },
     }),
     db.wish.create({
       data: {
@@ -184,29 +180,29 @@ export async function createTestScenario(db: any) {
         url: 'https://example.com/headphones',
         price: 149.99,
         wishLevel: 3,
-        ownerId: owner.id
-      }
+        ownerId: owner.id,
+      },
     }),
     db.wish.create({
       data: {
         id: 'wish-3-' + timestamp,
         title: 'Coffee Mug',
         notes: 'Nice ceramic mug',
-        price: 15.00,
+        price: 15.0,
         wishLevel: 1,
-        ownerId: owner.id
-      }
-    })
+        ownerId: owner.id,
+      },
+    }),
   ]);
 
   // Add wishes to list
   await Promise.all(
-    wishes.map(wish =>
+    wishes.map((wish) =>
       db.listWish.create({
         data: {
           listId: list.id,
-          wishId: wish.id
-        }
+          wishId: wish.id,
+        },
       })
     )
   );
@@ -216,7 +212,7 @@ export async function createTestScenario(db: any) {
     giver,
     group,
     list,
-    wishes
+    wishes,
   };
 }
 
@@ -224,7 +220,7 @@ export async function createTestScenario(db: any) {
  * Waits for async operations to complete
  */
 export function waitFor(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -238,8 +234,8 @@ export function assertApiResponse(
   expect(response.status).toBe(expectedStatus);
 
   if (expectedShape && response.status === 200) {
-    return response.json().then(data => {
-      Object.keys(expectedShape).forEach(key => {
+    return response.json().then((data) => {
+      Object.keys(expectedShape).forEach((key) => {
         expect(data).toHaveProperty(key);
         if (typeof expectedShape[key] === 'function') {
           expect(typeof data[key]).toBe(expectedShape[key].name.toLowerCase());
@@ -272,7 +268,7 @@ export class EmailCapture {
   capture(emailData: any) {
     this.emails.push({
       ...emailData,
-      sentAt: new Date()
+      sentAt: new Date(),
     });
   }
 
@@ -285,7 +281,7 @@ export class EmailCapture {
   }
 
   findByRecipient(email: string) {
-    return this.emails.filter(e => e.to === email);
+    return this.emails.filter((e) => e.to === email);
   }
 
   reset() {
@@ -351,12 +347,12 @@ export function validateReservation(reservation: any) {
   expect(reservation).toHaveProperty('id');
   expect(reservation).toHaveProperty('wishId');
   expect(reservation).toHaveProperty('reservedAt');
-  
+
   // Either authenticated or anonymous
   if (reservation.reserverEmail) {
     expect(reservation.reserverEmail).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
   }
-  
+
   if (!reservation.reserverEmail && !reservation.accessToken) {
     throw new Error('Reservation must have either reserverEmail or accessToken');
   }
@@ -370,12 +366,12 @@ export function validateWish(wish: any) {
   expect(wish).toHaveProperty('title');
   expect(wish).toHaveProperty('ownerId');
   expect(wish).toHaveProperty('wishLevel');
-  
+
   if (wish.price !== null && wish.price !== undefined) {
     expect(typeof wish.price).toBe('number');
     expect(wish.price).toBeGreaterThanOrEqual(0);
   }
-  
+
   if (wish.wishLevel) {
     expect(wish.wishLevel).toBeGreaterThanOrEqual(1);
     expect(wish.wishLevel).toBeLessThanOrEqual(3);
@@ -387,19 +383,19 @@ export function validateWish(wish: any) {
  */
 export async function createMockSession(db: any, user: any) {
   const sessionToken = 'session-' + generateTestId();
-  
+
   const session = await db.session.create({
     data: {
       sessionToken,
       userId: user.id,
-      expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-    }
+      expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+    },
   });
 
   return {
     sessionToken,
     session,
-    user
+    user,
   };
 }
 
@@ -415,21 +411,21 @@ export async function simulateMagicLinkFlow(db: any, email: string) {
     data: {
       identifier: email,
       token,
-      expires
-    }
+      expires,
+    },
   });
 
   // Find or create user
   let user = await db.user.findUnique({
-    where: { email }
+    where: { email },
   });
 
   if (!user) {
     user = await db.user.create({
       data: {
         email,
-        emailVerified: new Date()
-      }
+        emailVerified: new Date(),
+      },
     });
   }
 
@@ -438,12 +434,12 @@ export async function simulateMagicLinkFlow(db: any, email: string) {
 
   // Delete token (consumed)
   await db.verificationToken.delete({
-    where: { token }
+    where: { token },
   });
 
   return {
     user,
     sessionToken,
-    session
+    session,
   };
 }

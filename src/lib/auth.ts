@@ -1,4 +1,4 @@
-import { PrismaAdapter } from '@next-auth/prisma-adapter';
+import { createEncryptedPrismaAdapter } from '@/lib/auth/encrypted-prisma-adapter';
 
 import { type Account, type NextAuthOptions, type User as NextAuthUser } from 'next-auth';
 import { type AdapterUser } from 'next-auth/adapters';
@@ -23,12 +23,23 @@ import { UserProfileService } from '@/lib/services/user-profile';
 import { sanitizeRedirectUrl } from '@/lib/utils/url-validation';
 
 const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(db),
+  adapter: createEncryptedPrismaAdapter(),
   providers: [
     EmailProvider({
       from: process.env.EMAIL_FROM || 'noreply@localhost',
       maxAge: 15 * 60, // 15 minutes
-      sendVerificationRequest: async ({ identifier: email, url }) => {
+      // Server config is required by EmailProvider constructor even when using
+      // custom sendVerificationRequest. These values are not used for sending
+      // but must be present to prevent initialization errors.
+      server: {
+        host: process.env.SMTP_HOST || 'localhost',
+        port: Number(process.env.SMTP_PORT) || 587,
+        auth: {
+          user: process.env.SMTP_USER || '',
+          pass: process.env.SMTP_PASS || '',
+        },
+      },
+      sendVerificationRequest: async ({ identifier: email, url, provider: _provider }) => {
         const emailService = createEmailService();
 
         await emailService.send({
@@ -271,20 +282,79 @@ const authOptions: NextAuthOptions = {
           }
 
           // OAuth account doesn't exist yet - check if we should link it to an existing user
-          // First check UserEmail table
+          // SECURITY: Only link to verified emails to prevent account hijacking
+          // Attack scenario: Attacker creates account with victim@example.com (unverified),
+          // then victim signs in with OAuth using same email. Without this check, victim's
+          // OAuth would link to attacker's account, giving attacker access.
           const existingUserEmail = await db.userEmail.findFirst({
-            where: { email: user.email },
+            where: {
+              email: user.email,
+              isVerified: true, // CRITICAL: Only match verified emails
+            },
             include: { user: true },
           });
 
           // Also check legacy User table for backward compatibility
-          const existingUser = existingUserEmail?.user || (await db.user.findUnique({
-            where: { email: user.email },
-          }));
+          // For legacy users, we need to verify their email is verified in UserEmail table
+          let existingUser = existingUserEmail?.user;
+
+          if (!existingUser) {
+            const legacyUser = await db.user.findUnique({
+              where: { email: user.email },
+              include: {
+                emails: {
+                  where: {
+                    email: user.email,
+                    isVerified: true,
+                  },
+                },
+              },
+            });
+
+            // Only use legacy user if their email is verified (has verified UserEmail record)
+            if (legacyUser && legacyUser.emails.length > 0) {
+              existingUser = legacyUser;
+            }
+          }
 
           if (existingUser) {
             // User exists with this email - link the OAuth account
             try {
+              // Import encryption utilities for manual account creation
+              const { encryptToken } = await import('@/lib/crypto/oauth-encryption');
+
+              // Encrypt tokens before storage
+              let encryptedAccessToken: string | null = null;
+              let encryptedRefreshToken: string | null = null;
+              let tokenIv: string | null = null;
+
+              if (account.access_token) {
+                try {
+                  const encrypted = encryptToken(account.access_token);
+                  encryptedAccessToken = encrypted.encrypted;
+                  tokenIv = encrypted.iv;
+                } catch (encryptError) {
+                  logger.error(
+                    'Failed to encrypt access token during manual account linking',
+                    encryptError
+                  );
+                  // Continue with plaintext on encryption failure
+                }
+              }
+
+              if (account.refresh_token && tokenIv) {
+                try {
+                  const encrypted = encryptToken(account.refresh_token);
+                  encryptedRefreshToken = encrypted.encrypted;
+                } catch (encryptError) {
+                  logger.error(
+                    'Failed to encrypt refresh token during manual account linking',
+                    encryptError
+                  );
+                  // Continue with plaintext on encryption failure
+                }
+              }
+
               await db.account.create({
                 data: {
                   userId: existingUser.id,
@@ -298,6 +368,9 @@ const authOptions: NextAuthOptions = {
                   scope: account.scope ?? null,
                   id_token: account.id_token ?? null,
                   session_state: account.session_state ?? null,
+                  encryptedAccessToken,
+                  encryptedRefreshToken,
+                  tokenIv,
                 },
               });
 
@@ -515,6 +588,36 @@ const authOptions: NextAuthOptions = {
     signIn: '/auth/login',
     error: '/auth/error',
     verifyRequest: '/auth/verify-request',
+  },
+  // Cookie configuration for localhost development
+  // __Host- and __Secure- prefixes require HTTPS, which breaks on localhost
+  cookies: {
+    sessionToken: {
+      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+    callbackUrl: {
+      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.callback-url`,
+      options: {
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+    csrfToken: {
+      name: `${process.env.NODE_ENV === 'production' ? '__Host-' : ''}next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
   },
 };
 

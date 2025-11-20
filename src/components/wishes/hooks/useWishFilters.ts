@@ -34,6 +34,7 @@ export interface FilterState {
   cost: PriceRange;
   sort: SortOption;
   search: string;
+  [key: string]: unknown;
 }
 
 // LocalStorage key for persisting filters
@@ -137,11 +138,7 @@ export function useWishFilters(wishes: Wish[], pageSize = 24) {
     // 1. maxPrice changes and is greater than 0
     // 2. User hasn't set a custom price filter (min is still 0)
     // 3. Current max is less than the new maxPrice
-    if (
-      maxPrice > 0 &&
-      filterState.cost.min === 0 &&
-      filterState.cost.max < maxPrice
-    ) {
+    if (maxPrice > 0 && filterState.cost.min === 0 && filterState.cost.max < maxPrice) {
       setFilterState((prev) => ({
         ...prev,
         cost: { ...prev.cost, max: maxPrice },

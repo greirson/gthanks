@@ -11,6 +11,7 @@ gthanks uses Sentry for error tracking and performance monitoring in production.
 1. **Create Sentry Project** - Sign up at sentry.io and create a new Next.js project
 
 2. **Environment Variables**
+
 ```env
 SENTRY_DSN=https://...@sentry.io/...
 SENTRY_ORG=your-org
@@ -64,12 +65,14 @@ Sentry.init({
 ### Error Tracking
 
 **Automatic Capture:**
+
 - Unhandled promise rejections
 - Uncaught exceptions
 - API route errors
 - Server component errors
 
 **Manual Capture:**
+
 ```typescript
 import * as Sentry from '@sentry/nextjs';
 
@@ -92,12 +95,14 @@ try {
 ### Performance Monitoring
 
 **Automatic Instrumentation:**
+
 - Page load times
 - API route response times
 - Database query performance
 - External API calls
 
 **Custom Transactions:**
+
 ```typescript
 import * as Sentry from '@sentry/nextjs';
 
@@ -119,10 +124,7 @@ export async function processImage(imageUrl: string) {
       op: 'image.resize',
       description: 'Resize and optimize',
     });
-    const processed = await sharp(buffer)
-      .resize(800, 800)
-      .webp({ quality: 85 })
-      .toBuffer();
+    const processed = await sharp(buffer).resize(800, 800).webp({ quality: 85 }).toBuffer();
     processSpan.finish();
 
     return processed;
@@ -226,6 +228,7 @@ export const logger = {
 ### Logging Best Practices
 
 **DO log:**
+
 - Authentication attempts (success/failure)
 - Permission checks (denied access)
 - External API failures
@@ -234,12 +237,14 @@ export const logger = {
 - Image processing errors
 
 **DON'T log:**
+
 - Passwords or tokens
 - Personal information (unless necessary)
 - Successful routine operations
 - Verbose debug output in production
 
 **Example: Secure Logging**
+
 ```typescript
 // ✅ Good - No sensitive data
 logger.info('User login successful', {
@@ -336,6 +341,7 @@ Use external services to monitor health endpoint:
 - **Pingdom** - Advanced monitoring
 
 Configure alerts for:
+
 - Health check failures
 - Response time > 5s
 - 5xx error rate > 1%
@@ -492,18 +498,21 @@ docker logs gthanks-app 2>&1 | grep ERROR
 ### Common Issues
 
 **High Error Rate:**
+
 - Check recent deployments
 - Review database connection pool
 - Check external API status
 - Verify environment variables
 
 **Slow Response Times:**
+
 - Identify slow queries in Sentry
 - Check database indexes
 - Review n+1 queries
 - Check external API latency
 
 **Memory Leaks:**
+
 - Monitor memory usage trends
 - Check for unclosed connections
 - Review event listener cleanup

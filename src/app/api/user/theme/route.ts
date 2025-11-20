@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getCurrentUser } from '@/lib/auth-utils';
 import { getUserFriendlyError } from '@/lib/errors';
-import { db } from '@/lib/db';
+import { userService } from '@/lib/services/user-service';
 import { logger } from '@/lib/services/logger';
 
 const themeSchema = z.object({
@@ -37,11 +37,8 @@ export async function POST(request: NextRequest) {
 
     const { theme } = result.data;
 
-    // Update user's theme preference
-    await db.user.update({
-      where: { id: user.id },
-      data: { themePreference: theme },
-    });
+    // Use service layer
+    await userService.updateTheme(user.id, theme);
 
     return NextResponse.json({ success: true });
   } catch (error) {

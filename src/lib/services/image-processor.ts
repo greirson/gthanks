@@ -45,7 +45,8 @@ export class ImageProcessor {
 
   constructor() {
     // Use STORAGE_PATH env var if set, otherwise fallback to default path for backward compatibility
-    this.uploadsDir = process.env.STORAGE_PATH || path.join(process.cwd(), 'public', 'uploads', 'items');
+    this.uploadsDir =
+      process.env.STORAGE_PATH || path.join(process.cwd(), 'public', 'uploads', 'items');
   }
 
   /**
@@ -239,12 +240,19 @@ export class ImageProcessor {
    */
   async deleteImage(localPath: string): Promise<void> {
     try {
-      if (!localPath.startsWith('/uploads/items/')) {
+      // Support both legacy /uploads/items/ paths and new /api/images/ paths
+      if (localPath.startsWith('/api/images/')) {
+        // Extract filename from /api/images/{filename}
+        const filename = path.basename(localPath);
+        const filepath = path.join(this.uploadsDir, filename);
+        await fs.unlink(filepath);
+      } else if (localPath.startsWith('/uploads/items/')) {
+        // Legacy path format
+        const filepath = path.join(process.cwd(), 'public', localPath);
+        await fs.unlink(filepath);
+      } else {
         throw new Error('Invalid image path');
       }
-
-      const filepath = path.join(process.cwd(), 'public', localPath);
-      await fs.unlink(filepath);
     } catch (error) {
       logger.error(`Failed to delete image ${localPath}:`, error, {
         localPath,

@@ -156,8 +156,13 @@ function UserInvitationsComponent() {
 
   if (error) {
     return (
-      <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 dark:border-destructive/40 dark:bg-destructive/5" role="alert">
-        <p className="text-sm text-destructive">Failed to load invitations. Please try again later.</p>
+      <div
+        className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 dark:border-destructive/40 dark:bg-destructive/5"
+        role="alert"
+      >
+        <p className="text-sm text-destructive">
+          Failed to load invitations. Please try again later.
+        </p>
       </div>
     );
   }

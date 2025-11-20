@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getUserFriendlyError } from '@/lib/errors';
 import { verifyEmailToken } from '@/lib/email-verification';
 import { rateLimiter, getClientIdentifier } from '@/lib/rate-limiter';
+// eslint-disable-next-line local-rules/no-direct-db-import -- Read-only query for first-email check, utilities handle verification
 import { db } from '@/lib/db';
 import { updateEmailPrimaryStatus } from '@/lib/utils/email-constraints';
 import { logger } from '@/lib/services/logger';
@@ -27,6 +27,13 @@ import { logger } from '@/lib/services/logger';
  * GET /api/user/emails/verify?token=def456...
  * // Redirects to /settings?emailVerified=success&email=user2@example.com
  *
+ * @note This route uses utility functions appropriately:
+ *       - verifyEmailToken() handles core verification logic
+ *       - updateEmailPrimaryStatus() handles auto-promotion with transaction safety
+ *       - Simple count query to determine first-email status
+ *       - Could use userService.verifyEmail() + userService.setPrimaryEmail() but current
+ *         approach with utilities is cleaner for this redirect-based flow
+ *
  * @see {@link verifyEmailToken} for token verification logic
  * @see {@link updateEmailPrimaryStatus} for auto-promotion logic
  */
@@ -34,7 +41,7 @@ export async function GET(request: NextRequest) {
   try {
     // Check rate limit before processing
     const identifier = getClientIdentifier(request);
-    const rateLimitResult = rateLimiter.check('email-verify', identifier);
+    const rateLimitResult = await rateLimiter.check('email-verify', identifier);
 
     if (!rateLimitResult.allowed) {
       return NextResponse.redirect(

@@ -16,8 +16,8 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 // Development needs 'unsafe-eval' for webpack Hot Module Reloading
 // Production removes it for security
 const scriptSrc = isDevelopment
-  ? "'self' 'unsafe-inline' 'unsafe-eval'"  // Dev: Allow eval for webpack HMR
-  : "'self' 'unsafe-inline'";                // Prod: Block eval for security
+  ? "'self' 'unsafe-inline' 'unsafe-eval'" // Dev: Allow eval for webpack HMR
+  : "'self' 'unsafe-inline'"; // Prod: Block eval for security
 
 const securityHeaders = [
   {
@@ -70,15 +70,15 @@ const securityHeaders = [
 
 /**
  * CORS (Cross-Origin Resource Sharing) Configuration
- * 
+ *
  * This configuration protects the API from CSRF attacks and controls which origins
  * can access the API endpoints. For the MVP, we use a single origin approach with
  * environment-based configuration.
- * 
+ *
  * Configuration options:
  * - CORS_ALLOWED_ORIGIN: Single origin allowed to access the API (defaults to NEXTAUTH_URL)
  * - If not set, falls back to http://localhost:3000 for development
- * 
+ *
  * Security considerations:
  * - Credentials are allowed (required for NextAuth session cookies)
  * - Only specific HTTP methods are allowed
@@ -87,9 +87,8 @@ const securityHeaders = [
 
 // Determine the allowed origin for CORS
 // Priority: CORS_ALLOWED_ORIGIN > NEXTAUTH_URL > localhost:3000
-const allowedOrigin = process.env.CORS_ALLOWED_ORIGIN || 
-                     process.env.NEXTAUTH_URL || 
-                     'http://localhost:3000';
+const allowedOrigin =
+  process.env.CORS_ALLOWED_ORIGIN || process.env.NEXTAUTH_URL || 'http://localhost:3000';
 
 // CORS headers for API routes
 const corsHeaders = [
@@ -112,7 +111,8 @@ const corsHeaders = [
   },
   {
     key: 'Access-Control-Allow-Headers',
-    value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization',
+    value:
+      'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization',
     // Headers that clients are allowed to send
     // Includes standard headers plus those used by NextAuth and the application
   },

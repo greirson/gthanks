@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse and validate body
-    const body = await request.json();
+    const body = (await request.json()) as unknown;
     const validatedData = WishCreateSchema.parse(body);
 
     // Create wish

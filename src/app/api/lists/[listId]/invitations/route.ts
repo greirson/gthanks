@@ -16,7 +16,7 @@ export async function POST(request: NextRequest, { params }: { params: { listId:
   try {
     // Rate limiting - prevent email bombing
     const clientIdentifier = getClientIdentifier(request);
-    const rateLimitResult = rateLimiter.check('co-manager-invite', clientIdentifier);
+    const rateLimitResult = await rateLimiter.check('co-manager-invite', clientIdentifier);
 
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest, { params }: { params: { listId:
       );
     }
 
-    const body = await request.json();
+    const body = (await request.json()) as unknown;
     const { email } = createInvitationSchema.parse(body);
 
     const result = await listInvitationService.createInvitation(
@@ -87,7 +87,10 @@ export async function POST(request: NextRequest, { params }: { params: { listId:
     }
     if (error instanceof ValidationError) {
       return NextResponse.json(
-        { error: getUserFriendlyError('VALIDATION_ERROR', error.message), code: 'VALIDATION_ERROR' },
+        {
+          error: getUserFriendlyError('VALIDATION_ERROR', error.message),
+          code: 'VALIDATION_ERROR',
+        },
         { status: 400 }
       );
     }

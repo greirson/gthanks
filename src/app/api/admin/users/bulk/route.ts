@@ -3,11 +3,11 @@ import { z } from 'zod';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getCurrentAdmin } from '@/lib/auth-admin';
-import { db as prisma } from '@/lib/db';
 import { getUserFriendlyError } from '@/lib/errors';
 import { AdminService } from '@/lib/services/admin-service';
-import type { BulkUserRequest } from '@/types/admin-api';
 import { logger } from '@/lib/services/logger';
+// eslint-disable-next-line local-rules/no-direct-db-import -- Bulk operations require direct transaction access; uses AdminService for business logic
+import { db as prisma } from '@/lib/db';
 
 const BulkOperationSchema = z.object({
   userIds: z
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = (await request.json()) as BulkUserRequest;
+    const body: unknown = await request.json();
     const { userIds, action, metadata } = BulkOperationSchema.parse(body);
 
     // Prevent admin from modifying themselves

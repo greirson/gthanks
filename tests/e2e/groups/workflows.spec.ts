@@ -199,14 +199,12 @@ test('should share list with group and allow reservations', async ({ page, conte
 
   const wish1 = await createWish(userA.id, {
     title: 'Book: Clean Code',
-    notes: 'Programming book',
     price: 39.99,
     wishLevel: 2,
   });
 
   const wish2 = await createWish(userA.id, {
     title: 'Wireless Headphones',
-    notes: 'For working',
     price: 149.99,
     wishLevel: 3,
   });
@@ -337,13 +335,17 @@ test('should remove member from group and revoke access', async ({ page, context
 
   // Find User B in members list and remove
   const memberRow = pageA.locator(`text=${userB.name}`).locator('..').locator('..');
-  const removeButton = memberRow.locator('button:has-text("Remove"), button[aria-label*="Remove"]').first();
+  const removeButton = memberRow
+    .locator('button:has-text("Remove"), button[aria-label*="Remove"]')
+    .first();
 
   if (await removeButton.isVisible({ timeout: 3000 })) {
     await removeButton.click();
 
     // Confirm removal dialog
-    const confirmButton = pageA.locator('button:has-text("Confirm"), button:has-text("Delete"), button:has-text("Remove")').last();
+    const confirmButton = pageA
+      .locator('button:has-text("Confirm"), button:has-text("Delete"), button:has-text("Remove")')
+      .last();
     if (await confirmButton.isVisible({ timeout: 2000 })) {
       await confirmButton.click();
     }
@@ -352,12 +354,16 @@ test('should remove member from group and revoke access', async ({ page, context
     await waitForToast(pageA, 'removed', 10000);
   } else {
     // Alternative: Use API to remove member (now with separate context, uses User A's session)
-    const deleteResponse = await pageA.request.delete(`/api/groups/${group.id}/members/${userB.id}`);
+    const deleteResponse = await pageA.request.delete(
+      `/api/groups/${group.id}/members/${userB.id}`
+    );
 
     // Validate the DELETE succeeded
     if (!deleteResponse.ok()) {
       const body = await deleteResponse.json().catch(() => ({}));
-      throw new Error(`Failed to remove member: ${deleteResponse.status()} - ${JSON.stringify(body)}`);
+      throw new Error(
+        `Failed to remove member: ${deleteResponse.status()} - ${JSON.stringify(body)}`
+      );
     }
   }
 

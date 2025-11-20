@@ -25,6 +25,7 @@ feature/*   hotfix/*    bugfix/*
 ```
 
 **Branch Purposes:**
+
 - **production**: Always reflects current production state, protected from direct pushes
 - **staging**: Pre-production testing environment, integration branch before production
 - **dev**: Main development branch, default for new work
@@ -72,6 +73,7 @@ git push -u origin production staging dev
 - [x] Restrict who can push to matching branches (admins only)
 
 **Repeat for `staging` branch:**
+
 - [x] Require status checks to pass before merging
   - [x] CI build
   - [x] Tests
@@ -79,6 +81,7 @@ git push -u origin production staging dev
 - [ ] No approval required (faster than production)
 
 **For `dev` branch:**
+
 - [x] Require status checks to pass before merging
   - [x] CI build
   - [x] Tests
@@ -252,6 +255,7 @@ Create `.github/PULL_REQUEST_TEMPLATE.md`:
 ## Deployment Checklist
 
 ### Pre-Merge
+
 - [ ] All tests passing (unit + integration + E2E)
 - [ ] Linting passes
 - [ ] Database migrations tested (if applicable)
@@ -260,18 +264,21 @@ Create `.github/PULL_REQUEST_TEMPLATE.md`:
 - [ ] Monitoring alerts reviewed (if applicable)
 
 ### Deployment Type
+
 - [ ] Feature (new functionality)
 - [ ] Bug fix
 - [ ] Hotfix (urgent production issue)
 - [ ] Database migration (requires special handling)
 
 ### Database Migrations (if applicable)
+
 - [ ] Migration tested on staging database
 - [ ] Backup strategy confirmed
 - [ ] Rollback plan documented
 - [ ] Migration is backward-compatible (if possible)
 
 ### Post-Deploy
+
 - [ ] Health check passes (`/api/health`)
 - [ ] Smoke tests passed (auth, wish creation, list viewing)
 - [ ] No error spikes in logs
@@ -321,6 +328,7 @@ docker compose ps
 ```
 
 Make executable:
+
 ```bash
 chmod +x scripts/deploy.sh
 ```
@@ -353,11 +361,13 @@ ls -lh "$BACKUP_DIR" | tail -5
 ```
 
 Make executable:
+
 ```bash
 chmod +x scripts/backup-database.sh
 ```
 
 **Automate with cron (on production server):**
+
 ```bash
 # SSH to production server
 crontab -e
@@ -407,6 +417,7 @@ echo "  3. Create hotfix branch to properly fix the issue"
 ```
 
 Make executable:
+
 ```bash
 chmod +x scripts/rollback.sh
 ```
@@ -468,11 +479,13 @@ echo "All checks passed!"
 ```
 
 Make executable:
+
 ```bash
 chmod +x scripts/health-check.sh
 ```
 
 **Automate with cron (on production server):**
+
 ```bash
 # SSH to production server
 crontab -e
@@ -485,7 +498,7 @@ crontab -e
 
 Create `docs/DEVELOPMENT_WORKFLOW.md`:
 
-```markdown
+````markdown
 # Development Workflow
 
 ## Daily Development
@@ -498,8 +511,10 @@ git checkout dev
 git pull origin dev
 git checkout -b feature/add-wish-tagging
 ```
+````
 
 Branch naming conventions:
+
 - `feature/description` - New features
 - `bugfix/issue-number-description` - Bug fixes
 - `chore/description` - Non-functional changes (refactoring, docs)
@@ -525,6 +540,7 @@ git push -u origin feature/add-wish-tagging
 ```
 
 **PR Description should include:**
+
 - What changed and why
 - How to test
 - Database migrations (if any)
@@ -556,6 +572,7 @@ When dev branch is stable and ready for pre-production testing:
 ```
 
 **Staging Deploy (if staging server exists):**
+
 - Merging to `staging` triggers auto-deploy
 - Perform manual smoke tests
 - Monitor logs for errors
@@ -628,6 +645,7 @@ git push -u origin hotfix/fix-auth-redirect-loop
 ```
 
 **Hotfix PR Requirements:**
+
 - Minimal code changes (only what's needed for the fix)
 - All tests passing
 - Tested against production-like data
@@ -651,7 +669,8 @@ git push origin staging
 git branch -d hotfix/fix-auth-redirect-loop
 git push origin --delete hotfix/fix-auth-redirect-loop
 ```
-```
+
+````
 
 Create `docs/QUICK_REFERENCE.md`:
 
@@ -671,7 +690,7 @@ pnpm lint && pnpm typecheck && pnpm test:all
 # Create PR to dev
 git push -u origin feature/my-feature
 # PR: feature/my-feature → dev
-```
+````
 
 ## Release to Staging
 
@@ -738,7 +757,8 @@ docker compose ps
 # Restart containers
 docker compose restart
 ```
-```
+
+````
 
 Create `docs/POST_DEPLOY_CHECKLIST.md`:
 
@@ -758,7 +778,7 @@ docker compose ps
 
 # 3. Recent logs (check for errors)
 docker compose logs --tail=100 | grep -i error
-```
+````
 
 ## Manual Smoke Tests (10 minutes)
 
@@ -805,7 +825,8 @@ If any critical issue found:
 2. Restore database: `cp data/backups/gthanks-TIMESTAMP.db data/gthanks.db`
 3. Restart containers: `docker compose restart`
 4. Create hotfix branch to fix the issue
-```
+
+````
 
 ---
 
@@ -830,7 +851,7 @@ cp .env.example .env
 
 # Deploy
 docker compose up -d
-```
+````
 
 **Option B: Same Server, Different Port**
 
@@ -845,7 +866,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3001:3000"  # Different port
+      - '3001:3000' # Different port
     environment:
       - NODE_ENV=production
       - DATABASE_URL=file:./data/gthanks-staging.db
@@ -861,12 +882,14 @@ services:
 ## SUCCESS METRICS
 
 ### Week 1 (After Setup)
+
 - Zero direct pushes to `production` branch
 - All PRs pass CI checks before merge
 - Daily backups running automatically
 - Health checks running every 5 minutes
 
 ### Month 1 (After First Release Cycle)
+
 - At least 3 releases to production
 - Zero production incidents from deployment issues
 - 100% of PRs reviewed before merge
@@ -874,6 +897,7 @@ services:
 - CI failure rate < 10%
 
 ### Month 3 (Mature Workflow)
+
 - Hotfixes deployed in < 1 hour (from discovery to production)
 - Zero database-related incidents
 - Team comfortable with workflow (no confusion)
@@ -887,11 +911,13 @@ services:
 ### Risk: Breaking Production Immediately
 
 **Mitigation:**
+
 - Branch protection prevents direct pushes
 - CI checks block bad merges
 - Manual approval required for production PRs
 
 **Recovery:**
+
 - Rollback script ready (`./scripts/rollback.sh`)
 - Daily backups available
 - Previous Docker image tagged
@@ -901,11 +927,13 @@ services:
 ### Risk: Slow Development Velocity
 
 **Mitigation:**
+
 - `dev` branch has minimal restrictions (no approval needed)
 - CI runs in parallel (< 5 minutes)
 - Staging environment optional (can skip initially)
 
 **Recovery:**
+
 - Review CI failures, optimize tests
 - Simplify workflow if needed (remove staging if unused)
 
@@ -914,11 +942,13 @@ services:
 ### Risk: Database Migration Failure
 
 **Mitigation:**
+
 - Migration check workflow blocks dangerous changes
 - Automated pre-deployment backups
 - Rollback script includes database restoration
 
 **Recovery:**
+
 - Restore from backup: `cp data/backups/gthanks-TIMESTAMP.db data/gthanks.db`
 - Rollback code: `./scripts/rollback.sh`
 - Create hotfix with migration fix
@@ -928,6 +958,7 @@ services:
 ## FILES TO CREATE
 
 ### Immediate (Day 1)
+
 ```
 scripts/
 ├── deploy.sh                 # Production deployment
@@ -937,6 +968,7 @@ scripts/
 ```
 
 ### Day 2-3
+
 ```
 .github/
 ├── workflows/
@@ -946,6 +978,7 @@ scripts/
 ```
 
 ### Week 1
+
 ```
 docs/
 ├── DEVELOPMENT_WORKFLOW.md  # Complete workflow guide
@@ -954,6 +987,7 @@ docs/
 ```
 
 ### Week 2 (Optional)
+
 ```
 docker-compose.staging.yml   # Staging environment
 .github/workflows/deploy-staging.yml # Staging auto-deploy
@@ -995,21 +1029,25 @@ git fetch origin && git checkout production && git pull
 ## TROUBLESHOOTING
 
 ### Branch protection not working?
+
 - Verify you're a repo admin
 - Check branch name matches exactly
 - Ensure CI checks are enabled in branch protection settings
 
 ### CI not running?
+
 - Check `.github/workflows/ci.yml` exists
 - Verify GitHub Actions enabled (Settings → Actions)
 - Check workflow syntax (YAML is valid)
 
 ### Deployment script fails?
+
 - Check file permissions (`chmod +x scripts/deploy.sh`)
 - Verify Docker is running
 - Check environment variables are set
 
 ### Health check fails?
+
 - Verify `/api/health` endpoint exists
 - Check containers are running (`docker compose ps`)
 - Review logs (`docker compose logs`)

@@ -238,7 +238,9 @@ function UserInvitationsComponent() {
             Group Invitations ({invitations.length})
           </div>
           {!isExpanded && invitations.length > 0 && (
-            <Badge className="bg-warning/20 text-warning-foreground dark:bg-warning/30">{invitations.length}</Badge>
+            <Badge className="bg-warning/20 text-warning-foreground dark:bg-warning/30">
+              {invitations.length}
+            </Badge>
           )}
         </CardTitle>
       </CardHeader>

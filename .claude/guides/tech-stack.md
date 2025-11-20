@@ -102,12 +102,33 @@ pnpm typecheck            # Run TypeScript type checking
 
 ```env
 # Database
-DATABASE_URL=file:./dev.db  # SQLite (dev) or postgresql://... (prod)
+DATABASE_URL=file:./data/gthanks.db  # SQLite (dev) or postgresql://... (prod)
 
 # Authentication
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=[32+ char random string]  # Generate: openssl rand -base64 32
 ```
+
+**BREAKING CHANGE (2025-11-19):**
+The default SQLite database location has changed from `file:./prisma/dev2.db` to `file:./data/gthanks.db`.
+
+**Migration for existing developers:**
+
+- **Option 1 (Recommended)**: Move your database file to the new location:
+  ```bash
+  mkdir -p data
+  mv prisma/dev2.db data/gthanks.db
+  ```
+- **Option 2**: Update your `.env.local` to point to the old location:
+  ```env
+  DATABASE_URL=file:./prisma/dev2.db
+  ```
+- **Option 3**: Start fresh with a new database (will lose existing development data):
+  ```bash
+  pnpm db:push
+  ```
+
+**Rationale:** The new `data/` directory consolidates all runtime data (database, uploads) separate from source code and configuration files, making backups and deployment cleaner.
 
 ### Optional - OAuth Providers
 
@@ -159,43 +180,45 @@ REDIS_URL=redis://localhost:6379
 
 Key production packages and their purposes:
 
-| Package | Version | Purpose |
-|---------|---------|---------|
-| next | 14.2.3 | Framework |
-| react | 18.2.0 | UI library |
-| @prisma/client | 5.15.0 | Database ORM |
-| next-auth | 4.24.10 | Authentication |
-| @tanstack/react-query | 5.80.6 | Data fetching & caching |
-| zod | 3.23.8 | Schema validation |
-| react-hook-form | 7.58.0 | Form management |
-| @radix-ui/* | Latest | UI primitives |
-| tailwindcss | 3.3.0 | Styling |
-| sharp | 0.34.2 | Image processing |
-| nodemailer | 6.9.16 | Email sending |
-| rate-limiter-flexible | 8.1.0 | Rate limiting |
+| Package               | Version | Purpose                 |
+| --------------------- | ------- | ----------------------- |
+| next                  | 14.2.3  | Framework               |
+| react                 | 18.2.0  | UI library              |
+| @prisma/client        | 5.15.0  | Database ORM            |
+| next-auth             | 4.24.10 | Authentication          |
+| @tanstack/react-query | 5.80.6  | Data fetching & caching |
+| zod                   | 3.23.8  | Schema validation       |
+| react-hook-form       | 7.58.0  | Form management         |
+| @radix-ui/\*          | Latest  | UI primitives           |
+| tailwindcss           | 3.3.0   | Styling                 |
+| sharp                 | 0.34.2  | Image processing        |
+| nodemailer            | 6.9.16  | Email sending           |
+| rate-limiter-flexible | 8.1.0   | Rate limiting           |
 
 ## Development Dependencies
 
 Key development packages:
 
-| Package | Version | Purpose |
-|---------|---------|---------|
-| typescript | 5.0.0 | Type safety |
-| @playwright/test | 1.56.1 | E2E testing |
-| jest | 29.0.0 | Unit testing |
-| @testing-library/react | 16.3.0 | React testing utilities |
-| eslint | 8.0.0 | Code linting |
-| prettier | 3.6.2 | Code formatting |
-| prisma | 5.15.0 | Database tooling |
+| Package                | Version | Purpose                 |
+| ---------------------- | ------- | ----------------------- |
+| typescript             | 5.0.0   | Type safety             |
+| @playwright/test       | 1.56.1  | E2E testing             |
+| jest                   | 29.0.0  | Unit testing            |
+| @testing-library/react | 16.3.0  | React testing utilities |
+| eslint                 | 8.0.0   | Code linting            |
+| prettier               | 3.6.2   | Code formatting         |
+| prisma                 | 5.15.0  | Database tooling        |
 
 ## Platform Support
 
 **Development:**
+
 - macOS (Apple Silicon & Intel)
 - Linux (ARM64 & AMD64)
 - Windows (via WSL2 recommended)
 
 **Production Deployment:**
+
 - Docker (all platforms)
 - Vercel (alternative)
 - Any Node.js 20+ hosting platform
@@ -203,6 +226,7 @@ Key development packages:
 ## Browser Support
 
 **Minimum Support:**
+
 - Chrome/Edge 90+
 - Firefox 88+
 - Safari 14+
@@ -210,6 +234,7 @@ Key development packages:
 - Chrome Mobile (Android 10+)
 
 **Testing Priority:**
+
 1. Chrome (primary)
 2. Safari (iOS primary user base)
 3. Firefox (cross-browser validation)
@@ -221,6 +246,7 @@ Key development packages:
 **Issue**: Amazon uses advanced bot detection that blocks automated scraping from server IPs.
 
 **Behavior**:
+
 - System attempts automatic extraction of title, price, and image from Amazon URLs
 - Falls back to manual entry if CAPTCHA/bot detection triggers
 - Product URL is saved; user types title/price manually

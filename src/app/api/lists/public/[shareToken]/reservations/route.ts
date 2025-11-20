@@ -34,13 +34,10 @@ import { logger } from '@/lib/services/logger';
  *
  * @security Rate limited to prevent abuse. No authentication required.
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { shareToken: string } }
-) {
+export async function POST(request: NextRequest, { params }: { params: { shareToken: string } }) {
   // Rate limiting - prevent abuse (declare outside try-catch for error handler access)
   const clientIdentifier = getClientIdentifier(request);
-  const rateLimitResult = rateLimiter.check('public-reservation', clientIdentifier);
+  const rateLimitResult = await rateLimiter.check('public-reservation', clientIdentifier);
 
   if (!rateLimitResult.allowed) {
     return NextResponse.json(
@@ -58,7 +55,7 @@ export async function POST(
 
   try {
     // Parse and validate request body
-    const body = await request.json();
+    const body = (await request.json()) as unknown;
     const validatedData = ReservationCreateSchema.parse(body);
 
     // Create reservation via share token

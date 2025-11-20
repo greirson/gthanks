@@ -9,6 +9,8 @@ import { cn } from '@/lib/utils';
 import { ViewToggle } from '@/components/ui/view-toggle';
 
 import { AddWishTabDialog } from '@/components/lists/add-wish-tab-dialog';
+import { GiftCardSection } from '@/components/lists/GiftCardSection';
+import type { GiftCard } from '@/components/lists/hooks/useManageGiftCardsDialog';
 import { ListHeader } from '@/components/lists/list-header';
 import { ListDetailTopNav } from '@/components/lists/list-detail-top-nav';
 import { ListDetailWishesSection } from '@/components/lists/list-detail-wishes-section';
@@ -68,8 +70,8 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
   const [isDesktopFilterOpen, setIsDesktopFilterOpen] = useState(false);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
-  // View mode state - using standardized modes
-  const [viewMode, setViewMode, isHydrated] = useViewPreference('viewMode.listDetail', 'comfortable');
+  // View mode state - using standardized modes (list or grid)
+  const [viewMode, setViewMode, isHydrated] = useViewPreference('viewMode.listDetail', 'grid');
 
   // Selection mode state
   const [selectedWishIds, setSelectedWishIds] = useState<Set<string>>(new Set());
@@ -149,7 +151,9 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
 
   // Helper to get the correct public URL (vanity URL if available, otherwise standard share token URL)
   const getPublicUrl = useCallback(() => {
-    if (!list?.shareToken) {return null;}
+    if (!list?.shareToken) {
+      return null;
+    }
 
     const username = session?.user?.username;
     const canUseVanityUrls = session?.user?.canUseVanityUrls ?? false;
@@ -166,14 +170,11 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
   // Convert reservations to array of wish IDs that are reserved
   const reservedWishIds = useMemo(() => {
     if (!reservations) {
-      console.log('No reservations data yet');
       return [];
     }
-    console.log('Reservations from API:', reservations);
     const reserved = Object.entries(reservations)
       .filter(([_, res]) => res.isReserved)
       .map(([wishId]) => wishId);
-    console.log('Reserved wish IDs:', reserved);
     return reserved;
   }, [reservations]);
 
@@ -361,7 +362,16 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
             onAddWish={() => addWishDialog.open()}
             onEditList={() => editListDialog.open()}
             onShare={() => sharingDialog.open()}
-            onPublicView={getPublicUrl() ? () => window.open(getPublicUrl()!, '_blank') : undefined}
+            onPublicView={
+              getPublicUrl()
+                ? () => {
+                    const url = getPublicUrl();
+                    if (url) {
+                      window.open(url, '_blank');
+                    }
+                  }
+                : undefined
+            }
           />
 
           {/* List Header - Centered */}
@@ -384,6 +394,20 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
             showSelectButton={!!list.isOwner}
             isSelectionMode={isSelectionMode}
             onToggleSelection={toggleSelectionMode}
+          />
+
+          {/* Gift Cards Section */}
+          <GiftCardSection
+            listId={list.id}
+            giftCards={
+              typeof list.giftCardPreferences === 'string'
+                ? (JSON.parse(list.giftCardPreferences || '[]') as GiftCard[])
+                : (list.giftCardPreferences as GiftCard[] | undefined) || []
+            }
+            canEdit={list.canEdit ?? false}
+            onUpdate={() => {
+              void queryClient.invalidateQueries({ queryKey: ['lists', listId] });
+            }}
           />
 
           {/* Desktop Wishes Display */}
@@ -429,9 +453,9 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
                 variant="ghost"
                 size="icon"
                 onClick={toggleSelectionMode}
-                aria-label={isSelectionMode ? "Exit selection mode" : "Select wishes"}
+                aria-label={isSelectionMode ? 'Exit selection mode' : 'Select wishes'}
               >
-                <CheckSquare className={cn("h-4 w-4", isSelectionMode && "text-primary")} />
+                <CheckSquare className={cn('h-4 w-4', isSelectionMode && 'text-primary')} />
               </Button>
             )}
           </div>
@@ -449,7 +473,21 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
             visibility={list.visibility}
             wishCount={list._count.wishes}
             shareToken={list.shareToken}
-            className="mb-4"
+            className="mb-2 sm:mb-4"
+          />
+
+          {/* Gift Cards Section - Mobile */}
+          <GiftCardSection
+            listId={list.id}
+            giftCards={
+              typeof list.giftCardPreferences === 'string'
+                ? (JSON.parse(list.giftCardPreferences || '[]') as GiftCard[])
+                : (list.giftCardPreferences as GiftCard[] | undefined) || []
+            }
+            canEdit={list.canEdit ?? false}
+            onUpdate={() => {
+              void queryClient.invalidateQueries({ queryKey: ['lists', listId] });
+            }}
           />
 
           {/* Mobile Selection Controls */}
@@ -480,7 +518,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
       </div>
 
       {/* Bottom Bar - Mobile Only, Hidden in Selection Mode */}
-      {!isSelectionMode && (
+      {!isSelectionMode && !!list?.isOwner && (
         <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background shadow-md md:hidden">
           <div className="flex items-center justify-between px-3 py-1.5">
             {/* Left side - Secondary actions */}
@@ -511,11 +549,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
 
             {/* Right side - Primary action */}
             {list.isOwner && (
-              <Button
-                onClick={() => addWishDialog.open()}
-                size="sm"
-                className="min-h-[44px]"
-              >
+              <Button onClick={() => addWishDialog.open()} size="sm" className="min-h-[44px]">
                 <Plus className="mr-2 h-5 w-5" />
                 Add Wish
               </Button>
@@ -585,6 +619,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
             {editWishDialog.editingWish && (
               <WishForm
                 wish={editWishDialog.editingWish}
+                showListSelection={true}
                 onSuccess={() => {
                   editWishDialog.close();
                   void queryClient.invalidateQueries({ queryKey: ['lists', listId] });

@@ -115,6 +115,58 @@ export class ListService {
   }
 
   /**
+   * Validate gift card preferences structure
+   */
+  private validateGiftCardPreferences(
+    giftCardPreferences: unknown
+  ): Array<{ name: string; url: string }> {
+    // Handle null, undefined, or empty string
+    if (!giftCardPreferences || giftCardPreferences === '[]') {
+      return [];
+    }
+
+    // Parse if it's a string
+    let parsed: unknown;
+    try {
+      parsed =
+        typeof giftCardPreferences === 'string'
+          ? JSON.parse(giftCardPreferences)
+          : giftCardPreferences;
+    } catch {
+      throw new ValidationError('Invalid gift card preferences format');
+    }
+
+    // Validate it's an array
+    if (!Array.isArray(parsed)) {
+      throw new ValidationError('Gift card preferences must be an array');
+    }
+
+    // Max 8 gift cards
+    if (parsed.length > 8) {
+      throw new ValidationError('Maximum 8 gift cards allowed per list');
+    }
+
+    // Validate each gift card
+    return parsed
+      .map((card: unknown) => {
+        if (typeof card !== 'object' || card === null) {
+          return null;
+        }
+        const cardObj = card as Record<string, unknown>;
+        const name = typeof cardObj.name === 'string' ? cardObj.name : '';
+        const url = typeof cardObj.url === 'string' ? cardObj.url : '';
+        return {
+          name: name.slice(0, 14),
+          url: url,
+        };
+      })
+      .filter(
+        (card): card is { name: string; url: string } =>
+          card !== null && card.name !== '' && card.url !== ''
+      );
+  }
+
+  /**
    * Update list details
    */
   async updateList(listId: string, data: ListUpdateInput, userId: string): Promise<ListWithOwner> {
@@ -152,6 +204,11 @@ export class ListService {
 
     if (hashedPassword !== undefined) {
       updateData.password = hashedPassword;
+    }
+    // Handle gift card preferences
+    if ('giftCardPreferences' in data && data.giftCardPreferences !== undefined) {
+      const validated = this.validateGiftCardPreferences(data.giftCardPreferences);
+      updateData.giftCardPreferences = JSON.stringify(validated);
     }
 
     // Handle share token generation/removal based on visibility change
@@ -544,6 +601,37 @@ export class ListService {
   }
 
   /**
+   * Bulk remove wishes from list
+   */
+  async bulkRemoveWishesFromList(
+    listId: string,
+    wishIds: string[],
+    userId: string
+  ): Promise<{ removed: number }> {
+    // Use centralized permission service
+    await permissionService.require(userId, 'edit', { type: 'list', id: listId });
+
+    // Validate input
+    if (!Array.isArray(wishIds) || wishIds.length === 0) {
+      throw new ValidationError('wishIds must be a non-empty array');
+    }
+
+    // Remove wishes from list in a transaction
+    const result = await db.$transaction(async (tx) => {
+      const deleteResult = await tx.listWish.deleteMany({
+        where: {
+          listId,
+          wishId: { in: wishIds },
+        },
+      });
+
+      return deleteResult;
+    });
+
+    return { removed: result.count };
+  }
+
+  /**
    * Create reservation (for anonymous users)
    */
   async createReservation(
@@ -858,7 +946,13 @@ export class ListService {
 
       return updatedList as ListWithOwner;
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002' &&
+        error.meta?.['target'] &&
+        Array.isArray(error.meta['target']) &&
+        error.meta['target'].includes('slug')
+      ) {
         throw new ConflictError('Slug is already in use by another of your lists');
       }
       throw error;
@@ -867,8 +961,9 @@ export class ListService {
 
   /**
    * Get list by vanity URL (username + slug)
+   * Returns null if list not found, is private, or hidden from profile
    */
-  async getByVanityUrl(username: string, slug: string): Promise<ListWithDetails> {
+  async getByVanityUrl(username: string, slug: string): Promise<ListWithDetails | null> {
     const list = await db.list.findFirst({
       where: {
         slug: slug.toLowerCase(),
@@ -903,12 +998,13 @@ export class ListService {
     });
 
     if (!list) {
-      throw new NotFoundError('List not found');
+      return null;
     }
 
     // Check visibility - vanity URLs only work for public and password-protected lists
-    if (list.visibility === 'private') {
-      throw new ForbiddenError('This list is private and cannot be accessed via vanity URL');
+    // Also exclude lists hidden from profile
+    if (list.visibility === 'private' || list.hideFromProfile) {
+      return null;
     }
 
     // For password-protected lists, return basic info without wishes

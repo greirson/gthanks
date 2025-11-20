@@ -18,7 +18,10 @@ import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 
 // Import the real modules - no mocking
-import { GET as getPublicList, POST as accessPasswordProtectedList } from '@/app/api/lists/public/[shareToken]/route';
+import {
+  GET as getPublicList,
+  POST as accessPasswordProtectedList,
+} from '@/app/api/lists/public/[shareToken]/route';
 import { rateLimiter } from '@/lib/rate-limiter';
 
 describe('Public List API Integration Tests', () => {
@@ -186,7 +189,9 @@ describe('Public List API Integration Tests', () => {
 
   describe('Password-Protected List Access', () => {
     it('should return 403 when accessing password-protected list via GET without password', async () => {
-      const request = new NextRequest(`http://localhost:3000/api/lists/public/${passwordShareToken}`);
+      const request = new NextRequest(
+        `http://localhost:3000/api/lists/public/${passwordShareToken}`
+      );
 
       const response = await getPublicList(request, { params: { shareToken: passwordShareToken } });
       const data = await response.json();
@@ -197,15 +202,20 @@ describe('Public List API Integration Tests', () => {
     });
 
     it('should allow access to password-protected list with correct password', async () => {
-      const request = new NextRequest(`http://localhost:3000/api/lists/public/${passwordShareToken}`, {
-        method: 'POST',
-        body: JSON.stringify({ password: testPassword }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const request = new NextRequest(
+        `http://localhost:3000/api/lists/public/${passwordShareToken}`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ password: testPassword }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
-      const response = await accessPasswordProtectedList(request, { params: { shareToken: passwordShareToken } });
+      const response = await accessPasswordProtectedList(request, {
+        params: { shareToken: passwordShareToken },
+      });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -217,15 +227,20 @@ describe('Public List API Integration Tests', () => {
     });
 
     it('should return 403 when accessing password-protected list with wrong password', async () => {
-      const request = new NextRequest(`http://localhost:3000/api/lists/public/${passwordShareToken}`, {
-        method: 'POST',
-        body: JSON.stringify({ password: 'wrongpassword' }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const request = new NextRequest(
+        `http://localhost:3000/api/lists/public/${passwordShareToken}`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ password: 'wrongpassword' }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
-      const response = await accessPasswordProtectedList(request, { params: { shareToken: passwordShareToken } });
+      const response = await accessPasswordProtectedList(request, {
+        params: { shareToken: passwordShareToken },
+      });
       const data = await response.json();
 
       expect(response.status).toBe(403);
@@ -234,15 +249,20 @@ describe('Public List API Integration Tests', () => {
     });
 
     it('should return 400 when password is missing from POST request', async () => {
-      const request = new NextRequest(`http://localhost:3000/api/lists/public/${passwordShareToken}`, {
-        method: 'POST',
-        body: JSON.stringify({}),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const request = new NextRequest(
+        `http://localhost:3000/api/lists/public/${passwordShareToken}`,
+        {
+          method: 'POST',
+          body: JSON.stringify({}),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
-      const response = await accessPasswordProtectedList(request, { params: { shareToken: passwordShareToken } });
+      const response = await accessPasswordProtectedList(request, {
+        params: { shareToken: passwordShareToken },
+      });
       const data = await response.json();
 
       expect(response.status).toBe(400);
@@ -251,15 +271,20 @@ describe('Public List API Integration Tests', () => {
     });
 
     it('should not expose password hash in password-protected list response', async () => {
-      const request = new NextRequest(`http://localhost:3000/api/lists/public/${passwordShareToken}`, {
-        method: 'POST',
-        body: JSON.stringify({ password: testPassword }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const request = new NextRequest(
+        `http://localhost:3000/api/lists/public/${passwordShareToken}`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ password: testPassword }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
-      const response = await accessPasswordProtectedList(request, { params: { shareToken: passwordShareToken } });
+      const response = await accessPasswordProtectedList(request, {
+        params: { shareToken: passwordShareToken },
+      });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -314,21 +339,27 @@ describe('Public List API Integration Tests', () => {
 
       // Make 20 requests (should succeed)
       for (let i = 0; i < 20; i++) {
-        const request = new NextRequest(`http://localhost:3000/api/lists/public/${publicShareToken}`, {
-          headers: {
-            'x-real-ip': clientId,
-          },
-        });
+        const request = new NextRequest(
+          `http://localhost:3000/api/lists/public/${publicShareToken}`,
+          {
+            headers: {
+              'x-real-ip': clientId,
+            },
+          }
+        );
         const response = await getPublicList(request, { params: { shareToken: publicShareToken } });
         expect(response.status).toBe(200);
       }
 
       // 21st request should be rate limited
-      const request = new NextRequest(`http://localhost:3000/api/lists/public/${publicShareToken}`, {
-        headers: {
-          'x-real-ip': clientId,
-        },
-      });
+      const request = new NextRequest(
+        `http://localhost:3000/api/lists/public/${publicShareToken}`,
+        {
+          headers: {
+            'x-real-ip': clientId,
+          },
+        }
+      );
       const response = await getPublicList(request, { params: { shareToken: publicShareToken } });
       const data = await response.json();
 
@@ -356,28 +387,38 @@ describe('Public List API Integration Tests', () => {
 
       // Make 5 requests (should succeed)
       for (let i = 0; i < 5; i++) {
-        const request = new NextRequest(`http://localhost:3000/api/lists/public/${passwordShareToken}`, {
+        const request = new NextRequest(
+          `http://localhost:3000/api/lists/public/${passwordShareToken}`,
+          {
+            method: 'POST',
+            body: JSON.stringify({ password: testPassword }),
+            headers: {
+              'Content-Type': 'application/json',
+              'x-real-ip': clientId,
+            },
+          }
+        );
+        const response = await accessPasswordProtectedList(request, {
+          params: { shareToken: passwordShareToken },
+        });
+        expect(response.status).toBe(200);
+      }
+
+      // 6th request should be rate limited
+      const request = new NextRequest(
+        `http://localhost:3000/api/lists/public/${passwordShareToken}`,
+        {
           method: 'POST',
           body: JSON.stringify({ password: testPassword }),
           headers: {
             'Content-Type': 'application/json',
             'x-real-ip': clientId,
           },
-        });
-        const response = await accessPasswordProtectedList(request, { params: { shareToken: passwordShareToken } });
-        expect(response.status).toBe(200);
-      }
-
-      // 6th request should be rate limited
-      const request = new NextRequest(`http://localhost:3000/api/lists/public/${passwordShareToken}`, {
-        method: 'POST',
-        body: JSON.stringify({ password: testPassword }),
-        headers: {
-          'Content-Type': 'application/json',
-          'x-real-ip': clientId,
-        },
+        }
+      );
+      const response = await accessPasswordProtectedList(request, {
+        params: { shareToken: passwordShareToken },
       });
-      const response = await accessPasswordProtectedList(request, { params: { shareToken: passwordShareToken } });
       const data = await response.json();
 
       expect(response.status).toBe(429);
@@ -399,11 +440,14 @@ describe('Public List API Integration Tests', () => {
     });
 
     it('should work for users without accounts', async () => {
-      const request = new NextRequest(`http://localhost:3000/api/lists/public/${publicShareToken}`, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Anonymous User)',
-        },
-      });
+      const request = new NextRequest(
+        `http://localhost:3000/api/lists/public/${publicShareToken}`,
+        {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Anonymous User)',
+          },
+        }
+      );
 
       const response = await getPublicList(request, { params: { shareToken: publicShareToken } });
       const data = await response.json();

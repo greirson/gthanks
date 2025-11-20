@@ -94,7 +94,7 @@ module.exports = {
   plugins: [
     require('tailwindcss-animate'),
     require('@tailwindcss/forms'),
-    plugin(function({ addUtilities }) {
+    plugin(function ({ addUtilities }) {
       addUtilities({
         '.pb-safe-area-inset-bottom': {
           'padding-bottom': 'max(1.5rem, env(safe-area-inset-bottom))',

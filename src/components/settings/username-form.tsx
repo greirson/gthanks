@@ -98,7 +98,7 @@ export function UsernameForm({ currentUsername, canUseVanityUrls }: UsernameForm
           Your profile:{' '}
           <a
             href={`/${effectiveUsername}`}
-            className="text-primary hover:underline transition-opacity duration-75"
+            className="text-primary transition-opacity duration-75 hover:underline"
           >
             {displayUrl}
           </a>
@@ -183,10 +183,7 @@ export function UsernameForm({ currentUsername, canUseVanityUrls }: UsernameForm
                 maxLength={30}
               />
             </div>
-            <Button
-              type="submit"
-              disabled={!username || setUsernameMutation.isPending}
-            >
+            <Button type="submit" disabled={!username || setUsernameMutation.isPending}>
               {setUsernameMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (

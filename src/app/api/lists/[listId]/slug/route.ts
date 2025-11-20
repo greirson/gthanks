@@ -50,7 +50,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     // Check rate limit per user
-    const rateLimitResult = rateLimiter.check('slug-set', user.id);
+    const rateLimitResult = await rateLimiter.check('slug-set', user.id);
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
         { error: 'Too many requests. Please try again later.' },
@@ -64,7 +64,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const { listId } = params;
 
     // Parse and validate request body
-    const body = await request.json();
+    const body = (await request.json()) as unknown;
     const data = SetSlugSchema.parse(body);
 
     // Set slug via service (includes permission check)
@@ -85,13 +85,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: error.errors[0].message }, { status: 400 });
     }
 
-    // Handle specific errors
-    if (error instanceof NotFoundError) {
-      return NextResponse.json({ error: error.message }, { status: 404 });
-    }
-
-    if (error instanceof ForbiddenError) {
-      return NextResponse.json({ error: error.message }, { status: 403 });
+    // Return 404 for both NotFoundError and ForbiddenError to prevent resource enumeration
+    if (error instanceof NotFoundError || error instanceof ForbiddenError) {
+      return NextResponse.json({ error: 'Resource not found' }, { status: 404 });
     }
 
     if (error instanceof ConflictError) {

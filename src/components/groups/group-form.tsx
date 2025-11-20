@@ -58,10 +58,7 @@ export function GroupForm({
   );
 
   // Track dirty state
-  const { isDirty } = useFormDirtyState(
-    initialFormData,
-    formData as typeof initialFormData
-  );
+  const { isDirty } = useFormDirtyState(initialFormData, formData as typeof initialFormData);
 
   // Reset form data when group prop changes (for edit dialogs)
   useEffect(() => {
@@ -152,7 +149,6 @@ export function GroupForm({
           </div>
           {errors.avatarUrl && <p className="mt-1 text-sm text-red-500">{errors.avatarUrl}</p>}
         </div>
-
       </div>
 
       <div className="flex justify-end gap-3">

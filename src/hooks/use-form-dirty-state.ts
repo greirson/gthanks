@@ -4,8 +4,8 @@ import { useCallback, useMemo } from 'react';
 
 // Form dirty state tracking hook
 export function useFormDirtyState<T extends Record<string, unknown>>(
-  initialValues: T,
-  currentValues: T,
+  initialValues: Partial<T>,
+  currentValues: Partial<T>,
   options: {
     ignoreFields?: (keyof T)[];
     // Custom equality check for complex objects

@@ -13,6 +13,7 @@ import {
   WishMetadataSchema,
   WishSchema,
 } from '@/lib/validators/api-responses/wishes';
+import { ListWithOwnerSchema, type ListWithOwner } from '@/lib/validators/api-responses/lists';
 import { WishCreateInput, WishUpdateInput } from '@/lib/validators/wish';
 
 export const wishesApi = {
@@ -78,5 +79,18 @@ export const wishesApi = {
       { wishIds },
       BulkWishOperationResultSchema
     );
+  },
+
+  // Get all lists a wish belongs to
+  getWishLists: async (wishId: string): Promise<ListWithOwner[]> => {
+    return apiGet(`/api/wishes/${wishId}/lists`, z.array(ListWithOwnerSchema));
+  },
+
+  // Update which lists a wish belongs to (transactional)
+  updateWishMemberships: async (
+    wishId: string,
+    input: { listIds: string[] }
+  ): Promise<{ success: boolean }> => {
+    return apiPut(`/api/wishes/${wishId}/memberships`, input, z.object({ success: z.boolean() }));
   },
 };

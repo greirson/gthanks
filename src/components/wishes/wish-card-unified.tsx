@@ -67,7 +67,8 @@ const variantConfig = {
     layout: 'vertical' as const,
     cardClassName: 'relative overflow-hidden transition-all duration-150 hover:shadow-lg',
     imageAspect: 'aspect-square sm:aspect-video',
-    imageSizes: '(max-width: 767px) 100vw, (max-width: 1023px) 50vw, (max-width: 1279px) 33vw, 25vw',
+    imageSizes:
+      '(max-width: 767px) 100vw, (max-width: 1023px) 50vw, (max-width: 1279px) 33vw, 25vw',
     contentPadding: 'p-4',
     titleSize: 'text-lg',
     titleClamp: 'line-clamp-2',
@@ -222,7 +223,7 @@ export function UnifiedWishCard({
               {isSelectionMode && (
                 <label
                   htmlFor={`select-wish-${wish.id}`}
-                  className="flex cursor-pointer items-center justify-center p-3 -m-3"
+                  className="-m-3 flex cursor-pointer items-center justify-center p-3"
                 >
                   <input
                     id={`select-wish-${wish.id}`}
@@ -396,7 +397,9 @@ export function UnifiedWishCard({
                       <span className="hidden sm:inline">
                         {isReserved ? 'Reserved' : config.reserveTextFull}
                       </span>
-                      <span className="sm:hidden">{isReserved ? 'Reserved' : config.reserveTextShort}</span>
+                      <span className="sm:hidden">
+                        {isReserved ? 'Reserved' : config.reserveTextShort}
+                      </span>
                     </Button>
                   )}
                 </div>
@@ -420,7 +423,8 @@ export function UnifiedWishCard({
             <AlertDialogHeader>
               <AlertDialogTitle>Delete wish?</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete "{wish.title}"? This action cannot be undone.
+                Are you sure you want to delete &quot;{wish.title}&quot;? This action cannot be
+                undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -476,8 +480,12 @@ export function UnifiedWishCard({
 
             {/* Processing overlay */}
             {isImageProcessing && (
-              <div className={`absolute inset-0 flex items-start justify-end ${variant === 'compact' ? 'p-2' : 'p-3'}`}>
-                <div className={`flex items-center gap-1.5 rounded-full bg-blue-600/90 text-white shadow-lg ${config.processingBadge}`}>
+              <div
+                className={`absolute inset-0 flex items-start justify-end ${variant === 'compact' ? 'p-2' : 'p-3'}`}
+              >
+                <div
+                  className={`flex items-center gap-1.5 rounded-full bg-blue-600/90 text-white shadow-lg ${config.processingBadge}`}
+                >
                   <Clock className={`animate-spin ${config.processingIcon}`} />
                   <span className={config.processingTextClass}>{config.processingText}</span>
                 </div>
@@ -498,7 +506,9 @@ export function UnifiedWishCard({
 
         <CardContent className={config.contentPadding}>
           {/* Title and Actions */}
-          <div className={`${variant === 'compact' ? 'flex items-start justify-between gap-1' : 'mb-2 flex items-start justify-between'}`}>
+          <div
+            className={`${variant === 'compact' ? 'flex items-start justify-between gap-1' : 'mb-2 flex items-start justify-between'}`}
+          >
             <div className="flex flex-1 items-center gap-2 pr-2">
               <h3
                 className={`${config.titleClamp} font-semibold ${config.titleSize}`}
@@ -520,7 +530,12 @@ export function UnifiedWishCard({
             <div className={variant === 'compact' ? 'flex flex-shrink-0 items-start' : ''}>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" aria-label="Wish options" className="min-h-[44px] min-w-[44px]">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Wish options"
+                    className="min-h-[44px] min-w-[44px]"
+                  >
                     <MoreVertical className={config.menuIconSize} />
                   </Button>
                 </DropdownMenuTrigger>
@@ -589,7 +604,9 @@ export function UnifiedWishCard({
 
           {/* Price */}
           {wish.price && (
-            <p className={`${variant === 'compact' ? 'mt-1' : 'mb-2'} font-bold text-green-600 ${config.priceSize}`}>
+            <p
+              className={`${variant === 'compact' ? 'mt-1' : 'mb-2'} font-bold text-green-600 ${config.priceSize}`}
+            >
               {formatPrice(wish.price)}
             </p>
           )}
@@ -606,13 +623,10 @@ export function UnifiedWishCard({
             </div>
           )}
 
-          {/* Notes */}
-          {config.showNotes && wish.notes && (
-            <p className={`mb-3 text-sm text-muted-foreground ${config.notesClamp}`}>{wish.notes}</p>
-          )}
-
           {/* Metadata badges */}
-          <div className={`flex flex-wrap gap-${variant === 'compact' ? '1' : '2'} ${variant === 'compact' ? 'mt-2' : ''}`}>
+          <div
+            className={`flex flex-wrap gap-${variant === 'compact' ? '1' : '2'} ${variant === 'compact' ? 'mt-2' : ''}`}
+          >
             {wish.quantity && wish.quantity > 1 && (
               <Badge
                 variant="secondary"
@@ -644,7 +658,9 @@ export function UnifiedWishCard({
         </CardContent>
 
         {config.hasFooter && (
-          <CardFooter className={`flex ${variant === 'compact' ? 'gap-1 p-3 pt-0' : 'flex-col gap-3 p-4 pt-0 sm:flex-row sm:gap-2'}`}>
+          <CardFooter
+            className={`flex ${variant === 'compact' ? 'gap-1 p-3 pt-0' : 'flex-col gap-3 p-4 pt-0 sm:flex-row sm:gap-2'}`}
+          >
             {/* Reserve button (for non-owners) */}
             {!wish.isOwner && onReserve && (
               <Button
@@ -692,7 +708,8 @@ export function UnifiedWishCard({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete wish?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{wish.title}"? This action cannot be undone.
+              Are you sure you want to delete &quot;{wish.title}&quot;? This action cannot be
+              undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

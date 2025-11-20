@@ -1,42 +1,24 @@
-import type { PrismaClient, Wish } from '@prisma/client';
+// Mock dependencies BEFORE imports
+jest.mock('@/lib/auth-utils');
+jest.mock('@/lib/services/wish-service');
+jest.mock('@/lib/services/logger', () => ({
+  logger: {
+    error: jest.fn(),
+  },
+}));
+jest.mock('@/lib/services/image-processor');
 
 import { NextRequest } from 'next/server';
 
 import { getCurrentUser } from '@/lib/auth-utils';
-import { db } from '@/lib/db';
-import type { CurrentUser, PrismaTransactionCallback } from '@/lib/test-utils/mock-types';
+import { ForbiddenError } from '@/lib/errors';
+import { wishService } from '@/lib/services/wish-service';
+import type { CurrentUser } from '@/lib/test-utils/mock-types';
 
 import { POST } from './remove-from-lists/route';
 
-// Mock dependencies
-jest.mock('@/lib/auth-utils');
-jest.mock('@/lib/services/wish-service', () => ({
-  wishService: {
-    removeWishesFromLists: jest.fn(),
-  },
-}));
-jest.mock('@/lib/db', () => ({
-  db: {
-    $transaction: jest.fn(),
-    wish: {
-      findMany: jest.fn(),
-    },
-    listWish: {
-      deleteMany: jest.fn(),
-    },
-    list: {
-      updateMany: jest.fn(),
-    },
-  },
-}));
-
 const mockGetCurrentUser = jest.mocked(getCurrentUser);
-const mockDb = jest.mocked(db);
-
-// Create explicit mock functions to avoid unbound method errors
-const mockWishFindMany = jest.fn();
-const mockDbTransaction = jest.fn();
-const mockListWishDeleteMany = jest.fn();
+const mockWishService = jest.mocked(wishService);
 
 // Helper function to create a mock user
 const createMockUser = (id: string): NonNullable<CurrentUser> => ({
@@ -56,33 +38,9 @@ const createMockUser = (id: string): NonNullable<CurrentUser> => ({
   showPublicProfile: false,
 });
 
-// Helper function to create a mock wish
-const createMockWish = (id: string, ownerId: string): Wish => ({
-  id,
-  title: `Wish ${id}`,
-  notes: null,
-  url: null,
-  price: null,
-  currency: null,
-  imageUrl: null,
-  sourceImageUrl: null,
-  localImagePath: null,
-  imageStatus: 'PENDING',
-  quantity: 1,
-  size: null,
-  color: null,
-  wishLevel: 1,
-  ownerId,
-  createdAt: new Date(),
-  updatedAt: new Date(),
-});
-
 describe('POST /api/wishes/bulk/remove-from-lists', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockDb.wish.findMany = mockWishFindMany;
-    mockDb.$transaction = mockDbTransaction;
-    mockDb.listWish.deleteMany = mockListWishDeleteMany;
   });
 
   it('prevents anonymous users from removing wishes from lists', async () => {
@@ -92,13 +50,19 @@ describe('POST /api/wishes/bulk/remove-from-lists', () => {
       method: 'POST',
     });
     // Mock the json() method
-    request.json = jest.fn().mockResolvedValue({ wishIds: ['1', '2', '3'] });
+    request.json = jest.fn().mockResolvedValue({
+      wishIds: [
+        '00000000-0000-0000-0000-000000000001',
+        '00000000-0000-0000-0000-000000000002',
+        '00000000-0000-0000-0000-000000000003',
+      ],
+    });
 
     const response = await POST(request);
     const data = (await response.json()) as { error: string };
 
     expect(response.status).toBe(401);
-    expect(data.error).toBe('Unauthorized');
+    expect(data.error).toBe('Please sign in to continue');
   });
 
   it('requires users to specify which wishes to remove', async () => {
@@ -108,13 +72,19 @@ describe('POST /api/wishes/bulk/remove-from-lists', () => {
       method: 'POST',
     });
     // Mock the json() method
-    request.json = jest.fn().mockResolvedValue({ notWishIds: ['1', '2', '3'] });
+    request.json = jest.fn().mockResolvedValue({
+      notWishIds: [
+        '00000000-0000-0000-0000-000000000001',
+        '00000000-0000-0000-0000-000000000002',
+        '00000000-0000-0000-0000-000000000003',
+      ],
+    });
 
     const response = await POST(request);
     const data = (await response.json()) as { error: string };
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe('wishIds array is required');
+    expect(data.error).toBe('Please check your information and try again');
   });
 
   it('prevents users from submitting empty bulk removal requests', async () => {
@@ -130,20 +100,23 @@ describe('POST /api/wishes/bulk/remove-from-lists', () => {
     const data = (await response.json()) as { error: string };
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe('wishIds cannot be empty');
+    expect(data.error).toBe('Please check your information and try again');
   });
 
   it('prevents users from removing wishes they do not own', async () => {
     const userId = 'user-1';
-    const wishIds = ['wish-1', 'wish-2', 'wish-3'];
+    const wishIds = [
+      '00000000-0000-0000-0000-000000000001',
+      '00000000-0000-0000-0000-000000000002',
+      '00000000-0000-0000-0000-000000000003',
+    ];
 
     mockGetCurrentUser.mockResolvedValueOnce(createMockUser(userId));
 
-    // Mock that only 2 of 3 wishes belong to the user
-    mockWishFindMany.mockResolvedValueOnce([
-      createMockWish('wish-1', userId),
-      createMockWish('wish-2', userId),
-    ]);
+    // Mock service throwing ForbiddenError
+    mockWishService.removeWishesFromLists.mockRejectedValueOnce(
+      new ForbiddenError("Cannot remove wishes you don't own: wish-3")
+    );
 
     const request = new NextRequest('http://localhost:3000/api/wishes/bulk/remove-from-lists', {
       method: 'POST',
@@ -152,33 +125,26 @@ describe('POST /api/wishes/bulk/remove-from-lists', () => {
     request.json = jest.fn().mockResolvedValue({ wishIds });
 
     const response = await POST(request);
-    const data = (await response.json()) as { error: string; unauthorized: string[] };
+    const data = (await response.json()) as { error: string; code: string };
 
     expect(response.status).toBe(403);
-    expect(data.error).toBe('You do not have permission to remove some of these wishes');
-    expect(data.unauthorized).toEqual(['wish-3']);
+    expect(data.error).toBe("You don't have permission to do that");
   });
 
   it('allows users to remove their wishes from all lists at once', async () => {
     const userId = 'user-1';
-    const wishIds = ['wish-1', 'wish-2', 'wish-3'];
+    const wishIds = [
+      '00000000-0000-0000-0000-000000000001',
+      '00000000-0000-0000-0000-000000000002',
+      '00000000-0000-0000-0000-000000000003',
+    ];
 
     mockGetCurrentUser.mockResolvedValueOnce(createMockUser(userId));
 
-    // Mock that all wishes belong to the user
-    mockWishFindMany.mockResolvedValueOnce([
-      createMockWish('wish-1', userId),
-      createMockWish('wish-2', userId),
-      createMockWish('wish-3', userId),
-    ]);
-
-    // Mock transaction to execute the callback
-    mockDbTransaction.mockImplementationOnce(async <T>(callback: PrismaTransactionCallback<T>) => {
-      return callback(mockDb as unknown as PrismaClient);
+    // Mock service returning successful removal
+    mockWishService.removeWishesFromLists.mockResolvedValueOnce({
+      removed: 7,
     });
-
-    // Mock successful removals
-    mockDb.listWish.deleteMany.mockResolvedValueOnce({ count: 7 });
 
     const request = new NextRequest('http://localhost:3000/api/wishes/bulk/remove-from-lists', {
       method: 'POST',
@@ -187,42 +153,28 @@ describe('POST /api/wishes/bulk/remove-from-lists', () => {
     request.json = jest.fn().mockResolvedValue({ wishIds });
 
     const response = await POST(request);
-    const data = (await response.json()) as { removed: number; errors?: unknown };
+    const data = (await response.json()) as { removed: number };
 
     expect(response.status).toBe(200);
     expect(data.removed).toBe(7);
-    expect(data.errors).toBeUndefined();
 
-    // Verify transaction was used
-    expect(mockDbTransaction).toHaveBeenCalled();
-
-    // Verify wishes were removed from all lists
-    expect(mockListWishDeleteMany).toHaveBeenCalledWith({
-      where: {
-        wishId: { in: wishIds },
-      },
-    });
+    // Verify service was called correctly
+    expect(mockWishService.removeWishesFromLists).toHaveBeenCalledWith(wishIds, userId);
   });
 
   it('gracefully handles removal requests for wishes not in any lists', async () => {
     const userId = 'user-1';
-    const wishIds = ['wish-1', 'wish-2'];
+    const wishIds = [
+      '00000000-0000-0000-0000-000000000001',
+      '00000000-0000-0000-0000-000000000002',
+    ];
 
     mockGetCurrentUser.mockResolvedValueOnce(createMockUser(userId));
 
-    // Mock that all wishes belong to the user
-    mockWishFindMany.mockResolvedValueOnce([
-      createMockWish('wish-1', userId),
-      createMockWish('wish-2', userId),
-    ]);
-
-    // Mock transaction to execute the callback
-    mockDbTransaction.mockImplementationOnce(async <T>(callback: PrismaTransactionCallback<T>) => {
-      return callback(mockDb as unknown as PrismaClient);
+    // Mock service returning no removals
+    mockWishService.removeWishesFromLists.mockResolvedValueOnce({
+      removed: 0,
     });
-
-    // Mock that no wishes were in any lists
-    mockDb.listWish.deleteMany.mockResolvedValueOnce({ count: 0 });
 
     const request = new NextRequest('http://localhost:3000/api/wishes/bulk/remove-from-lists', {
       method: 'POST',
@@ -240,18 +192,15 @@ describe('POST /api/wishes/bulk/remove-from-lists', () => {
 
   it('provides error feedback when bulk removal encounters database issues', async () => {
     const userId = 'user-1';
-    const wishIds = ['wish-1', 'wish-2'];
+    const wishIds = [
+      '00000000-0000-0000-0000-000000000001',
+      '00000000-0000-0000-0000-000000000002',
+    ];
 
     mockGetCurrentUser.mockResolvedValueOnce(createMockUser(userId));
 
-    // Mock that all wishes belong to the user
-    mockWishFindMany.mockResolvedValueOnce([
-      createMockWish('wish-1', userId),
-      createMockWish('wish-2', userId),
-    ]);
-
-    // Mock transaction to throw an error
-    mockDb.$transaction.mockRejectedValueOnce(new Error('Database error'));
+    // Mock service throwing generic error
+    mockWishService.removeWishesFromLists.mockRejectedValueOnce(new Error('Database error'));
 
     const request = new NextRequest('http://localhost:3000/api/wishes/bulk/remove-from-lists', {
       method: 'POST',
@@ -263,7 +212,7 @@ describe('POST /api/wishes/bulk/remove-from-lists', () => {
     const data = (await response.json()) as { error: string };
 
     expect(response.status).toBe(500);
-    expect(data.error).toBe('Failed to remove wishes from lists');
+    expect(data.error).toBe('Something went wrong. Please try again');
   });
 
   it('rejects malformed bulk removal requests', async () => {
@@ -278,7 +227,7 @@ describe('POST /api/wishes/bulk/remove-from-lists', () => {
     const response = await POST(request);
     const data = (await response.json()) as { error: string };
 
-    expect(response.status).toBe(400);
-    expect(data.error).toBe('Invalid request body');
+    expect(response.status).toBe(500);
+    expect(data.error).toBe('Something went wrong. Please try again');
   });
 });

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getCurrentUser } from '@/lib/auth-utils';
+// eslint-disable-next-line local-rules/no-direct-db-import -- Read-only complex aggregation query with multiple joins (_count, nested where clauses). Service layer abstraction would not provide value for this display-only query.
 import { db } from '@/lib/db';
 import { getUserFriendlyError } from '@/lib/errors';
 import { permissionService } from '@/lib/services/permission-service';

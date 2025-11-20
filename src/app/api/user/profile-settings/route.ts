@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { getCurrentUser } from '@/lib/auth-utils';
-import { db } from '@/lib/db';
 import { handleApiError } from '@/lib/errors';
+import { userService } from '@/lib/services/user-service';
 
 const UpdateProfileSettingsSchema = z.object({
   showPublicProfile: z.boolean(),
@@ -26,6 +26,7 @@ const UpdateProfileSettingsSchema = z.object({
  * { "showPublicProfile": true }
  *
  * @see {@link getCurrentUser} for unified authentication
+ * @see {@link userService.updateProfileSettings} for service implementation
  */
 export async function PUT(request: NextRequest) {
   try {
@@ -36,16 +37,11 @@ export async function PUT(request: NextRequest) {
     }
 
     // Parse and validate request body
-    const body = await request.json();
+    const body = (await request.json()) as unknown;
     const data = UpdateProfileSettingsSchema.parse(body);
 
-    // Update user settings
-    const updatedUser = await db.user.update({
-      where: { id: user.id },
-      data: {
-        showPublicProfile: data.showPublicProfile,
-      },
-    });
+    // Use service layer
+    const updatedUser = await userService.updateProfileSettings(user.id, data);
 
     return NextResponse.json({
       user: {

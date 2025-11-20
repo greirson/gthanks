@@ -4,7 +4,7 @@ import { Wish } from '@/lib/validators/api-responses/wishes';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { simplifyProductUrl } from '@/lib/utils/url-simplification';
 
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ImageInput } from '@/components/ui/image-input';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { ThemeButton } from '@/components/ui/theme-button';
 import { useToast } from '@/components/ui/use-toast';
 import { useFormDirtyState } from '@/hooks/use-form-dirty-state';
@@ -42,14 +41,16 @@ export function WishForm({
   const queryClient = useQueryClient();
   const [isExtractingMetadata, setIsExtractingMetadata] = useState(false);
   const [priceFetchFailed, setPriceFetchFailed] = useState(false);
-  const [selectedListIds, setSelectedListIds] = useState<string[]>(defaultListId ? [defaultListId] : []);
+  const [selectedListIds, setSelectedListIds] = useState<string[]>(
+    defaultListId ? [defaultListId] : []
+  );
+  const initialListIdsRef = useRef<string[]>([]);
   const isEditing = Boolean(wish);
 
   // Form state
   const [formData, setFormData] = useState<Partial<WishCreateInput>>({
     title: wish?.title || '',
     url: wish?.url || null,
-    notes: wish?.notes || '',
     price: wish?.price || undefined,
     wishLevel: wish?.wishLevel || 1,
     quantity: wish?.quantity || 1,
@@ -66,7 +67,6 @@ export function WishForm({
     () => ({
       title: wish?.title || '',
       url: wish?.url || null,
-      notes: wish?.notes || '',
       price: wish?.price || undefined,
       wishLevel: wish?.wishLevel || 1,
       quantity: wish?.quantity || 1,
@@ -78,19 +78,50 @@ export function WishForm({
   );
 
   // Track form dirty state
-  const { isDirty } = useFormDirtyState(initialFormData, formData);
+  const { isDirty: isFormDataDirty } = useFormDirtyState(initialFormData, formData);
+
+  // Check if lists have changed from their initial state
+  const areListsDirty = useMemo(() => {
+    const initial = [...initialListIdsRef.current].sort();
+    const current = [...selectedListIds].sort();
+    return JSON.stringify(initial) !== JSON.stringify(current);
+  }, [selectedListIds]);
+
+  const isDirty = isFormDataDirty || areListsDirty;
 
   // Notify parent of dirty state changes
   useEffect(() => {
     onDirtyStateChange?.(isDirty);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDirty]); // onDirtyStateChange is stable (setState function) - no need in deps
 
   // Load user's lists for list selection
-  const { data: listsData } = useQuery({
+  const { data: listsData, isLoading: isLoadingLists } = useQuery({
     queryKey: ['lists'],
     queryFn: () => listsApi.getLists(),
     enabled: showListSelection,
   });
+
+  // Load wish's current lists (edit mode only)
+  const wishListsQuery = useQuery({
+    queryKey: ['wish-lists', wish?.id],
+    queryFn: async () => {
+      if (!wish?.id) {
+        return [];
+      }
+      return wishesApi.getWishLists(wish.id);
+    },
+    enabled: !!wish?.id && showListSelection,
+  });
+
+  // Initialize selected lists from wish's current lists (edit mode)
+  useEffect(() => {
+    if (wishListsQuery.isSuccess && wishListsQuery.data) {
+      const ids = wishListsQuery.data.map((list) => list.id);
+      setSelectedListIds(ids);
+      initialListIdsRef.current = ids;
+    }
+  }, [wishListsQuery.isSuccess, wishListsQuery.data]);
 
   // Create mutation
   const createMutation = useMutation({
@@ -100,9 +131,7 @@ export function WishForm({
       // If lists are selected, add the wish to all selected lists
       if (selectedListIds.length > 0 && wish.id) {
         await Promise.all(
-          selectedListIds.map(listId =>
-            listsApi.addWishToList(listId, { wishId: wish.id })
-          )
+          selectedListIds.map((listId) => listsApi.addWishToList(listId, { wishId: wish.id }))
         );
       }
 
@@ -129,8 +158,18 @@ export function WishForm({
   // Update mutation
   const updateMutation = useMutation({
     mutationFn: async (data: WishUpdateInput) => {
-      if (!wish?.id) {throw new Error('Wish ID is required');}
+      if (!wish?.id) {
+        throw new Error('Wish ID is required');
+      }
       const updatedWish = await wishesApi.updateWish(wish.id, data);
+
+      // Update list memberships transactionally
+      if (showListSelection) {
+        await wishesApi.updateWishMemberships(wish.id, {
+          listIds: selectedListIds,
+        });
+      }
+
       return updatedWish;
     },
     onSuccess: () => {
@@ -138,7 +177,12 @@ export function WishForm({
         title: 'Wish updated',
         description: 'Your wish has been updated successfully.',
       });
+      // Invalidate all relevant queries
       void queryClient.invalidateQueries({ queryKey: ['wishes'] });
+      if (wish?.id) {
+        void queryClient.invalidateQueries({ queryKey: ['wish', wish.id] });
+        void queryClient.invalidateQueries({ queryKey: ['wish-lists', wish.id] });
+      }
       void queryClient.invalidateQueries({ queryKey: ['lists'] });
       onSuccess?.();
     },
@@ -194,11 +238,11 @@ export function WishForm({
 
   // Handle list selection toggle
   const handleListToggle = (listId: string, checked: boolean) => {
-    setSelectedListIds(prev => {
+    setSelectedListIds((prev) => {
       if (checked) {
         return [...prev, listId];
       } else {
-        return prev.filter(id => id !== listId);
+        return prev.filter((id) => id !== listId);
       }
     });
   };
@@ -215,10 +259,6 @@ export function WishForm({
 
     // No need to validate URL length - URLs are automatically simplified to ~36 chars
     // Backend validation will catch any edge cases
-
-    if (formData.notes && formData.notes.length > 500) {
-      newErrors.notes = 'Notes must be less than 500 characters';
-    }
 
     if (formData.price && formData.price < 0) {
       newErrors.price = 'Price must be positive';
@@ -238,7 +278,9 @@ export function WishForm({
 
   // Extract metadata from URL
   const handleExtractMetadata = async () => {
-    if (!formData.url) {return;}
+    if (!formData.url) {
+      return;
+    }
 
     setIsExtractingMetadata(true);
 
@@ -257,7 +299,6 @@ export function WishForm({
           const updated = {
             ...prev,
             title: prev.title || metadata.title || '',
-            notes: prev.notes || metadata.description || '',
             price: prev.price || metadata.price || undefined,
             imageUrl: prev.imageUrl || metadata.imageUrl || null,
           };
@@ -278,43 +319,46 @@ export function WishForm({
         // Show user-friendly error message
         if (type === 'captcha_detected') {
           toast({
-            title: 'Manual entry required',
-            description: `${partial?.siteName || 'This site'} requires manual details`,
+            title: 'Ah crap, fancy anti-bot tools detected',
+            description: `${partial?.siteName || 'This site'} has security that blocks us. You'll need to enter the price and details yourself.`,
             variant: 'destructive',
             duration: 5000,
           });
         } else if (type === 'timeout') {
           toast({
-            title: 'Slow response',
-            description: 'The site took too long to respond',
+            title: 'Site took too long to respond',
+            description:
+              "The website was really slow. You'll need to add the price and details manually.",
             variant: 'destructive',
             duration: 5000,
           });
         } else if (type === 'parse_error') {
           toast({
-            title: 'Limited details available',
-            description: `Could not extract full details from ${partial?.siteName || 'this site'}`,
+            title: "Couldn't read the page details",
+            description: `We saved your link, but couldn't grab the price or description from ${partial?.siteName || 'this site'}. You can add those yourself.`,
             variant: 'destructive',
             duration: 5000,
           });
         } else if (type === 'network_error') {
           toast({
-            title: 'Site unavailable',
-            description: 'The site could not be reached',
+            title: "Couldn't reach that website",
+            description:
+              "The site might be down or blocking us. You'll need to add the price and details manually.",
             variant: 'destructive',
             duration: 5000,
           });
         } else if (type === 'invalid_url') {
           toast({
-            title: 'Invalid URL',
-            description: 'The URL could not be validated',
+            title: 'Hmm, that URL looks weird',
+            description: "We'll save it anyway - just add the price and details yourself.",
             variant: 'destructive',
             duration: 5000,
           });
         } else {
           toast({
-            title: 'Could not extract product details',
-            description: 'Some sites block automated scraping. Please enter the details manually - your URL is still saved!',
+            title: "Couldn't grab the details automatically",
+            description:
+              'Some sites block us from reading their pages. No worries - just enter the price and details yourself!',
             variant: 'destructive',
             duration: 5000,
           });
@@ -336,19 +380,23 @@ export function WishForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) {return;}
+    if (!validateForm()) {
+      return;
+    }
 
+    // At this point validateForm ensures title exists and is not empty
     const dataToSubmit = {
       ...formData,
-      title: formData.title!,
+      title: formData.title ?? '',
       wishLevel: formData.wishLevel || 1,
     } as WishCreateInput | WishUpdateInput;
 
     // Clean up empty strings and convert to null
     Object.keys(dataToSubmit).forEach((key) => {
       const typedKey = key as keyof typeof dataToSubmit;
-      if (dataToSubmit[typedKey] === '') {
-        (dataToSubmit as any)[typedKey] = null;
+      const value = dataToSubmit[typedKey];
+      if (value === '') {
+        (dataToSubmit as Record<string, unknown>)[typedKey] = null;
       }
     });
 
@@ -362,7 +410,12 @@ export function WishForm({
   const isPending = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form
+      onSubmit={(e) => {
+        void handleSubmit(e);
+      }}
+      className="space-y-6"
+    >
       {/* URL Field with Fetch Button */}
       <div className="space-y-2">
         <Label htmlFor="url">Product URL</Label>
@@ -378,7 +431,6 @@ export function WishForm({
             disabled={createMutation.isPending || updateMutation.isPending}
             aria-invalid={errors.url ? 'true' : 'false'}
             aria-describedby={errors.url ? 'url-error' : undefined}
-            autoFocus
           />
           <Button
             type="button"
@@ -400,7 +452,7 @@ export function WishForm({
           </p>
         )}
         <p className="text-xs text-muted-foreground">
-          Paste a product URL and click "Fetch" to auto-fill details
+          Paste a product URL and click &quot;Fetch&quot; to auto-fill details
         </p>
       </div>
 
@@ -436,8 +488,8 @@ export function WishForm({
           <Label htmlFor="price">
             Price
             {priceFetchFailed && (
-              <span className="ml-2 text-xs text-muted-foreground font-normal">
-                couldn't fetch price from site :(
+              <span className="ml-2 text-xs font-normal text-muted-foreground">
+                couldn&apos;t fetch price from site :(
               </span>
             )}
           </Label>
@@ -465,7 +517,7 @@ export function WishForm({
         {/* Wish Level */}
         <div className="space-y-2">
           <Label htmlFor="wishLevel">Wish Level</Label>
-          <div className="flex items-center h-11">
+          <div className="flex h-11 items-center">
             <StarRating
               value={formData.wishLevel || 1}
               onChange={handleWishLevelChange}
@@ -474,33 +526,6 @@ export function WishForm({
             />
           </div>
         </div>
-      </div>
-
-      {/* Notes Field with character counter in label row */}
-      <div className="space-y-2">
-        <div className="flex justify-between items-center">
-          <Label htmlFor="notes">Notes</Label>
-          <span className="text-xs text-muted-foreground">
-            {formData.notes?.length || 0} / 500
-          </span>
-        </div>
-        <Textarea
-          id="notes"
-          name="notes"
-          placeholder="Any specific details, preferences, or links..."
-          value={formData.notes ?? ''}
-          onChange={handleChange}
-          disabled={createMutation.isPending || updateMutation.isPending}
-          rows={3}
-          maxLength={500}
-          aria-invalid={errors.notes ? 'true' : 'false'}
-          aria-describedby={errors.notes ? 'notes-error' : undefined}
-        />
-        {errors.notes && (
-          <p id="notes-error" className="text-error-aa text-sm" aria-live="polite">
-            {errors.notes}
-          </p>
-        )}
       </div>
 
       {/* More Options Section - Always Visible */}
@@ -571,27 +596,46 @@ export function WishForm({
       </div>
 
       {/* List Selection - Multi-select with checkboxes */}
-      {showListSelection && listsData && 'items' in listsData && Array.isArray(listsData.items) && listsData.items.length > 0 && (
+      {showListSelection && (
         <div className="space-y-2">
           <Label>Add to Lists</Label>
-          <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3">
-            {listsData.items.map((list) => (
-              <div key={list.id} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`list-${list.id}`}
-                  checked={selectedListIds.includes(list.id)}
-                  onCheckedChange={(checked) => handleListToggle(list.id, checked as boolean)}
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                />
-                <Label
-                  htmlFor={`list-${list.id}`}
-                  className="text-sm font-normal cursor-pointer flex-1"
-                >
-                  {list.name} ({list._count.wishes} wishes)
-                </Label>
-              </div>
-            ))}
-          </div>
+          {(isLoadingLists || wishListsQuery.isLoading) && (
+            <p className="text-sm text-muted-foreground">Loading lists...</p>
+          )}
+          {listsData &&
+            'items' in listsData &&
+            Array.isArray(listsData.items) &&
+            listsData.items.length > 0 &&
+            (!wish?.id || !wishListsQuery.isLoading) && (
+              <fieldset
+                disabled={createMutation.isPending || updateMutation.isPending}
+                className="max-h-48 space-y-2 overflow-y-auto rounded-md border p-3"
+              >
+                {listsData.items.map((list) => (
+                  <div key={list.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`list-${list.id}`}
+                      checked={selectedListIds.includes(list.id)}
+                      onCheckedChange={(checked) => handleListToggle(list.id, checked as boolean)}
+                    />
+                    <Label
+                      htmlFor={`list-${list.id}`}
+                      className="flex-1 cursor-pointer text-sm font-normal"
+                    >
+                      {list.name} ({list._count.wishes} wishes)
+                    </Label>
+                  </div>
+                ))}
+              </fieldset>
+            )}
+          {listsData &&
+            'items' in listsData &&
+            Array.isArray(listsData.items) &&
+            listsData.items.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                No lists available. Create a list first.
+              </p>
+            )}
           {selectedListIds.length > 0 && (
             <p className="text-xs text-muted-foreground">
               Selected {selectedListIds.length} list{selectedListIds.length !== 1 ? 's' : ''}
@@ -601,7 +645,7 @@ export function WishForm({
       )}
 
       {/* Form Actions */}
-      <div className="flex gap-3 justify-end">
+      <div className="flex justify-end gap-3">
         {onCancel && (
           <Button type="button" variant="outline" onClick={onCancel} disabled={isPending}>
             Cancel

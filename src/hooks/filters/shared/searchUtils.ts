@@ -11,14 +11,10 @@
  * @returns Filtered array of items matching the query
  *
  * @example
- * const filtered = applySearchFilter(wishes, 'gift', ['title', 'notes']);
+ * const filtered = applySearchFilter(wishes, 'gift', ['title']);
  * const filtered = applySearchFilter(lists, 'birthday', ['name', 'description']);
  */
-export function applySearchFilter<T>(
-  items: T[],
-  query: string,
-  fields: (keyof T)[]
-): T[] {
+export function applySearchFilter<T>(items: T[], query: string, fields: (keyof T)[]): T[] {
   // Return unchanged if no query
   if (!query.trim()) {
     return items;

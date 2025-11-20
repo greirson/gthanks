@@ -31,7 +31,7 @@ export function ProfileVisibilityToggle({ username, initialValue }: ProfileVisib
 
   const toggleMutation = useMutation({
     mutationFn: vanityApi.setProfileVisibility,
-    onMutate: async (newValue) => {
+    onMutate: (newValue) => {
       // Optimistically update UI
       setIsEnabled(newValue);
     },
@@ -88,7 +88,7 @@ export function ProfileVisibilityToggle({ username, initialValue }: ProfileVisib
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-4">
-        <div className="space-y-1 flex-1">
+        <div className="flex-1 space-y-1">
           <Label htmlFor="profile-visibility">Public Profile</Label>
           <p className="text-sm text-muted-foreground">
             Allow others to view your public profile and lists
@@ -105,13 +105,13 @@ export function ProfileVisibilityToggle({ username, initialValue }: ProfileVisib
       {isEnabled && (
         <div className="rounded-lg border bg-muted/50 p-3">
           <div className="flex items-start gap-2">
-            <Eye className="h-4 w-4 flex-shrink-0 text-green-600 dark:text-green-400 mt-0.5" />
-            <div className="space-y-1 flex-1 min-w-0">
+            <Eye className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600 dark:text-green-400" />
+            <div className="min-w-0 flex-1 space-y-1">
               <p className="text-sm font-medium">Your public profile is visible</p>
-              <p className="text-xs text-muted-foreground break-all">
+              <p className="break-all text-xs text-muted-foreground">
                 <a
                   href={`/${username}`}
-                  className="text-primary hover:underline transition-opacity duration-75"
+                  className="text-primary transition-opacity duration-75 hover:underline"
                 >
                   {displayUrl}
                 </a>
@@ -124,14 +124,12 @@ export function ProfileVisibilityToggle({ username, initialValue }: ProfileVisib
       {!isEnabled && (
         <div className="rounded-lg border bg-muted/50 p-3">
           <div className="flex items-start gap-2">
-            <EyeOff className="h-4 w-4 flex-shrink-0 text-muted-foreground mt-0.5" />
+            <EyeOff className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground" />
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground">
                 Your public profile is hidden
               </p>
-              <p className="text-xs text-muted-foreground">
-                Your profile and lists are private
-              </p>
+              <p className="text-xs text-muted-foreground">Your profile and lists are private</p>
             </div>
           </div>
         </div>

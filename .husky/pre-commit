@@ -1,18 +1,32 @@
 #!/bin/sh
 . "$(dirname "$0")/common.sh"
 
-# Run lint-staged on changed files only
+echo "🔍 Running pre-commit checks..."
+echo ""
+
+# Run lint-staged for auto-fixes on changed files
+echo "📝 Auto-fixing changed files with lint-staged..."
 pnpm exec lint-staged
 
-# Quick type check on changed TypeScript files only
-echo "🔍 Quick type checking changed files..."
-changed_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx)$' || true)
-
-if [ -n "$changed_files" ]; then
-  # Just notify about type errors, don't block commit
-  if ! pnpm run typecheck 2>/dev/null; then
-    echo "⚠️  Note: TypeScript errors detected in the project"
-    echo "   These don't block commits but will fail in CI/CD"
-    echo "   Run 'pnpm run typecheck' to see details"
-  fi
+# Type check all files (catches errors in unchanged files that depend on changed code)
+echo ""
+echo "🔎 Running TypeScript type check..."
+if ! pnpm run typecheck; then
+  print_error "TypeScript errors found. Please fix them before committing."
+  echo ""
+  echo "💡 To bypass this check (emergency only): git commit --no-verify"
+  exit 1
 fi
+
+# Lint all files (catches errors that may have been introduced)
+echo ""
+echo "🔧 Running ESLint..."
+if ! pnpm run lint; then
+  print_error "ESLint errors found. Please fix them before committing."
+  echo ""
+  echo "💡 To bypass this check (emergency only): git commit --no-verify"
+  exit 1
+fi
+
+echo ""
+print_success "All pre-commit checks passed!"

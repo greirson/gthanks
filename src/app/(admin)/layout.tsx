@@ -17,10 +17,10 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
   const sessionUser = await getCurrentUser();
 
   const user = {
-    id: sessionUser!.id,
-    name: sessionUser!.name || null,
-    email: sessionUser!.email || '',
-    avatarUrl: sessionUser!.avatarUrl || null,
+    id: sessionUser?.id ?? '',
+    name: sessionUser?.name ?? null,
+    email: sessionUser?.email ?? '',
+    avatarUrl: sessionUser?.avatarUrl ?? null,
     isAdmin: true,
   };
 

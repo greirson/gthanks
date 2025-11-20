@@ -20,18 +20,21 @@ gthanks uses a comprehensive testing pyramid with 80% coverage target for critic
 **Purpose**: Test individual functions, components, and utilities in isolation
 
 **Coverage Target**: 80% for:
+
 - Service layer functions
 - Utility functions
 - Custom hooks
 - Complex component logic
 
 **Tools**:
+
 - Jest 29
 - @testing-library/react 16
 - @testing-library/user-event 14
 - @testing-library/jest-dom 6
 
 **Commands**:
+
 ```bash
 pnpm test                  # Run all unit tests
 pnpm test:watch            # Watch mode
@@ -39,6 +42,7 @@ pnpm test:coverage         # Generate coverage report
 ```
 
 **Example: Service Layer Test**
+
 ```typescript
 // tests/unit/lib/services/wish-service.test.ts
 import { wishService } from '@/lib/services/wish-service';
@@ -52,10 +56,7 @@ describe('wishService', () => {
       const mockWish = { id: '123', title: 'Test', ownerId: 'user1' };
       (db.wish.create as jest.Mock).mockResolvedValue(mockWish);
 
-      const result = await wishService.createWish(
-        { title: 'Test' },
-        'user1'
-      );
+      const result = await wishService.createWish({ title: 'Test' }, 'user1');
 
       expect(result).toEqual(mockWish);
       expect(db.wish.create).toHaveBeenCalledWith({
@@ -64,15 +65,16 @@ describe('wishService', () => {
     });
 
     it('throws ValidationError for invalid data', async () => {
-      await expect(
-        wishService.createWish({ title: '' }, 'user1')
-      ).rejects.toThrow('Title is required');
+      await expect(wishService.createWish({ title: '' }, 'user1')).rejects.toThrow(
+        'Title is required'
+      );
     });
   });
 });
 ```
 
 **Example: Component Test**
+
 ```typescript
 // tests/unit/components/wishes/WishCard.test.tsx
 import { render, screen } from '@testing-library/react';
@@ -112,6 +114,7 @@ describe('WishCard', () => {
 **Purpose**: Test multiple components working together with real database
 
 **Coverage Target**: Critical user flows:
+
 - Authentication flow
 - Wish CRUD operations
 - List sharing
@@ -119,11 +122,13 @@ describe('WishCard', () => {
 - Reservation system
 
 **Tools**:
+
 - Jest 29
 - Prisma Client (test database)
 - In-memory SQLite
 
 **Commands**:
+
 ```bash
 pnpm test:integration       # Run integration tests
 pnpm test:integration:watch # Watch mode
@@ -131,6 +136,7 @@ pnpm test:all               # Run all tests
 ```
 
 **Example: API Route Integration Test**
+
 ```typescript
 // tests/integration/api/wishes.test.ts
 import { testRequest } from '@/tests/helpers';
@@ -150,14 +156,11 @@ describe('POST /api/wishes', () => {
   });
 
   it('creates wish for authenticated user', async () => {
-    const response = await testRequest
-      .post('/api/wishes')
-      .auth(user.id)
-      .send({
-        title: 'New Bike',
-        price: 299.99,
-        wishLevel: 2,
-      });
+    const response = await testRequest.post('/api/wishes').auth(user.id).send({
+      title: 'New Bike',
+      price: 299.99,
+      wishLevel: 2,
+    });
 
     expect(response.status).toBe(201);
     expect(response.body).toMatchObject({
@@ -173,9 +176,7 @@ describe('POST /api/wishes', () => {
   });
 
   it('returns 401 for unauthenticated request', async () => {
-    const response = await testRequest
-      .post('/api/wishes')
-      .send({ title: 'Test' });
+    const response = await testRequest.post('/api/wishes').send({ title: 'Test' });
 
     expect(response.status).toBe(401);
   });
@@ -187,6 +188,7 @@ describe('POST /api/wishes', () => {
 **Purpose**: Test complete user flows in real browser
 
 **Coverage Target**: Critical user journeys:
+
 - User signup and onboarding
 - Creating and managing wishes
 - Sharing lists with groups
@@ -194,10 +196,12 @@ describe('POST /api/wishes', () => {
 - Admin functions
 
 **Tools**:
+
 - Playwright 1.56
 - Chromium, Firefox, WebKit
 
 **Commands**:
+
 ```bash
 pnpm test:e2e              # Run all E2E tests
 pnpm test:e2e:ui           # Playwright UI mode
@@ -207,6 +211,7 @@ pnpm test:e2e:report       # View test report
 ```
 
 **Example: E2E Test**
+
 ```typescript
 // tests/e2e/wish-management.spec.ts
 import { test, expect } from '@playwright/test';
@@ -294,10 +299,7 @@ it('creates reservation for wish', async () => {
   const reserver = { name: 'John', email: 'john@example.com' };
 
   // Act
-  const reservation = await reservationService.createReservation(
-    wish.id,
-    reserver
-  );
+  const reservation = await reservationService.createReservation(wish.id, reserver);
 
   // Assert
   expect(reservation.wishId).toBe(wish.id);
@@ -354,20 +356,18 @@ Don't just test happy paths:
 
 ```typescript
 describe('deleteWish', () => {
-  it('deletes wish successfully', async () => { /* ... */ });
+  it('deletes wish successfully', async () => {
+    /* ... */
+  });
 
   it('throws NotFoundError when wish does not exist', async () => {
-    await expect(
-      wishService.deleteWish('nonexistent', 'user1')
-    ).rejects.toThrow(NotFoundError);
+    await expect(wishService.deleteWish('nonexistent', 'user1')).rejects.toThrow(NotFoundError);
   });
 
   it('throws ForbiddenError when user is not owner', async () => {
     const wish = await createTestWish({ ownerId: 'user1' });
 
-    await expect(
-      wishService.deleteWish(wish.id, 'user2')
-    ).rejects.toThrow(ForbiddenError);
+    await expect(wishService.deleteWish(wish.id, 'user2')).rejects.toThrow(ForbiddenError);
   });
 });
 ```
@@ -375,11 +375,13 @@ describe('deleteWish', () => {
 ## Continuous Integration
 
 Tests run automatically on:
+
 - Pre-commit hooks (unit tests only)
 - Pull request creation
 - Merges to main branch
 
 **CI Pipeline:**
+
 1. Install dependencies
 2. Run linting + type checking
 3. Run unit tests
@@ -390,6 +392,7 @@ Tests run automatically on:
 ## Coverage Requirements
 
 **Minimum Coverage Targets:**
+
 - Service layer: 80%
 - Utility functions: 80%
 - API routes: 70%
@@ -397,6 +400,7 @@ Tests run automatically on:
 - Overall: 70%
 
 **Priority Areas (Must be 100%):**
+
 - Permission checks (`permissionService`)
 - Authentication logic
 - Reservation system
@@ -405,6 +409,7 @@ Tests run automatically on:
 ## Debugging Tests
 
 **Unit/Integration Tests:**
+
 ```bash
 # Run specific test file
 pnpm test wish-service.test.ts
@@ -417,6 +422,7 @@ node --inspect-brk node_modules/.bin/jest --runInBand
 ```
 
 **E2E Tests:**
+
 ```bash
 # Run in headed mode (see browser)
 pnpm test:e2e:headed
@@ -431,16 +437,19 @@ pnpm test:e2e tests/e2e/wishes/create.spec.ts
 ## Test Data Management
 
 **In-Memory Database (Unit/Integration):**
+
 - SQLite in-memory database
 - Isolated per test suite
 - Fast and disposable
 
 **Test Database (E2E):**
+
 - SQLite file database (`data/test.db`)
 - Reset before each test run
 - Seeded with minimal data
 
 **Database Seeding:**
+
 ```typescript
 // tests/setup/seed.ts
 export async function seedTestDatabase() {

@@ -4,6 +4,7 @@ import { UnifiedPaginatedResponseSchema } from '@/lib/validators/pagination';
 import { flexibleDateSchema } from '@/lib/validators/helpers/date-schema';
 
 // List schema for API responses
+// List schema for API responses
 export const ListSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -13,6 +14,7 @@ export const ListSchema = z.object({
   shareToken: z.string().nullable(),
   slug: z.string().nullable(),
   hideFromProfile: z.boolean(),
+  giftCardPreferences: z.string().nullable().optional(), // JSON string of gift cards
   ownerId: z.string(),
   createdAt: flexibleDateSchema(),
   updatedAt: flexibleDateSchema(),
@@ -52,29 +54,31 @@ export const ListWithOwnerSchema = ListSchema.extend({
 export const ListWithDetailsSchema = ListWithOwnerSchema.extend({
   wishes: z
     .array(
-      z.object({
-        wish: z.object({
-          id: z.string(),
-          title: z.string(),
-          notes: z.string().nullable(),
-          url: z.string().nullable(),
-          imageUrl: z.string().nullable(),
-          sourceImageUrl: z.string().nullable(),
-          localImagePath: z.string().nullable(),
-          imageStatus: z.string(),
-          price: z.number().nullable(),
-          currency: z.string().nullable(),
-          quantity: z.number(),
-          size: z.string().nullable(),
-          color: z.string().nullable(),
+      z
+        .object({
+          wish: z.object({
+            id: z.string(),
+            title: z.string(),
+            notes: z.string().nullable(),
+            url: z.string().nullable(),
+            imageUrl: z.string().nullable(),
+            sourceImageUrl: z.string().nullable(),
+            localImagePath: z.string().nullable(),
+            imageStatus: z.string(),
+            price: z.number().nullable(),
+            currency: z.string().nullable(),
+            quantity: z.number(),
+            size: z.string().nullable(),
+            color: z.string().nullable(),
+            wishLevel: z.number().nullable(),
+            ownerId: z.string(),
+            createdAt: flexibleDateSchema(),
+            updatedAt: flexibleDateSchema(),
+          }),
+          addedAt: flexibleDateSchema(),
           wishLevel: z.number().nullable(),
-          ownerId: z.string(),
-          createdAt: flexibleDateSchema(),
-          updatedAt: flexibleDateSchema(),
-        }),
-        addedAt: flexibleDateSchema(),
-        wishLevel: z.number().nullable(),
-      }).passthrough() // Allow additional fields like listId and wishId from join table
+        })
+        .passthrough() // Allow additional fields like listId and wishId from join table
     )
     .optional(),
 });

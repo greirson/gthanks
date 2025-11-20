@@ -22,7 +22,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8.15.9
+          version: 10.20.0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -37,7 +37,7 @@ jobs:
         run: pnpm run db:generate
 
       - name: Run tests
-        run: pnpm run test -- --passWithNoTests
+        run: pnpm exec jest --passWithNoTests
         env:
           NODE_ENV: test
 
@@ -52,7 +52,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8.15.9
+          version: 10.20.0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -90,7 +90,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8.15.9
+          version: 10.20.0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -108,6 +108,9 @@ jobs:
         run: pnpm run build
         env:
           SKIP_ENV_VALIDATION: true
+          DATABASE_URL: file:./data/gthanks.db
+          NEXTAUTH_SECRET: build-time-secret-minimum-32-characters-long
+          NEXTAUTH_URL: http://localhost:3000
 
   e2e-smoke:
     name: E2E Smoke Tests
@@ -135,7 +138,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8.15.9
+          version: 10.20.0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -147,7 +150,12 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers
-        run: pnpm exec playwright install chromium --with-deps
+        run: pnpm exec playwright install --with-deps
+
+      - name: Configure Prisma for PostgreSQL
+        run: |
+          sed -i 's/provider = "sqlite"/provider = "postgresql"/' prisma/schema.prisma
+        shell: bash
 
       - name: Generate Prisma client
         run: pnpm run db:generate

@@ -1,10 +1,11 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { Check, Copy, Plus, Share, Trash, Mail, Users } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -125,13 +126,13 @@ export function ListSharingDialog({ list, open, onOpenChange }: ListSharingDialo
       if (!response.ok) {
         throw new Error('Failed to fetch co-managers');
       }
-      const data = await response.json();
+      const data = (await response.json()) as { admins: CoManagerWithDetails[] };
       return data.admins || [];
     },
     enabled: open && list.isOwner,
   });
 
-  const coManagers: CoManagerWithDetails[] = coManagersData || [];
+  const coManagers = useMemo<CoManagerWithDetails[]>(() => coManagersData || [], [coManagersData]);
 
   // Unified access list combining owner, co-managers, and groups
   const accessItems = useMemo(() => {
@@ -181,7 +182,10 @@ export function ListSharingDialog({ list, open, onOpenChange }: ListSharingDialo
 
   // Update visibility mutation
   const updateVisibilityMutation = useMutation({
-    mutationFn: async (data: { visibility: 'private' | 'public' | 'password'; password?: string | null }) => {
+    mutationFn: async (data: {
+      visibility: 'private' | 'public' | 'password';
+      password?: string | null;
+    }) => {
       return listsApi.updateList(list.id, data);
     },
     onSuccess: (updatedList) => {
@@ -272,11 +276,11 @@ export function ListSharingDialog({ list, open, onOpenChange }: ListSharingDialo
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = (await response.json()) as { error?: string };
         throw new Error(errorData.error || 'Failed to add co-manager');
       }
 
-      return response.json();
+      return response.json() as Promise<CoManagerWithDetails>;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['list-admins', list.id] });
@@ -306,11 +310,11 @@ export function ListSharingDialog({ list, open, onOpenChange }: ListSharingDialo
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = (await response.json()) as { error?: string };
         throw new Error(errorData.error || 'Failed to remove co-manager');
       }
 
-      return response.json();
+      return response.json() as Promise<{ success: boolean }>;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['list-admins', list.id] });
@@ -548,10 +552,14 @@ export function ListSharingDialog({ list, open, onOpenChange }: ListSharingDialo
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={handleCopyShareLink}
+                            onClick={() => void handleCopyShareLink()}
                             className="flex-shrink-0"
                           >
-                            {copyTokenSuccess ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                            {copyTokenSuccess ? (
+                              <Check className="h-4 w-4" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
                           </Button>
                         </div>
                       </div>
@@ -569,10 +577,14 @@ export function ListSharingDialog({ list, open, onOpenChange }: ListSharingDialo
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={handleCopyVanityUrl}
+                              onClick={() => void handleCopyVanityUrl()}
                               className="flex-shrink-0"
                             >
-                              {copyVanitySuccess ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                              {copyVanitySuccess ? (
+                                <Check className="h-4 w-4" />
+                              ) : (
+                                <Copy className="h-4 w-4" />
+                              )}
                             </Button>
                           </div>
                           <p className="text-xs text-muted-foreground">
@@ -595,7 +607,8 @@ export function ListSharingDialog({ list, open, onOpenChange }: ListSharingDialo
                           {session?.user?.username && !list.slug && (
                             <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-900 dark:bg-blue-950">
                               <p className="text-xs text-blue-800 dark:text-blue-200">
-                                💡 Want a custom URL? Edit this list and add a custom slug in the form.
+                                💡 Want a custom URL? Edit this list and add a custom slug in the
+                                form.
                               </p>
                             </div>
                           )}
@@ -608,7 +621,7 @@ export function ListSharingDialog({ list, open, onOpenChange }: ListSharingDialo
               <CardContent>
                 {isLoadingCoManagers || isLoadingSharedGroups ? (
                   <div className="space-y-3">
-                    {[...Array(3)].map((_, i) => (
+                    {Array.from({ length: 3 }).map((_, i) => (
                       <div
                         key={i}
                         className="flex animate-pulse items-center justify-between rounded-lg bg-secondary p-3"
@@ -764,7 +777,8 @@ export function ListSharingDialog({ list, open, onOpenChange }: ListSharingDialo
                       <span className="text-sm font-medium">Add Co-manager</span>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Co-managers can add or remove wishes from this list, but cannot delete the list or change sharing settings.
+                      Co-managers can add or remove wishes from this list, but cannot delete the
+                      list or change sharing settings.
                     </p>
                     <div className="flex gap-2">
                       <EmailInput
@@ -831,29 +845,29 @@ export function ListSharingDialog({ list, open, onOpenChange }: ListSharingDialo
                                 }}
                               >
                                 <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                                  <div className="flex min-w-0 flex-1 items-center gap-2">
                                     {group.avatarUrl ? (
                                       // eslint-disable-next-line @next/next/no-img-element
                                       <img
                                         src={group.avatarUrl}
                                         alt={group.name}
-                                        className="h-8 w-8 rounded-full flex-shrink-0"
+                                        className="h-8 w-8 flex-shrink-0 rounded-full"
                                       />
                                     ) : (
-                                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted flex-shrink-0">
+                                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted">
                                         <Users className="h-4 w-4 text-muted-foreground" />
                                       </div>
                                     )}
 
-                                    <div className="flex-1 min-w-0">
-                                      <div className="font-medium truncate">{group.name}</div>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="truncate font-medium">{group.name}</div>
                                       <div className="text-xs text-muted-foreground">
                                         {group._count.members} members
                                       </div>
                                     </div>
                                   </div>
 
-                                  <div className="flex items-center gap-2 flex-shrink-0">
+                                  <div className="flex flex-shrink-0 items-center gap-2">
                                     {group.currentUserRole && (
                                       <Badge variant="outline" className="text-xs">
                                         {group.currentUserRole === 'admin' ? 'Admin' : 'Member'}
@@ -868,15 +882,17 @@ export function ListSharingDialog({ list, open, onOpenChange }: ListSharingDialo
                             ))}
                         </div>
 
-                        {shareableGroups.filter((group) => !sharedGroups.find((sg) => sg.id === group.id))
-                          .length === 0 && (
-                          <p className="text-center text-sm text-muted-foreground py-4">
+                        {shareableGroups.filter(
+                          (group) => !sharedGroups.find((sg) => sg.id === group.id)
+                        ).length === 0 && (
+                          <p className="py-4 text-center text-sm text-muted-foreground">
                             All your groups already have access to this list.
                           </p>
                         )}
 
-                        {shareableGroups.filter((group) => !sharedGroups.find((sg) => sg.id === group.id))
-                          .length > 0 && (
+                        {shareableGroups.filter(
+                          (group) => !sharedGroups.find((sg) => sg.id === group.id)
+                        ).length > 0 && (
                           <Button
                             onClick={handleShareWithGroups}
                             disabled={

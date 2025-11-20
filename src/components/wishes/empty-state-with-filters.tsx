@@ -19,7 +19,7 @@ export function EmptyStateWithFilters({
     return (
       <div className="flex min-h-[400px] items-center justify-center p-8">
         <div className="text-center">
-          <div className="mb-4 rounded-full bg-muted p-4 mx-auto w-fit">
+          <div className="mx-auto mb-4 w-fit rounded-full bg-muted p-4">
             <Filter className="h-8 w-8 text-muted-foreground" />
           </div>
           <h3 className="text-lg font-semibold">There are no wishes yet!</h3>
@@ -33,20 +33,21 @@ export function EmptyStateWithFilters({
   if (hasActiveFilters && totalWishCount > 0) {
     return (
       <div className="flex min-h-[400px] items-center justify-center p-8">
-        <div className="text-center space-y-4">
+        <div className="space-y-4 text-center">
           <div>
-            <div className="mb-4 rounded-full bg-muted p-4 mx-auto w-fit">
+            <div className="mx-auto mb-4 w-fit rounded-full bg-muted p-4">
               <Filter className="h-8 w-8 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-semibold">
-              There&apos;s {totalWishCount} {totalWishCount === 1 ? 'wish' : 'wishes'} hidden by filters!
+              There&apos;s {totalWishCount} {totalWishCount === 1 ? 'wish' : 'wishes'} hidden by
+              filters!
             </h3>
             <p className="mt-2 text-sm text-muted-foreground">Clear filters?</p>
           </div>
           <Button
             onClick={onClearFilters}
             size="lg"
-            className="min-w-[200px] h-12"
+            className="h-12 min-w-[200px]"
             variant="default"
           >
             <X className="mr-2 h-4 w-4" />

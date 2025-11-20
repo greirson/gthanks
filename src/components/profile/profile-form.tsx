@@ -18,6 +18,23 @@ interface ProfileFormProps {
   };
 }
 
+interface ApiErrorResponse {
+  error: string;
+}
+
+interface UpdateProfileResponse {
+  profile: {
+    name: string;
+    email: string;
+  };
+}
+
+function isApiErrorResponse(data: unknown): data is ApiErrorResponse {
+  return (
+    typeof data === 'object' && data !== null && 'error' in data && typeof data.error === 'string'
+  );
+}
+
 export function ProfileForm({ user }: ProfileFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -40,12 +57,20 @@ export function ProfileForm({ user }: ProfileFormProps) {
         body: JSON.stringify(data),
       });
 
+      const responseData = (await res.json()) as UpdateProfileResponse | ApiErrorResponse;
+
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to update profile');
+        const errorMessage = isApiErrorResponse(responseData)
+          ? responseData.error
+          : 'Failed to update profile';
+        throw new Error(errorMessage);
       }
 
-      return res.json();
+      if (!('profile' in responseData)) {
+        throw new Error('Invalid response format');
+      }
+
+      return responseData;
     },
     onSuccess: async (data) => {
       // Update the NextAuth session with new name and email
@@ -144,9 +169,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="name">
-          Name *
-        </Label>
+        <Label htmlFor="name">Name *</Label>
         <Input
           id="name"
           name="name"
@@ -168,9 +191,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="email">
-          Email *
-        </Label>
+        <Label htmlFor="email">Email *</Label>
         <Input
           id="email"
           name="email"

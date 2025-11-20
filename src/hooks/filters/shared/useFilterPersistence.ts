@@ -57,7 +57,9 @@ export function useFilterPersistence<F extends Record<string, any>>(
   // Hydrate from URL and localStorage AFTER initial render (Phase 2)
   useEffect(() => {
     // Only run on client, skip on server
-    if (typeof window === 'undefined') {return;}
+    if (typeof window === 'undefined') {
+      return;
+    }
 
     // 1. Try URL parameters first (highest priority)
     const urlParams = new URLSearchParams(window.location.search);

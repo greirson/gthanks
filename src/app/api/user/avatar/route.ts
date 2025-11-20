@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getCurrentUser } from '@/lib/auth-utils';
 import { getUserFriendlyError } from '@/lib/errors';
+// eslint-disable-next-line local-rules/no-direct-db-import -- Avatar file operations require direct db access for metadata; read-only queries with no business logic
 import { db } from '@/lib/db';
 import { imageProcessor } from '@/lib/services/image-processor';
 import { logger } from '@/lib/services/logger';
@@ -41,7 +42,10 @@ export async function POST(request: NextRequest) {
     if (buffer.length > MAX_AVATAR_SIZE) {
       return NextResponse.json(
         {
-          error: getUserFriendlyError('VALIDATION_ERROR', 'Avatar image too large. Maximum size is 2MB.'),
+          error: getUserFriendlyError(
+            'VALIDATION_ERROR',
+            'Avatar image too large. Maximum size is 2MB.'
+          ),
           code: 'VALIDATION_ERROR',
         },
         { status: 400 }
@@ -55,7 +59,10 @@ export async function POST(request: NextRequest) {
     if (!fileType || !allowedTypes.includes(fileType.mime)) {
       return NextResponse.json(
         {
-          error: getUserFriendlyError('VALIDATION_ERROR', 'Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.'),
+          error: getUserFriendlyError(
+            'VALIDATION_ERROR',
+            'Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.'
+          ),
           code: 'VALIDATION_ERROR',
         },
         { status: 400 }
@@ -82,7 +89,10 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error && error.message.includes('Unsupported file type')) {
       return NextResponse.json(
         {
-          error: getUserFriendlyError('VALIDATION_ERROR', 'Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.'),
+          error: getUserFriendlyError(
+            'VALIDATION_ERROR',
+            'Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.'
+          ),
           code: 'VALIDATION_ERROR',
         },
         { status: 400 }
@@ -157,6 +167,64 @@ export async function GET(request: NextRequest) {
     logger.error({ error: error }, 'Avatar serving error');
     return NextResponse.json(
       { error: getUserFriendlyError('INTERNAL_ERROR'), code: 'INTERNAL_ERROR' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * DELETE /api/user/avatar - Removes the current user's avatar
+ *
+ * @description Deletes the user's avatar file from the filesystem and sets avatarUrl to null.
+ * Only deletes local uploads (paths starting with '/'); external OAuth avatars are preserved.
+ */
+export async function DELETE() {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json(
+        { error: getUserFriendlyError('UNAUTHORIZED'), code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
+    }
+
+    // Get current avatar URL from database
+    const userData = await db.user.findUnique({
+      where: { id: user.id },
+      select: { avatarUrl: true },
+    });
+
+    // Delete file if it exists (only if it's a local upload, not a data URL or external URL)
+    if (userData?.avatarUrl && userData.avatarUrl.startsWith('/api/images/')) {
+      try {
+        await imageProcessor.deleteImage(userData.avatarUrl);
+      } catch (error) {
+        // File might already be deleted, log but continue anyway
+        logger.warn(
+          { error: error, avatarUrl: userData.avatarUrl },
+          'Failed to delete avatar file'
+        );
+      }
+    }
+
+    // Set avatarUrl to null in database
+    await db.user.update({
+      where: { id: user.id },
+      data: {
+        avatarUrl: null,
+        image: null, // Also clear NextAuth image field
+      },
+    });
+
+    // Return 204 No Content
+    return new NextResponse(null, { status: 204 });
+  } catch (error) {
+    logger.error({ error: error }, 'Error deleting user avatar');
+    return NextResponse.json(
+      {
+        error: getUserFriendlyError('INTERNAL_ERROR', 'Failed to delete avatar'),
+        code: 'INTERNAL_ERROR',
+      },
       { status: 500 }
     );
   }

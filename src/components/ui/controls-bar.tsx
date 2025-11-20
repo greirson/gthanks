@@ -1,12 +1,11 @@
 'use client';
 
-import { Filter, LayoutGrid, List, LayoutList, Plus } from 'lucide-react';
+import { Filter, Grid2x2, List, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 
-export type ViewMode = 'list' | 'compact' | 'comfortable';
+export type ViewMode = 'list' | 'grid';
 
 interface ControlsBarProps {
   onToggleFilters: () => void;
@@ -39,7 +38,7 @@ export function ControlsBar({
   isHydrated = true,
 }: ControlsBarProps) {
   return (
-    <div className="mb-4 flex flex-col gap-3 border-b pb-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mb-2 flex flex-col gap-3 border-b pb-4 sm:mb-4 sm:flex-row sm:items-center sm:justify-between">
       {/* Desktop: Filter + Select on left */}
       <div className="hidden sm:flex sm:items-center sm:gap-3">
         <Button
@@ -62,84 +61,72 @@ export function ControlsBar({
 
         {/* Select Button - Desktop Only */}
         {showSelectButton && onToggleSelection && (
-          <Button
-            variant={isSelectionMode ? 'default' : 'outline'}
-            onClick={onToggleSelection}
-          >
+          <Button variant={isSelectionMode ? 'default' : 'outline'} onClick={onToggleSelection}>
             {isSelectionMode ? 'Exit Selection' : 'Select'}
           </Button>
         )}
       </div>
 
-      {/* Mobile: View picker on left, action buttons on right */}
-      <div className="flex items-center justify-between sm:hidden">
-        <ToggleGroup
-          type="single"
-          value={isHydrated ? (viewMode === 'list' ? 'list' : 'grid') : undefined}
-          onValueChange={(value) => {
-            if (value && isHydrated) {
-              onViewModeChange(value === 'list' ? 'list' : 'compact');
+      {/* Mobile: Action buttons on left */}
+      {showMobileActions && (
+        <div className="flex items-center gap-1 sm:hidden">
+          {showSelectButton && onToggleSelection && (
+            <Button
+              variant={isSelectionMode ? 'default' : 'outline'}
+              size="sm"
+              onClick={onToggleSelection}
+            >
+              {isSelectionMode ? 'Done' : 'Select'}
+            </Button>
+          )}
+          {onAddAction && (
+            <Button size="sm" onClick={onAddAction}>
+              <Plus className="h-4 w-4" />
+              <span className="sr-only">Add</span>
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* Unified View Mode Toggle - Works on mobile and desktop */}
+      <div className="flex items-center gap-2">
+        <span className="hidden text-sm text-muted-foreground sm:inline">View:</span>
+        <button
+          onClick={() => {
+            if (isHydrated) {
+              onViewModeChange(viewMode === 'list' ? 'grid' : 'list');
             }
           }}
           disabled={!isHydrated}
-          className={cn("gap-1", !isHydrated && "opacity-50 cursor-not-allowed")}
+          className={cn(
+            'inline-flex min-h-[44px] items-center justify-center gap-1 rounded-md bg-muted p-1 text-muted-foreground',
+            !isHydrated && 'cursor-not-allowed opacity-50'
+          )}
+          aria-label={`Switch to ${viewMode === 'list' ? 'grid' : 'list'} view`}
         >
-          <ToggleGroupItem value="list" aria-label="List view" className="h-8 px-2">
-            <List className="h-4 w-4" />
-          </ToggleGroupItem>
-          <ToggleGroupItem value="grid" aria-label="Grid view" className="h-8 px-2">
-            <LayoutGrid className="h-4 w-4" />
-          </ToggleGroupItem>
-        </ToggleGroup>
-
-        {showMobileActions && (
-          <div className="flex items-center gap-1">
-            {showSelectButton && onToggleSelection && (
-              <Button
-                variant={isSelectionMode ? 'default' : 'outline'}
-                size="sm"
-                onClick={onToggleSelection}
-              >
-                {isSelectionMode ? 'Done' : 'Select'}
-              </Button>
+          <div
+            className={cn(
+              'inline-flex min-h-[36px] min-w-[44px] items-center justify-center rounded-sm px-3 text-sm font-medium transition-all',
+              viewMode === 'list'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground'
             )}
-            {onAddAction && (
-              <Button size="sm" onClick={onAddAction}>
-                <Plus className="h-4 w-4" />
-                <span className="sr-only">Add</span>
-              </Button>
-            )}
+          >
+            <List className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">List</span>
           </div>
-        )}
-      </div>
-
-      {/* Desktop: View Mode Toggle */}
-      <div className="hidden sm:flex sm:items-center sm:gap-2">
-        <span className="text-sm text-muted-foreground">View:</span>
-        <ToggleGroup
-          type="single"
-          value={isHydrated ? viewMode : undefined}
-          onValueChange={(value) => {
-            if (value && isHydrated) {
-              onViewModeChange(value as ViewMode);
-            }
-          }}
-          disabled={!isHydrated}
-          className={cn("gap-1", !isHydrated && "opacity-50 cursor-not-allowed")}
-        >
-          <ToggleGroupItem value="list" aria-label="List view" className="h-8 px-3">
-            <List className="mr-2 h-4 w-4" />
-            List
-          </ToggleGroupItem>
-          <ToggleGroupItem value="compact" aria-label="Compact grid" className="h-8 px-3">
-            <LayoutGrid className="mr-2 h-4 w-4" />
-            Compact
-          </ToggleGroupItem>
-          <ToggleGroupItem value="comfortable" aria-label="Comfortable grid" className="h-8 px-3">
-            <LayoutList className="mr-2 h-4 w-4" />
-            Comfortable
-          </ToggleGroupItem>
-        </ToggleGroup>
+          <div
+            className={cn(
+              'inline-flex min-h-[36px] min-w-[44px] items-center justify-center rounded-sm px-3 text-sm font-medium transition-all',
+              viewMode === 'grid'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground'
+            )}
+          >
+            <Grid2x2 className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Grid</span>
+          </div>
+        </button>
       </div>
     </div>
   );

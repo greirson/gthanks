@@ -9,6 +9,29 @@ import { TextDecoder, TextEncoder } from 'util';
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
+// Mock @prisma/client Prisma namespace FIRST (before any Prisma usage)
+// This ensures instanceof checks work correctly in service layer
+class PrismaClientKnownRequestError extends Error {
+  constructor(message, { code, clientVersion, meta }) {
+    super(message);
+    this.name = 'PrismaClientKnownRequestError';
+    this.code = code;
+    this.clientVersion = clientVersion || '5.22.0';
+    this.meta = meta || {};
+  }
+}
+
+jest.mock('@prisma/client', () => {
+  const actual = jest.requireActual('@prisma/client');
+  return {
+    ...actual,
+    Prisma: {
+      ...actual.Prisma,
+      PrismaClientKnownRequestError,
+    },
+  };
+});
+
 // Add setImmediate polyfill for Node.js compatibility
 if (typeof global.setImmediate === 'undefined') {
   global.setImmediate = (callback, ...args) => {
@@ -81,7 +104,8 @@ const mockDb = {
       return Promise.resolve(users);
     }),
     create: jest.fn().mockImplementation((data) => {
-      const id = data.data.id || `user-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+      const id =
+        data.data.id || `user-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
       const user = {
         id,
         email: data.data.email || 'test@example.com',
@@ -91,6 +115,10 @@ const mockDb = {
         avatarUrl: data.data.avatarUrl !== undefined ? data.data.avatarUrl : null,
         role: data.data.role || 'user',
         isAdmin: data.data.isAdmin || false,
+        username: data.data.username !== undefined ? data.data.username : null,
+        usernameSetAt: data.data.usernameSetAt !== undefined ? data.data.usernameSetAt : null,
+        canUseVanityUrls:
+          data.data.canUseVanityUrls !== undefined ? data.data.canUseVanityUrls : true,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -100,6 +128,27 @@ const mockDb = {
     update: jest.fn().mockImplementation((args) => {
       const existing = mockDataStore.users.get(args.where.id);
       if (!existing) return Promise.resolve(null);
+
+      // Check for unique username constraint
+      if (args.data.username !== undefined && args.data.username !== null) {
+        const duplicateUsername = Array.from(mockDataStore.users.values()).find(
+          (u) =>
+            u.id !== args.where.id && u.username?.toLowerCase() === args.data.username.toLowerCase()
+        );
+        if (duplicateUsername) {
+          // Create a proper Prisma unique constraint error using the mocked class
+          const error = new PrismaClientKnownRequestError(
+            'Unique constraint failed on the fields: (`username`)',
+            {
+              code: 'P2002',
+              clientVersion: '5.22.0',
+              meta: { target: ['username'] },
+            }
+          );
+          return Promise.reject(error);
+        }
+      }
+
       const updated = {
         ...existing,
         ...args.data,
@@ -490,6 +539,66 @@ const mockDb = {
       }
       return Promise.resolve(lists);
     }),
+    findFirst: jest.fn().mockImplementation((args) => {
+      mockDataStore.lists = mockDataStore.lists || new Map();
+      let lists = Array.from(mockDataStore.lists.values());
+
+      if (args?.where) {
+        // Filter by slug
+        if (args.where.slug) {
+          const slug =
+            typeof args.where.slug === 'string' ? args.where.slug.toLowerCase() : args.where.slug;
+          lists = lists.filter((l) => l.slug?.toLowerCase() === slug);
+        }
+
+        // Filter by owner username
+        if (args.where.owner?.username) {
+          const username = args.where.owner.username.toLowerCase();
+          lists = lists.filter((l) => {
+            const owner = mockDataStore.users.get(l.ownerId);
+            return owner?.username?.toLowerCase() === username;
+          });
+        }
+
+        // Filter by visibility (NOT private)
+        if (args.where.visibility?.not) {
+          lists = lists.filter((l) => l.visibility !== args.where.visibility.not);
+        }
+
+        // Filter by hideFromProfile
+        if (args.where.hideFromProfile === false) {
+          lists = lists.filter((l) => !l.hideFromProfile);
+        }
+      }
+
+      const list = lists[0] || null;
+
+      if (!list) return Promise.resolve(null);
+
+      // Handle includes
+      if (args.include) {
+        const result = { ...list };
+
+        if (args.include.owner) {
+          const owner = mockDataStore.users.get(list.ownerId);
+          if (owner && args.include.owner.select) {
+            const selectedOwner = {};
+            Object.keys(args.include.owner.select).forEach((key) => {
+              if (args.include.owner.select[key] && owner[key] !== undefined) {
+                selectedOwner[key] = owner[key];
+              }
+            });
+            result.owner = selectedOwner;
+          } else {
+            result.owner = owner || null;
+          }
+        }
+
+        return Promise.resolve(result);
+      }
+
+      return Promise.resolve(list);
+    }),
     findUnique: jest.fn().mockImplementation((args) => {
       mockDataStore.lists = mockDataStore.lists || new Map();
       let list = null;
@@ -572,7 +681,8 @@ const mockDb = {
       return Promise.resolve(list);
     }),
     create: jest.fn().mockImplementation((data) => {
-      const id = data.data.id || `list-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+      const id =
+        data.data.id || `list-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
       const list = {
         id,
         name: data.data.name,
@@ -580,6 +690,9 @@ const mockDb = {
         visibility: data.data.visibility || 'private',
         password: data.data.password || null,
         shareToken: data.data.shareToken || null,
+        slug: data.data.slug !== undefined ? data.data.slug : null,
+        hideFromProfile:
+          data.data.hideFromProfile !== undefined ? data.data.hideFromProfile : false,
         ownerId: data.data.ownerId,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -600,6 +713,29 @@ const mockDb = {
       mockDataStore.lists = mockDataStore.lists || new Map();
       const existing = mockDataStore.lists.get(args.where.id);
       if (!existing) return Promise.resolve(null);
+
+      // Check for unique slug constraint (per owner)
+      if (args.data.slug !== undefined && args.data.slug !== null) {
+        const duplicateSlug = Array.from(mockDataStore.lists.values()).find(
+          (l) =>
+            l.id !== args.where.id &&
+            l.ownerId === existing.ownerId &&
+            l.slug?.toLowerCase() === args.data.slug.toLowerCase()
+        );
+        if (duplicateSlug) {
+          // Create a proper Prisma unique constraint error using the mocked class
+          const error = new PrismaClientKnownRequestError(
+            'Unique constraint failed on the fields: (`slug`,`ownerId`)',
+            {
+              code: 'P2002',
+              clientVersion: '5.22.0',
+              meta: { target: ['slug', 'ownerId'] },
+            }
+          );
+          return Promise.reject(error);
+        }
+      }
+
       const updated = {
         ...existing,
         ...args.data,
@@ -714,7 +850,8 @@ const mockDb = {
   },
   wish: {
     create: jest.fn().mockImplementation((data) => {
-      const id = data.data.id || `wish-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+      const id =
+        data.data.id || `wish-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
       const wish = {
         id,
         title: data.data.title,
@@ -833,7 +970,8 @@ const mockDb = {
   },
   reservation: {
     create: jest.fn().mockImplementation((data) => {
-      const id = data.data.id || `reservation-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+      const id =
+        data.data.id || `reservation-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
       const reservation = {
         id,
         wishId: data.data.wishId,
@@ -1059,12 +1197,14 @@ const mockDb = {
 
           // Check identifier startsWith filter
           if (args.where.identifier?.startsWith) {
-            shouldDelete = shouldDelete && token.identifier.startsWith(args.where.identifier.startsWith);
+            shouldDelete =
+              shouldDelete && token.identifier.startsWith(args.where.identifier.startsWith);
           }
 
           // Check expires lt filter
           if (args.where.expires?.lt) {
-            shouldDelete = shouldDelete && new Date(token.expires) < new Date(args.where.expires.lt);
+            shouldDelete =
+              shouldDelete && new Date(token.expires) < new Date(args.where.expires.lt);
           }
 
           if (shouldDelete) {
@@ -1072,7 +1212,7 @@ const mockDb = {
           }
         }
 
-        tokensToDelete.forEach(key => {
+        tokensToDelete.forEach((key) => {
           mockDataStore.verificationTokens.delete(key);
           count++;
         });
@@ -1146,7 +1286,8 @@ const mockDb = {
 
           // Check expiresAt lt filter
           if (args.where.expiresAt?.lt) {
-            shouldDelete = shouldDelete && new Date(magicLink.expiresAt) < new Date(args.where.expiresAt.lt);
+            shouldDelete =
+              shouldDelete && new Date(magicLink.expiresAt) < new Date(args.where.expiresAt.lt);
           }
 
           if (shouldDelete) {
@@ -1154,7 +1295,7 @@ const mockDb = {
           }
         }
 
-        linksToDelete.forEach(token => {
+        linksToDelete.forEach((token) => {
           mockDataStore.magicLinks.delete(token);
           count++;
         });
@@ -1203,9 +1344,7 @@ const mockDb = {
       if (args.where.sessionToken) {
         session = mockDataStore.sessions.get(args.where.sessionToken);
       } else if (args.where.id) {
-        session = Array.from(mockDataStore.sessions.values()).find(
-          (s) => s.id === args.where.id
-        );
+        session = Array.from(mockDataStore.sessions.values()).find((s) => s.id === args.where.id);
       }
 
       if (!session) return Promise.resolve(null);
@@ -1255,7 +1394,10 @@ const mockDb = {
           if (args.where.userId && session.userId === args.where.userId) {
             shouldDelete = true;
           }
-          if (args.where.expires?.lt && new Date(session.expires) < new Date(args.where.expires.lt)) {
+          if (
+            args.where.expires?.lt &&
+            new Date(session.expires) < new Date(args.where.expires.lt)
+          ) {
             shouldDelete = true;
           }
           if (shouldDelete) {
@@ -1576,7 +1718,7 @@ const mockDb = {
 
         if (data.include?.invitation && log.invitationId) {
           const invitation = mockDataStore.groupInvitations.get(log.invitationId);
-          // @ts-ignore - Dynamic property based on include
+          // @ts-expect-error - Dynamic property based on Prisma include
           result.invitation = invitation || null;
         }
 
@@ -2298,7 +2440,7 @@ mockDb.listWish = {
     const listWish = {
       listId: data.data.listId,
       wishId: data.data.wishId,
-      addedAt: new Date()
+      addedAt: new Date(),
     };
     mockDataStore.listWishes = mockDataStore.listWishes || new Map();
     mockDataStore.listWishes.set(key, listWish);
@@ -2309,10 +2451,10 @@ mockDb.listWish = {
     let results = Array.from(listWishes.values());
     if (args?.where) {
       if (args.where.listId) {
-        results = results.filter(lw => lw.listId === args.where.listId);
+        results = results.filter((lw) => lw.listId === args.where.listId);
       }
       if (args.where.wishId) {
-        results = results.filter(lw => lw.wishId === args.where.wishId);
+        results = results.filter((lw) => lw.wishId === args.where.wishId);
       }
     }
     return Promise.resolve(results);
@@ -2339,7 +2481,7 @@ mockDb.listWish = {
       }
     }
     return Promise.resolve({ count });
-  })
+  }),
 };
 
 // Also ensure listWishes is cleared on reset

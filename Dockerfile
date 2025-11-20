@@ -24,7 +24,8 @@ COPY package.json pnpm-lock.yaml ./
 COPY prisma ./prisma/
 
 # Set build-time database config for Prisma generation during install
-ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+# Use SQLite URL to match schema provider
+ENV DATABASE_URL="file:./dev.db"
 # Skip Prisma postinstall generation (we'll do it explicitly in builder stage)
 ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
 
@@ -44,7 +45,8 @@ RUN npx prisma generate
 
 # Build the application
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+# Use SQLite URL for build (matches schema provider)
+ENV DATABASE_URL="file:./dev.db"
 RUN pnpm build
 
 # Production stage
@@ -94,8 +96,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV HOME=/app
 ENV npm_config_cache=/tmp/.npm
 
-# Create data directory for SQLite (if used)
-RUN mkdir -p /app/data && chown nextjs:nodejs /app/data
+# Create data directory for SQLite (if used) and uploads directory
+RUN mkdir -p /app/data /app/uploads && chown nextjs:nodejs /app/data /app/uploads
 
 # Expose port
 EXPOSE 3000

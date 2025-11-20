@@ -428,6 +428,113 @@ export class ListInvitationService {
       status: 'pending' as const,
     }));
   }
+
+  /**
+   * Remove co-manager from list
+   */
+  async removeCoManager(listId: string, targetUserId: string, userId: string): Promise<void> {
+    // Check permissions - only list owners can remove co-managers
+    await permissionService.require(userId, 'admin', { type: 'list', id: listId });
+
+    // Verify list exists
+    const list = await this.db.list.findUnique({
+      where: { id: listId },
+      select: { id: true, name: true, ownerId: true },
+    });
+
+    if (!list) {
+      throw new NotFoundError('List not found');
+    }
+
+    // Prevent owner from removing themselves
+    if (targetUserId === userId) {
+      throw new ValidationError('Cannot remove yourself from the list');
+    }
+
+    // Check if target user is actually a co-manager
+    const existingAdmin = await this.db.listAdmin.findUnique({
+      where: {
+        listId_userId: {
+          listId,
+          userId: targetUserId,
+        },
+      },
+    });
+
+    if (!existingAdmin) {
+      throw new NotFoundError('User is not a co-manager of this list');
+    }
+
+    // Remove user as co-manager
+    await this.db.listAdmin.delete({
+      where: {
+        listId_userId: {
+          listId,
+          userId: targetUserId,
+        },
+      },
+    });
+  }
+
+  /**
+   * Get all co-managers for a list with details
+   */
+  async getListCoManagers(
+    listId: string,
+    userId: string
+  ): Promise<
+    Array<{
+      userId: string;
+      user: {
+        id: string;
+        name: string | null;
+        email: string;
+        image: string | null;
+      };
+      addedAt: Date;
+      addedBy: {
+        id: string;
+        name: string | null;
+      };
+    }>
+  > {
+    // Check permission to view list (any access allows viewing admins)
+    await permissionService.require(userId, 'view', { type: 'list', id: listId });
+
+    // Retrieve all co-managers with user details and metadata
+    const admins = await this.db.listAdmin.findMany({
+      where: { listId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
+        },
+      },
+      orderBy: { addedAt: 'asc' },
+    });
+
+    // Get the addedBy user details for each admin
+    const adminUserIds = admins.map((admin) => admin.addedBy);
+    const addedByUsers = await this.db.user.findMany({
+      where: { id: { in: adminUserIds } },
+      select: { id: true, name: true },
+    });
+
+    // Create a map for quick lookup
+    const addedByUsersMap = new Map(addedByUsers.map((user) => [user.id, user]));
+
+    // Transform the response to match the required format
+    return admins.map((admin) => ({
+      userId: admin.userId,
+      user: admin.user,
+      addedAt: admin.addedAt,
+      addedBy: addedByUsersMap.get(admin.addedBy) || { id: admin.addedBy, name: null },
+    }));
+  }
 }
 
 // Export singleton instance

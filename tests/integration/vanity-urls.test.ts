@@ -53,9 +53,9 @@ describe('Vanity URLs Integration Tests', () => {
         },
       });
 
-      await expect(
-        userService.setUsername(otherUser.id, 'duplicate')
-      ).rejects.toThrow(ConflictError);
+      await expect(userService.setUsername(otherUser.id, 'duplicate')).rejects.toThrow(
+        ConflictError
+      );
 
       await db.user.delete({ where: { id: otherUser.id } });
     });
@@ -63,9 +63,7 @@ describe('Vanity URLs Integration Tests', () => {
     it('should reject if user already has username', async () => {
       await userService.setUsername(testUser.id, 'first');
 
-      await expect(
-        userService.setUsername(testUser.id, 'second')
-      ).rejects.toThrow(ConflictError);
+      await expect(userService.setUsername(testUser.id, 'second')).rejects.toThrow(ConflictError);
     });
 
     it('should reject if user does not have vanity URL access', async () => {
@@ -76,9 +74,9 @@ describe('Vanity URLs Integration Tests', () => {
         },
       });
 
-      await expect(
-        userService.setUsername(noAccessUser.id, 'username')
-      ).rejects.toThrow(ForbiddenError);
+      await expect(userService.setUsername(noAccessUser.id, 'username')).rejects.toThrow(
+        ForbiddenError
+      );
 
       await db.user.delete({ where: { id: noAccessUser.id } });
     });
@@ -143,9 +141,9 @@ describe('Vanity URLs Integration Tests', () => {
         },
       });
 
-      await expect(
-        listService.setSlug(otherList.id, testUser.id, 'duplicate')
-      ).rejects.toThrow(ConflictError);
+      await expect(listService.setSlug(otherList.id, testUser.id, 'duplicate')).rejects.toThrow(
+        ConflictError
+      );
 
       await db.list.delete({ where: { id: otherList.id } });
     });
@@ -181,12 +179,13 @@ describe('Vanity URLs Integration Tests', () => {
       const otherUser = await db.user.create({
         data: {
           email: 'other@example.com',
+          canUseVanityUrls: true,
         },
       });
 
-      await expect(
-        listService.setSlug(testList.id, otherUser.id, 'slug')
-      ).rejects.toThrow(ForbiddenError);
+      await expect(listService.setSlug(testList.id, otherUser.id, 'slug')).rejects.toThrow(
+        ForbiddenError
+      );
 
       await db.user.delete({ where: { id: otherUser.id } });
     });

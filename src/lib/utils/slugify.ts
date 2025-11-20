@@ -1,3 +1,5 @@
+import { RESERVED_SLUGS } from '@/lib/constants/reserved-words';
+
 /**
  * Converts text to URL-friendly slug format with unicode support
  *
@@ -38,9 +40,6 @@ export function slugify(text: string): string {
  * generateSlugFromListName('My Super Long List Name That Goes On Forever') // truncated to 70 chars
  */
 export function generateSlugFromListName(name: string): string {
-  // Import reserved slugs dynamically to avoid circular dependencies
-  const { RESERVED_SLUGS } = require('@/lib/constants/reserved-words');
-
   // 1. Handle empty strings
   if (!name || name.trim() === '') {
     return 'untitled';

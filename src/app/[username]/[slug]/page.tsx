@@ -1,8 +1,9 @@
 'use client';
 
 import { Wish } from '@prisma/client';
+import { Wish as ApiWish } from '@/lib/validators/api-responses/wishes';
 import { useQuery } from '@tanstack/react-query';
-import { Eye, Lock, ArrowLeft, X, Info } from 'lucide-react';
+import { Lock, ArrowLeft, X, Info } from 'lucide-react';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -10,7 +11,6 @@ import { useParams } from 'next/navigation';
 
 import { ReservationDialog } from '@/components/reservations/reservation-dialog';
 import { SimpleThemeToggle } from '@/components/theme/simple-theme-toggle';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { FilteredWishesDisplay } from '@/components/wishes/filtered-wishes-display';
 import { reservationsApi } from '@/lib/api/reservations';
+import { PublicGiftCardSection } from '@/components/lists/PublicGiftCardSection';
 
 interface ApiError {
   response?: {
@@ -39,6 +40,7 @@ interface ListResponse {
   slug: string | null;
   hideFromProfile: boolean;
   shareToken: string | null;
+  giftCardPreferences?: string | null;
   owner: {
     id: string;
     name: string | null;
@@ -73,11 +75,13 @@ async function fetchListByVanityUrl(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Failed to fetch list' }));
-    throw new Error(error.error || 'Failed to fetch list');
+    const error: { error?: string } = await response
+      .json()
+      .catch(() => ({ error: 'Failed to fetch list' }));
+    throw new Error(error.error ?? 'Failed to fetch list');
   }
 
-  return response.json();
+  return response.json() as Promise<ListResponse>;
 }
 
 export default function PublicListVanityUrlPage() {
@@ -89,7 +93,7 @@ export default function PublicListVanityUrlPage() {
   const [password, setPassword] = useState('');
   const [passwordSubmitted, setPasswordSubmitted] = useState(false);
   const [showReservationDialog, setShowReservationDialog] = useState(false);
-  const [selectedWish, setSelectedWish] = useState<Wish | null>(null);
+  const [selectedWish, setSelectedWish] = useState<ApiWish | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
@@ -107,7 +111,7 @@ export default function PublicListVanityUrlPage() {
       try {
         const response = await fetch('/api/user/profile');
         if (response.ok) {
-          const userData = await response.json();
+          const userData: { id: string } = await response.json();
           setCurrentUserId(userData.id);
         }
       } catch {
@@ -174,7 +178,7 @@ export default function PublicListVanityUrlPage() {
     }
   };
 
-  const handleReserveWish = (wish: Wish) => {
+  const handleReserveWish = (wish: ApiWish) => {
     setSelectedWish(wish);
     setShowReservationDialog(true);
   };
@@ -227,7 +231,7 @@ export default function PublicListVanityUrlPage() {
               <p className="text-muted-foreground">This list requires a password to view</p>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handlePasswordSubmit} className="space-y-4">
+              <form onSubmit={(e) => void handlePasswordSubmit(e)} className="space-y-4">
                 <div>
                   <Label htmlFor="password">Password</Label>
                   <Input
@@ -272,7 +276,7 @@ export default function PublicListVanityUrlPage() {
         <div className="text-center">
           <h1 className="mb-4 text-2xl font-bold">List not found</h1>
           <p className="mb-6 text-muted-foreground">
-            The list you{"'"}re looking for doesn{"'"}t exist or is no longer available.
+            The list you&apos;re looking for doesn&apos;t exist or is no longer available.
           </p>
         </div>
       </div>
@@ -324,7 +328,7 @@ export default function PublicListVanityUrlPage() {
             <X className="h-5 w-5" />
           </button>
 
-          <CardContent className="pt-6 pr-12">
+          <CardContent className="pr-12 pt-6">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-info/10">
@@ -340,12 +344,14 @@ export default function PublicListVanityUrlPage() {
                 <p className="text-sm text-muted-foreground">
                   {currentUserId === list.owner.id ? (
                     <>
-                      This is how others see your wishlist. They can reserve items, but you can't
-                      reserve your own wishes.
+                      This is how others see your wishlist. They can reserve items, but you
+                      can&apos;t reserve your own wishes.
                     </>
                   ) : (
                     <>
-                      Click the "Reserve" button on any item you plan to buy. Your name stays hidden from {list.owner.name} until after the gift is given. This prevents duplicate gifts!
+                      Click the &quot;Reserve&quot; button on any item you plan to buy. Your name
+                      stays hidden from {list.owner.name} until after the gift is given. This
+                      prevents duplicate gifts!
                     </>
                   )}
                 </p>
@@ -355,6 +361,9 @@ export default function PublicListVanityUrlPage() {
         </Card>
       )}
 
+      {/* Gift Cards Section */}
+      <PublicGiftCardSection list={list} />
+
       {/* Wishes Display with Filtering and View Toggle */}
       <FilteredWishesDisplay
         wishes={
@@ -362,9 +371,7 @@ export default function PublicListVanityUrlPage() {
             id: listWish.wish.id,
             ownerId: list.owner.id,
             createdAt: new Date(listWish.wish.createdAt).toISOString(),
-            updatedAt: new Date(
-              listWish.wish.updatedAt || listWish.wish.createdAt
-            ).toISOString(),
+            updatedAt: new Date(listWish.wish.updatedAt || listWish.wish.createdAt).toISOString(),
             title: listWish.wish.title,
             color: listWish.wish.color,
             size: listWish.wish.size,
@@ -381,7 +388,7 @@ export default function PublicListVanityUrlPage() {
             isOwner: currentUserId === list.owner.id,
           })) || []
         }
-        onReserve={handleReserveWish as any}
+        onReserve={(wish) => handleReserveWish(wish)}
         reservedWishIds={
           reservations
             ? Object.keys(reservations).filter((wishId) => reservations[wishId].isReserved)
@@ -393,13 +400,15 @@ export default function PublicListVanityUrlPage() {
       />
 
       {/* Reservation Dialog */}
-      <ReservationDialog
-        wish={selectedWish as any}
-        open={showReservationDialog}
-        onOpenChange={setShowReservationDialog}
-        shareToken={list.shareToken || undefined}
-        isAuthenticated={false}
-      />
+      {selectedWish && (
+        <ReservationDialog
+          wish={selectedWish}
+          open={showReservationDialog}
+          onOpenChange={setShowReservationDialog}
+          shareToken={list.shareToken ?? undefined}
+          isAuthenticated={false}
+        />
+      )}
     </div>
   );
 }

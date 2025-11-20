@@ -18,6 +18,7 @@ SQLite is excellent for local development but not suitable for production with c
 Choose a PostgreSQL provider:
 
 **Option A: Neon (Recommended for Serverless)**
+
 ```bash
 # Sign up at https://neon.tech
 # Create new project
@@ -25,6 +26,7 @@ Choose a PostgreSQL provider:
 ```
 
 **Option B: Supabase**
+
 ```bash
 # Sign up at https://supabase.com
 # Create new project
@@ -33,6 +35,7 @@ Choose a PostgreSQL provider:
 ```
 
 **Option C: Railway**
+
 ```bash
 # Sign up at https://railway.app
 # Add PostgreSQL service
@@ -40,6 +43,7 @@ Choose a PostgreSQL provider:
 ```
 
 **Option D: Local PostgreSQL**
+
 ```bash
 # Install PostgreSQL
 brew install postgresql@15  # macOS
@@ -120,12 +124,12 @@ npx prisma generate --schema=prisma/schema.sqlite.prisma
 
 Prisma handles most differences automatically, but be aware:
 
-| SQLite | PostgreSQL | Notes |
-|--------|------------|-------|
-| TEXT | VARCHAR/TEXT | No change needed |
-| INTEGER | INTEGER | No change needed |
-| REAL | DOUBLE PRECISION | No change needed |
-| BLOB | BYTEA | No change needed |
+| SQLite  | PostgreSQL       | Notes            |
+| ------- | ---------------- | ---------------- |
+| TEXT    | VARCHAR/TEXT     | No change needed |
+| INTEGER | INTEGER          | No change needed |
+| REAL    | DOUBLE PRECISION | No change needed |
+| BLOB    | BYTEA            | No change needed |
 
 ### Indexes
 
@@ -142,6 +146,7 @@ All Prisma queries are database-agnostic. Your application code works without ch
 **Symptom**: `Error: Can't reach database server`
 
 **Solution**:
+
 1. Verify PostgreSQL is running
 2. Check connection string is correct
 3. Ensure firewall allows connections
@@ -152,6 +157,7 @@ All Prisma queries are database-agnostic. Your application code works without ch
 **Symptom**: `Error: SSL connection required`
 
 **Solution**: Add `?sslmode=require` to connection string:
+
 ```env
 DATABASE_URL=postgresql://user:pass@host:5432/db?schema=public&sslmode=require
 ```
@@ -161,6 +167,7 @@ DATABASE_URL=postgresql://user:pass@host:5432/db?schema=public&sslmode=require
 **Symptom**: `Error: Schema 'public' does not exist`
 
 **Solution**: PostgreSQL should create the `public` schema automatically. If not:
+
 ```sql
 CREATE SCHEMA IF NOT EXISTS public;
 ```
@@ -170,6 +177,7 @@ CREATE SCHEMA IF NOT EXISTS public;
 **Symptom**: `npx prisma db push` fails
 
 **Solution**:
+
 1. Check database permissions (user needs CREATE TABLE)
 2. Verify database exists
 3. Check connection string format
@@ -180,16 +188,19 @@ CREATE SCHEMA IF NOT EXISTS public;
 For production deployments, use connection pooling:
 
 **Neon**: Use pooled connection string
+
 ```env
 DATABASE_URL=postgresql://user:pass@ep-xxx-pooler.us-east-1.aws.neon.tech/gthanks
 ```
 
 **Supabase**: Use connection pooling port (6543)
+
 ```env
 DATABASE_URL=postgresql://postgres:pass@db.xxx.supabase.co:6543/postgres
 ```
 
 **PgBouncer** (self-hosted):
+
 ```bash
 # Install PgBouncer
 brew install pgbouncer
@@ -213,6 +224,7 @@ datasource db {
 ```
 
 Then in `.env`:
+
 ```env
 DATABASE_URL=postgresql://pooled-connection
 DIRECT_URL=postgresql://direct-connection
@@ -234,11 +246,13 @@ LIMIT 10;
 If you need to revert to SQLite:
 
 1. Update `prisma/schema.prisma`:
+
    ```prisma
    provider = "sqlite"
    ```
 
 2. Update `.env`:
+
    ```env
    DATABASE_URL=file:./data/gthanks.db
    ```

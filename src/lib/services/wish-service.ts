@@ -273,9 +273,7 @@ export class WishService {
     const unauthorizedIds = wishIds.filter((id) => !ownedWishIds.includes(id));
 
     if (unauthorizedIds.length > 0) {
-      throw new ForbiddenError(
-        `Cannot add wishes you don't own: ${unauthorizedIds.join(', ')}`
-      );
+      throw new ForbiddenError(`Cannot add wishes you don't own: ${unauthorizedIds.join(', ')}`);
     }
 
     // Add to list in transaction
@@ -314,9 +312,7 @@ export class WishService {
     const unauthorizedIds = wishIds.filter((id) => !ownedWishIds.includes(id));
 
     if (unauthorizedIds.length > 0) {
-      throw new ForbiddenError(
-        `Cannot delete wishes you don't own: ${unauthorizedIds.join(', ')}`
-      );
+      throw new ForbiddenError(`Cannot delete wishes you don't own: ${unauthorizedIds.join(', ')}`);
     }
 
     // Delete in transaction
@@ -335,14 +331,11 @@ export class WishService {
         try {
           await imageProcessor.deleteImage(wish.localImagePath);
         } catch (error) {
-          console.error(
-            'Failed to delete local image file during bulk wish deletion:',
-            {
-              wishId: wish.id,
-              localImagePath: wish.localImagePath,
-              error,
-            }
-          );
+          console.error('Failed to delete local image file during bulk wish deletion:', {
+            wishId: wish.id,
+            localImagePath: wish.localImagePath,
+            error,
+          });
           // Continue to next image
         }
       }
@@ -365,9 +358,7 @@ export class WishService {
     const unauthorizedIds = wishIds.filter((id) => !ownedWishIds.includes(id));
 
     if (unauthorizedIds.length > 0) {
-      throw new ForbiddenError(
-        `Cannot remove wishes you don't own: ${unauthorizedIds.join(', ')}`
-      );
+      throw new ForbiddenError(`Cannot remove wishes you don't own: ${unauthorizedIds.join(', ')}`);
     }
 
     // Remove from all lists in transaction
@@ -376,6 +367,160 @@ export class WishService {
     });
 
     return { removed: result.count };
+  }
+
+  /**
+   * Get all lists that contain a wish (filtered to user's own lists)
+   */
+  async getWishLists(wishId: string, userId: string) {
+    // Verify user owns the wish
+    await permissionService.require(userId, 'view', { type: 'wish', id: wishId });
+
+    // Verify wish exists
+    const wish = await db.wish.findUnique({
+      where: { id: wishId },
+      select: { id: true, ownerId: true },
+    });
+
+    if (!wish) {
+      throw new NotFoundError('Wish not found');
+    }
+
+    // Get all lists this wish belongs to (filtered to user's own lists)
+    const listWishes = await db.listWish.findMany({
+      where: {
+        wishId,
+        list: {
+          ownerId: userId,
+        },
+      },
+      include: {
+        list: {
+          include: {
+            owner: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatarUrl: true,
+              },
+            },
+            _count: {
+              select: {
+                wishes: true,
+                admins: true,
+              },
+            },
+            admins: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    avatarUrl: true,
+                  },
+                },
+              },
+              orderBy: {
+                addedAt: 'asc',
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        addedAt: 'desc',
+      },
+    });
+
+    // Extract just the list data
+    return listWishes.map((lw) => lw.list);
+  }
+
+  /**
+   * Update which lists a wish belongs to (complete replacement)
+   */
+  async updateWishListMemberships(
+    wishId: string,
+    listIds: string[],
+    userId: string
+  ): Promise<{ success: boolean }> {
+    // Deduplicate list IDs
+    const uniqueListIds = [...new Set(listIds)];
+
+    // Verify user owns the wish
+    await permissionService.require(userId, 'edit', { type: 'wish', id: wishId });
+
+    // Verify wish exists
+    const wish = await db.wish.findUnique({
+      where: { id: wishId },
+      select: { id: true, ownerId: true },
+    });
+
+    if (!wish) {
+      throw new NotFoundError('Wish not found');
+    }
+
+    // Verify user owns all target lists
+    if (uniqueListIds.length > 0) {
+      const targetLists = await db.list.findMany({
+        where: { id: { in: uniqueListIds } },
+        select: { id: true, ownerId: true },
+      });
+
+      // Check if all requested lists exist
+      if (targetLists.length !== uniqueListIds.length) {
+        const foundIds = targetLists.map((l) => l.id);
+        const missingIds = uniqueListIds.filter((id) => !foundIds.includes(id));
+        throw new NotFoundError(`Lists not found: ${missingIds.join(', ')}`);
+      }
+
+      // Check if user owns all target lists
+      const unauthorizedLists = targetLists.filter((list) => list.ownerId !== userId);
+      if (unauthorizedLists.length > 0) {
+        throw new ForbiddenError(
+          `Cannot add wish to lists you don't own: ${unauthorizedLists.map((l) => l.id).join(', ')}`
+        );
+      }
+    }
+
+    // Transactionally update list memberships
+    await db.$transaction(async (tx) => {
+      // Get current list memberships
+      const currentMemberships = await tx.listWish.findMany({
+        where: { wishId },
+        select: { listId: true },
+      });
+
+      const currentListIds = currentMemberships.map((m) => m.listId);
+
+      // Calculate diff
+      const toRemove = currentListIds.filter((id) => !uniqueListIds.includes(id));
+      const toAdd = uniqueListIds.filter((id) => !currentListIds.includes(id));
+
+      // Remove wish from lists no longer selected
+      if (toRemove.length > 0) {
+        await tx.listWish.deleteMany({
+          where: {
+            wishId,
+            listId: { in: toRemove },
+          },
+        });
+      }
+
+      // Add wish to newly selected lists
+      if (toAdd.length > 0) {
+        await tx.listWish.createMany({
+          data: toAdd.map((listId) => ({
+            wishId,
+            listId,
+          })),
+        });
+      }
+    });
+
+    return { success: true };
   }
 
   /**

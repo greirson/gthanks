@@ -6,7 +6,7 @@ import { getCurrentUser } from '@/lib/auth-utils';
 import { db } from '@/lib/db';
 import { ForbiddenError, NotFoundError, ValidationError } from '@/lib/errors';
 import { permissionService } from '@/lib/services/permission-service';
-import { ListInvitationService } from '@/lib/services/list-invitation.service';
+import { listInvitationService } from '@/lib/services/list-invitation.service';
 import { createMockUser } from '@/lib/test-utils/mock-types';
 
 import { GET, POST } from './route';
@@ -20,7 +20,7 @@ jest.mock('@/lib/services/list-invitation.service');
 const mockGetCurrentUser = jest.mocked(getCurrentUser);
 const mockDb = jest.mocked(db);
 const mockPermissionService = jest.mocked(permissionService);
-const mockListInvitationService = jest.mocked(ListInvitationService);
+const mockListInvitationService = jest.mocked(listInvitationService);
 
 // Helper functions to create mock data
 const createMockList = (id: string, ownerId: string): List => ({
@@ -33,6 +33,7 @@ const createMockList = (id: string, ownerId: string): List => ({
   shareToken: null,
   slug: null,
   hideFromProfile: false,
+  giftCardPreferences: '[]',
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
 });
@@ -64,19 +65,34 @@ describe('GET /api/lists/[listId]/admins', () => {
   describe('Successful operations', () => {
     it('allows list owners to retrieve all co-managers with user details and metadata', async () => {
       mockGetCurrentUser.mockResolvedValue(mockOwner);
-      mockPermissionService.require.mockResolvedValue(undefined);
 
-      // Mock list admins
+      // Mock service to return admins
       const mockAdmins = [
-        createMockAdmin('list-1', 'co-manager-1', 'owner-1'),
-        createMockAdmin('list-1', 'co-manager-2', 'owner-1'),
+        {
+          userId: 'co-manager-1',
+          addedAt: new Date('2024-01-01'),
+          user: {
+            id: 'co-manager-1',
+            name: 'User co-manager-1',
+            email: 'userco-manager-1@example.com',
+            image: null,
+          },
+          addedBy: { id: 'owner-1', name: 'List Owner' },
+        },
+        {
+          userId: 'co-manager-2',
+          addedAt: new Date('2024-01-01'),
+          user: {
+            id: 'co-manager-2',
+            name: 'User co-manager-2',
+            email: 'userco-manager-2@example.com',
+            image: null,
+          },
+          addedBy: { id: 'owner-1', name: 'List Owner' },
+        },
       ];
 
-      mockDb.listAdmin.findMany.mockResolvedValue(mockAdmins as any);
-
-      // Mock addedBy users lookup
-      const mockAddedByUsers = [{ id: 'owner-1', name: 'List Owner' }];
-      mockDb.user.findMany.mockResolvedValue(mockAddedByUsers as any);
+      mockListInvitationService.getListCoManagers.mockResolvedValue(mockAdmins as any);
 
       const request = new NextRequest('http://localhost:3000/api/lists/list-1/admins');
       const response = await GET(request, { params: { listId: 'list-1' } });
@@ -96,54 +112,34 @@ describe('GET /api/lists/[listId]/admins', () => {
         addedBy: { id: 'owner-1', name: 'List Owner' },
       });
 
-      // Verify permission check was called
-      expect(mockPermissionService.require).toHaveBeenCalledWith(mockOwner.id, 'view', {
-        type: 'list',
-        id: 'list-1',
-      });
-
-      // Verify database queries
-      expect(mockDb.listAdmin.findMany).toHaveBeenCalledWith({
-        where: { listId: 'list-1' },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              image: true,
-            },
-          },
-        },
-        orderBy: { addedAt: 'asc' },
-      });
+      // Verify service was called
+      expect(mockListInvitationService.getListCoManagers).toHaveBeenCalledWith(
+        'list-1',
+        mockOwner.id
+      );
     });
 
     it('allows co-managers to view list admins', async () => {
       mockGetCurrentUser.mockResolvedValue(mockCoManager);
-      mockPermissionService.require.mockResolvedValue(undefined);
 
-      mockDb.listAdmin.findMany.mockResolvedValue([]);
-      mockDb.user.findMany.mockResolvedValue([]);
+      mockListInvitationService.getListCoManagers.mockResolvedValue([]);
 
       const request = new NextRequest('http://localhost:3000/api/lists/list-1/admins');
       const response = await GET(request, { params: { listId: 'list-1' } });
 
       expect(response.status).toBe(200);
 
-      // Verify permission check was called
-      expect(mockPermissionService.require).toHaveBeenCalledWith(mockCoManager.id, 'view', {
-        type: 'list',
-        id: 'list-1',
-      });
+      // Verify service was called
+      expect(mockListInvitationService.getListCoManagers).toHaveBeenCalledWith(
+        'list-1',
+        mockCoManager.id
+      );
     });
 
     it('returns empty array when list has no co-managers', async () => {
       mockGetCurrentUser.mockResolvedValue(mockOwner);
-      mockPermissionService.require.mockResolvedValue(undefined);
 
-      mockDb.listAdmin.findMany.mockResolvedValue([]);
-      mockDb.user.findMany.mockResolvedValue([]);
+      mockListInvitationService.getListCoManagers.mockResolvedValue([]);
 
       const request = new NextRequest('http://localhost:3000/api/lists/list-1/admins');
       const response = await GET(request, { params: { listId: 'list-1' } });
@@ -156,12 +152,25 @@ describe('GET /api/lists/[listId]/admins', () => {
 
     it('handles missing addedBy user gracefully', async () => {
       mockGetCurrentUser.mockResolvedValue(mockOwner);
-      mockPermissionService.require.mockResolvedValue(undefined);
 
-      const mockAdmins = [createMockAdmin('list-1', 'co-manager-1', 'deleted-user-1')];
+      const mockAdmins = [
+        {
+          userId: 'co-manager-1',
+          addedAt: new Date('2024-01-01'),
+          user: {
+            id: 'co-manager-1',
+            name: 'User co-manager-1',
+            email: 'userco-manager-1@example.com',
+            image: null,
+          },
+          addedBy: {
+            id: 'deleted-user-1',
+            name: null,
+          },
+        },
+      ];
 
-      mockDb.listAdmin.findMany.mockResolvedValue(mockAdmins as any);
-      mockDb.user.findMany.mockResolvedValue([]); // No addedBy users found
+      mockListInvitationService.getListCoManagers.mockResolvedValue(mockAdmins as any);
 
       const request = new NextRequest('http://localhost:3000/api/lists/list-1/admins');
       const response = await GET(request, { params: { listId: 'list-1' } });
@@ -197,25 +206,31 @@ describe('GET /api/lists/[listId]/admins', () => {
   describe('Authorization failures', () => {
     it('rejects users without list view permissions', async () => {
       mockGetCurrentUser.mockResolvedValue(mockUnauthorizedUser);
-      mockPermissionService.require.mockRejectedValue(
+
+      // Service throws ForbiddenError, but route returns 404 to prevent resource enumeration
+      mockListInvitationService.getListCoManagers.mockRejectedValue(
         new ForbiddenError('You do not have permission to view this list')
       );
 
       const request = new NextRequest('http://localhost:3000/api/lists/list-1/admins');
       const response = await GET(request, { params: { listId: 'list-1' } });
 
-      expect(response.status).toBe(403);
+      // Route returns 404 instead of 403 to prevent resource enumeration
+      expect(response.status).toBe(404);
 
       const data = await response.json();
-      expect(data.error).toBe("You don't have permission to do that");
-      expect(data.code).toBe('FORBIDDEN');
+      expect(data.error).toBe("We couldn't find what you're looking for");
+      expect(data.code).toBe('NOT_FOUND');
     });
   });
 
   describe('Edge cases', () => {
     it('handles list not found through permission service', async () => {
       mockGetCurrentUser.mockResolvedValue(mockOwner);
-      mockPermissionService.require.mockRejectedValue(new NotFoundError('List not found'));
+
+      mockListInvitationService.getListCoManagers.mockRejectedValue(
+        new NotFoundError('List not found')
+      );
 
       const request = new NextRequest('http://localhost:3000/api/lists/list-1/admins');
       const response = await GET(request, { params: { listId: 'list-1' } });
@@ -229,8 +244,10 @@ describe('GET /api/lists/[listId]/admins', () => {
 
     it('handles database errors gracefully', async () => {
       mockGetCurrentUser.mockResolvedValue(mockOwner);
-      mockPermissionService.require.mockResolvedValue(undefined);
-      mockDb.listAdmin.findMany.mockRejectedValue(new Error('Database connection failed'));
+
+      mockListInvitationService.getListCoManagers.mockRejectedValue(
+        new Error('Database connection failed')
+      );
 
       const request = new NextRequest('http://localhost:3000/api/lists/list-1/admins');
       const response = await GET(request, { params: { listId: 'list-1' } });
@@ -259,8 +276,8 @@ describe('POST /api/lists/[listId]/admins', () => {
     it('allows list owners to add co-managers by email', async () => {
       mockGetCurrentUser.mockResolvedValue(mockOwner);
 
-      // Mock ListInvitationService to return directlyAdded
-      mockListInvitationService.prototype.createInvitation.mockResolvedValue({
+      // Mock service to return directlyAdded
+      mockListInvitationService.createInvitation.mockResolvedValue({
         directlyAdded: true,
       });
 
@@ -283,7 +300,7 @@ describe('POST /api/lists/[listId]/admins', () => {
       });
 
       // Verify service was called (permission check is internal to service)
-      expect(mockListInvitationService.prototype.createInvitation).toHaveBeenCalledWith(
+      expect(mockListInvitationService.createInvitation).toHaveBeenCalledWith(
         'list-1',
         'target@example.com',
         mockOwner.id
@@ -317,7 +334,7 @@ describe('POST /api/lists/[listId]/admins', () => {
       mockGetCurrentUser.mockResolvedValue(mockCoManager);
 
       // Mock service to throw ForbiddenError (service handles permission check internally)
-      mockListInvitationService.prototype.createInvitation.mockRejectedValue(
+      mockListInvitationService.createInvitation.mockRejectedValue(
         new ForbiddenError('Only list owners can add co-managers')
       );
 
@@ -400,7 +417,7 @@ describe('POST /api/lists/[listId]/admins', () => {
       mockGetCurrentUser.mockResolvedValue(mockOwner);
 
       // Mock service to throw ValidationError for existing co-manager
-      mockListInvitationService.prototype.createInvitation.mockRejectedValue(
+      mockListInvitationService.createInvitation.mockRejectedValue(
         new ValidationError('User is already a co-manager of this list')
       );
 
@@ -424,7 +441,7 @@ describe('POST /api/lists/[listId]/admins', () => {
       mockGetCurrentUser.mockResolvedValue(mockOwner);
 
       // Mock service to return invitation sent (directlyAdded: false)
-      mockListInvitationService.prototype.createInvitation.mockResolvedValue({
+      mockListInvitationService.createInvitation.mockResolvedValue({
         directlyAdded: false,
       });
 
@@ -453,7 +470,7 @@ describe('POST /api/lists/[listId]/admins', () => {
       mockGetCurrentUser.mockResolvedValue(mockOwner);
 
       // Mock service to throw NotFoundError for list not found
-      mockListInvitationService.prototype.createInvitation.mockRejectedValue(
+      mockListInvitationService.createInvitation.mockRejectedValue(
         new NotFoundError('List not found')
       );
 
@@ -477,7 +494,7 @@ describe('POST /api/lists/[listId]/admins', () => {
       mockGetCurrentUser.mockResolvedValue(mockOwner);
 
       // Mock service to throw generic error
-      mockListInvitationService.prototype.createInvitation.mockRejectedValue(
+      mockListInvitationService.createInvitation.mockRejectedValue(
         new Error('Database connection failed')
       );
 

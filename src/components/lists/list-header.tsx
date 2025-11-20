@@ -25,26 +25,21 @@ export function ListHeader({
   className,
 }: ListHeaderProps) {
   return (
-    <div className={cn('flex flex-col items-center gap-2 pb-2 border-b text-center', className)}>
+    <div className={cn('flex flex-col items-center gap-2 border-b pb-2 text-center', className)}>
       {/* Title and description - Centered */}
-      <div className="max-w-2xl">
-        <h1 className="text-xl font-bold">{name}</h1>
+      <div className="w-full max-w-2xl px-4">
+        <h1 className="break-words text-xl font-bold">{name}</h1>
         {description && (
-          <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
+          <p className="mt-0.5 break-words text-sm text-muted-foreground">{description}</p>
         )}
       </div>
 
       {/* Metadata row - badges and counts - Centered */}
       <div className="flex flex-wrap items-center justify-center gap-2">
-        <Badge
-          variant="secondary"
-          className={getVisibilityColor(visibility, 'default')}
-        >
+        <Badge variant="secondary" className={getVisibilityColor(visibility, 'default')}>
           {visibility.charAt(0).toUpperCase() + visibility.slice(1)}
         </Badge>
-        {shareToken && (
-          <Badge variant="outline">Shareable</Badge>
-        )}
+        {shareToken && <Badge variant="outline">Shareable</Badge>}
         <span className="text-sm text-muted-foreground">
           {wishCount} {wishCount === 1 ? 'wish' : 'wishes'}
         </span>

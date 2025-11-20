@@ -40,7 +40,13 @@ function slugify(text: string): string {
     .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
 }
 
-export function ListForm({ list, onSuccess, onCancel, onDirtyStateChange, onOpenSharingSettings }: ListFormProps) {
+export function ListForm({
+  list,
+  onSuccess,
+  onCancel,
+  onDirtyStateChange,
+  onOpenSharingSettings,
+}: ListFormProps) {
   const router = useRouter();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -407,7 +413,10 @@ export function ListForm({ list, onSuccess, onCancel, onDirtyStateChange, onOpen
               {slug && (
                 <div className="rounded-lg border bg-muted/50 px-3 py-2">
                   <p className="text-xs text-muted-foreground">
-                    Preview: {isMounted ? `${window.location.origin}/${username}/${slug}` : `/${username}/${slug}`}
+                    Preview:{' '}
+                    {isMounted
+                      ? `${window.location.origin}/${username}/${slug}`
+                      : `/${username}/${slug}`}
                   </p>
                 </div>
               )}
@@ -423,7 +432,7 @@ export function ListForm({ list, onSuccess, onCancel, onDirtyStateChange, onOpen
               <div className="space-y-0.5">
                 <Label htmlFor="hideFromProfile">Hide from public profile</Label>
                 <p className="text-xs text-muted-foreground">
-                  List will still be accessible via its URL but won't appear on /{username}
+                  List will still be accessible via its URL but won&apos;t appear on /{username}
                 </p>
               </div>
               <Switch
@@ -451,16 +460,12 @@ export function ListForm({ list, onSuccess, onCancel, onDirtyStateChange, onOpen
               <p className="text-xs text-muted-foreground">
                 {formData.visibility === 'private' && 'Only you and co-managers can see this list'}
                 {formData.visibility === 'public' && 'Anyone with the link can see this list'}
-                {formData.visibility === 'password' && 'Anyone with the link and password can see this list'}
+                {formData.visibility === 'password' &&
+                  'Anyone with the link and password can see this list'}
               </p>
             </div>
             {onOpenSharingSettings && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={onOpenSharingSettings}
-              >
+              <Button type="button" variant="outline" size="sm" onClick={onOpenSharingSettings}>
                 Change Sharing
               </Button>
             )}

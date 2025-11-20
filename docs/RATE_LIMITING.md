@@ -21,22 +21,24 @@ Global rate limiting has been implemented to protect all API routes from abuse a
 
 ### Rate Limit Configuration
 
-| Category | Window | Max Requests | Notes |
-|----------|--------|--------------|-------|
-| **global-api** | 1 minute | 100 | Baseline protection for all API routes |
-| co-manager-invite | 1 hour | 10 | Prevent invitation spam |
-| co-manager-add | 1 hour | 20 | Prevent bulk additions |
-| co-manager-remove | 1 hour | 50 | Higher limit for removals |
-| invitation-accept | 1 minute | 5 | Prevent rapid acceptance attempts |
-| public-list-access | 1 minute | 20 | Anonymous list viewing |
-| public-reservation | 1 minute | 10 | Anonymous gift reservations |
-| public-list-password | 5 minutes | 5 | Brute-force protection |
-| email-add | 1 hour | 5 | Email addition rate limit |
-| email-verify | 1 hour | 20 | Verification attempts |
-| email-resend | 1 hour | 5 | Resend verification |
-| username-set | 1 hour | 5 | Username updates (per user) |
-| username-set-ip | 1 hour | 10 | Username updates (per IP) |
-| slug-set | 1 hour | 10 | Slug updates |
+| Category             | Window    | Max Requests | Notes                                  |
+| -------------------- | --------- | ------------ | -------------------------------------- |
+| **global-api**       | 1 minute  | 100          | Baseline protection for all API routes |
+| co-manager-invite    | 1 hour    | 10           | Prevent invitation spam                |
+| co-manager-add       | 1 hour    | 20           | Prevent bulk additions                 |
+| co-manager-remove    | 1 hour    | 50           | Higher limit for removals              |
+| invitation-accept    | 1 minute  | 5            | Prevent rapid acceptance attempts      |
+| public-list-access   | 1 minute  | 20           | Anonymous list viewing                 |
+| public-reservation   | 1 minute  | 10           | Anonymous gift reservations            |
+| public-list-password | 5 minutes | 5            | Brute-force protection                 |
+| email-add            | 1 hour    | 5            | Email addition rate limit              |
+| email-verify         | 1 hour    | 20           | Verification attempts                  |
+| email-resend         | 1 hour    | 5            | Resend verification                    |
+| username-set         | 1 hour    | 5            | Username updates (per user)            |
+| username-set-ip      | 1 hour    | 10           | Username updates (per IP)              |
+| slug-set             | 1 hour    | 10           | Slug updates                           |
+| **metadata-extract** | 1 minute  | 5            | Web scraping (expensive network I/O)   |
+| **image-upload**     | 1 hour    | 10           | Image processing (CPU-intensive)       |
 
 ## Excluded Endpoints
 
@@ -69,6 +71,7 @@ X-RateLimit-Reset: 2025-11-14T12:35:00.000Z
 ```
 
 **Headers:**
+
 ```
 X-RateLimit-Limit: 100
 X-RateLimit-Remaining: 0
@@ -142,6 +145,7 @@ export class RateLimiter {
 ```
 
 **Environment Variables:**
+
 ```env
 # Optional for development
 UPSTASH_REDIS_URL=https://your-redis-url.upstash.io
@@ -157,6 +161,7 @@ Monitor rate limiting effectiveness by watching for:
 ```
 
 This log indicates potential memory exhaustion attack or unusually high traffic. Consider:
+
 - Migrating to Redis/Upstash
 - Increasing MAX_ENTRIES (if legitimate traffic)
 - Investigating potential DDoS attack
@@ -176,11 +181,12 @@ To adjust rate limits, edit the configuration in `src/lib/rate-limiter.ts`:
 ```typescript
 rateLimiter.configure('global-api', {
   windowMs: 60 * 1000, // 1 minute
-  maxRequests: 100,    // Increase if needed
+  maxRequests: 100, // Increase if needed
 });
 ```
 
 **Guidelines:**
+
 - Too low: Legitimate users blocked
 - Too high: Ineffective against abuse
 - Monitor 429 responses in production logs
@@ -195,6 +201,7 @@ rateLimiter.configure('global-api', {
 ### Issue: Memory usage growing
 
 **Solution:** Check for memory exhaustion warnings in logs. Consider:
+
 - Migrating to Redis
 - Increasing cleanup frequency
 - Investigating unusual traffic patterns
@@ -202,6 +209,7 @@ rateLimiter.configure('global-api', {
 ### Issue: Rate limiting not working
 
 **Solution:** Verify:
+
 - Middleware is applied to `/api/*` routes
 - Request is not excluded (auth, cron, health)
 - Rate limiter is configured for the category

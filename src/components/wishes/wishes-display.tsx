@@ -3,7 +3,6 @@
 import { Wish } from '@/lib/validators/api-responses/wishes';
 import { WishGrid } from '@/components/wishes/wish-grid';
 import { WishList } from '@/components/wishes/wish-list';
-import { WishSmallGrid } from '@/components/wishes/wish-small-grid';
 
 interface WishesDisplayProps {
   wishes: (Wish & { isOwner?: boolean })[];
@@ -15,8 +14,8 @@ interface WishesDisplayProps {
   isLoading?: boolean;
   showAddToList?: boolean;
   className?: string;
-  // View mode prop - when provided, overrides internal state
-  viewMode?: 'list' | 'compact' | 'comfortable';
+  // View mode prop - binary choice between list and grid
+  viewMode?: 'list' | 'grid';
   // Selection props
   isSelectionMode?: boolean;
   selectedWishIds?: Set<string>;
@@ -36,7 +35,7 @@ export function WishesDisplay({
   isLoading = false,
   showAddToList = false,
   className,
-  viewMode = 'comfortable',
+  viewMode = 'grid',
   isSelectionMode = false,
   selectedWishIds = new Set(),
   onToggleSelection,
@@ -55,17 +54,9 @@ export function WishesDisplay({
     onToggleSelection,
   };
 
-  const renderWishesView = () => {
-    switch (viewMode) {
-      case 'list':
-        return <WishList {...commonProps} />;
-      case 'compact':
-        return <WishSmallGrid {...commonProps} />;
-      case 'comfortable':
-      default:
-        return <WishGrid {...commonProps} />;
-    }
-  };
-
-  return <div className={className}>{renderWishesView()}</div>;
+  return (
+    <div className={className}>
+      {viewMode === 'list' ? <WishList {...commonProps} /> : <WishGrid {...commonProps} />}
+    </div>
+  );
 }

@@ -10,13 +10,8 @@ const customJestConfig = {
   displayName: 'gthanks-integration',
   testEnvironment: 'jest-environment-jsdom',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-  testMatch: [
-    '<rootDir>/tests/integration/**/*.test.{js,jsx,ts,tsx}',
-  ],
-  testPathIgnorePatterns: [
-    '<rootDir>/.next/',
-    '<rootDir>/node_modules/',
-  ],
+  testMatch: ['<rootDir>/tests/integration/**/*.test.{js,jsx,ts,tsx}'],
+  testPathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/node_modules/'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },

@@ -35,7 +35,6 @@ export function MobileGroupFilterSheet({
   onClearAll: _onClearAll,
   activeFilterCount: _activeFilterCount,
 }: MobileGroupFilterSheetProps) {
-
   // Temporary state for filters (batch application)
   const [tempSearch, setTempSearch] = useState(search);
   const [tempSelectedMembers, setTempSelectedMembers] = useState(selectedMembers);

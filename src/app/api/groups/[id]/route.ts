@@ -54,7 +54,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     // Parse and validate request body
-    const body = await request.json();
+    const body = (await request.json()) as unknown;
     const data = GroupUpdateSchema.parse(body);
 
     // Update group
@@ -80,17 +80,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    if (error instanceof NotFoundError) {
+    // Return 404 for both NotFoundError and ForbiddenError to prevent resource enumeration
+    if (error instanceof NotFoundError || error instanceof ForbiddenError) {
       return NextResponse.json(
-        { error: getUserFriendlyError('NOT_FOUND', error.message), code: 'NOT_FOUND' },
+        { error: getUserFriendlyError('NOT_FOUND'), code: 'NOT_FOUND' },
         { status: 404 }
-      );
-    }
-
-    if (error instanceof ForbiddenError) {
-      return NextResponse.json(
-        { error: getUserFriendlyError('FORBIDDEN', error.message), code: 'FORBIDDEN' },
-        { status: 403 }
       );
     }
 
@@ -152,6 +146,14 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    // Return 404 for both NotFoundError and ForbiddenError to prevent resource enumeration
+    if (error instanceof NotFoundError || error instanceof ForbiddenError) {
+      return NextResponse.json(
+        { error: getUserFriendlyError('NOT_FOUND'), code: 'NOT_FOUND' },
+        { status: 404 }
+      );
+    }
+
     if (error instanceof AppError) {
       return NextResponse.json(
         {

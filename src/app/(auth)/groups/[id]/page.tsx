@@ -119,9 +119,7 @@ export default function GroupDetailPage({ params }: PageProps) {
           <div>
             <h1 className="text-2xl font-bold sm:text-3xl">{group.name}</h1>
             {group.description && (
-              <p className="mt-1 text-sm text-muted-foreground sm:text-base">
-                {group.description}
-              </p>
+              <p className="mt-1 text-sm text-muted-foreground sm:text-base">{group.description}</p>
             )}
           </div>
         </div>

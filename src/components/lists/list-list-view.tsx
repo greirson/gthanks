@@ -66,24 +66,14 @@ export function ListListView({
 
   return (
     <div className="divide-y rounded-lg border bg-card">
-      {/* Header Row - Desktop only */}
-      <div className="hidden gap-4 bg-muted/30 px-4 py-2 text-xs font-medium text-muted-foreground sm:grid sm:grid-cols-12">
-        <div className="col-span-4">List</div>
-        <div className="col-span-2">Visibility</div>
-        <div className="col-span-1">Items</div>
-        <div className="col-span-2">Owner</div>
-        <div className="col-span-2">Updated</div>
-        <div className="col-span-1 text-right">Actions</div>
-      </div>
-
-      {/* List Rows */}
+      {/* List Rows - Vertical card layout for all screen sizes */}
       {lists.map((list) => {
         const isOwner = currentUserId ? list.ownerId === currentUserId : false;
 
         return (
           <div
             key={list.id}
-            className="group flex cursor-pointer items-center gap-3 px-3 py-2 transition-colors hover:bg-muted/50 sm:grid sm:grid-cols-12 sm:gap-4 sm:px-4"
+            className="group cursor-pointer px-3 py-3 transition-colors hover:bg-muted/50 sm:px-4 sm:py-4"
             onClick={() => router.push(`/lists/${list.id}`)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
@@ -94,92 +84,79 @@ export function ListListView({
             role="button"
             tabIndex={0}
           >
-            {/* List Name - Mobile: Full width, Desktop: 4 cols */}
-            <div className="min-w-0 flex-1 sm:col-span-4">
-              <div className="flex items-center gap-2">
-                <h3 className="truncate text-sm font-medium">{list.name}</h3>
-                {!isOwner && (
-                  <Badge variant="secondary" className="h-5 shrink-0 text-[10px] sm:hidden">
-                    Shared
-                  </Badge>
+            <div className="flex items-start justify-between gap-3">
+              {/* Left: Title, description, and metadata */}
+              <div className="min-w-0 flex-1 space-y-2">
+                {/* Title */}
+                <div className="flex items-center gap-2">
+                  <h3 className="truncate text-sm font-medium sm:text-base">{list.name}</h3>
+                  {!isOwner && (
+                    <Badge variant="secondary" className="h-5 shrink-0 text-[10px]">
+                      Shared
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Description */}
+                {list.description && (
+                  <p className="truncate text-xs text-muted-foreground sm:text-sm">
+                    {list.description}
+                  </p>
                 )}
-              </div>
-              {list.description && (
-                <p className="hidden truncate text-xs text-muted-foreground sm:block">
-                  {list.description}
-                </p>
-              )}
-            </div>
 
-            {/* Mobile: Metadata in row */}
-            <div className="flex items-center gap-2 sm:hidden">
-              <Badge
-                variant={list.visibility === 'private' ? 'secondary' : 'outline'}
-                className="h-5 px-1.5 text-[10px]"
-              >
-                {getVisibilityIcon(list.visibility, 'h-3 w-3')}
-              </Badge>
-              <span className="text-xs text-muted-foreground">
-                {list._count?.wishes || 0}
-                <FileText className="ml-0.5 inline h-2.5 w-2.5" />
-              </span>
-              {list.shareToken && <Share2 className="h-3 w-3 text-muted-foreground" />}
-            </div>
+                {/* Metadata row - same for mobile and desktop */}
+                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground sm:gap-3">
+                  {/* Visibility Badge */}
+                  <Badge
+                    variant={list.visibility === 'private' ? 'secondary' : 'outline'}
+                    className="h-5 gap-1 px-1.5 text-[10px] sm:h-6 sm:text-xs"
+                  >
+                    {getVisibilityIcon(list.visibility, 'h-2.5 w-2.5 sm:h-3 sm:w-3')}
+                    {list.visibility}
+                  </Badge>
 
-            {/* Desktop: Visibility - 2 cols */}
-            <div className="hidden items-center sm:col-span-2 sm:flex">
-              <Badge
-                variant={list.visibility === 'private' ? 'secondary' : 'outline'}
-                className="h-6 gap-1 text-xs"
-              >
-                {getVisibilityIcon(list.visibility, 'h-3 w-3')}
-                {list.visibility}
-              </Badge>
-            </div>
-
-            {/* Desktop: Items - 1 col */}
-            <div className="hidden items-center gap-1.5 text-sm text-muted-foreground sm:col-span-1 sm:flex">
-              <FileText className="h-3.5 w-3.5" />
-              <span>{list._count?.wishes || 0}</span>
-            </div>
-
-            {/* Desktop: Owner - 2 cols */}
-            <div className="hidden items-center gap-1.5 text-sm text-muted-foreground sm:col-span-2 sm:flex">
-              {isOwner ? (
-                <span className="text-xs">You</span>
-              ) : (
-                <>
-                  <User className="h-3.5 w-3.5" />
-                  <span className="truncate">
-                    {list.owner?.name || list.owner?.email?.split('@')[0] || 'Unknown'}
+                  {/* Items count */}
+                  <span className="flex items-center gap-1">
+                    <FileText className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                    <span>{list._count?.wishes || 0}</span>
                   </span>
-                </>
-              )}
-              {list.shareToken && (
-                <Badge variant="outline" className="ml-1 h-5 text-[10px]">
-                  <Share2 className="mr-0.5 h-2.5 w-2.5" />
-                  Shared
-                </Badge>
-              )}
-            </div>
 
-            {/* Desktop: Updated - 2 cols */}
-            <div className="hidden items-center gap-1.5 text-xs text-muted-foreground sm:col-span-2 sm:flex">
-              <Calendar className="h-3 w-3" />
-              <span>{formatRelativeTime(list.updatedAt)} ago</span>
-            </div>
+                  {/* Owner - only show if not owner */}
+                  {!isOwner && list.owner && (
+                    <span className="flex items-center gap-1">
+                      <User className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      <span className="truncate">
+                        {list.owner.name || list.owner.email?.split('@')[0] || 'Unknown'}
+                      </span>
+                    </span>
+                  )}
 
-            {/* Actions - 1 col */}
-            <div className="sm:col-span-1 sm:flex sm:justify-end">
+                  {/* Share status */}
+                  {list.shareToken && (
+                    <span className="flex items-center gap-1">
+                      <Share2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      <span className="hidden sm:inline">Shared</span>
+                    </span>
+                  )}
+
+                  {/* Updated time */}
+                  <span className="ml-auto flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    <span>{formatRelativeTime(list.updatedAt)} ago</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Right: Actions */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100"
+                    className="h-7 w-7 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 sm:h-8 sm:w-8"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <MoreVertical className="h-3.5 w-3.5" />
+                    <MoreVertical className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     <span className="sr-only">List options</span>
                   </Button>
                 </DropdownMenuTrigger>

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { NextRequest, NextResponse } from 'next/server';
 import { metadataExtractor } from '@/lib/scraping/metadata-extractor';
 import { logger } from '@/lib/services/logger';
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
   }
 
   const startTime = Date.now();
-  const debugInfo: Record<string, any> = {
+  const debugInfo: Record<string, unknown> = {
     requestedUrl: url,
     timestamp: new Date().toISOString(),
   };
@@ -95,7 +96,8 @@ export async function GET(request: NextRequest) {
       clearTimeout(timeoutId);
 
       debugInfo.fetchEndTime = Date.now();
-      debugInfo.fetchDuration = debugInfo.fetchEndTime - debugInfo.fetchStartTime;
+      debugInfo.fetchDuration =
+        (debugInfo.fetchEndTime as number) - (debugInfo.fetchStartTime as number);
 
       // Capture response details
       debugInfo.response = {
@@ -107,7 +109,7 @@ export async function GET(request: NextRequest) {
       };
 
       console.log(`📥 [DEBUG SCRAPER] Response: ${response.status} ${response.statusText}`);
-      console.log(`⏱️  [DEBUG SCRAPER] Fetch duration: ${debugInfo.fetchDuration}ms`);
+      console.log(`⏱️  [DEBUG SCRAPER] Fetch duration: ${String(debugInfo.fetchDuration)}ms`);
 
       if (!response.ok) {
         debugInfo.fetchSuccess = false;
@@ -153,7 +155,8 @@ export async function GET(request: NextRequest) {
     const extractionResult = await metadataExtractor.extractWithDetails(url);
 
     debugInfo.extractionEndTime = Date.now();
-    debugInfo.extractionDuration = debugInfo.extractionEndTime - debugInfo.extractionStartTime;
+    debugInfo.extractionDuration =
+      (debugInfo.extractionEndTime as number) - (debugInfo.extractionStartTime as number);
 
     debugInfo.extractionResult = extractionResult;
     debugInfo.metadata = extractionResult.data || null;
@@ -168,7 +171,7 @@ export async function GET(request: NextRequest) {
     const endTime = Date.now();
     debugInfo.totalDuration = endTime - startTime;
 
-    console.log(`⏱️  [DEBUG SCRAPER] Total duration: ${debugInfo.totalDuration}ms`);
+    console.log(`⏱️  [DEBUG SCRAPER] Total duration: ${String(debugInfo.totalDuration)}ms`);
     console.log('✅ [DEBUG SCRAPER] Debug complete\n');
 
     // Return comprehensive debug information
