@@ -53,7 +53,7 @@ export function ManageGiftCardsDialog({
     if (isOpen) {
       dialog.resetCards();
     }
-  }, [isOpen, dialog]);
+  }, [isOpen, dialog.resetCards]);
 
   // Cleanup auto-save timeout on unmount
   useEffect(() => {
@@ -102,7 +102,7 @@ export function ManageGiftCardsDialog({
   const handleCancel = useCallback(() => {
     dialog.resetCards(); // Revert changes
     onClose();
-  }, [dialog, onClose]);
+  }, [dialog.resetCards, onClose]);
 
   return (
     <Dialog open={isOpen} onOpenChange={dialog.handleClose} {...dialogProps}>
