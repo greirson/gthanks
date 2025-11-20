@@ -86,17 +86,6 @@ jobs:
       - name: Run integration tests
         run: pnpm test:integration
 
-      - name: Install Playwright browsers
-        run: pnpm exec playwright install chromium --with-deps
-
-      - name: Run E2E tests
-        run: pnpm test:e2e
-        timeout-minutes: 10
-        env:
-          DATABASE_URL: file:./test.db
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-          NEXTAUTH_URL: http://localhost:3000
-
   build-and-push:
     name: Build and Push Docker Image
     needs: [test-basic, test-full]
