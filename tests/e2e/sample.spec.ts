@@ -38,7 +38,6 @@ test.describe('Wish Management', () => {
 
     // 4. Fill out the wish form
     await page.fill('[name="title"]', 'Wireless Headphones');
-    await page.fill('[name="notes"]', 'Noise-cancelling, over-ear');
     await page.fill('[name="url"]', 'https://example.com/headphones');
     await page.fill('[name="price"]', '199.99');
 
@@ -67,7 +66,6 @@ test.describe('Wish Management', () => {
 
     const wish = await createWish(user.id, {
       title: 'Programming Book',
-      notes: 'Clean Code by Robert Martin',
       url: 'https://example.com/book',
       price: 39.99,
       wishLevel: 2,
@@ -81,7 +79,6 @@ test.describe('Wish Management', () => {
 
     // 4. Verify wish details are displayed
     await expect(page.locator('text=Programming Book')).toBeVisible();
-    await expect(page.locator('text=Clean Code by Robert Martin')).toBeVisible();
     await expect(page.locator('text=$39.99')).toBeVisible();
 
     // Cleanup

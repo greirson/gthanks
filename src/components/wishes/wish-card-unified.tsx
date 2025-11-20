@@ -606,11 +606,6 @@ export function UnifiedWishCard({
             </div>
           )}
 
-          {/* Notes */}
-          {config.showNotes && wish.notes && (
-            <p className={`mb-3 text-sm text-muted-foreground ${config.notesClamp}`}>{wish.notes}</p>
-          )}
-
           {/* Metadata badges */}
           <div className={`flex flex-wrap gap-${variant === 'compact' ? '1' : '2'} ${variant === 'compact' ? 'mt-2' : ''}`}>
             {wish.quantity && wish.quantity > 1 && (

@@ -69,7 +69,6 @@ test.describe('High-Risk Areas', () => {
       wishPromises.push(
         createWish(user.id, {
           title: `Test Wish ${i}`,
-          notes: `This is test wish number ${i} for bulk operations`,
           price: 10 + i,
           wishLevel: (i % 3) + 1, // Rotate between wish levels 1, 2, 3
         })

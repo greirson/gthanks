@@ -199,14 +199,12 @@ test('should share list with group and allow reservations', async ({ page, conte
 
   const wish1 = await createWish(userA.id, {
     title: 'Book: Clean Code',
-    notes: 'Programming book',
     price: 39.99,
     wishLevel: 2,
   });
 
   const wish2 = await createWish(userA.id, {
     title: 'Wireless Headphones',
-    notes: 'For working',
     price: 149.99,
     wishLevel: 3,
   });

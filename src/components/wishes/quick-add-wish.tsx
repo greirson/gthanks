@@ -99,7 +99,6 @@ export function QuickAddWish({ className, onSuccess }: QuickAddWishProps) {
               const wishData = {
                 title: metadata.title || normalizedUrl,
                 url: normalizedUrl,
-                notes: metadata.description || undefined,
                 price: metadata.price ? metadata.price : undefined,
                 imageUrl: metadata.imageUrl || undefined,
                 quantity: 1,

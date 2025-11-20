@@ -12,7 +12,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ImageInput } from '@/components/ui/image-input';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { ThemeButton } from '@/components/ui/theme-button';
 import { useToast } from '@/components/ui/use-toast';
 import { useFormDirtyState } from '@/hooks/use-form-dirty-state';
@@ -49,7 +48,6 @@ export function WishForm({
   const [formData, setFormData] = useState<Partial<WishCreateInput>>({
     title: wish?.title || '',
     url: wish?.url || null,
-    notes: wish?.notes || '',
     price: wish?.price || undefined,
     wishLevel: wish?.wishLevel || 1,
     quantity: wish?.quantity || 1,
@@ -66,7 +64,6 @@ export function WishForm({
     () => ({
       title: wish?.title || '',
       url: wish?.url || null,
-      notes: wish?.notes || '',
       price: wish?.price || undefined,
       wishLevel: wish?.wishLevel || 1,
       quantity: wish?.quantity || 1,
@@ -216,10 +213,6 @@ export function WishForm({
     // No need to validate URL length - URLs are automatically simplified to ~36 chars
     // Backend validation will catch any edge cases
 
-    if (formData.notes && formData.notes.length > 500) {
-      newErrors.notes = 'Notes must be less than 500 characters';
-    }
-
     if (formData.price && formData.price < 0) {
       newErrors.price = 'Price must be positive';
     }
@@ -257,7 +250,6 @@ export function WishForm({
           const updated = {
             ...prev,
             title: prev.title || metadata.title || '',
-            notes: prev.notes || metadata.description || '',
             price: prev.price || metadata.price || undefined,
             imageUrl: prev.imageUrl || metadata.imageUrl || null,
           };
@@ -474,33 +466,6 @@ export function WishForm({
             />
           </div>
         </div>
-      </div>
-
-      {/* Notes Field with character counter in label row */}
-      <div className="space-y-2">
-        <div className="flex justify-between items-center">
-          <Label htmlFor="notes">Notes</Label>
-          <span className="text-xs text-muted-foreground">
-            {formData.notes?.length || 0} / 500
-          </span>
-        </div>
-        <Textarea
-          id="notes"
-          name="notes"
-          placeholder="Any specific details, preferences, or links..."
-          value={formData.notes ?? ''}
-          onChange={handleChange}
-          disabled={createMutation.isPending || updateMutation.isPending}
-          rows={3}
-          maxLength={500}
-          aria-invalid={errors.notes ? 'true' : 'false'}
-          aria-describedby={errors.notes ? 'notes-error' : undefined}
-        />
-        {errors.notes && (
-          <p id="notes-error" className="text-error-aa text-sm" aria-live="polite">
-            {errors.notes}
-          </p>
-        )}
       </div>
 
       {/* More Options Section - Always Visible */}

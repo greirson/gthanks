@@ -11,7 +11,7 @@
  * @returns Filtered array of items matching the query
  *
  * @example
- * const filtered = applySearchFilter(wishes, 'gift', ['title', 'notes']);
+ * const filtered = applySearchFilter(wishes, 'gift', ['title']);
  * const filtered = applySearchFilter(lists, 'birthday', ['name', 'description']);
  */
 export function applySearchFilter<T>(
