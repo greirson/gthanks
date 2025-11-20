@@ -47,7 +47,9 @@ RUN npx prisma generate
 ENV NEXT_TELEMETRY_DISABLED=1
 # Use SQLite URL for build (matches schema provider)
 ENV DATABASE_URL="file:./dev.db"
-RUN pnpm build
+ENV NEXT_PRIVATE_PROFILE=1
+RUN --mount=type=cache,id=nextjs,target=/app/.next/cache \
+    pnpm build
 
 # Production stage
 FROM node:20-slim AS runner
