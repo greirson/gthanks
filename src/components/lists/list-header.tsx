@@ -27,10 +27,10 @@ export function ListHeader({
   return (
     <div className={cn('flex flex-col items-center gap-2 pb-2 border-b text-center', className)}>
       {/* Title and description - Centered */}
-      <div className="max-w-2xl">
-        <h1 className="text-xl font-bold">{name}</h1>
+      <div className="max-w-2xl w-full px-4">
+        <h1 className="text-xl font-bold break-words">{name}</h1>
         {description && (
-          <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
+          <p className="mt-0.5 text-sm text-muted-foreground break-words">{description}</p>
         )}
       </div>
 

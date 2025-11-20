@@ -59,20 +59,49 @@ export function GiftCardTable({
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
     >
-      <Table>
+      {/* Mobile Card List (< md breakpoint) */}
+      <div className="md:hidden">
+        {cards.length === 0 ? (
+          <div className="text-center text-muted-foreground py-12 px-4">
+            Click &quot;Add Card&quot; to create your first gift card
+          </div>
+        ) : (
+          <SortableContext
+            items={cards.map((_, i) => `card-${i}`)}
+            strategy={verticalListSortingStrategy}
+          >
+            {cards.map((card, index) => (
+              <GiftCardTableRow
+                key={`card-${index}`}
+                card={card}
+                index={index}
+                onUpdate={onUpdate}
+                onDelete={onDelete}
+                onBlur={onBlur}
+              />
+            ))}
+          </SortableContext>
+        )}
+      </div>
+
+      {/* Desktop Table (md breakpoint and up) */}
+      <Table className="hidden md:table">
         <TableHeader>
           <TableRow>
-            <TableHead className="w-8"></TableHead> {/* Drag handle */}
+            {/* Drag handle */}
+            <TableHead className="w-12"></TableHead>
+            {/* Name */}
             <TableHead>Name</TableHead>
+            {/* URL */}
             <TableHead>URL</TableHead>
-            <TableHead className="w-32">Amount ($)</TableHead>
-            <TableHead className="w-12"></TableHead> {/* Delete */}
+            {/* Delete */}
+            <TableHead className="w-14"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {cards.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center text-muted-foreground p-8">
+              <TableCell colSpan={4} className="text-center text-muted-foreground p-8">
                 Click &quot;Add Card&quot; to create your first gift card
               </TableCell>
             </TableRow>

@@ -391,11 +391,14 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
           <GiftCardSection
             listId={list.id}
             giftCards={
-              typeof list.giftCardPreferences === 'string' 
+              typeof list.giftCardPreferences === 'string'
                 ? JSON.parse(list.giftCardPreferences || '[]')
                 : (list.giftCardPreferences || [])
             }
             canEdit={list.canEdit ?? false}
+            onUpdate={() => {
+              void queryClient.invalidateQueries({ queryKey: ['lists', listId] });
+            }}
           />
 
           {/* Desktop Wishes Display */}
@@ -461,18 +464,21 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
             visibility={list.visibility}
             wishCount={list._count.wishes}
             shareToken={list.shareToken}
-            className="mb-4"
+            className="mb-2 sm:mb-4"
           />
 
           {/* Gift Cards Section - Mobile */}
           <GiftCardSection
             listId={list.id}
             giftCards={
-              typeof list.giftCardPreferences === 'string' 
+              typeof list.giftCardPreferences === 'string'
                 ? JSON.parse(list.giftCardPreferences || '[]')
                 : (list.giftCardPreferences || [])
             }
             canEdit={list.canEdit ?? false}
+            onUpdate={() => {
+              void queryClient.invalidateQueries({ queryKey: ['lists', listId] });
+            }}
           />
 
 
@@ -504,7 +510,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
       </div>
 
       {/* Bottom Bar - Mobile Only, Hidden in Selection Mode */}
-      {!isSelectionMode && (
+      {!isSelectionMode && !!list?.isOwner && (
         <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background shadow-md md:hidden">
           <div className="flex items-center justify-between px-3 py-1.5">
             {/* Left side - Secondary actions */}

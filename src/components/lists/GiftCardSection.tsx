@@ -87,7 +87,7 @@ export function GiftCardSection({
     // Only show Add button for owners when there are no cards
     if (canEdit) {
       return (
-        <div className="mb-12"> {/* Fix #3: Increased spacing */}
+        <div className="mb-6 sm:mb-8 md:mb-12"> {/* Fix #3: Increased spacing */}
           <Button
             variant="outline"
             size="sm"
@@ -113,7 +113,7 @@ export function GiftCardSection({
   }
 
   return (
-    <div className="space-y-3 mb-12"> {/* Fix #3: Increased spacing from mb-8 to mb-12 */}
+    <div className="space-y-3 mb-4"> {/* Reduced spacing from mb-12 to mb-4 (1rem) */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
           <CreditCard className="h-4 w-4" />

@@ -97,10 +97,8 @@ export const ListCreateSchema = z.object({
 
 // Gift card schema
 export const GiftCardSchema = z.object({
-  name: z.string().min(1).max(200),
+  name: z.string().min(1).max(14, 'Gift card name must be 14 characters or less'),
   url: z.string().url('Invalid URL format'),
-  amount: z.number().positive().optional(),
-  currency: z.string().length(3).optional()
 });
 
 // List update schema with gift cards

@@ -4,7 +4,6 @@ import { usePreventUnsavedClose } from '@/hooks/use-form-dirty-state';
 export interface GiftCard {
   name: string;
   url: string;
-  amount?: number;
 }
 
 const MAX_CARDS = 8;
@@ -51,7 +50,7 @@ export function useManageGiftCardsDialog(initialCards: GiftCard[]) {
       if (prev.length >= MAX_CARDS) {
         return prev;
       }
-      return [...prev, { name: '', url: '', amount: undefined }];
+      return [...prev, { name: '', url: '' }];
     });
     setIsDirty(true);
   }, []);

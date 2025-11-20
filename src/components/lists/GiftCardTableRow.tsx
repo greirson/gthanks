@@ -2,7 +2,7 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Trash2 } from 'lucide-react';
+import { GripVertical, Trash2, Store, Link } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { TableRow, TableCell } from '@/components/ui/table';
@@ -44,87 +44,152 @@ export function GiftCardTableRow({
   };
 
   return (
-    <TableRow ref={setNodeRef} style={dragStyle}>
-      {/* Column 1: Drag Handle (w-8) */}
-      <TableCell className="w-8 p-2">
-        <button
-          className="cursor-grab active:cursor-grabbing touch-none"
-          {...attributes}
-          {...listeners}
-          aria-label="Drag to reorder"
-        >
-          <GripVertical className="h-4 w-4 text-muted-foreground" />
-        </button>
-      </TableCell>
+    <>
+      {/* Mobile Card Layout (< md breakpoint) */}
+      <div
+        ref={setNodeRef}
+        style={dragStyle}
+        className="md:hidden border rounded-lg p-4 mb-3 bg-card hover:bg-accent/5 transition-colors"
+      >
+        {/* Top Row: Drag Handle + Store Name + Delete Button */}
+        <div className="flex items-center gap-3 mb-3">
+          <button
+            className="cursor-grab active:cursor-grabbing touch-none p-2 -ml-2 hover:bg-accent/10 rounded transition-colors flex-shrink-0"
+            {...attributes}
+            {...listeners}
+            aria-label="Drag to reorder"
+          >
+            <GripVertical className="h-5 w-5 text-muted-foreground" />
+          </button>
 
-      {/* Column 2: Name Input */}
-      <TableCell className="p-2">
-        <Input
-          value={card.name}
-          onChange={(e) => onUpdate(index, 'name', e.target.value)}
-          onBlur={onBlur}
-          placeholder="Store name"
-          className="h-9"
-          aria-label="Gift card store name"
-        />
-      </TableCell>
+          <div className="flex-1 min-w-0 relative">
+            <Store className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              value={card.name}
+              onChange={(e) => onUpdate(index, 'name', e.target.value)}
+              onBlur={onBlur}
+              placeholder="Store name"
+              maxLength={14}
+              className="h-11 text-base pl-9"
+              aria-label="Gift card store name"
+            />
+          </div>
 
-      {/* Column 3: URL Input */}
-      <TableCell className="p-2">
-        <Input
-          type="url"
-          value={card.url}
-          onChange={(e) => onUpdate(index, 'url', e.target.value)}
-          onBlur={onBlur}
-          placeholder="https://..."
-          className="h-9"
-          aria-label="Gift card URL"
-        />
-      </TableCell>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-11 w-11 hover:bg-destructive/20 flex-shrink-0"
+                aria-label="Delete gift card"
+              >
+                <Trash2 className="h-5 w-5" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete gift card?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will remove &quot;{card.name || 'this card'}&quot; from the list.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => onDelete(index)}>Delete</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
 
-      {/* Column 4: Amount Input (w-32) */}
-      <TableCell className="w-32 p-2">
-        <Input
-          type="number"
-          step="0.01"
-          value={card.amount ?? ''}
-          onChange={(e) =>
-            onUpdate(index, 'amount', e.target.value ? parseFloat(e.target.value) : undefined)
-          }
-          onBlur={onBlur}
-          placeholder="Optional"
-          className="h-9"
-          aria-label="Gift card amount"
-        />
-      </TableCell>
+        {/* URL Input (Full Width) */}
+        <div className="relative">
+          <Link className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <Input
+            type="url"
+            value={card.url}
+            onChange={(e) => onUpdate(index, 'url', e.target.value)}
+            onBlur={onBlur}
+            placeholder="https://..."
+            className="h-11 text-base pl-9"
+            aria-label="Gift card URL"
+          />
+        </div>
+      </div>
 
-      {/* Column 5: Delete Button (w-12) */}
-      <TableCell className="w-12 p-2">
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 hover:bg-destructive/20"
-              aria-label="Delete gift card"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete gift card?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This will remove &quot;{card.name || 'this card'}&quot; from the list.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={() => onDelete(index)}>Delete</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </TableCell>
-    </TableRow>
+      {/* Desktop Table Row (md breakpoint and up) */}
+      <TableRow ref={setNodeRef} style={dragStyle} className="hidden md:table-row">
+        {/* Column 1: Drag Handle (w-12 for larger click target on desktop) */}
+        <TableCell className="w-12 p-3">
+          <button
+            className="cursor-grab active:cursor-grabbing touch-none"
+            {...attributes}
+            {...listeners}
+            aria-label="Drag to reorder"
+          >
+            <GripVertical className="h-5 w-5 text-muted-foreground" />
+          </button>
+        </TableCell>
+
+        {/* Column 2: Name Input */}
+        <TableCell className="p-3">
+          <div className="relative">
+            <Store className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              value={card.name}
+              onChange={(e) => onUpdate(index, 'name', e.target.value)}
+              onBlur={onBlur}
+              placeholder="Store name"
+              maxLength={14}
+              className="h-10 pl-9"
+              aria-label="Gift card store name"
+            />
+          </div>
+        </TableCell>
+
+        {/* Column 3: URL Input */}
+        <TableCell className="p-3">
+          <div className="relative">
+            <Link className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              type="url"
+              value={card.url}
+              onChange={(e) => onUpdate(index, 'url', e.target.value)}
+              onBlur={onBlur}
+              placeholder="https://..."
+              className="h-10 pl-9"
+              aria-label="Gift card URL"
+            />
+          </div>
+        </TableCell>
+
+        {/* Column 4: Delete Button (w-14 for larger click target) */}
+        <TableCell className="w-14 p-3">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 hover:bg-destructive/20"
+                aria-label="Delete gift card"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete gift card?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will remove &quot;{card.name || 'this card'}&quot; from the list.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => onDelete(index)}>Delete</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </TableCell>
+      </TableRow>
+    </>
   );
 }

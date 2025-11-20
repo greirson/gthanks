@@ -49,7 +49,7 @@ export function ManageGiftCardsDialog({
     if (isOpen) {
       dialog.resetCards();
     }
-  }, [isOpen, dialog]);
+  }, [isOpen, dialog.resetCards]);
 
   // Cleanup auto-save timeout on unmount
   useEffect(() => {
@@ -101,18 +101,18 @@ export function ManageGiftCardsDialog({
   }, [dialog, onClose]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose} {...dialogProps}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col sm:max-w-[90vw]">
+    <Dialog open={isOpen} onOpenChange={dialog.handleClose} {...dialogProps}>
+      <DialogContent className="max-w-[800px] max-h-[90vh] flex flex-col sm:max-w-[90vw] md:max-w-[800px] p-4 sm:p-6">
         {/* Header */}
-        <DialogHeader>
-          <DialogTitle>Manage Gift Cards</DialogTitle>
+        <DialogHeader className="pb-4">
+          <DialogTitle className="text-lg sm:text-xl">Manage Gift Cards</DialogTitle>
           <DialogDescription>
             {dialog.cards.length}/8 cards
           </DialogDescription>
         </DialogHeader>
 
-        {/* Table (scrollable) */}
-        <div className="flex-1 overflow-auto -mx-6 px-6">
+        {/* Table/Cards (scrollable) */}
+        <div className="flex-1 overflow-auto -mx-4 px-4 sm:-mx-6 sm:px-6">
           <GiftCardTable
             cards={dialog.cards}
             onReorder={dialog.reorderCards}
@@ -122,27 +122,34 @@ export function ManageGiftCardsDialog({
           />
         </div>
 
-        {/* Add Card Button */}
-        <div className="border-t pt-4 -mx-6 px-6">
+        {/* Footer */}
+        <DialogFooter className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-4">
           <Button
             variant="outline"
             onClick={dialog.addCard}
             disabled={dialog.cards.length >= 8}
-            className="w-full"
+            className="h-11 sm:h-10 w-full sm:w-auto"
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Card ({dialog.cards.length}/8)
           </Button>
-        </div>
 
-        {/* Footer */}
-        <DialogFooter>
-          <Button variant="outline" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={!dialog.isDirty}>
-            Save
-          </Button>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button
+              variant="outline"
+              onClick={handleCancel}
+              className="h-11 sm:h-10 flex-1 sm:flex-initial"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={!dialog.isDirty}
+              className="h-11 sm:h-10 flex-1 sm:flex-initial"
+            >
+              Save
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

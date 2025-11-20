@@ -145,10 +145,8 @@ export class ListService {
 
     // Validate each gift card
     return parsed.map((card: any) => ({
-      name: String(card.name || '').slice(0, 200),
+      name: String(card.name || '').slice(0, 14),
       url: String(card.url || ''),
-      amount: card.amount ? Number(card.amount) : undefined,
-      
     })).filter(card => card.name && card.url);
   }
 
