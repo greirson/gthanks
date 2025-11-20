@@ -54,19 +54,11 @@ export function ManageGiftCardsDialog({
 
   // Reset cards ONLY when dialog first opens (not on every parent re-render)
   useEffect(() => {
-    console.log('[ManageGiftCardsDialog] Effect triggered:', {
-      isOpen,
-      wasOpen: wasOpenRef.current,
-      timestamp: new Date().toISOString(),
-    });
-
     // Only reset when transitioning from closed to open
     if (isOpen && !wasOpenRef.current) {
-      console.log('[ManageGiftCardsDialog] Dialog opened - resetting cards');
       dialog.resetCards();
       wasOpenRef.current = true;
     } else if (!isOpen && wasOpenRef.current) {
-      console.log('[ManageGiftCardsDialog] Dialog closed');
       wasOpenRef.current = false;
     }
   }, [isOpen]); // Only depend on isOpen, not dialog.resetCards

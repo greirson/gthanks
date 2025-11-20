@@ -16,11 +16,6 @@ export function useManageGiftCardsDialog(initialCards: GiftCard[]) {
   const [isOpen, setIsOpen] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
 
-  // Debug: log when initialCards changes
-  useEffect(() => {
-    console.log('[useManageGiftCardsDialog] initialCards changed:', initialCards);
-  }, [initialCards]);
-
   const closeHandler = usePreventUnsavedClose(isDirty, () => {
     setIsOpen(false);
     setIsDirty(false);
@@ -71,7 +66,6 @@ export function useManageGiftCardsDialog(initialCards: GiftCard[]) {
   }, []);
 
   const resetCards = useCallback(() => {
-    console.log('[useManageGiftCardsDialog] resetCards called, initialCards:', initialCards);
     setCards(initialCards);
     setIsDirty(false);
   }, [initialCards]);

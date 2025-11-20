@@ -30,20 +30,6 @@ export function GiftCardSection({
 
   const manageDialog = useManageGiftCardsDialog(giftCards);
 
-  // Debug: log window focus/blur events
-  useEffect(() => {
-    const handleFocus = () => console.log('[GiftCardSection] Window focused');
-    const handleBlur = () => console.log('[GiftCardSection] Window blurred');
-
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('blur', handleBlur);
-
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('blur', handleBlur);
-    };
-  }, []);
-
   // Update mutation
   const updateMutation = useMutation({
     mutationFn: async (cards: GiftCard[]) => {
@@ -75,7 +61,6 @@ export function GiftCardSection({
 
   // Sync with prop changes
   useEffect(() => {
-    console.log('[GiftCardSection] initialCards prop changed:', initialCards);
     setGiftCards(initialCards || []);
   }, [initialCards]);
 
