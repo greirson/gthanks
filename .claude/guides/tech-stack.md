@@ -102,12 +102,32 @@ pnpm typecheck            # Run TypeScript type checking
 
 ```env
 # Database
-DATABASE_URL=file:./dev.db  # SQLite (dev) or postgresql://... (prod)
+DATABASE_URL=file:./data/gthanks.db  # SQLite (dev) or postgresql://... (prod)
 
 # Authentication
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=[32+ char random string]  # Generate: openssl rand -base64 32
 ```
+
+**BREAKING CHANGE (2025-11-19):**
+The default SQLite database location has changed from `file:./prisma/dev2.db` to `file:./data/gthanks.db`.
+
+**Migration for existing developers:**
+- **Option 1 (Recommended)**: Move your database file to the new location:
+  ```bash
+  mkdir -p data
+  mv prisma/dev2.db data/gthanks.db
+  ```
+- **Option 2**: Update your `.env.local` to point to the old location:
+  ```env
+  DATABASE_URL=file:./prisma/dev2.db
+  ```
+- **Option 3**: Start fresh with a new database (will lose existing development data):
+  ```bash
+  pnpm db:push
+  ```
+
+**Rationale:** The new `data/` directory consolidates all runtime data (database, uploads) separate from source code and configuration files, making backups and deployment cleaner.
 
 ### Optional - OAuth Providers
 

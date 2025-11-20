@@ -96,8 +96,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV HOME=/app
 ENV npm_config_cache=/tmp/.npm
 
-# Create data directory for SQLite (if used)
-RUN mkdir -p /app/data && chown nextjs:nodejs /app/data
+# Create data directory for SQLite (if used) and uploads directory
+RUN mkdir -p /app/data /app/uploads && chown nextjs:nodejs /app/data /app/uploads
 
 # Expose port
 EXPOSE 3000

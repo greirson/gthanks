@@ -8,6 +8,7 @@
 const { execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const { resolveDatabaseUrl } = require('../src/lib/utils/db-path');
 
 // Load environment variables
 try {
@@ -16,10 +17,11 @@ try {
   // dotenv might not be available in all environments
 }
 
-const DATABASE_URL = process.env.DATABASE_URL || 'file:./prisma/dev2.db';
+const DATABASE_URL = resolveDatabaseUrl(process.env.DATABASE_URL || 'file:./data/gthanks.db');
 
 async function ensureDatabase() {
   console.log('[DB] Checking database initialization...');
+  console.log('[DB] Using database:', DATABASE_URL);
 
   // For SQLite, ensure the directory exists
   if (DATABASE_URL.startsWith('file:')) {

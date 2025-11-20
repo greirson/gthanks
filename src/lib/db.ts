@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { ensureDatabaseInitialized } from './db-init';
+import { resolveDatabaseUrl } from './utils/db-path';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -19,7 +20,7 @@ export const db =
   new PrismaClient({
     datasources: {
       db: {
-        url: process.env.DATABASE_URL,
+        url: resolveDatabaseUrl(process.env.DATABASE_URL),
       },
     },
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
