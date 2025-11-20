@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 export interface CollapsibleSectionProps {
-  title: string;
+  title: React.ReactNode;
   defaultOpen?: boolean;
   infoTooltip?: string;
   children: React.ReactNode;
@@ -55,7 +55,7 @@ export function CollapsibleSection({
                   <button
                     type="button"
                     className="flex h-11 w-11 shrink-0 items-center justify-center border-l border-border transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:h-14 sm:w-14"
-                    aria-label={`About ${title.toLowerCase()}`}
+                    aria-label={`About ${typeof title === 'string' ? title.toLowerCase() : 'section'}`}
                     onClick={(e) => {
                       // Prevent collapsible from toggling when clicking info icon
                       e.stopPropagation();

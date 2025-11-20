@@ -1,23 +1,20 @@
 'use client';
 
-import { Wish as ApiWish } from '@/lib/validators/api-responses/wishes';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Eye, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 
 import { useState, useEffect } from 'react';
 
-import { ReservationDialog } from '@/components/reservations/reservation-dialog';
 import { SimpleThemeToggle } from '@/components/theme/simple-theme-toggle';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
-import { FilteredWishesDisplay } from '@/components/wishes/filtered-wishes-display';
 import { listsApi } from '@/lib/api/lists';
 import { reservationsApi } from '@/lib/api/reservations';
-import { PublicGiftCardSection } from '@/components/lists/PublicGiftCardSection';
+import { PublicListContent } from '@/components/lists/PublicListContent';
+import type { PublicListData } from '@/components/lists/PublicListContent';
 
 interface PageProps {
   params: { token: string };
@@ -40,8 +37,6 @@ export default function PublicListPage({ params }: PageProps) {
   const queryClient = useQueryClient();
   const [password, setPassword] = useState('');
   const [_showPasswordForm, setShowPasswordForm] = useState(false);
-  const [showReservationDialog, setShowReservationDialog] = useState(false);
-  const [selectedWish, setSelectedWish] = useState<ApiWish | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Fetch public list
@@ -109,11 +104,6 @@ export default function PublicListPage({ params }: PageProps) {
     if (password.trim()) {
       passwordMutation.mutate(password);
     }
-  };
-
-  const handleReserveWish = (wish: ApiWish) => {
-    setSelectedWish(wish);
-    setShowReservationDialog(true);
   };
 
   if (isLoading) {
@@ -200,92 +190,13 @@ export default function PublicListPage({ params }: PageProps) {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Theme Toggle Button */}
-      <div className="fixed right-4 top-4 z-10">
-        <SimpleThemeToggle variant="outline" />
-      </div>
-
-      {/* Header */}
-      <div className="mb-8 text-center">
-        <h1 className="mb-2 text-3xl font-bold">{list.name}</h1>
-        {list.description && <p className="mb-4 text-muted-foreground">{list.description}</p>}
-
-        <div className="flex items-center justify-center gap-4">
-          <Badge variant="outline">
-            {list._count.wishes} {list._count.wishes === 1 ? 'wish' : 'wishes'}
-          </Badge>
-          <span className="text-sm text-muted-foreground">by {list.owner.name}</span>
-        </div>
-      </div>
-
-      {/* Info Banner */}
-      <Card className="mb-8 border-info/20 bg-info/5">
-        <CardContent className="pt-6">
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-info/10">
-                <Eye className="h-4 w-4 text-info" />
-              </div>
-            </div>
-            <div>
-              <h3 className="mb-1 font-medium text-foreground">
-                {currentUserId === list.owner.id
-                  ? 'Viewing Your Wishlist'
-                  : `Viewing ${list.owner.name}&apos;s Wishlist`}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {currentUserId === list.owner.id ? (
-                  <>
-                    This is how others see your wishlist. They can reserve items, but you can&apos;t
-                    reserve your own wishes.
-                  </>
-                ) : (
-                  <>
-                    You can reserve items to let others know you plan to purchase them. Your name
-                    will be hidden from the list owner until after the gift is given.
-                  </>
-                )}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Gift Cards Section */}
-      <PublicGiftCardSection list={list} />
-
-      {/* Wishes Display with Filtering and View Toggle */}
-      <FilteredWishesDisplay
-        wishes={
-          list.wishes?.map((listWish) => ({
-            ...(listWish.wish as ApiWish),
-            // Keep existing wish data, only add missing required fields
-            ownerId: list.owner.id,
-            updatedAt: listWish.wish.updatedAt || listWish.wish.createdAt,
-            isOwner: currentUserId === list.owner.id,
-          })) || []
-        }
-        onReserve={(wish) => handleReserveWish(wish)}
-        reservedWishIds={
-          reservations
-            ? Object.keys(reservations).filter((wishId) => reservations[wishId].isReserved)
-            : []
-        }
-        isLoading={reservationsLoading}
-        showFilters={true}
-        compactFilters={true}
+      {/* Shared public list content */}
+      <PublicListContent
+        list={list as PublicListData}
+        currentUserId={currentUserId ?? undefined}
+        reservations={reservations ?? undefined}
+        reservationsLoading={reservationsLoading}
       />
-
-      {/* Reservation Dialog */}
-      {selectedWish && (
-        <ReservationDialog
-          wish={selectedWish}
-          open={showReservationDialog}
-          onOpenChange={setShowReservationDialog}
-          shareToken={params.token}
-          isAuthenticated={false}
-        />
-      )}
     </div>
   );
 }

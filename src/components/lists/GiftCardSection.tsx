@@ -16,6 +16,7 @@ interface GiftCardSectionProps {
   giftCards: GiftCard[];
   canEdit: boolean;
   onUpdate?: (cards: GiftCard[]) => void;
+  hideHeading?: boolean;
 }
 
 export function GiftCardSection({
@@ -23,6 +24,7 @@ export function GiftCardSection({
   giftCards: initialCards,
   canEdit,
   onUpdate,
+  hideHeading = false,
 }: GiftCardSectionProps) {
   const { toast } = useToast();
   const [giftCards, setGiftCards] = useState<GiftCard[]>(initialCards || []);
@@ -116,24 +118,26 @@ export function GiftCardSection({
     <div className="mb-4 space-y-3">
       {' '}
       {/* Reduced spacing from mb-12 to mb-4 (1rem) */}
-      <div className="flex items-center justify-between">
-        <h3 className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-          <CreditCard className="h-4 w-4" />
-          Gift Cards
-        </h3>
+      {!hideHeading && (
+        <div className="flex items-center justify-between">
+          <h3 className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <CreditCard className="h-4 w-4" />
+            Gift Cards
+          </h3>
 
-        {canEdit && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => manageDialog.open()}
-            disabled={giftCards.length >= 8}
-          >
-            <Plus className="mr-1 h-4 w-4" />
-            Manage Gift Cards
-          </Button>
-        )}
-      </div>
+          {canEdit && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => manageDialog.open()}
+              disabled={giftCards.length >= 8}
+            >
+              <Plus className="mr-1 h-4 w-4" />
+              Manage Gift Cards
+            </Button>
+          )}
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
         {giftCards.map((card, index) => (
           <GiftCardItem key={`${card.name}-${index}`} card={card} />
