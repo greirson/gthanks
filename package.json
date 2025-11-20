@@ -14,7 +14,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "lint": "next lint",
+    "lint": "next lint --max-warnings 300",
     "lint:fix": "next lint --fix",
     "lint:strict": "next lint --max-warnings=0",
     "lint:service-layer": "eslint 'src/app/api/**/*.ts' --rule 'local-rules/no-direct-db-import: error' --rule 'local-rules/use-permission-service: error'",

@@ -35,6 +35,12 @@ jobs:
         run: |
           echo "🔍 Checking for breaking database schema changes..."
 
+          # Check if schema exists on base branch (skip for initial deployment)
+          if ! git cat-file -e origin/${{ github.base_ref }}:prisma/schema.prisma 2>/dev/null; then
+            echo "✅ Initial schema deployment - skipping migration safety check"
+            exit 0
+          fi
+
           # Get diff of schema.prisma
           git diff origin/${{ github.base_ref }} HEAD -- prisma/schema.prisma > schema-diff.txt
 
