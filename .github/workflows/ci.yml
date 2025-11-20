@@ -108,6 +108,9 @@ jobs:
         run: pnpm run build
         env:
           SKIP_ENV_VALIDATION: true
+          DATABASE_URL: file:./data/gthanks.db
+          NEXTAUTH_SECRET: build-time-secret-minimum-32-characters-long
+          NEXTAUTH_URL: http://localhost:3000
 
   e2e-smoke:
     name: E2E Smoke Tests
