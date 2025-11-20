@@ -41,6 +41,13 @@ jobs:
             exit 0
           fi
 
+          # Check PR title for v0.0.1 release (most reliable for PR workflows)
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          if echo "$PR_TITLE" | grep -qi "v0\.0\.1\|Release v0\.0\.1"; then
+            echo "✅ v0.0.1 release detected in PR title - skipping migration safety check"
+            exit 0
+          fi
+
           # Check for v0.0.1 tag (initial production release - no data to migrate)
           if git describe --tags --exact-match 2>/dev/null | grep -q "^v0\.0\.1$"; then
             echo "✅ v0.0.1 initial release - skipping migration safety check (no production data)"
