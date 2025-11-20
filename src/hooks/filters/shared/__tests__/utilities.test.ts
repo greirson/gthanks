@@ -17,7 +17,7 @@ describe('searchUtils', () => {
 
     const result = applySearchFilter(items, 'gift', ['title']);
     expect(result).toHaveLength(1);
-    expect(result.map(i => i.id)).toEqual([1]);
+    expect(result.map((i) => i.id)).toEqual([1]);
   });
 
   it('returns all items when query is empty', () => {

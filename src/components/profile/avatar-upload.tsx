@@ -36,7 +36,9 @@ interface AvatarUploadResponse {
 }
 
 function isApiErrorResponse(data: unknown): data is ApiErrorResponse {
-  return typeof data === 'object' && data !== null && 'error' in data && typeof data.error === 'string';
+  return (
+    typeof data === 'object' && data !== null && 'error' in data && typeof data.error === 'string'
+  );
 }
 
 export function AvatarUpload({
@@ -56,7 +58,9 @@ export function AvatarUpload({
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) {return;}
+    if (!file) {
+      return;
+    }
 
     // Validate file type
     const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -89,7 +93,7 @@ export function AvatarUpload({
         router.refresh();
         toast.success('Photo removed successfully');
       } else {
-        const error = await response.json() as ApiErrorResponse;
+        const error = (await response.json()) as ApiErrorResponse;
         const errorMessage = isApiErrorResponse(error) ? error.error : 'Failed to remove photo';
         toast.error(errorMessage);
       }
@@ -180,7 +184,7 @@ export function AvatarUpload({
             });
 
             if (uploadResponse.ok) {
-              const result = await uploadResponse.json() as AvatarUploadResponse;
+              const result = (await uploadResponse.json()) as AvatarUploadResponse;
 
               // Optimistic update - instant UI change
               setLocalAvatar(result.avatarUrl || '');
@@ -193,8 +197,10 @@ export function AvatarUpload({
 
               toast.success('Photo updated successfully');
             } else {
-              const error = await uploadResponse.json() as ApiErrorResponse;
-              const errorMessage = isApiErrorResponse(error) ? error.error : 'Failed to upload photo';
+              const error = (await uploadResponse.json()) as ApiErrorResponse;
+              const errorMessage = isApiErrorResponse(error)
+                ? error.error
+                : 'Failed to upload photo';
               toast.error(errorMessage);
             }
           } catch {
@@ -219,7 +225,11 @@ export function AvatarUpload({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="min-h-[44px]">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void handleRemove()} disabled={isUploading} className="min-h-[44px]">
+            <AlertDialogAction
+              onClick={() => void handleRemove()}
+              disabled={isUploading}
+              className="min-h-[44px]"
+            >
               {isUploading ? 'Removing...' : 'Remove'}
             </AlertDialogAction>
           </AlertDialogFooter>

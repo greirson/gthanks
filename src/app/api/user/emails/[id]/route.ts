@@ -26,10 +26,7 @@ import { logger } from '@/lib/services/logger';
  * @see {@link getCurrentUser} for unified authentication
  * @see {@link userService.deleteEmail} for service implementation
  */
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const user = await getCurrentUser();
     if (!user?.id) {

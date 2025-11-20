@@ -33,6 +33,7 @@ pnpm test:e2e:webkit       # Run only WebKit tests
 ## Test Results
 
 All smoke tests are passing:
+
 - Homepage loads correctly
 - Login page is accessible
 - 404 handling works

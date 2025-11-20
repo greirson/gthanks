@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
         },
         {
           status: 429,
-          headers: getRateLimitHeaders(rateLimitResult)
+          headers: getRateLimitHeaders(rateLimitResult),
         }
       );
     }
@@ -107,7 +107,10 @@ export async function POST(request: NextRequest) {
         logger.error({ error: err }, 'Failed to send verification email');
         return NextResponse.json(
           {
-            error: getUserFriendlyError('INTERNAL_ERROR', 'Failed to send verification email. Please try again.'),
+            error: getUserFriendlyError(
+              'INTERNAL_ERROR',
+              'Failed to send verification email. Please try again.'
+            ),
             code: 'INTERNAL_ERROR',
           },
           { status: 500, headers: getRateLimitHeaders(rateLimitResult) }
@@ -121,7 +124,10 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         {
-          error: getUserFriendlyError('VALIDATION_ERROR', error.errors[0]?.message || 'Invalid email format'),
+          error: getUserFriendlyError(
+            'VALIDATION_ERROR',
+            error.errors[0]?.message || 'Invalid email format'
+          ),
           code: 'VALIDATION_ERROR',
         },
         { status: 400 }

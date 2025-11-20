@@ -2,7 +2,12 @@
  * OAuth Token Encryption Tests
  */
 
-import { encryptToken, decryptToken, safeRetrieveToken, isTokenEncrypted } from '../oauth-encryption';
+import {
+  encryptToken,
+  decryptToken,
+  safeRetrieveToken,
+  isTokenEncrypted,
+} from '../oauth-encryption';
 
 describe('OAuth Token Encryption', () => {
   const testToken = 'test-access-token-1234567890';
@@ -47,20 +52,28 @@ describe('OAuth Token Encryption', () => {
 
     it('should throw error for invalid ciphertext', () => {
       const encrypted = encryptToken(testToken);
-      expect(() => decryptToken('invalid-ciphertext', encrypted.iv)).toThrow('Token decryption failed');
+      expect(() => decryptToken('invalid-ciphertext', encrypted.iv)).toThrow(
+        'Token decryption failed'
+      );
     });
 
     it('should throw error for invalid IV', () => {
       const encrypted = encryptToken(testToken);
-      expect(() => decryptToken(encrypted.encrypted, 'invalid-iv')).toThrow('Token decryption failed');
+      expect(() => decryptToken(encrypted.encrypted, 'invalid-iv')).toThrow(
+        'Token decryption failed'
+      );
     });
 
     it('should throw error for missing encrypted data', () => {
-      expect(() => decryptToken('', 'some-iv')).toThrow('Cannot decrypt: missing encrypted data or IV');
+      expect(() => decryptToken('', 'some-iv')).toThrow(
+        'Cannot decrypt: missing encrypted data or IV'
+      );
     });
 
     it('should throw error for missing IV', () => {
-      expect(() => decryptToken('some-encrypted-data', '')).toThrow('Cannot decrypt: missing encrypted data or IV');
+      expect(() => decryptToken('some-encrypted-data', '')).toThrow(
+        'Cannot decrypt: missing encrypted data or IV'
+      );
     });
   });
 
@@ -86,36 +99,21 @@ describe('OAuth Token Encryption', () => {
   describe('safeRetrieveToken', () => {
     it('should decrypt encrypted token when encrypted fields exist', () => {
       const encrypted = encryptToken(testToken);
-      const result = safeRetrieveToken(
-        encrypted.encrypted,
-        encrypted.iv,
-        null,
-        'access'
-      );
+      const result = safeRetrieveToken(encrypted.encrypted, encrypted.iv, null, 'access');
 
       expect(result).toBe(testToken);
     });
 
     it('should fall back to plaintext when encrypted fields are missing', () => {
       const plaintextToken = 'plaintext-token';
-      const result = safeRetrieveToken(
-        null,
-        null,
-        plaintextToken,
-        'access'
-      );
+      const result = safeRetrieveToken(null, null, plaintextToken, 'access');
 
       expect(result).toBe(plaintextToken);
     });
 
     it('should fall back to plaintext on decryption failure', () => {
       const plaintextToken = 'fallback-token';
-      const result = safeRetrieveToken(
-        'invalid-encrypted',
-        'invalid-iv',
-        plaintextToken,
-        'access'
-      );
+      const result = safeRetrieveToken('invalid-encrypted', 'invalid-iv', plaintextToken, 'access');
 
       expect(result).toBe(plaintextToken);
     });
@@ -136,7 +134,10 @@ describe('OAuth Token Encryption', () => {
 
       // Force module reload by requiring encryption again
       jest.resetModules();
-      const { encryptToken: encryptWithFallback, decryptToken: decryptWithFallback } = require('../oauth-encryption');
+      const {
+        encryptToken: encryptWithFallback,
+        decryptToken: decryptWithFallback,
+      } = require('../oauth-encryption');
 
       const encrypted = encryptWithFallback(testToken);
       const decrypted = decryptWithFallback(encrypted.encrypted, encrypted.iv);

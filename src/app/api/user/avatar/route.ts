@@ -42,7 +42,10 @@ export async function POST(request: NextRequest) {
     if (buffer.length > MAX_AVATAR_SIZE) {
       return NextResponse.json(
         {
-          error: getUserFriendlyError('VALIDATION_ERROR', 'Avatar image too large. Maximum size is 2MB.'),
+          error: getUserFriendlyError(
+            'VALIDATION_ERROR',
+            'Avatar image too large. Maximum size is 2MB.'
+          ),
           code: 'VALIDATION_ERROR',
         },
         { status: 400 }
@@ -56,7 +59,10 @@ export async function POST(request: NextRequest) {
     if (!fileType || !allowedTypes.includes(fileType.mime)) {
       return NextResponse.json(
         {
-          error: getUserFriendlyError('VALIDATION_ERROR', 'Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.'),
+          error: getUserFriendlyError(
+            'VALIDATION_ERROR',
+            'Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.'
+          ),
           code: 'VALIDATION_ERROR',
         },
         { status: 400 }
@@ -83,7 +89,10 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error && error.message.includes('Unsupported file type')) {
       return NextResponse.json(
         {
-          error: getUserFriendlyError('VALIDATION_ERROR', 'Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.'),
+          error: getUserFriendlyError(
+            'VALIDATION_ERROR',
+            'Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.'
+          ),
           code: 'VALIDATION_ERROR',
         },
         { status: 400 }
@@ -191,7 +200,10 @@ export async function DELETE() {
         await imageProcessor.deleteImage(userData.avatarUrl);
       } catch (error) {
         // File might already be deleted, log but continue anyway
-        logger.warn({ error: error, avatarUrl: userData.avatarUrl }, 'Failed to delete avatar file');
+        logger.warn(
+          { error: error, avatarUrl: userData.avatarUrl },
+          'Failed to delete avatar file'
+        );
       }
     }
 
@@ -209,7 +221,10 @@ export async function DELETE() {
   } catch (error) {
     logger.error({ error: error }, 'Error deleting user avatar');
     return NextResponse.json(
-      { error: getUserFriendlyError('INTERNAL_ERROR', 'Failed to delete avatar'), code: 'INTERNAL_ERROR' },
+      {
+        error: getUserFriendlyError('INTERNAL_ERROR', 'Failed to delete avatar'),
+        code: 'INTERNAL_ERROR',
+      },
       { status: 500 }
     );
   }

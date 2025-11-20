@@ -150,25 +150,40 @@ export function useListFilters(lists: ListWithOwner[], currentUserId?: string) {
   }, [filterState]);
 
   // Setters
-  const setSearch = useCallback((search: string) => {
-    setFilterState((prev) => ({ ...prev, search }));
-  }, [setFilterState]);
+  const setSearch = useCallback(
+    (search: string) => {
+      setFilterState((prev) => ({ ...prev, search }));
+    },
+    [setFilterState]
+  );
 
-  const setVisibility = useCallback((visibility: VisibilitySelection) => {
-    setFilterState((prev) => ({ ...prev, visibility }));
-  }, [setFilterState]);
+  const setVisibility = useCallback(
+    (visibility: VisibilitySelection) => {
+      setFilterState((prev) => ({ ...prev, visibility }));
+    },
+    [setFilterState]
+  );
 
-  const setOwnership = useCallback((ownership: OwnershipFilter) => {
-    setFilterState((prev) => ({ ...prev, ownership }));
-  }, [setFilterState]);
+  const setOwnership = useCallback(
+    (ownership: OwnershipFilter) => {
+      setFilterState((prev) => ({ ...prev, ownership }));
+    },
+    [setFilterState]
+  );
 
-  const setItemCount = useCallback((itemCount: ItemCountRange) => {
-    setFilterState((prev) => ({ ...prev, itemCount }));
-  }, [setFilterState]);
+  const setItemCount = useCallback(
+    (itemCount: ItemCountRange) => {
+      setFilterState((prev) => ({ ...prev, itemCount }));
+    },
+    [setFilterState]
+  );
 
-  const setSortOption = useCallback((sort: ListSortOption) => {
-    setFilterState((prev) => ({ ...prev, sort }));
-  }, [setFilterState]);
+  const setSortOption = useCallback(
+    (sort: ListSortOption) => {
+      setFilterState((prev) => ({ ...prev, sort }));
+    },
+    [setFilterState]
+  );
 
   const resetFilters = useCallback(() => {
     setFilterState(DEFAULT_FILTER_STATE);

@@ -38,7 +38,7 @@ describe('slugify', () => {
 
   it('should handle mixed unicode and special characters', () => {
     expect(slugify('Café & Restaurant')).toBe('cafe-restaurant');
-    expect(slugify('Müller\'s Party #2024')).toBe('mullers-party-2024');
+    expect(slugify("Müller's Party #2024")).toBe('mullers-party-2024');
   });
 
   it('should handle emojis by removing them', () => {
@@ -112,7 +112,7 @@ describe('generateSlugFromListName', () => {
     // After fix, these should produce readable slugs
     expect(generateSlugFromListName('Wünsche Liste')).toBe('wunsche-liste');
     expect(generateSlugFromListName('Noël 2024')).toBe('noel-2024');
-    expect(generateSlugFromListName('José\'s Birthday')).toBe('joses-birthday');
+    expect(generateSlugFromListName("José's Birthday")).toBe('joses-birthday');
   });
 
   it('should handle unicode names that are not reserved words', () => {
@@ -131,7 +131,7 @@ describe('generateSlugFromListName', () => {
 
   it('should handle complex real-world examples', () => {
     expect(generateSlugFromListName('Christmas 2024')).toBe('christmas-2024');
-    expect(generateSlugFromListName('Mom\'s Birthday Wishes')).toBe('moms-birthday-wishes');
+    expect(generateSlugFromListName("Mom's Birthday Wishes")).toBe('moms-birthday-wishes');
     expect(generateSlugFromListName('Family Gift Ideas')).toBe('family-gift-ideas');
   });
 
@@ -164,7 +164,7 @@ describe('generateSlugFromListName', () => {
   });
 
   it('should handle mixed content', () => {
-    expect(generateSlugFromListName('List #1: Mom\'s Birthday 🎂')).toBe('list-1-moms-birthday');
+    expect(generateSlugFromListName("List #1: Mom's Birthday 🎂")).toBe('list-1-moms-birthday');
     expect(generateSlugFromListName('Café ☕ - Breakfast Items')).toBe('cafe-breakfast-items');
   });
 });

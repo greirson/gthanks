@@ -104,7 +104,8 @@ const mockDb = {
       return Promise.resolve(users);
     }),
     create: jest.fn().mockImplementation((data) => {
-      const id = data.data.id || `user-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+      const id =
+        data.data.id || `user-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
       const user = {
         id,
         email: data.data.email || 'test@example.com',
@@ -116,7 +117,8 @@ const mockDb = {
         isAdmin: data.data.isAdmin || false,
         username: data.data.username !== undefined ? data.data.username : null,
         usernameSetAt: data.data.usernameSetAt !== undefined ? data.data.usernameSetAt : null,
-        canUseVanityUrls: data.data.canUseVanityUrls !== undefined ? data.data.canUseVanityUrls : true,
+        canUseVanityUrls:
+          data.data.canUseVanityUrls !== undefined ? data.data.canUseVanityUrls : true,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -130,7 +132,8 @@ const mockDb = {
       // Check for unique username constraint
       if (args.data.username !== undefined && args.data.username !== null) {
         const duplicateUsername = Array.from(mockDataStore.users.values()).find(
-          (u) => u.id !== args.where.id && u.username?.toLowerCase() === args.data.username.toLowerCase()
+          (u) =>
+            u.id !== args.where.id && u.username?.toLowerCase() === args.data.username.toLowerCase()
         );
         if (duplicateUsername) {
           // Create a proper Prisma unique constraint error using the mocked class
@@ -543,7 +546,8 @@ const mockDb = {
       if (args?.where) {
         // Filter by slug
         if (args.where.slug) {
-          const slug = typeof args.where.slug === 'string' ? args.where.slug.toLowerCase() : args.where.slug;
+          const slug =
+            typeof args.where.slug === 'string' ? args.where.slug.toLowerCase() : args.where.slug;
           lists = lists.filter((l) => l.slug?.toLowerCase() === slug);
         }
 
@@ -677,7 +681,8 @@ const mockDb = {
       return Promise.resolve(list);
     }),
     create: jest.fn().mockImplementation((data) => {
-      const id = data.data.id || `list-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+      const id =
+        data.data.id || `list-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
       const list = {
         id,
         name: data.data.name,
@@ -686,7 +691,8 @@ const mockDb = {
         password: data.data.password || null,
         shareToken: data.data.shareToken || null,
         slug: data.data.slug !== undefined ? data.data.slug : null,
-        hideFromProfile: data.data.hideFromProfile !== undefined ? data.data.hideFromProfile : false,
+        hideFromProfile:
+          data.data.hideFromProfile !== undefined ? data.data.hideFromProfile : false,
         ownerId: data.data.ownerId,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -711,9 +717,10 @@ const mockDb = {
       // Check for unique slug constraint (per owner)
       if (args.data.slug !== undefined && args.data.slug !== null) {
         const duplicateSlug = Array.from(mockDataStore.lists.values()).find(
-          (l) => l.id !== args.where.id &&
-                 l.ownerId === existing.ownerId &&
-                 l.slug?.toLowerCase() === args.data.slug.toLowerCase()
+          (l) =>
+            l.id !== args.where.id &&
+            l.ownerId === existing.ownerId &&
+            l.slug?.toLowerCase() === args.data.slug.toLowerCase()
         );
         if (duplicateSlug) {
           // Create a proper Prisma unique constraint error using the mocked class
@@ -843,7 +850,8 @@ const mockDb = {
   },
   wish: {
     create: jest.fn().mockImplementation((data) => {
-      const id = data.data.id || `wish-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+      const id =
+        data.data.id || `wish-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
       const wish = {
         id,
         title: data.data.title,
@@ -962,7 +970,8 @@ const mockDb = {
   },
   reservation: {
     create: jest.fn().mockImplementation((data) => {
-      const id = data.data.id || `reservation-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+      const id =
+        data.data.id || `reservation-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
       const reservation = {
         id,
         wishId: data.data.wishId,
@@ -1188,12 +1197,14 @@ const mockDb = {
 
           // Check identifier startsWith filter
           if (args.where.identifier?.startsWith) {
-            shouldDelete = shouldDelete && token.identifier.startsWith(args.where.identifier.startsWith);
+            shouldDelete =
+              shouldDelete && token.identifier.startsWith(args.where.identifier.startsWith);
           }
 
           // Check expires lt filter
           if (args.where.expires?.lt) {
-            shouldDelete = shouldDelete && new Date(token.expires) < new Date(args.where.expires.lt);
+            shouldDelete =
+              shouldDelete && new Date(token.expires) < new Date(args.where.expires.lt);
           }
 
           if (shouldDelete) {
@@ -1201,7 +1212,7 @@ const mockDb = {
           }
         }
 
-        tokensToDelete.forEach(key => {
+        tokensToDelete.forEach((key) => {
           mockDataStore.verificationTokens.delete(key);
           count++;
         });
@@ -1275,7 +1286,8 @@ const mockDb = {
 
           // Check expiresAt lt filter
           if (args.where.expiresAt?.lt) {
-            shouldDelete = shouldDelete && new Date(magicLink.expiresAt) < new Date(args.where.expiresAt.lt);
+            shouldDelete =
+              shouldDelete && new Date(magicLink.expiresAt) < new Date(args.where.expiresAt.lt);
           }
 
           if (shouldDelete) {
@@ -1283,7 +1295,7 @@ const mockDb = {
           }
         }
 
-        linksToDelete.forEach(token => {
+        linksToDelete.forEach((token) => {
           mockDataStore.magicLinks.delete(token);
           count++;
         });
@@ -1332,9 +1344,7 @@ const mockDb = {
       if (args.where.sessionToken) {
         session = mockDataStore.sessions.get(args.where.sessionToken);
       } else if (args.where.id) {
-        session = Array.from(mockDataStore.sessions.values()).find(
-          (s) => s.id === args.where.id
-        );
+        session = Array.from(mockDataStore.sessions.values()).find((s) => s.id === args.where.id);
       }
 
       if (!session) return Promise.resolve(null);
@@ -1384,7 +1394,10 @@ const mockDb = {
           if (args.where.userId && session.userId === args.where.userId) {
             shouldDelete = true;
           }
-          if (args.where.expires?.lt && new Date(session.expires) < new Date(args.where.expires.lt)) {
+          if (
+            args.where.expires?.lt &&
+            new Date(session.expires) < new Date(args.where.expires.lt)
+          ) {
             shouldDelete = true;
           }
           if (shouldDelete) {
@@ -2427,7 +2440,7 @@ mockDb.listWish = {
     const listWish = {
       listId: data.data.listId,
       wishId: data.data.wishId,
-      addedAt: new Date()
+      addedAt: new Date(),
     };
     mockDataStore.listWishes = mockDataStore.listWishes || new Map();
     mockDataStore.listWishes.set(key, listWish);
@@ -2438,10 +2451,10 @@ mockDb.listWish = {
     let results = Array.from(listWishes.values());
     if (args?.where) {
       if (args.where.listId) {
-        results = results.filter(lw => lw.listId === args.where.listId);
+        results = results.filter((lw) => lw.listId === args.where.listId);
       }
       if (args.where.wishId) {
-        results = results.filter(lw => lw.wishId === args.where.wishId);
+        results = results.filter((lw) => lw.wishId === args.where.wishId);
       }
     }
     return Promise.resolve(results);
@@ -2468,7 +2481,7 @@ mockDb.listWish = {
       }
     }
     return Promise.resolve({ count });
-  })
+  }),
 };
 
 // Also ensure listWishes is cleared on reset

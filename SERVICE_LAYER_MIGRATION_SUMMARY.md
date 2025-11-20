@@ -7,18 +7,21 @@
 ### Completed Files (14/26)
 
 ✅ **User Email Management** - All migrated to `userService`
+
 - `/api/user/emails/add/route.ts`
 - `/api/user/emails/[id]/route.ts`
 - `/api/user/emails/[id]/resend/route.ts`
 - `/api/user/emails/set-primary/route.ts`
 
 ✅ **User Profile Management** - All migrated to `userService`
+
 - `/api/user/profile-settings/route.ts`
 - `/api/user/theme/route.ts`
 - `/api/user/preferences/route.ts`
 - `/api/user/profile/complete/route.ts`
 
 ✅ **Service Layer Enhancements**
+
 - Enhanced `userService` with comprehensive email management methods
 - Added `getUserEmails`, `getUserEmail`, `deleteEmail`, `setPrimaryEmail`
 - Added `verifyEmail`, `resendVerificationEmail`, `changeEmail`
@@ -28,6 +31,7 @@
 ### Remaining Files (12/26)
 
 #### Admin Routes (6 files) - Use `userService` + `adminService`
+
 - [ ] `/api/admin/users/[userId]/emails/route.ts` - GET/POST emails for user
 - [ ] `/api/admin/users/[userId]/emails/[emailId]/route.ts` - DELETE email
 - [ ] `/api/admin/users/[userId]/emails/[emailId]/set-primary/route.ts` - Admin set primary
@@ -36,10 +40,12 @@
 - [ ] `/api/admin/users/bulk/route.ts` - Bulk user operations
 
 #### List Admin Management (2 files) - Keep some `db` access (complex queries)
+
 - [~] `/api/lists/[listId]/admins/route.ts` - Partially fixed (GET uses db, POST uses service)
 - [ ] `/api/lists/[listId]/admins/[userId]/route.ts` - DELETE co-manager
 
 #### Group & Avatar Routes (4 files) - Need review
+
 - [ ] `/api/groups/[id]/avatar/route.ts` - Avatar upload (may need file service)
 - [ ] `/api/groups/members/unique/route.ts` - Unique member query (OK to keep db)
 - [ ] `/api/lists/[listId]/groups/route.ts` - List group sharing
@@ -47,6 +53,7 @@
 - [ ] `/api/user/avatar/route.ts` - Current user avatar
 
 #### Other User Routes (2 files)
+
 - [ ] `/api/user/emails/change/route.ts` - Change primary email (admin operation)
 - [ ] `/api/user/emails/verify/route.ts` - Verify email token
 - [ ] `/api/user/invitations/route.ts` - List/group invitations
@@ -57,6 +64,7 @@
 ### userService (src/lib/services/user-service.ts)
 
 **Email Management**
+
 ```typescript
 await userService.addEmail(userId, email, sendVerification);
 await userService.getUserEmails(userId);
@@ -69,6 +77,7 @@ await userService.changeEmail(userId, newEmail); // Admin only
 ```
 
 **Profile Management**
+
 ```typescript
 await userService.updateProfileSettings(userId, { showPublicProfile: true });
 await userService.updateTheme(userId, 'dark');
@@ -78,6 +87,7 @@ await userService.completeProfile(userId, { name, username });
 ```
 
 **Username & Vanity URLs**
+
 ```typescript
 await userService.setUsername(userId, username); // One-time only
 await userService.canSetUsername(userId);
@@ -87,6 +97,7 @@ await userService.adminUpdateUsername(userId, username); // Admin bypass
 ```
 
 **Utility Methods**
+
 ```typescript
 await userService.getUserById(userId);
 await userService.hasFeatureAccess(userId, 'vanityUrls');
@@ -120,6 +131,7 @@ await listService.bulkRemoveWishesFromList(listId, wishIds, userId);
 ### permissionService (src/lib/services/permission-service.ts)
 
 **MANDATORY for all permission checks**
+
 ```typescript
 // Throws ForbiddenError if not allowed
 await permissionService.require(userId, 'edit', { type: 'list', id: listId });
@@ -133,14 +145,16 @@ const { allowed } = await permissionService.can(userId, 'delete', { type: 'wish'
 ### Pattern 1: Simple Read Operations
 
 **Before:**
+
 ```typescript
 const emails = await db.userEmail.findMany({
   where: { userId },
-  orderBy: { isPrimary: 'desc' }
+  orderBy: { isPrimary: 'desc' },
 });
 ```
 
 **After:**
+
 ```typescript
 const emails = await userService.getUserEmails(userId);
 ```
@@ -148,13 +162,15 @@ const emails = await userService.getUserEmails(userId);
 ### Pattern 2: Write Operations with Validation
 
 **Before:**
+
 ```typescript
 const email = await db.userEmail.delete({
-  where: { id: emailId }
+  where: { id: emailId },
 });
 ```
 
 **After:**
+
 ```typescript
 // Service handles all validation (only email, primary check, etc.)
 await userService.deleteEmail(userId, emailId);
@@ -163,14 +179,16 @@ await userService.deleteEmail(userId, emailId);
 ### Pattern 3: Admin Operations
 
 **Before:**
+
 ```typescript
 const user = await db.user.update({
   where: { id: userId },
-  data: { canUseVanityUrls: true }
+  data: { canUseVanityUrls: true },
 });
 ```
 
 **After:**
+
 ```typescript
 // Check admin first
 await requireAdminUser(adminId);
@@ -181,6 +199,7 @@ await userService.setVanityAccess(userId, true);
 ### Pattern 4: Complex Transactions
 
 **Before:**
+
 ```typescript
 await db.$transaction(async (tx) => {
   await tx.userEmail.updateMany(...);
@@ -190,6 +209,7 @@ await db.$transaction(async (tx) => {
 ```
 
 **After:**
+
 ```typescript
 // Service method handles transaction internally
 await userService.setPrimaryEmail(userId, emailId);

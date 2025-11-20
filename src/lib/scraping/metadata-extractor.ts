@@ -72,7 +72,9 @@ export class MetadataExtractor {
    * 2. Must have at least one additional field (price, description, or image)
    */
   private isQualityMetadata(metadata: ProductMetadata, url: string): boolean {
-    if (!metadata || !metadata.title) {return false;}
+    if (!metadata || !metadata.title) {
+      return false;
+    }
 
     try {
       const parsedUrl = new URL(url);
@@ -275,7 +277,8 @@ export class MetadataExtractor {
           success: false,
           error: {
             type: 'captcha_detected',
-            message: "Ah crap, this website has fancy tools to stop us from reading it. You'll have to enter the info manually.",
+            message:
+              "Ah crap, this website has fancy tools to stop us from reading it. You'll have to enter the info manually.",
             url: sanitizedUrl,
             partial: {
               domain: parsedUrl.hostname,
@@ -345,7 +348,7 @@ export class MetadataExtractor {
     const captchaIndicators = [
       'To discuss automated access to Amazon data',
       'api-services-support@amazon.com',
-      'Sorry, we just need to make sure you\'re not a robot',
+      "Sorry, we just need to make sure you're not a robot",
       'Enter the characters you see below',
       'Type the characters you see in this image',
       'validateCaptcha',
@@ -369,11 +372,7 @@ export class MetadataExtractor {
       if (pathParts.length > 0) {
         const lastPart = pathParts[pathParts.length - 1];
         // Clean up URL-encoded characters and hyphens
-        return lastPart
-          .replace(/-/g, ' ')
-          .replace(/[_+]/g, ' ')
-          .replace(/%20/g, ' ')
-          .trim();
+        return lastPart.replace(/-/g, ' ').replace(/[_+]/g, ' ').replace(/%20/g, ' ').trim();
       }
 
       return parsedUrl.hostname;

@@ -19,7 +19,11 @@ export class GroupInvitationService {
   /**
    * Invite users to group
    */
-  async inviteUsers(groupId: string, data: GroupInviteInput, userId: string): Promise<{ sent: number; skipped: string[] }> {
+  async inviteUsers(
+    groupId: string,
+    data: GroupInviteInput,
+    userId: string
+  ): Promise<{ sent: number; skipped: string[] }> {
     // Check permissions
     await permissionService.require(userId, 'invite', { type: 'group', id: groupId });
 

@@ -43,7 +43,10 @@ export async function GET(request: NextRequest) {
       if (!reservation) {
         return NextResponse.json(
           {
-            error: getUserFriendlyError('NOT_FOUND', 'Reservation not found or invalid access token'),
+            error: getUserFriendlyError(
+              'NOT_FOUND',
+              'Reservation not found or invalid access token'
+            ),
             code: 'NOT_FOUND',
           },
           { status: 404 }
@@ -129,7 +132,10 @@ export async function DELETE(request: NextRequest) {
       if (error.message.includes('not found') || error.message.includes('invalid access token')) {
         return NextResponse.json(
           {
-            error: getUserFriendlyError('NOT_FOUND', 'Reservation not found or invalid access token'),
+            error: getUserFriendlyError(
+              'NOT_FOUND',
+              'Reservation not found or invalid access token'
+            ),
             code: 'NOT_FOUND',
           },
           { status: 404 }

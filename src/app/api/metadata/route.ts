@@ -109,7 +109,10 @@ export async function POST(request: NextRequest) {
 
     // Fallback for unexpected cases
     return NextResponse.json(
-      { success: false, error: { type: 'parse_error', message: 'Failed to extract metadata', url } },
+      {
+        success: false,
+        error: { type: 'parse_error', message: 'Failed to extract metadata', url },
+      },
       { status: 500 }
     );
   } catch (error) {

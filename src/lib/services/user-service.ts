@@ -99,7 +99,11 @@ export class UserService {
   /**
    * Add a new email to user's account
    */
-  async addEmail(userId: string, email: string, sendVerification: boolean = true): Promise<UserEmail> {
+  async addEmail(
+    userId: string,
+    email: string,
+    sendVerification: boolean = true
+  ): Promise<UserEmail> {
     // Create UserEmail record (not verified yet)
     try {
       const userEmail = await db.userEmail.create({
@@ -313,10 +317,7 @@ export class UserService {
   /**
    * Update user profile settings
    */
-  async updateProfileSettings(
-    userId: string,
-    data: { showPublicProfile?: boolean }
-  ) {
+  async updateProfileSettings(userId: string, data: { showPublicProfile?: boolean }) {
     return db.user.update({
       where: { id: userId },
       data,
@@ -345,18 +346,13 @@ export class UserService {
   /**
    * Update user preferences
    */
-  async updatePreferences(
-    userId: string,
-    data: Prisma.UserPreferenceUpdateInput
-  ) {
+  async updatePreferences(userId: string, data: Prisma.UserPreferenceUpdateInput) {
     // Upsert to create if doesn't exist
     // Extract user field if present (for create)
     const createData: Prisma.UserPreferenceCreateInput = {
       user: { connect: { id: userId } },
       ...(typeof data === 'object' && data !== null
-        ? Object.fromEntries(
-            Object.entries(data).filter(([key]) => key !== 'user')
-          )
+        ? Object.fromEntries(Object.entries(data).filter(([key]) => key !== 'user'))
         : {}),
     };
 

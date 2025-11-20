@@ -37,7 +37,7 @@ export default async function ListDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="container mx-auto px-4 pb-8 max-w-full overflow-x-hidden">
+    <div className="container mx-auto max-w-full overflow-x-hidden px-4 pb-8">
       <HydrationBoundary state={dehydrate(queryClient)}>
         <ListDetailView initialList={list} listId={params.id} />
       </HydrationBoundary>

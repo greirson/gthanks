@@ -86,6 +86,7 @@ npx playwright test tests/e2e/reservations/privacy.spec.ts --trace on
 ### Database Setup
 
 Tests use helper functions from `tests/e2e/helpers/database.helper.ts`:
+
 - `createCompleteTestScenario()` - Creates users, groups, lists, and wishes
 - `cleanupTestData()` - Removes test data after each test
 - `getReservationByWishId()` - Verifies database state
@@ -94,6 +95,7 @@ Tests use helper functions from `tests/e2e/helpers/database.helper.ts`:
 ### Authentication
 
 Tests use helper functions from `tests/e2e/helpers/auth.helper.ts`:
+
 - `loginAsUser()` - Direct session creation (faster than magic links)
 - `createAndLoginUser()` - Creates user and logs in
 - Session tokens are injected via cookies
@@ -101,6 +103,7 @@ Tests use helper functions from `tests/e2e/helpers/auth.helper.ts`:
 ### Test Data Cleanup
 
 Each test includes cleanup in `finally` blocks to ensure:
+
 - No test data persists between runs
 - Database remains in clean state
 - Tests can be run repeatedly without conflicts
@@ -110,6 +113,7 @@ Each test includes cleanup in `finally` blocks to ensure:
 ### Owner View (Critical Privacy Requirements)
 
 When a wish is reserved, the owner should see:
+
 - ✅ "Reserved" indicator or badge
 - ❌ NO reserver name
 - ❌ NO reserver email
@@ -118,6 +122,7 @@ When a wish is reserved, the owner should see:
 ### Reserver View
 
 When a wish is reserved by the current user, they should see:
+
 - ✅ Indication that they reserved it ("You reserved", "Reserved by you", etc.)
 - ✅ Cancel/Unreserve button
 - ✅ Wish details (title, price, etc.)
@@ -125,6 +130,7 @@ When a wish is reserved by the current user, they should see:
 ### Other Users View
 
 When viewing a list with reserved wishes:
+
 - ✅ "Reserved" indicator
 - ❌ NO reserver identity
 - ❌ Cannot reserve already-reserved wishes
@@ -149,6 +155,7 @@ expect(success1 !== success2).toBeTruthy();
 ### Tests Fail Due to UI Changes
 
 If UI selectors change, update the locators in `privacy.spec.ts`:
+
 ```typescript
 const reserveButton = page.locator(
   `button:has-text("Reserve"),
@@ -160,6 +167,7 @@ const reserveButton = page.locator(
 ### Database Connection Issues
 
 Ensure `DATABASE_URL` is set in `.env.test`:
+
 ```env
 DATABASE_URL=file:./data/test.db
 ```
@@ -167,6 +175,7 @@ DATABASE_URL=file:./data/test.db
 ### Race Condition Tests Flaky
 
 If concurrent reservation tests are flaky:
+
 1. Check database transaction isolation
 2. Verify unique constraint on `Reservation.wishId`
 3. Ensure API properly handles concurrent requests
@@ -174,6 +183,7 @@ If concurrent reservation tests are flaky:
 ### Cleanup Failures
 
 If tests fail to cleanup:
+
 ```bash
 # Manual cleanup
 npx prisma db push --force-reset
@@ -183,6 +193,7 @@ pnpm db:push
 ## Success Criteria
 
 All tests should pass with:
+
 - ✅ No privacy violations (owner never sees reserver identity)
 - ✅ No duplicate reservations
 - ✅ Proper error handling for concurrent attempts

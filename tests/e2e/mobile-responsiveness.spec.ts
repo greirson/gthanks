@@ -155,12 +155,8 @@ test.describe('Mobile Responsiveness - Critical Tests', () => {
       test('should have no horizontal scroll', async ({ page }) => {
         await page.goto('/wishes');
 
-        const scrollWidth = await page.evaluate(
-          () => document.documentElement.scrollWidth
-        );
-        const clientWidth = await page.evaluate(
-          () => document.documentElement.clientWidth
-        );
+        const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+        const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
 
         expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
       });
@@ -168,12 +164,8 @@ test.describe('Mobile Responsiveness - Critical Tests', () => {
       test('should have no horizontal scroll on lists page', async ({ page }) => {
         await page.goto('/lists');
 
-        const scrollWidth = await page.evaluate(
-          () => document.documentElement.scrollWidth
-        );
-        const clientWidth = await page.evaluate(
-          () => document.documentElement.clientWidth
-        );
+        const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+        const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
 
         expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
       });
@@ -181,12 +173,8 @@ test.describe('Mobile Responsiveness - Critical Tests', () => {
       test('should have no horizontal scroll on groups page', async ({ page }) => {
         await page.goto('/groups');
 
-        const scrollWidth = await page.evaluate(
-          () => document.documentElement.scrollWidth
-        );
-        const clientWidth = await page.evaluate(
-          () => document.documentElement.clientWidth
-        );
+        const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+        const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
 
         expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
       });
@@ -267,9 +255,7 @@ test.describe('Touch Target Accessibility - All Interactive Elements', () => {
 
         if (box.width < 44 || box.height < 44) {
           failedButtons++;
-          failedList.push(
-            `Button "${ariaLabel || text}" (${box.width}x${box.height}px)`
-          );
+          failedList.push(`Button "${ariaLabel || text}" (${box.width}x${box.height}px)`);
         }
       }
     }

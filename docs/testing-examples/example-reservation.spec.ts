@@ -15,7 +15,6 @@ test.describe('Gift Reservations (Example)', () => {
     // 3. Click reserve on a wish
     // 4. Verify reservation confirmation
     // 5. Verify wish shows as reserved to gift giver
-
     // Example flow:
     // await loginUser(page, 'giver@example.com');
     // await page.goto('/lists/[list-id]');
@@ -23,16 +22,13 @@ test.describe('Gift Reservations (Example)', () => {
     // await expect(page.getByText(/reserved by you/i)).toBeVisible();
   });
 
-  test.skip('list owner cannot see reservations on their own list', async ({
-    page,
-  }) => {
+  test.skip('list owner cannot see reservations on their own list', async ({ page }) => {
     // TODO: Implement visibility test
     // CRITICAL: This is the core feature - prevent duplicate gifts
     // 1. Login as list owner
     // 2. View own list with reserved items
     // 3. Verify reserved wishes appear unreserved to owner
     // 4. Verify no indication of who reserved
-
     // Example flow:
     // await loginUser(page, 'owner@example.com');
     // await page.goto('/lists/my-birthday');
@@ -47,7 +43,6 @@ test.describe('Gift Reservations (Example)', () => {
     // 3. Click unreserve
     // 4. Verify wish is no longer reserved
     // 5. Verify other gift givers can now reserve it
-
     // Example flow:
     // await loginUser(page, 'giver@example.com');
     // await page.goto('/lists/[list-id]');
@@ -55,15 +50,12 @@ test.describe('Gift Reservations (Example)', () => {
     // await expect(page.getByText(/no longer reserved/i)).toBeVisible();
   });
 
-  test.skip('prevents double reservation of the same wish', async ({
-    page,
-  }) => {
+  test.skip('prevents double reservation of the same wish', async ({ page }) => {
     // TODO: Implement conflict test
     // 1. Have two gift givers try to reserve same wish
     // 2. First should succeed
     // 3. Second should see wish is already reserved
     // 4. Second should not be able to reserve
-
     // This may require multiple browser contexts
   });
 
@@ -72,7 +64,6 @@ test.describe('Gift Reservations (Example)', () => {
     // 1. Login and reserve a wish
     // 2. Reload page
     // 3. Verify wish still shows as reserved
-
     // Example flow:
     // await loginUser(page, 'giver@example.com');
     // await page.goto('/lists/[list-id]');
@@ -81,16 +72,13 @@ test.describe('Gift Reservations (Example)', () => {
     // await expect(page.getByText(/reserved by you/i)).toBeVisible();
   });
 
-  test.skip('shows reservation count to list owner without details', async ({
-    page,
-  }) => {
+  test.skip('shows reservation count to list owner without details', async ({ page }) => {
     // TODO: Implement count display test
     // Optional: List owner might see "X of Y wishes reserved" but not which ones
     // 1. Login as list owner
     // 2. View list with some reserved wishes
     // 3. Verify general count is shown
     // 4. Verify specific wishes are not identified
-
     // Example flow:
     // await loginUser(page, 'owner@example.com');
     // await page.goto('/lists/my-birthday');

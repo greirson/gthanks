@@ -11,7 +11,10 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { GiftCardTable } from '@/components/lists/GiftCardTable';
-import { useManageGiftCardsDialog, type GiftCard } from '@/components/lists/hooks/useManageGiftCardsDialog';
+import {
+  useManageGiftCardsDialog,
+  type GiftCard,
+} from '@/components/lists/hooks/useManageGiftCardsDialog';
 import { Plus } from 'lucide-react';
 
 interface ManageGiftCardsDialogProps {
@@ -106,17 +109,15 @@ export function ManageGiftCardsDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={dialog.handleClose} {...dialogProps}>
-      <DialogContent className="max-w-[800px] max-h-[90vh] flex flex-col sm:max-w-[90vw] md:max-w-[800px] p-4 sm:p-6">
+      <DialogContent className="flex max-h-[90vh] max-w-[800px] flex-col p-4 sm:max-w-[90vw] sm:p-6 md:max-w-[800px]">
         {/* Header */}
         <DialogHeader className="pb-4">
           <DialogTitle className="text-lg sm:text-xl">Manage Gift Cards</DialogTitle>
-          <DialogDescription>
-            {dialog.cards.length}/8 cards
-          </DialogDescription>
+          <DialogDescription>{dialog.cards.length}/8 cards</DialogDescription>
         </DialogHeader>
 
         {/* Table/Cards (scrollable) */}
-        <div className="flex-1 overflow-auto -mx-4 px-4 sm:-mx-6 sm:px-6">
+        <div className="-mx-4 flex-1 overflow-auto px-4 sm:-mx-6 sm:px-6">
           <GiftCardTable
             cards={dialog.cards}
             onReorder={dialog.reorderCards}
@@ -127,29 +128,29 @@ export function ManageGiftCardsDialog({
         </div>
 
         {/* Footer */}
-        <DialogFooter className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-4">
+        <DialogFooter className="flex flex-col items-stretch gap-3 pt-4 sm:flex-row sm:items-center">
           <Button
             variant="outline"
             onClick={dialog.addCard}
             disabled={dialog.cards.length >= 8}
-            className="h-11 sm:h-10 w-full sm:w-auto"
+            className="h-11 w-full sm:h-10 sm:w-auto"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="mr-2 h-4 w-4" />
             Add Card ({dialog.cards.length}/8)
           </Button>
 
-          <div className="flex gap-2 w-full sm:w-auto">
+          <div className="flex w-full gap-2 sm:w-auto">
             <Button
               variant="outline"
               onClick={handleCancel}
-              className="h-11 sm:h-10 flex-1 sm:flex-initial"
+              className="h-11 flex-1 sm:h-10 sm:flex-initial"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSave}
               disabled={!dialog.isDirty}
-              className="h-11 sm:h-10 flex-1 sm:flex-initial"
+              className="h-11 flex-1 sm:h-10 sm:flex-initial"
             >
               Save
             </Button>

@@ -66,10 +66,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(serializePrismaResponse(result));
   } catch (error) {
-    logger.error(
-      { error, userId: user?.id, wishId },
-      'PUT /api/wishes/[wishId]/memberships error'
-    );
+    logger.error({ error, userId: user?.id, wishId }, 'PUT /api/wishes/[wishId]/memberships error');
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

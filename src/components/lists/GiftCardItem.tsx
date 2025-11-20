@@ -25,11 +25,11 @@ export function GiftCardItem({ card }: GiftCardItemProps) {
   return (
     <div
       className={cn(
-        "group relative inline-flex items-center gap-2 px-3 rounded-full",
-        "bg-secondary/50 hover:bg-secondary/70 transition-colors",
-        "border border-secondary-foreground/10",
-        "min-w-0 max-w-full",
-        "h-11" // Fixed height for uniform pill sizes (44px)
+        'group relative inline-flex items-center gap-2 rounded-full px-3',
+        'bg-secondary/50 transition-colors hover:bg-secondary/70',
+        'border border-secondary-foreground/10',
+        'min-w-0 max-w-full',
+        'h-11' // Fixed height for uniform pill sizes (44px)
       )}
     >
       {/* Favicon */}

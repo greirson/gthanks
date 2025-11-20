@@ -18,6 +18,7 @@ Implemented two backend API improvements for avatar handling:
 **Method:** `DELETE /api/user/avatar`
 
 **Functionality:**
+
 - Authenticates the user
 - Retrieves current avatar URL from database
 - Deletes the file if it's a local upload (`/api/images/` path)
@@ -25,11 +26,13 @@ Implemented two backend API improvements for avatar handling:
 - Returns `204 No Content`
 
 **Security:**
+
 - User can only delete their own avatar
 - Only deletes local uploads, not OAuth avatars or external URLs
 - Handles missing files gracefully (logs warning, continues)
 
 **Code Changes:**
+
 - Added `DELETE` method handler
 - Uses `imageProcessor.deleteImage()` for file deletion
 - Properly handles errors with user-friendly messages
@@ -43,6 +46,7 @@ Implemented two backend API improvements for avatar handling:
 **Method:** `DELETE /api/groups/[id]/avatar`
 
 **Functionality:**
+
 - Authenticates the user
 - Checks admin permissions using `groupService.requireAdmin()`
 - Retrieves current avatar URL from database
@@ -51,12 +55,14 @@ Implemented two backend API improvements for avatar handling:
 - Returns `204 No Content`
 
 **Security:**
+
 - Only group admins can delete group avatar
 - Returns `403 Forbidden` if user is not admin
 - Only deletes local uploads, not data URLs
 - Handles missing files gracefully (logs warning, continues)
 
 **Code Changes:**
+
 - Added `DELETE` method handler
 - Uses `groupService.requireAdmin()` for permission check
 - Uses `imageProcessor.deleteImage()` for file deletion
@@ -71,6 +77,7 @@ Implemented two backend API improvements for avatar handling:
 **Method:** `deleteImage(localPath: string)`
 
 **Changes:**
+
 - Now supports both `/api/images/` paths (new format) and `/uploads/items/` paths (legacy)
 - For `/api/images/` paths: extracts filename and deletes from `uploadsDir`
 - For `/uploads/items/` paths: deletes from `public/` directory
@@ -78,6 +85,7 @@ Implemented two backend API improvements for avatar handling:
 - Logs errors but doesn't throw (file might already be deleted)
 
 **Code:**
+
 ```typescript
 async deleteImage(localPath: string): Promise<void> {
   try {
@@ -108,6 +116,7 @@ async deleteImage(localPath: string): Promise<void> {
 ### Problem
 
 When creating a new group with an avatar, the avatar was stored as a data URL string in the database. This caused issues:
+
 - Data URLs are very long strings (can be 100KB+)
 - GET endpoint expects file paths, not data URLs
 - Avatar doesn't display correctly after group creation
@@ -117,10 +126,12 @@ When creating a new group with an avatar, the avatar was stored as a data URL st
 **File:** `/src/app/api/groups/route.ts`
 
 **Changes:**
+
 1. Added `processDataUrlToFile()` helper function
 2. Updated `POST` handler to detect and process data URLs before calling service
 
 **Helper Function:**
+
 ```typescript
 async function processDataUrlToFile(dataUrl: string): Promise<string> {
   // Extract base64 data from data URL
@@ -143,6 +154,7 @@ async function processDataUrlToFile(dataUrl: string): Promise<string> {
 ```
 
 **Updated POST Handler:**
+
 ```typescript
 export async function POST(request: NextRequest) {
   // ... authentication and parsing ...
@@ -170,6 +182,7 @@ export async function POST(request: NextRequest) {
 ```
 
 **Benefits:**
+
 - Data URLs are converted to optimized WebP files
 - Files are properly stored in filesystem
 - Avatar displays correctly after group creation
@@ -181,6 +194,7 @@ export async function POST(request: NextRequest) {
 ## Testing Checklist
 
 ### User Avatar Deletion
+
 - [ ] DELETE `/api/user/avatar` removes user avatar
 - [ ] User avatar file is deleted from filesystem
 - [ ] Database `avatarUrl` is set to null
@@ -190,6 +204,7 @@ export async function POST(request: NextRequest) {
 - [ ] Data URL avatars are not deleted from filesystem (only DB cleared)
 
 ### Group Avatar Deletion
+
 - [ ] DELETE `/api/groups/{id}/avatar` removes group avatar (admin only)
 - [ ] Group avatar file is deleted from filesystem
 - [ ] Database `avatarUrl` is set to null
@@ -199,6 +214,7 @@ export async function POST(request: NextRequest) {
 - [ ] Data URL avatars are not deleted from filesystem (only DB cleared)
 
 ### Group Creation with Avatar
+
 - [ ] Creating group with data URL avatar saves file (not data URL)
 - [ ] Group avatar displays correctly after creation
 - [ ] Avatar is optimized and converted to WebP
@@ -208,6 +224,7 @@ export async function POST(request: NextRequest) {
 - [ ] No errors in logs for successful avatar processing
 
 ### File System Integrity
+
 - [ ] Avatar files are actually deleted from filesystem
 - [ ] Deleted files don't leave orphaned data
 - [ ] `/api/images/{filename}` endpoint serves new group avatars correctly
@@ -228,11 +245,13 @@ export async function POST(request: NextRequest) {
 **Request:** No body required
 
 **Response:**
+
 - **204 No Content** - Avatar deleted successfully
 - **401 Unauthorized** - User not authenticated
 - **500 Internal Server Error** - Failed to delete avatar
 
 **Side Effects:**
+
 - Deletes avatar file from filesystem (if local upload)
 - Sets `avatarUrl` and `image` to `null` in database
 
@@ -249,6 +268,7 @@ export async function POST(request: NextRequest) {
 **Request:** No body required
 
 **Response:**
+
 - **204 No Content** - Avatar deleted successfully
 - **401 Unauthorized** - User not authenticated
 - **403 Forbidden** - User is not a group admin
@@ -256,6 +276,7 @@ export async function POST(request: NextRequest) {
 - **500 Internal Server Error** - Failed to delete avatar
 
 **Side Effects:**
+
 - Deletes avatar file from filesystem (if local upload)
 - Sets `avatarUrl` to `null` in database
 
@@ -282,6 +303,7 @@ export async function POST(request: NextRequest) {
 ## Next Steps
 
 After testing, consider:
+
 1. Add E2E tests for avatar deletion flows
 2. Add unit tests for `processDataUrlToFile()` function
 3. Document API endpoints in API documentation
@@ -293,26 +315,31 @@ After testing, consider:
 ## Implementation Notes
 
 **Error Handling:**
+
 - File deletion errors are logged but don't fail the request
 - Data URL processing errors are logged and gracefully handled
 - User-friendly error messages for all failure cases
 
 **Security:**
+
 - Permission checks using `groupService.requireAdmin()`
 - Only local uploads are deleted (no external URL deletion)
 - Proper authentication checks on all endpoints
 
 **Logging:**
+
 - All errors are logged with context
 - Successful operations are logged (data URL processing)
 - Warnings for missing files (might already be deleted)
 
 **Database Updates:**
+
 - User avatar: Sets both `avatarUrl` and `image` to null (NextAuth compatibility)
 - Group avatar: Sets `avatarUrl` to null
 - No cascade deletes - just sets to null
 
 **File Management:**
+
 - Supports both legacy (`/uploads/items/`) and new (`/api/images/`) paths
 - Uses `path.basename()` to safely extract filename
 - Uses `this.uploadsDir` for consistent path resolution

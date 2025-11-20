@@ -3,6 +3,7 @@
 ## Overview
 
 This directory contains integration tests for the critical paths of the gthanks application:
+
 - **Authentication**: Magic link email flow, OAuth (if configured), session persistence
 - **Reservations**: Core feature that prevents duplicate gifts
 
@@ -22,11 +23,13 @@ tests/
 ## Running Tests
 
 ### Run All Integration Tests
+
 ```bash
 pnpm test:integration
 ```
 
 ### Run Specific Test Suite
+
 ```bash
 # Authentication tests only
 pnpm test:integration auth
@@ -36,11 +39,13 @@ pnpm test:integration reservations
 ```
 
 ### Watch Mode (for development)
+
 ```bash
 pnpm test:integration:watch
 ```
 
 ### Run All Tests (unit + integration)
+
 ```bash
 pnpm test:all
 ```
@@ -48,42 +53,52 @@ pnpm test:all
 ## What's Being Tested
 
 ### Authentication Tests (`auth.test.ts`)
+
 ✅ **Magic Link Flow**
+
 - Sending magic link emails
 - Creating user sessions with valid tokens
 - Rejecting expired tokens
 - Handling non-existent tokens
 
 ✅ **Session Persistence**
+
 - Maintaining sessions across requests
 - Cleaning up expired sessions
 
 ✅ **Protected Routes**
+
 - Allowing authenticated users access
 - Denying unauthenticated users
 - Handling invalid session tokens
 
 ✅ **OAuth** (if configured)
+
 - Account linking with OAuth providers
 
 ### Reservation Tests (`reservations.test.ts`)
+
 ✅ **Creating Reservations**
+
 - Reserve wishes for gift giving
 - Prevent duplicate reservations
 - Anonymous reservations with access tokens
 - Include wish details with reservations
 
 ✅ **Visibility Rules**
+
 - Hide reservation details from wish owners
 - Show details to the reserver
 - Show reservation status to group members
 
 ✅ **Canceling Reservations**
+
 - Users can cancel their own reservations
 - Prevent canceling others' reservations
 - Anonymous cancellation with access tokens
 
 ✅ **Edge Cases**
+
 - Handle wish deletion with active reservations
 - Manage concurrent reservation attempts
 - Update timestamps correctly
@@ -91,6 +106,7 @@ pnpm test:all
 ## Test Environment
 
 Tests use:
+
 - **Mock Database**: In-memory mock implementation (see `jest.setup.js`)
 - **Mock Email Service**: Captures emails for verification
 - **Mock Authentication**: Simulates NextAuth sessions
@@ -98,6 +114,7 @@ Tests use:
 ## Environment Variables
 
 Tests run with minimal configuration. OAuth tests are skipped if providers aren't configured:
+
 - `GOOGLE_CLIENT_ID`
 - `FACEBOOK_CLIENT_ID`
 - `APPLE_CLIENT_ID`
@@ -105,6 +122,7 @@ Tests run with minimal configuration. OAuth tests are skipped if providers aren'
 ## CI/CD Integration
 
 ### GitHub Actions Example
+
 ```yaml
 name: Tests
 on: [push, pull_request]
@@ -123,6 +141,7 @@ jobs:
 ```
 
 ### Pre-deployment Checklist
+
 ```bash
 # Before deploying to production, ensure tests pass:
 pnpm test:integration
@@ -148,16 +167,19 @@ Common utilities available for tests:
 ## Troubleshooting
 
 ### Tests Failing
+
 1. Ensure database mocks are reset: Tests automatically reset mock data
 2. Check for async issues: Use `await` for all database operations
 3. Verify mocks are properly configured in `jest.setup.js`
 
 ### Email Tests
+
 - Email sends are mocked and captured
 - Check `mockEmailSend.mock.calls` for sent emails
 - Magic link URLs are extracted from email HTML
 
 ### Authentication Tests
+
 - Use `mockAuthenticatedUser()` to set current user
 - Use `clearAuth()` to reset authentication state
 - Check `getCurrentUser` mock for proper user data
@@ -165,6 +187,7 @@ Common utilities available for tests:
 ## MVP Testing Philosophy
 
 These tests follow MVP principles:
+
 - **Fast Execution**: Mock database, no real I/O
 - **Critical Paths Only**: Auth and reservations are essential
 - **Simple Assertions**: Basic checks, not exhaustive
@@ -183,6 +206,7 @@ These tests follow MVP principles:
 ## Questions or Issues?
 
 For test-related questions:
+
 1. Check test output for specific failures
 2. Verify mock setup in `jest.setup.js`
 3. Ensure test database is properly initialized

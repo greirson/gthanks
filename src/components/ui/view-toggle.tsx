@@ -11,11 +11,7 @@ interface ViewToggleProps {
   isHydrated?: boolean;
 }
 
-export function ViewToggle({
-  viewMode,
-  onViewModeChange,
-  isHydrated = true,
-}: ViewToggleProps) {
+export function ViewToggle({ viewMode, onViewModeChange, isHydrated = true }: ViewToggleProps) {
   return (
     <button
       onClick={() => {
@@ -33,9 +29,7 @@ export function ViewToggle({
       <div
         className={cn(
           'inline-flex min-h-[36px] min-w-[44px] items-center justify-center rounded-sm px-3 text-sm font-medium transition-all',
-          viewMode === 'list'
-            ? 'bg-background text-foreground shadow-sm'
-            : 'text-muted-foreground'
+          viewMode === 'list' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'
         )}
       >
         <List className="h-4 w-4" />
@@ -43,9 +37,7 @@ export function ViewToggle({
       <div
         className={cn(
           'inline-flex min-h-[36px] min-w-[44px] items-center justify-center rounded-sm px-3 text-sm font-medium transition-all',
-          viewMode === 'grid'
-            ? 'bg-background text-foreground shadow-sm'
-            : 'text-muted-foreground'
+          viewMode === 'grid' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'
         )}
       >
         <Grid2x2 className="h-4 w-4" />

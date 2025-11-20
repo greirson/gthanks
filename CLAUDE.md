@@ -28,10 +28,12 @@ Sign Up → Create Wish → Set Priority → Add to List → Share with Group �
 **CRITICAL**: This app must work flawlessly on mobile devices. Mobile is not an afterthought.
 
 ### Minimum Viewport Support
+
 - **Smallest supported**: iPhone SE (375x667px)
 - **Target**: Most users will be on mobile (primary use case)
 
 ### Mobile UI Requirements
+
 1. **Touch Targets**: All buttons/links minimum 44x44px (Apple HIG standard)
 2. **Navigation**: Hamburger menu or mobile-friendly nav on smaller screens
 3. **No Horizontal Scroll**: All content must fit within viewport width
@@ -41,12 +43,14 @@ Sign Up → Create Wish → Set Priority → Add to List → Share with Group �
 7. **Form Inputs**: Large, easy-to-tap fields on mobile
 
 ### Responsive Breakpoints (Tailwind)
+
 - `375px` - iPhone SE (minimum)
 - `640px` - `sm` breakpoint (small phones)
 - `768px` - `md` breakpoint (tablets, landscape)
 - `1024px` - `lg` breakpoint (desktop)
 
 ### Mobile-Specific Components
+
 - Mobile navigation menu (hamburger/slide-out)
 - Touch-friendly wish cards (tap targets, swipe support)
 - Mobile-optimized forms (full-width inputs, large buttons)
@@ -54,6 +58,7 @@ Sign Up → Create Wish → Set Priority → Add to List → Share with Group �
 - Bottom navigation or sticky menu for quick actions
 
 ### Testing Checklist
+
 - All E2E tests must pass on mobile viewports (375px, 768px)
 - Manual testing on actual iOS/Android devices before release
 - Check responsive behavior at all breakpoints
@@ -66,6 +71,7 @@ Sign Up → Create Wish → Set Priority → Add to List → Share with Group �
 **CRITICAL**: This app is designed for families—grandmas, aunts, uncles, kids. Technical jargon and developer patterns are forbidden in user-facing UI.
 
 ### Core Principle: Grandma Test
+
 If your grandma wouldn't understand it, it's too technical. Every UI element must pass the "grandma test."
 
 ### URL Display Rules
@@ -75,6 +81,7 @@ If your grandma wouldn't understand it, it's too technical. Every UI element mus
    - ❌ Bad: `/greir` (confusing, looks broken, "where's the rest?")
 
 2. **Implementation Pattern** - Use progressive enhancement to avoid hydration errors:
+
    ```typescript
    const [fullUrl, setFullUrl] = useState<string | null>(null);
 
@@ -89,10 +96,7 @@ If your grandma wouldn't understand it, it's too technical. Every UI element mus
 
 3. **Visual Transition** - Use subtle fade to minimize flash:
    ```tsx
-   <a
-     href="/path"
-     className="transition-opacity duration-75"
-   >
+   <a href="/path" className="transition-opacity duration-75">
      {fullUrl || '/path'}
    </a>
    ```
@@ -139,7 +143,7 @@ If your grandma wouldn't understand it, it's too technical. Every UI element mus
 
 3. **Password-Protected Lists** - Clear two-step process
    - "Step 1: Copy the link"
-   - "Step 2: Share this password: ****"
+   - "Step 2: Share this password: \*\*\*\*"
    - Not: "Share credentials with authorized users"
 
 ### Visual Feedback
@@ -191,13 +195,15 @@ If your grandma wouldn't understand it, it's too technical. Every UI element mus
 The service layer is **MANDATORY** for security-critical operations:
 
 ### DO ✅
+
 - Use existing services for ALL write operations and bulk operations (MANDATORY)
 - Use permissionService for ALL authorization checks (MANDATORY - security requirement)
 - Write direct Prisma queries for simple reads (user's own data after auth)
 - Fix critical bugs in existing services
 
 ### DON'T ❌
-- Create NEW service files (src/lib/services/*)
+
+- Create NEW service files (src/lib/services/\*)
 - Bypass services for bulk operations (security risk)
 - Manually check permissions - ALWAYS use permissionService
 - Refactor existing services unless fixing critical bugs
@@ -214,6 +220,7 @@ if (!wish) throw new ForbiddenError('...');
 ```
 
 **Why:**
+
 - Permission logic is complex (owners, admins, group members, public/password lists)
 - Manual checks bypass business rules and create security holes
 - Centralized logic is easier to audit and update
@@ -316,6 +323,7 @@ Build fails if service layer violations are detected (configured as errors, not 
 ### When to Use Each Agent
 
 **react-nextjs-expert** - Use for:
+
 - Implementing new pages or features with App Router
 - Server Components vs Client Components decisions
 - Data fetching patterns (Server Components, React Query, Server Actions)
@@ -324,6 +332,7 @@ Build fails if service layer violations are detected (configured as errors, not 
 - Routing and navigation patterns
 
 **tailwind-frontend-expert** - Use for:
+
 - Responsive layouts and mobile-first design (375px minimum)
 - Component styling with Tailwind utilities
 - Radix UI integration and customization
@@ -332,6 +341,7 @@ Build fails if service layer violations are detected (configured as errors, not 
 - Accessibility improvements (WCAG AA compliance)
 
 **code-reviewer** - Use for:
+
 - Pre-merge code reviews (MANDATORY)
 - Security audits (permission checks, input validation)
 - Service layer compliance verification
@@ -340,6 +350,7 @@ Build fails if service layer violations are detected (configured as errors, not 
 - Test coverage validation
 
 **performance-optimizer** - Use for:
+
 - Slow page load investigations
 - Database query optimization (N+1 queries)
 - Bundle size reduction
@@ -348,6 +359,7 @@ Build fails if service layer violations are detected (configured as errors, not 
 - Caching strategy reviews
 
 **documentation-specialist** - Use for:
+
 - API documentation updates
 - Architecture decision records
 - Deployment guide improvements
@@ -358,6 +370,7 @@ Build fails if service layer violations are detected (configured as errors, not 
 ### Development Patterns (MANDATORY)
 
 **Service Layer Architecture:**
+
 - ALL write operations MUST use existing services (wish-service, list-service, reservation-service, etc.)
 - ALL permission checks MUST use permissionService.require() or permissionService.can()
 - NEVER bypass service layer for bulk operations (security risk)
@@ -365,6 +378,7 @@ Build fails if service layer violations are detected (configured as errors, not 
 - ESLint enforces service layer compliance (build-blocking errors)
 
 **Mobile-First Development:**
+
 - Design for 375px viewport first (iPhone SE)
 - All touch targets minimum 44x44px
 - Test on mobile viewports: 375px, 640px, 768px
@@ -372,6 +386,7 @@ Build fails if service layer violations are detected (configured as errors, not 
 - Progressive disclosure for complex features
 
 **UX "Grandma Test":**
+
 - Use plain English, no technical jargon
 - Show full URLs (https://gthanks.app/...), not relative paths
 - Friendly error messages with actionable next steps
@@ -379,6 +394,7 @@ Build fails if service layer violations are detected (configured as errors, not 
 - Action-oriented copy ("Share with family" not "Configure access control")
 
 **Testing Requirements:**
+
 - Unit tests for service layer (80% coverage target)
 - Integration tests for API routes
 - E2E tests for critical user flows (Playwright)
@@ -386,6 +402,7 @@ Build fails if service layer violations are detected (configured as errors, not 
 - All tests must pass before merge
 
 **Security Requirements:**
+
 - Use permissionService for ALL authorization checks
 - Rate limiting on all API endpoints (100 req/min baseline)
 - Input validation with Zod schemas

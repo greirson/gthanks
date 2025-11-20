@@ -61,8 +61,8 @@ export function ReservationDialog({
       // For public list sharing, always require name and email
       const input = {
         wishId: wish.id,
-        reserverName: isAuthenticated ? (userName || 'Anonymous') : (formData.name || 'Anonymous'),
-        reserverEmail: isAuthenticated ? (userEmail || null) : (formData.email || null),
+        reserverName: isAuthenticated ? userName || 'Anonymous' : formData.name || 'Anonymous',
+        reserverEmail: isAuthenticated ? userEmail || null : formData.email || null,
       };
 
       // Use public list endpoint if shareToken is provided
@@ -174,7 +174,9 @@ export function ReservationDialog({
                     onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                     disabled={reserveMutation.isPending}
                   />
-                  <p className="text-sm text-muted-foreground">This helps other gift-givers coordinate</p>
+                  <p className="text-sm text-muted-foreground">
+                    This helps other gift-givers coordinate
+                  </p>
                 </div>
 
                 <div className="space-y-2">

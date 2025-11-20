@@ -34,10 +34,7 @@ import { logger } from '@/lib/services/logger';
  *
  * @security Rate limited to prevent abuse. No authentication required.
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { shareToken: string } }
-) {
+export async function POST(request: NextRequest, { params }: { params: { shareToken: string } }) {
   // Rate limiting - prevent abuse (declare outside try-catch for error handler access)
   const clientIdentifier = getClientIdentifier(request);
   const rateLimitResult = await rateLimiter.check('public-reservation', clientIdentifier);

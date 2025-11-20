@@ -479,7 +479,10 @@ export class ListInvitationService {
   /**
    * Get all co-managers for a list with details
    */
-  async getListCoManagers(listId: string, userId: string): Promise<
+  async getListCoManagers(
+    listId: string,
+    userId: string
+  ): Promise<
     Array<{
       userId: string;
       user: {

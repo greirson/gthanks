@@ -7,37 +7,45 @@ The gthanks platform uses **17 Prisma models** organized into logical domains:
 ### Core Domain Models
 
 **User Management (2 models)**
+
 - `User` - Main user account with OAuth, admin fields, vanity URLs, and theme preferences
 - `UserEmail` - Multiple email support with verification tokens
 
 **Authentication (4 models)**
+
 - `Session` - NextAuth session management
 - `Account` - OAuth provider accounts (Google, Facebook, Apple, OIDC)
 - `VerificationToken` - Email verification tokens
 - `MagicLink` - Passwordless magic link authentication
 
 **Wish Management (2 models)**
+
 - `Wish` - Individual wish items with metadata, priority levels, and image processing
 - `UserPreference` - Per-user sorting, filtering, and notification preferences
 
 **List Management (1 model)**
+
 - `List` - Wish collections with visibility control (private, public, password, link, group)
 
 **Group Management (1 model)**
+
 - `Group` - Family/friend groups for coordinated gift giving
 
 ### Relationship Models
 
 **List Relationships (3 models)**
+
 - `ListWish` - Many-to-many between lists and wishes with priority levels
 - `ListAdmin` - Co-admin permissions for lists
 - `ListGroup` - Lists shared with groups
 
 **Group Relationships (2 models)**
+
 - `UserGroup` - Group memberships with roles (member, admin)
 - `GroupInvitation` - Pending group invitations with expiration
 
 **Other Relationships (2 models)**
+
 - `ListInvitation` - Pending list invitations with expiration
 - `Reservation` - Gift reservations (hidden from list owners)
 
@@ -175,6 +183,7 @@ src/lib/services/
 Services MUST be used for:
 
 1. **Bulk Operations** - Any API route that modifies multiple records
+
    ```typescript
    // ✅ Correct
    await wishService.deleteWishes(wishIds, userId);
@@ -184,6 +193,7 @@ Services MUST be used for:
    ```
 
 2. **Permission-Sensitive Operations** - Write operations requiring authorization
+
    ```typescript
    // ✅ Correct
    await wishService.updateWish(wishId, data, userId);
@@ -194,6 +204,7 @@ Services MUST be used for:
    ```
 
 3. **Complex Transactions** - Multi-step database operations
+
    ```typescript
    // ✅ Correct
    await wishService.deleteWish(wishId, userId);
@@ -212,18 +223,20 @@ Services MUST be used for:
 Direct Prisma queries are acceptable for:
 
 1. **Simple Reads** - Public data or data pre-filtered by auth
+
    ```typescript
    // OK: User's own data after auth check
    const wishes = await db.wish.findMany({
-     where: { ownerId: user.id }
+     where: { ownerId: user.id },
    });
    ```
 
 2. **Aggregations** - Count, sum, etc. where no authorization logic needed
+
    ```typescript
    // OK: Simple count
    const count = await db.wish.count({
-     where: { ownerId: user.id }
+     where: { ownerId: user.id },
    });
    ```
 
@@ -241,23 +254,24 @@ All permission checks MUST use the centralized permission service:
 // ✅ Correct - Throws ForbiddenError if not allowed
 await permissionService.require(userId, 'edit', {
   type: 'wish',
-  id: wishId
+  id: wishId,
 });
 
 // ✅ Correct - Returns { allowed: boolean, reason?: string }
 const { allowed } = await permissionService.can(userId, 'delete', {
   type: 'list',
-  id: listId
+  id: listId,
 });
 
 // ❌ NEVER do this - Bypasses permission logic
 const wish = await db.wish.findFirst({
-  where: { id: wishId, ownerId: userId }
+  where: { id: wishId, ownerId: userId },
 });
 if (!wish) throw new ForbiddenError('Not authorized');
 ```
 
 **Why Permission Service is Mandatory:**
+
 - Permission logic is complex (owners, admins, group members, public/password lists)
 - Manual checks bypass business rules and create security holes
 - Centralized logic is easier to audit and update
@@ -276,10 +290,12 @@ pnpm lint:fix
 ```
 
 **Rules:**
+
 - `local-rules/no-direct-db-import` - Warns on `import { db }` in API routes
 - `local-rules/use-permission-service` - Warns on manual permission patterns
 
 **Build Integration:**
+
 - ESLint rules configured as **errors** (not warnings)
 - Production builds fail if service layer violations detected
 - Pre-commit hooks prevent committing violations
@@ -297,6 +313,7 @@ pnpm lint:fix
 ### Server Components (Default)
 
 Use Server Components for:
+
 - Initial page loads
 - SEO-critical content
 - Data that doesn't change frequently
@@ -313,6 +330,7 @@ export default async function WishesPage() {
 ### React Query (Interactivity)
 
 Use TanStack React Query for:
+
 - Interactive UI (real-time updates)
 - Optimistic updates
 - Pagination/infinite scroll
@@ -322,7 +340,7 @@ Use TanStack React Query for:
 // components/wishes/WishList.tsx
 const { data: wishes } = useQuery({
   queryKey: ['wishes', userId],
-  queryFn: () => fetch('/api/wishes').then(r => r.json()),
+  queryFn: () => fetch('/api/wishes').then((r) => r.json()),
   staleTime: 60_000, // 1 minute
 });
 ```
@@ -330,6 +348,7 @@ const { data: wishes } = useQuery({
 ### Server Actions (Mutations)
 
 Use Server Actions for:
+
 - Form submissions
 - Simple mutations
 - Progressive enhancement
@@ -349,6 +368,7 @@ export async function createWish(formData: FormData) {
 ### API Routes (Explicit API)
 
 Use API Routes for:
+
 - Complex mutations
 - External integrations
 - Rate-limited endpoints
@@ -401,10 +421,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     }
     // Log unexpected errors (Sentry in production)
     console.error('Unexpected error:', error);
-    return Response.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 ```
@@ -416,11 +433,13 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 Current implementation uses `rate-limiter-flexible` with in-memory storage:
 
 **Multi-Tiered Limits:**
+
 - Anonymous requests: By IP address
 - Authenticated requests: By user ID
 - Admin users: Higher limits or bypassed
 
 **Common Limits:**
+
 - Login attempts: 5 per 15 minutes
 - API requests: 100 per minute (authenticated)
 - API requests: 20 per minute (anonymous)
@@ -454,6 +473,7 @@ export const apiLimiter = new RateLimiterRedis({
 5. **Serving** - Next.js static file serving
 
 **Status Tracking:**
+
 - `PENDING` - Image URL received, not yet processed
 - `PROCESSING` - Download/processing in progress
 - `COMPLETED` - Image ready to display
@@ -471,12 +491,14 @@ export const apiLimiter = new RateLimiterRedis({
 ### Single-Server Deployment (Current)
 
 **Components:**
+
 - Next.js application (single container)
 - SQLite or PostgreSQL database
 - Local filesystem for uploads
 - In-memory rate limiting
 
 **Scalability:**
+
 - Supports 100s-1000s of users
 - Vertical scaling (larger server)
 - Simple backup/restore
@@ -484,6 +506,7 @@ export const apiLimiter = new RateLimiterRedis({
 ### Future: Distributed Deployment
 
 **Components:**
+
 - Multiple Next.js instances (horizontal scaling)
 - PostgreSQL database (managed service or cluster)
 - S3-compatible object storage for uploads
@@ -491,6 +514,7 @@ export const apiLimiter = new RateLimiterRedis({
 - Load balancer (nginx, AWS ALB, etc.)
 
 **Scalability:**
+
 - Supports 10,000+ concurrent users
 - Horizontal scaling (add more containers)
 - High availability (multi-region)

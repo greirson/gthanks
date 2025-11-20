@@ -74,7 +74,11 @@ export function ListGrid({
 
   // Grid view - unified responsive grid: 2 columns mobile, 4 columns desktop
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-4" role="grid" aria-label={`Grid of ${lists.length} lists`}>
+    <div
+      className="grid grid-cols-2 gap-3 md:grid-cols-4"
+      role="grid"
+      aria-label={`Grid of ${lists.length} lists`}
+    >
       {lists.map((list) => (
         <ListCardCompact
           key={list.id}

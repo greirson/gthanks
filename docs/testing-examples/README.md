@@ -5,6 +5,7 @@ This directory contains example test files that serve as **templates and documen
 ## Purpose
 
 These files demonstrate:
+
 - ✅ Test structure and organization
 - ✅ Common testing patterns
 - ✅ Best practices for E2E testing with Playwright
@@ -18,12 +19,12 @@ These files demonstrate:
 
 ## Example Files
 
-| File | Purpose |
-|------|---------|
-| `example-auth.spec.ts` | Authentication flow examples (login, logout, OAuth, magic links) |
-| `example-edge-cases.spec.ts` | Edge case and error handling examples (network failures, validation, etc.) |
-| `example-group-sharing.spec.ts` | Group sharing feature examples (invitations, permissions, etc.) |
-| `example-reservation.spec.ts` | Reservation feature examples (privacy, conflicts, persistence) |
+| File                            | Purpose                                                                    |
+| ------------------------------- | -------------------------------------------------------------------------- |
+| `example-auth.spec.ts`          | Authentication flow examples (login, logout, OAuth, magic links)           |
+| `example-edge-cases.spec.ts`    | Edge case and error handling examples (network failures, validation, etc.) |
+| `example-group-sharing.spec.ts` | Group sharing feature examples (invitations, permissions, etc.)            |
+| `example-reservation.spec.ts`   | Reservation feature examples (privacy, conflicts, persistence)             |
 
 ## How to Use These Examples
 
@@ -36,6 +37,7 @@ These files demonstrate:
 ## Reference
 
 For actual working tests, see:
+
 - `tests/e2e/core/user-journey.spec.ts`
 - `tests/e2e/groups/workflows.spec.ts`
 - `tests/e2e/reservations/privacy.spec.ts`
@@ -44,5 +46,6 @@ For actual working tests, see:
 ## Testing Guidelines
 
 See the main project documentation at:
+
 - `/docs/e2e-testing-guide.md` - Complete E2E testing guide
 - `/docs/codebase-exploration.md` - Codebase structure and analysis

@@ -13,7 +13,9 @@ jest.mock('@/lib/services/list-service', () => ({
 
 // Use requireActual to get the real permission service implementation
 // This bypasses the global mock in jest.setup.js which is needed for other tests
-const { permissionService } = jest.requireActual('@/lib/services/permission-service') as typeof import('../permission-service');
+const { permissionService } = jest.requireActual(
+  '@/lib/services/permission-service'
+) as typeof import('../permission-service');
 
 // Add missing mock methods
 if (!db.userGroup.findFirst) {
@@ -64,7 +66,7 @@ describe('PermissionService Co-Manager Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.resetAllMocks();
-    
+
     // Default: mock users as non-admin by default
     // Tests can override this with mockUserFindUnique.mockResolvedValueOnce()
     mockUserFindUnique.mockResolvedValue({

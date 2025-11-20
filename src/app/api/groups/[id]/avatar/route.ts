@@ -30,7 +30,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     if (!file) {
       return NextResponse.json(
-        { error: getUserFriendlyError('VALIDATION_ERROR', 'No file provided'), code: 'VALIDATION_ERROR' },
+        {
+          error: getUserFriendlyError('VALIDATION_ERROR', 'No file provided'),
+          code: 'VALIDATION_ERROR',
+        },
         { status: 400 }
       );
     }
@@ -43,7 +46,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (buffer.length > MAX_AVATAR_SIZE) {
       return NextResponse.json(
         {
-          error: getUserFriendlyError('VALIDATION_ERROR', 'Avatar image too large. Maximum size is 2MB.'),
+          error: getUserFriendlyError(
+            'VALIDATION_ERROR',
+            'Avatar image too large. Maximum size is 2MB.'
+          ),
           code: 'VALIDATION_ERROR',
         },
         { status: 400 }
@@ -230,7 +236,10 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
         await imageProcessor.deleteImage(group.avatarUrl);
       } catch (error) {
         // File might already be deleted, log but continue anyway
-        logger.warn({ error: error, avatarUrl: group.avatarUrl }, 'Failed to delete group avatar file');
+        logger.warn(
+          { error: error, avatarUrl: group.avatarUrl },
+          'Failed to delete group avatar file'
+        );
       }
     }
 
@@ -245,7 +254,10 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   } catch (error) {
     logger.error({ error: error }, 'Error deleting group avatar');
     return NextResponse.json(
-      { error: getUserFriendlyError('INTERNAL_ERROR', 'Failed to delete avatar'), code: 'INTERNAL_ERROR' },
+      {
+        error: getUserFriendlyError('INTERNAL_ERROR', 'Failed to delete avatar'),
+        code: 'INTERNAL_ERROR',
+      },
       { status: 500 }
     );
   }

@@ -112,7 +112,9 @@ export function AddToListDialog({ wishId, open, onOpenChange }: AddToListDialogP
           {!isLoading && data?.items.length === 0 && (
             <div className="py-8 text-center">
               <p className="text-muted-foreground">No lists yet</p>
-              <p className="mt-1 text-sm text-muted-foreground/70">Create a list first to add wishes to it</p>
+              <p className="mt-1 text-sm text-muted-foreground/70">
+                Create a list first to add wishes to it
+              </p>
             </div>
           )}
 
@@ -126,7 +128,9 @@ export function AddToListDialog({ wishId, open, onOpenChange }: AddToListDialogP
                 <Card
                   key={list.id}
                   className={`cursor-pointer transition-colors ${
-                    isInList ? 'border-success/30 bg-success/10 dark:border-success/40 dark:bg-success/5' : 'hover:bg-accent/50'
+                    isInList
+                      ? 'border-success/30 bg-success/10 dark:border-success/40 dark:bg-success/5'
+                      : 'hover:bg-accent/50'
                   }`}
                   onClick={() => handleAddToList(list as ListWithOwner)}
                 >

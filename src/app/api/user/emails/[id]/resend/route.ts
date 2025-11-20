@@ -33,9 +33,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     );
   } catch (error) {
     logger.error({ error: error }, 'Resend verification email error');
-    return NextResponse.json(
-      { error: 'Failed to resend verification email' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to resend verification email' }, { status: 500 });
   }
 }

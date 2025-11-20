@@ -9,10 +9,7 @@ import { logger } from '@/lib/services/logger';
  * GET /api/lists/public/[shareToken]
  * Access a public list via share token (no authentication required)
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { shareToken: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: { shareToken: string } }) {
   try {
     // Rate limiting - prevent abuse
     const clientIdentifier = getClientIdentifier(request);
@@ -47,10 +44,7 @@ export async function GET(
     }
 
     if (error instanceof ForbiddenError) {
-      return NextResponse.json(
-        { error: error.message, code: 'FORBIDDEN' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: error.message, code: 'FORBIDDEN' }, { status: 403 });
     }
 
     logger.error({ error: error }, 'Error fetching public list');
@@ -62,10 +56,7 @@ export async function GET(
  * POST /api/lists/public/[shareToken]
  * Access a password-protected list via share token with password
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { shareToken: string } }
-) {
+export async function POST(request: NextRequest, { params }: { params: { shareToken: string } }) {
   try {
     // Rate limiting - prevent brute force password attempts (stricter limit)
     const clientIdentifier = getClientIdentifier(request);
@@ -87,9 +78,10 @@ export async function POST(
 
     // Extract password from request body
     const body = (await request.json()) as unknown;
-    const password = typeof body === 'object' && body !== null && 'password' in body
-      ? (body as { password: unknown }).password
-      : undefined;
+    const password =
+      typeof body === 'object' && body !== null && 'password' in body
+        ? (body as { password: unknown }).password
+        : undefined;
 
     if (!password || typeof password !== 'string') {
       return NextResponse.json(
@@ -116,10 +108,7 @@ export async function POST(
     }
 
     if (error instanceof ForbiddenError) {
-      return NextResponse.json(
-        { error: error.message, code: 'FORBIDDEN' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: error.message, code: 'FORBIDDEN' }, { status: 403 });
     }
 
     logger.error({ error: error }, 'Error fetching password-protected list');

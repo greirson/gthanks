@@ -80,7 +80,6 @@ export function QuickAddWish({ className, onSuccess }: QuickAddWishProps) {
       setIsLoading(true);
       try {
         if (isUrl(trimmedInput)) {
-
           // If it's a URL, normalize it and attempt metadata extraction
           let normalizedUrl = trimmedInput;
           if (!/^https?:\/\//i.test(normalizedUrl)) {
@@ -115,13 +114,14 @@ export function QuickAddWish({ className, onSuccess }: QuickAddWishProps) {
 
               if (type === 'captcha_detected') {
                 toast({
-                  title: "Ah crap, fancy anti-bot tools detected",
+                  title: 'Ah crap, fancy anti-bot tools detected',
                   description: `${partial?.siteName || 'This site'} has security that blocks us. Wish saved - you can add the price and details yourself.`,
                 });
               } else if (type === 'timeout') {
                 toast({
                   title: 'Site took too long to respond',
-                  description: 'The website was really slow. Wish saved with the link - you can add details yourself.',
+                  description:
+                    'The website was really slow. Wish saved with the link - you can add details yourself.',
                 });
               } else if (type === 'parse_error') {
                 toast({
@@ -131,12 +131,14 @@ export function QuickAddWish({ className, onSuccess }: QuickAddWishProps) {
               } else if (type === 'network_error') {
                 toast({
                   title: "Couldn't reach that website",
-                  description: "The site might be down or blocking us. We saved the link - you'll need to add the price and details manually.",
+                  description:
+                    "The site might be down or blocking us. We saved the link - you'll need to add the price and details manually.",
                 });
               } else if (type === 'invalid_url') {
                 toast({
                   title: 'Hmm, that URL looks weird',
-                  description: 'We saved it anyway - you can fix the link and add details yourself.',
+                  description:
+                    'We saved it anyway - you can fix the link and add details yourself.',
                 });
               } else {
               }

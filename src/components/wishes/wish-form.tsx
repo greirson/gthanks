@@ -41,7 +41,9 @@ export function WishForm({
   const queryClient = useQueryClient();
   const [isExtractingMetadata, setIsExtractingMetadata] = useState(false);
   const [priceFetchFailed, setPriceFetchFailed] = useState(false);
-  const [selectedListIds, setSelectedListIds] = useState<string[]>(defaultListId ? [defaultListId] : []);
+  const [selectedListIds, setSelectedListIds] = useState<string[]>(
+    defaultListId ? [defaultListId] : []
+  );
   const initialListIdsRef = useRef<string[]>([]);
   const isEditing = Boolean(wish);
 
@@ -104,7 +106,9 @@ export function WishForm({
   const wishListsQuery = useQuery({
     queryKey: ['wish-lists', wish?.id],
     queryFn: async () => {
-      if (!wish?.id) {return [];}
+      if (!wish?.id) {
+        return [];
+      }
       return wishesApi.getWishLists(wish.id);
     },
     enabled: !!wish?.id && showListSelection,
@@ -113,7 +117,7 @@ export function WishForm({
   // Initialize selected lists from wish's current lists (edit mode)
   useEffect(() => {
     if (wishListsQuery.isSuccess && wishListsQuery.data) {
-      const ids = wishListsQuery.data.map(list => list.id);
+      const ids = wishListsQuery.data.map((list) => list.id);
       setSelectedListIds(ids);
       initialListIdsRef.current = ids;
     }
@@ -127,9 +131,7 @@ export function WishForm({
       // If lists are selected, add the wish to all selected lists
       if (selectedListIds.length > 0 && wish.id) {
         await Promise.all(
-          selectedListIds.map(listId =>
-            listsApi.addWishToList(listId, { wishId: wish.id })
-          )
+          selectedListIds.map((listId) => listsApi.addWishToList(listId, { wishId: wish.id }))
         );
       }
 
@@ -156,13 +158,15 @@ export function WishForm({
   // Update mutation
   const updateMutation = useMutation({
     mutationFn: async (data: WishUpdateInput) => {
-      if (!wish?.id) {throw new Error('Wish ID is required');}
+      if (!wish?.id) {
+        throw new Error('Wish ID is required');
+      }
       const updatedWish = await wishesApi.updateWish(wish.id, data);
 
       // Update list memberships transactionally
       if (showListSelection) {
         await wishesApi.updateWishMemberships(wish.id, {
-          listIds: selectedListIds
+          listIds: selectedListIds,
         });
       }
 
@@ -234,11 +238,11 @@ export function WishForm({
 
   // Handle list selection toggle
   const handleListToggle = (listId: string, checked: boolean) => {
-    setSelectedListIds(prev => {
+    setSelectedListIds((prev) => {
       if (checked) {
         return [...prev, listId];
       } else {
-        return prev.filter(id => id !== listId);
+        return prev.filter((id) => id !== listId);
       }
     });
   };
@@ -274,7 +278,9 @@ export function WishForm({
 
   // Extract metadata from URL
   const handleExtractMetadata = async () => {
-    if (!formData.url) {return;}
+    if (!formData.url) {
+      return;
+    }
 
     setIsExtractingMetadata(true);
 
@@ -313,7 +319,7 @@ export function WishForm({
         // Show user-friendly error message
         if (type === 'captcha_detected') {
           toast({
-            title: "Ah crap, fancy anti-bot tools detected",
+            title: 'Ah crap, fancy anti-bot tools detected',
             description: `${partial?.siteName || 'This site'} has security that blocks us. You'll need to enter the price and details yourself.`,
             variant: 'destructive',
             duration: 5000,
@@ -321,7 +327,8 @@ export function WishForm({
         } else if (type === 'timeout') {
           toast({
             title: 'Site took too long to respond',
-            description: "The website was really slow. You'll need to add the price and details manually.",
+            description:
+              "The website was really slow. You'll need to add the price and details manually.",
             variant: 'destructive',
             duration: 5000,
           });
@@ -335,7 +342,8 @@ export function WishForm({
         } else if (type === 'network_error') {
           toast({
             title: "Couldn't reach that website",
-            description: "The site might be down or blocking us. You'll need to add the price and details manually.",
+            description:
+              "The site might be down or blocking us. You'll need to add the price and details manually.",
             variant: 'destructive',
             duration: 5000,
           });
@@ -349,7 +357,8 @@ export function WishForm({
         } else {
           toast({
             title: "Couldn't grab the details automatically",
-            description: 'Some sites block us from reading their pages. No worries - just enter the price and details yourself!',
+            description:
+              'Some sites block us from reading their pages. No worries - just enter the price and details yourself!',
             variant: 'destructive',
             duration: 5000,
           });
@@ -479,7 +488,7 @@ export function WishForm({
           <Label htmlFor="price">
             Price
             {priceFetchFailed && (
-              <span className="ml-2 text-xs text-muted-foreground font-normal">
+              <span className="ml-2 text-xs font-normal text-muted-foreground">
                 couldn&apos;t fetch price from site :(
               </span>
             )}
@@ -508,7 +517,7 @@ export function WishForm({
         {/* Wish Level */}
         <div className="space-y-2">
           <Label htmlFor="wishLevel">Wish Level</Label>
-          <div className="flex items-center h-11">
+          <div className="flex h-11 items-center">
             <StarRating
               value={formData.wishLevel || 1}
               onChange={handleWishLevelChange}
@@ -593,31 +602,40 @@ export function WishForm({
           {(isLoadingLists || wishListsQuery.isLoading) && (
             <p className="text-sm text-muted-foreground">Loading lists...</p>
           )}
-          {listsData && 'items' in listsData && Array.isArray(listsData.items) && listsData.items.length > 0 && (!wish?.id || !wishListsQuery.isLoading) && (
-            <fieldset
-              disabled={createMutation.isPending || updateMutation.isPending}
-              className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3"
-            >
-              {listsData.items.map((list) => (
-                <div key={list.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`list-${list.id}`}
-                    checked={selectedListIds.includes(list.id)}
-                    onCheckedChange={(checked) => handleListToggle(list.id, checked as boolean)}
-                  />
-                  <Label
-                    htmlFor={`list-${list.id}`}
-                    className="text-sm font-normal cursor-pointer flex-1"
-                  >
-                    {list.name} ({list._count.wishes} wishes)
-                  </Label>
-                </div>
-              ))}
-            </fieldset>
-          )}
-          {listsData && 'items' in listsData && Array.isArray(listsData.items) && listsData.items.length === 0 && (
-            <p className="text-sm text-muted-foreground">No lists available. Create a list first.</p>
-          )}
+          {listsData &&
+            'items' in listsData &&
+            Array.isArray(listsData.items) &&
+            listsData.items.length > 0 &&
+            (!wish?.id || !wishListsQuery.isLoading) && (
+              <fieldset
+                disabled={createMutation.isPending || updateMutation.isPending}
+                className="max-h-48 space-y-2 overflow-y-auto rounded-md border p-3"
+              >
+                {listsData.items.map((list) => (
+                  <div key={list.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`list-${list.id}`}
+                      checked={selectedListIds.includes(list.id)}
+                      onCheckedChange={(checked) => handleListToggle(list.id, checked as boolean)}
+                    />
+                    <Label
+                      htmlFor={`list-${list.id}`}
+                      className="flex-1 cursor-pointer text-sm font-normal"
+                    >
+                      {list.name} ({list._count.wishes} wishes)
+                    </Label>
+                  </div>
+                ))}
+              </fieldset>
+            )}
+          {listsData &&
+            'items' in listsData &&
+            Array.isArray(listsData.items) &&
+            listsData.items.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                No lists available. Create a list first.
+              </p>
+            )}
           {selectedListIds.length > 0 && (
             <p className="text-xs text-muted-foreground">
               Selected {selectedListIds.length} list{selectedListIds.length !== 1 ? 's' : ''}
@@ -627,7 +645,7 @@ export function WishForm({
       )}
 
       {/* Form Actions */}
-      <div className="flex gap-3 justify-end">
+      <div className="flex justify-end gap-3">
         {onCancel && (
           <Button type="button" variant="outline" onClick={onCancel} disabled={isPending}>
             Cancel

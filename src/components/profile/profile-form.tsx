@@ -30,7 +30,9 @@ interface UpdateProfileResponse {
 }
 
 function isApiErrorResponse(data: unknown): data is ApiErrorResponse {
-  return typeof data === 'object' && data !== null && 'error' in data && typeof data.error === 'string';
+  return (
+    typeof data === 'object' && data !== null && 'error' in data && typeof data.error === 'string'
+  );
 }
 
 export function ProfileForm({ user }: ProfileFormProps) {
@@ -55,10 +57,12 @@ export function ProfileForm({ user }: ProfileFormProps) {
         body: JSON.stringify(data),
       });
 
-      const responseData = await res.json() as UpdateProfileResponse | ApiErrorResponse;
+      const responseData = (await res.json()) as UpdateProfileResponse | ApiErrorResponse;
 
       if (!res.ok) {
-        const errorMessage = isApiErrorResponse(responseData) ? responseData.error : 'Failed to update profile';
+        const errorMessage = isApiErrorResponse(responseData)
+          ? responseData.error
+          : 'Failed to update profile';
         throw new Error(errorMessage);
       }
 
@@ -165,9 +169,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="name">
-          Name *
-        </Label>
+        <Label htmlFor="name">Name *</Label>
         <Input
           id="name"
           name="name"
@@ -189,9 +191,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="email">
-          Email *
-        </Label>
+        <Label htmlFor="email">Email *</Label>
         <Input
           id="email"
           name="email"

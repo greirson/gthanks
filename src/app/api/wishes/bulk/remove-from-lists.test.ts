@@ -50,15 +50,13 @@ describe('POST /api/wishes/bulk/remove-from-lists', () => {
       method: 'POST',
     });
     // Mock the json() method
-    request.json = jest
-      .fn()
-      .mockResolvedValue({
-        wishIds: [
-          '00000000-0000-0000-0000-000000000001',
-          '00000000-0000-0000-0000-000000000002',
-          '00000000-0000-0000-0000-000000000003',
-        ],
-      });
+    request.json = jest.fn().mockResolvedValue({
+      wishIds: [
+        '00000000-0000-0000-0000-000000000001',
+        '00000000-0000-0000-0000-000000000002',
+        '00000000-0000-0000-0000-000000000003',
+      ],
+    });
 
     const response = await POST(request);
     const data = (await response.json()) as { error: string };
@@ -74,15 +72,13 @@ describe('POST /api/wishes/bulk/remove-from-lists', () => {
       method: 'POST',
     });
     // Mock the json() method
-    request.json = jest
-      .fn()
-      .mockResolvedValue({
-        notWishIds: [
-          '00000000-0000-0000-0000-000000000001',
-          '00000000-0000-0000-0000-000000000002',
-          '00000000-0000-0000-0000-000000000003',
-        ],
-      });
+    request.json = jest.fn().mockResolvedValue({
+      notWishIds: [
+        '00000000-0000-0000-0000-000000000001',
+        '00000000-0000-0000-0000-000000000002',
+        '00000000-0000-0000-0000-000000000003',
+      ],
+    });
 
     const response = await POST(request);
     const data = (await response.json()) as { error: string };

@@ -41,13 +41,13 @@ src/app/api/
 
 ### HTTP Methods
 
-| Method | Purpose | Success Status |
-|--------|---------|---------------|
-| GET | Retrieve resource(s) | 200 OK |
-| POST | Create new resource | 201 Created |
-| PATCH | Partial update | 200 OK |
-| PUT | Full replacement | 200 OK |
-| DELETE | Remove resource | 204 No Content |
+| Method | Purpose              | Success Status |
+| ------ | -------------------- | -------------- |
+| GET    | Retrieve resource(s) | 200 OK         |
+| POST   | Create new resource  | 201 Created    |
+| PATCH  | Partial update       | 200 OK         |
+| PUT    | Full replacement     | 200 OK         |
+| DELETE | Remove resource      | 204 No Content |
 
 ### URL Structure
 
@@ -110,10 +110,7 @@ export async function POST(req: Request) {
   // Check authentication
   const session = await auth();
   if (!session?.user) {
-    return NextResponse.json(
-      { error: 'Unauthorized' },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const userId = session.user.id;
@@ -135,10 +132,7 @@ export async function GET(req: Request) {
 
   // Check admin permission
   if (!session?.user?.isAdmin) {
-    return NextResponse.json(
-      { error: 'Forbidden - Admin access required' },
-      { status: 403 }
-    );
+    return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
   }
 
   const users = await adminService.listUsers();
@@ -192,6 +186,7 @@ export async function POST(req: Request) {
 ### Response Formats
 
 **Success Response:**
+
 ```json
 {
   "id": "clh1x2y3z4",
@@ -206,6 +201,7 @@ export async function POST(req: Request) {
 ```
 
 **Error Response:**
+
 ```json
 {
   "error": "Validation failed",
@@ -222,6 +218,7 @@ export async function POST(req: Request) {
 ```
 
 **Collection Response (with Pagination):**
+
 ```json
 {
   "data": [...],
@@ -238,16 +235,16 @@ export async function POST(req: Request) {
 
 ### Standard Error Codes
 
-| Status | Use Case | Example |
-|--------|----------|---------|
-| 400 | Bad Request | Invalid input data |
-| 401 | Unauthorized | Missing or invalid auth |
-| 403 | Forbidden | Insufficient permissions |
-| 404 | Not Found | Resource doesn't exist |
-| 409 | Conflict | Duplicate resource |
-| 422 | Unprocessable | Business logic error |
-| 429 | Too Many Requests | Rate limit exceeded |
-| 500 | Internal Error | Unexpected server error |
+| Status | Use Case          | Example                  |
+| ------ | ----------------- | ------------------------ |
+| 400    | Bad Request       | Invalid input data       |
+| 401    | Unauthorized      | Missing or invalid auth  |
+| 403    | Forbidden         | Insufficient permissions |
+| 404    | Not Found         | Resource doesn't exist   |
+| 409    | Conflict          | Duplicate resource       |
+| 422    | Unprocessable     | Business logic error     |
+| 429    | Too Many Requests | Rate limit exceeded      |
+| 500    | Internal Error    | Unexpected server error  |
 
 ### Error Handler Pattern
 
@@ -255,43 +252,27 @@ export async function POST(req: Request) {
 // lib/api-error-handler.ts
 import { NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
-import {
-  NotFoundError,
-  ForbiddenError,
-  ValidationError,
-} from '@/lib/errors';
+import { NotFoundError, ForbiddenError, ValidationError } from '@/lib/errors';
 
 export function handleApiError(error: unknown) {
   // Known error types
   if (error instanceof ValidationError) {
-    return NextResponse.json(
-      { error: error.message },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
   if (error instanceof ForbiddenError) {
-    return NextResponse.json(
-      { error: error.message },
-      { status: 403 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 403 });
   }
 
   if (error instanceof NotFoundError) {
-    return NextResponse.json(
-      { error: error.message },
-      { status: 404 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 404 });
   }
 
   // Unexpected errors
   console.error('Unexpected API error:', error);
   Sentry.captureException(error);
 
-  return NextResponse.json(
-    { error: 'Internal server error' },
-    { status: 500 }
-  );
+  return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
 }
 
 // Usage in API routes
@@ -380,10 +361,7 @@ export async function POST(req: Request) {
   try {
     await apiLimiter.consume(key);
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Too many requests' },
-      { status: 429 }
-    );
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
   // Process request...
@@ -448,10 +426,7 @@ import { writeFile } from 'fs/promises';
 import { join } from 'path';
 import sharp from 'sharp';
 
-export async function POST(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: Request, { params }: { params: { id: string } }) {
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -468,10 +443,7 @@ export async function POST(
   try {
     await uploadLimiter.consume(key);
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Upload limit exceeded' },
-      { status: 429 }
-    );
+    return NextResponse.json({ error: 'Upload limit exceeded' }, { status: 429 });
   }
 
   // Parse multipart form data
@@ -479,26 +451,17 @@ export async function POST(
   const file = formData.get('image') as File;
 
   if (!file) {
-    return NextResponse.json(
-      { error: 'No file uploaded' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
   }
 
   // Validate file type
   if (!file.type.startsWith('image/')) {
-    return NextResponse.json(
-      { error: 'File must be an image' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'File must be an image' }, { status: 400 });
   }
 
   // Validate file size (max 5MB)
   if (file.size > 5 * 1024 * 1024) {
-    return NextResponse.json(
-      { error: 'File too large (max 5MB)' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'File too large (max 5MB)' }, { status: 400 });
   }
 
   // Process image
@@ -588,9 +551,7 @@ describe('DELETE /api/wishes/[id]', () => {
     const user = await createTestUser();
     const wish = await createTestWish({ ownerId: user.id });
 
-    const response = await testRequest
-      .delete(`/api/wishes/${wish.id}`)
-      .auth(user.id);
+    const response = await testRequest.delete(`/api/wishes/${wish.id}`).auth(user.id);
 
     expect(response.status).toBe(204);
 
@@ -601,9 +562,7 @@ describe('DELETE /api/wishes/[id]', () => {
   it('returns 404 for non-existent wish', async () => {
     const user = await createTestUser();
 
-    const response = await testRequest
-      .delete('/api/wishes/nonexistent')
-      .auth(user.id);
+    const response = await testRequest.delete('/api/wishes/nonexistent').auth(user.id);
 
     expect(response.status).toBe(404);
   });
@@ -613,9 +572,7 @@ describe('DELETE /api/wishes/[id]', () => {
     const otherUser = await createTestUser({ email: 'other@example.com' });
     const wish = await createTestWish({ ownerId: owner.id });
 
-    const response = await testRequest
-      .delete(`/api/wishes/${wish.id}`)
-      .auth(otherUser.id);
+    const response = await testRequest.delete(`/api/wishes/${wish.id}`).auth(otherUser.id);
 
     expect(response.status).toBe(403);
   });

@@ -28,7 +28,7 @@ export function WishSkeleton({ variant = 'grid' }: WishSkeletonProps) {
   return (
     <Card className="overflow-hidden">
       <div className="aspect-square animate-pulse bg-muted" />
-      <CardContent className="p-3 space-y-2">
+      <CardContent className="space-y-2 p-3">
         <div className="h-4 w-full animate-pulse rounded bg-muted" />
         <div className="h-3 w-1/3 animate-pulse rounded bg-muted" />
       </CardContent>
@@ -41,14 +41,12 @@ export function WishSkeleton({ variant = 'grid' }: WishSkeletonProps) {
 
 export function WishesLoadingSkeleton({
   variant = 'grid',
-  count = 8
+  count = 8,
 }: {
   variant?: 'grid' | 'list';
   count?: number;
 }) {
-  const gridClass = variant === 'list'
-    ? 'space-y-3'
-    : 'grid grid-cols-2 gap-3 md:grid-cols-4';
+  const gridClass = variant === 'list' ? 'space-y-3' : 'grid grid-cols-2 gap-3 md:grid-cols-4';
 
   return (
     <div className={gridClass}>

@@ -103,7 +103,11 @@ export function MainNav({ user }: MainNavProps) {
           </Link>
 
           {/* Desktop Navigation Links */}
-          <div className="hidden items-center gap-6 md:flex" role="menubar" data-testid="desktop-nav">
+          <div
+            className="hidden items-center gap-6 md:flex"
+            role="menubar"
+            data-testid="desktop-nav"
+          >
             {navItems.map((item) => {
               const Icon = item.icon;
               return (

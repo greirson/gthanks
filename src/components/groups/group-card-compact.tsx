@@ -20,12 +20,7 @@ interface GroupCardCompactProps {
   onManage?: (group: GroupWithCountsResponse) => void;
 }
 
-export function GroupCardCompact({
-  group,
-  onEdit,
-  onDelete,
-  onManage,
-}: GroupCardCompactProps) {
+export function GroupCardCompact({ group, onEdit, onDelete, onManage }: GroupCardCompactProps) {
   const handleManageClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onManage?.(group);
@@ -41,9 +36,7 @@ export function GroupCardCompact({
         <div className="flex min-w-0 flex-1 items-start gap-3">
           <GroupAvatar group={group} size="sm" className="shrink-0" />
           <div className="min-w-0 flex-1">
-            <h3 className="truncate text-sm font-semibold">
-              {group.name}
-            </h3>
+            <h3 className="truncate text-sm font-semibold">{group.name}</h3>
 
             {/* Metadata row */}
             <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">

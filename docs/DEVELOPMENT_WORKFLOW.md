@@ -16,12 +16,12 @@ production (main) ────────────────────�
 
 ### Branch Purposes
 
-| Branch | Purpose | Protected | Deploys To |
-|--------|---------|-----------|------------|
-| **production** | Live production code | Yes | Production Docker/Vercel |
-| **staging** | Pre-release testing | Yes | Staging environment |
-| **dev** | Integration branch | Yes | Dev environment (optional) |
-| **feature/*** | Active development | No | Local only |
+| Branch         | Purpose              | Protected | Deploys To                 |
+| -------------- | -------------------- | --------- | -------------------------- |
+| **production** | Live production code | Yes       | Production Docker/Vercel   |
+| **staging**    | Pre-release testing  | Yes       | Staging environment        |
+| **dev**        | Integration branch   | Yes       | Dev environment (optional) |
+| **feature/\*** | Active development   | No        | Local only                 |
 
 ---
 
@@ -40,13 +40,13 @@ git checkout -b feature/add-wish-templates
 
 **Branch Naming Conventions:**
 
-| Type | Pattern | Example |
-|------|---------|---------|
-| Feature | `feature/short-description` | `feature/wish-templates` |
-| Bug Fix | `fix/issue-description` | `fix/reservation-email-bug` |
-| Hotfix | `hotfix/critical-issue` | `hotfix/auth-bypass` |
-| Refactor | `refactor/component-name` | `refactor/wish-service` |
-| Docs | `docs/topic` | `docs/deployment-guide` |
+| Type     | Pattern                     | Example                     |
+| -------- | --------------------------- | --------------------------- |
+| Feature  | `feature/short-description` | `feature/wish-templates`    |
+| Bug Fix  | `fix/issue-description`     | `fix/reservation-email-bug` |
+| Hotfix   | `hotfix/critical-issue`     | `hotfix/auth-bypass`        |
+| Refactor | `refactor/component-name`   | `refactor/wish-service`     |
+| Docs     | `docs/topic`                | `docs/deployment-guide`     |
 
 ### 2. Develop Locally
 
@@ -70,6 +70,7 @@ pnpm format                # Prettier
 **Pre-Commit Checks (Automatic):**
 
 When you commit, the following checks run automatically:
+
 1. **lint-staged** - Auto-fixes formatting and lint issues on changed files
 2. **TypeScript type check** - Ensures no type errors exist
 3. **ESLint** - Ensures no linting errors exist
@@ -97,6 +98,7 @@ git commit --no-verify -m "hotfix: critical production fix"
 ```
 
 **Types:**
+
 - `feat:` - New feature
 - `fix:` - Bug fix
 - `refactor:` - Code refactoring
@@ -105,6 +107,7 @@ git commit --no-verify -m "hotfix: critical production fix"
 - `chore:` - Build/tooling changes
 
 **Examples:**
+
 ```bash
 git commit -m "feat: add wish template system"
 git commit -m "fix: resolve reservation email duplicate bug"
@@ -128,6 +131,7 @@ gh pr create --base dev --title "Add wish template system" --fill
 ```
 
 **PR Checklist (see template):**
+
 - [ ] All tests pass (`pnpm test:all` + `pnpm test:e2e`)
 - [ ] Code linted (`pnpm lint:strict`)
 - [ ] TypeScript passes (`pnpm typecheck`)
@@ -139,6 +143,7 @@ gh pr create --base dev --title "Add wish template system" --fill
 ### 6. Code Review
 
 **For Reviewers:**
+
 1. Check test coverage
 2. Verify service layer compliance (no direct DB access in API routes)
 3. Review permission checks (using `permissionService`)
@@ -146,6 +151,7 @@ gh pr create --base dev --title "Add wish template system" --fill
 5. Approve or request changes
 
 **For Authors:**
+
 1. Address feedback
 2. Push updates to feature branch
 3. Re-request review when ready
@@ -225,6 +231,7 @@ gh pr merge --merge
 ### Phase 2: Staging → Production (After Bake Time)
 
 **Prerequisites:**
+
 - [ ] Staging bake time completed (3+ days)
 - [ ] No critical bugs reported by beta testers
 - [ ] All smoke tests pass
@@ -362,6 +369,7 @@ git push origin --delete hotfix/auth-bypass-fix
 ```
 
 **Hotfix Best Practices:**
+
 - Keep changes minimal (only fix the critical issue)
 - Test thoroughly before deploying
 - Document the issue and fix clearly
@@ -375,6 +383,7 @@ git push origin --delete hotfix/auth-bypass-fix
 ### For Authors
 
 **Before Creating PR:**
+
 1. Self-review your changes
 2. Run all tests locally
 3. Check for console errors/warnings
@@ -382,6 +391,7 @@ git push origin --delete hotfix/auth-bypass-fix
 5. Update documentation if needed
 
 **During Review:**
+
 1. Respond to feedback promptly
 2. Ask questions if feedback is unclear
 3. Push updates as new commits (don't force-push)
@@ -424,6 +434,7 @@ git push origin --delete hotfix/auth-bypass-fix
    - Rate limiting on sensitive endpoints
 
 **Review Response Time:**
+
 - Normal PRs: Within 24 hours
 - Hotfixes: Within 2 hours
 - Blocking PRs: Within 4 hours
@@ -435,6 +446,7 @@ git push origin --delete hotfix/auth-bypass-fix
 ### Before Creating PR
 
 **Required:**
+
 ```bash
 pnpm test                  # Unit tests
 pnpm test:integration      # Integration tests
@@ -444,6 +456,7 @@ pnpm lint:service-layer    # Service layer compliance
 ```
 
 **Recommended:**
+
 ```bash
 pnpm test:e2e              # E2E tests (if UI changes)
 pnpm build                 # Verify build succeeds
@@ -451,14 +464,15 @@ pnpm build                 # Verify build succeeds
 
 ### Test Coverage Requirements
 
-| Code Type | Minimum Coverage |
-|-----------|-----------------|
-| Service layer | 80% |
-| Utility functions | 80% |
-| API routes | 70% |
-| Components | 60% |
+| Code Type         | Minimum Coverage |
+| ----------------- | ---------------- |
+| Service layer     | 80%              |
+| Utility functions | 80%              |
+| API routes        | 70%              |
+| Components        | 60%              |
 
 **Critical paths must have 100% coverage:**
+
 - Authentication
 - Permission checks
 - Reservation system
@@ -484,27 +498,33 @@ pnpm db:studio
 **Before Deploying:**
 
 1. **Document Migration in PR:**
+
    ```markdown
    ## Database Changes
 
    ### Schema Changes
+
    - Added `wishTemplate` table
    - Added `templateId` field to `Wish` table
 
    ### Data Migration Required
+
    No data migration needed (new feature)
 
    ### Rollback Plan
+
    Remove `templateId` field, drop `wishTemplate` table
    ```
 
 2. **Test Migration Locally:**
+
    ```bash
    # Switch to PostgreSQL locally
    DATABASE_URL=postgresql://... pnpm db:push
    ```
 
 3. **Backup Production Database:**
+
    ```bash
    # See DOCKER_DEPLOYMENT.md for backup commands
    ```
@@ -545,6 +565,7 @@ pnpm db:studio
 ### Pre-Commit Hook Failures
 
 **TypeScript Errors:**
+
 ```bash
 # See all type errors
 pnpm typecheck
@@ -557,6 +578,7 @@ pnpm typecheck
 ```
 
 **ESLint Errors:**
+
 ```bash
 # Auto-fix issues
 pnpm lint:fix
@@ -571,6 +593,7 @@ pnpm lint
 ```
 
 **Emergency Bypass (Use Sparingly):**
+
 ```bash
 # Only for critical situations
 git commit --no-verify -m "hotfix: emergency fix"
@@ -581,18 +604,21 @@ git commit --no-verify -m "hotfix: emergency fix"
 ### PR Checks Failing
 
 **ESLint Errors:**
+
 ```bash
 pnpm lint:fix              # Auto-fix issues
 pnpm lint                  # Check remaining issues
 ```
 
 **TypeScript Errors:**
+
 ```bash
 pnpm typecheck             # See all errors
 # Fix each error manually
 ```
 
 **Test Failures:**
+
 ```bash
 pnpm test --watch          # Run tests in watch mode
 # Fix failing tests one by one

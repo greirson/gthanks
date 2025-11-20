@@ -24,7 +24,9 @@ interface UpdateProfileResponse {
 }
 
 function isApiErrorResponse(data: unknown): data is ApiErrorResponse {
-  return typeof data === 'object' && data !== null && 'error' in data && typeof data.error === 'string';
+  return (
+    typeof data === 'object' && data !== null && 'error' in data && typeof data.error === 'string'
+  );
 }
 
 export function NameForm({ currentName }: NameFormProps) {
@@ -45,10 +47,12 @@ export function NameForm({ currentName }: NameFormProps) {
         body: JSON.stringify({ name: newName }),
       });
 
-      const responseData = await res.json() as UpdateProfileResponse | ApiErrorResponse;
+      const responseData = (await res.json()) as UpdateProfileResponse | ApiErrorResponse;
 
       if (!res.ok) {
-        const errorMessage = isApiErrorResponse(responseData) ? responseData.error : 'Failed to update name';
+        const errorMessage = isApiErrorResponse(responseData)
+          ? responseData.error
+          : 'Failed to update name';
         throw new Error(errorMessage);
       }
 
@@ -86,7 +90,9 @@ export function NameForm({ currentName }: NameFormProps) {
   // Handle input change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setName(e.target.value);
-    if (error) {setError('');}
+    if (error) {
+      setError('');
+    }
   };
 
   // Client-side validation

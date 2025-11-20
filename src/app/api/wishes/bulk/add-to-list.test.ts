@@ -50,16 +50,14 @@ describe('POST /api/wishes/bulk/add-to-list', () => {
       method: 'POST',
     });
     // Mock the json() method
-    request.json = jest
-      .fn()
-      .mockResolvedValue({
-        wishIds: [
-          '00000000-0000-0000-0000-000000000001',
-          '00000000-0000-0000-0000-000000000002',
-          '00000000-0000-0000-0000-000000000003',
-        ],
-        listId: '00000000-0000-0000-0000-000000000011',
-      });
+    request.json = jest.fn().mockResolvedValue({
+      wishIds: [
+        '00000000-0000-0000-0000-000000000001',
+        '00000000-0000-0000-0000-000000000002',
+        '00000000-0000-0000-0000-000000000003',
+      ],
+      listId: '00000000-0000-0000-0000-000000000011',
+    });
 
     const response = await POST(request);
     const data = (await response.json()) as { error: string };
@@ -75,15 +73,13 @@ describe('POST /api/wishes/bulk/add-to-list', () => {
       method: 'POST',
     });
     // Mock the json() method
-    request.json = jest
-      .fn()
-      .mockResolvedValue({
-        wishIds: [
-          '00000000-0000-0000-0000-000000000001',
-          '00000000-0000-0000-0000-000000000002',
-          '00000000-0000-0000-0000-000000000003',
-        ],
-      });
+    request.json = jest.fn().mockResolvedValue({
+      wishIds: [
+        '00000000-0000-0000-0000-000000000001',
+        '00000000-0000-0000-0000-000000000002',
+        '00000000-0000-0000-0000-000000000003',
+      ],
+    });
 
     const response = await POST(request);
     const data = (await response.json()) as { error: string };

@@ -160,9 +160,11 @@ export class ListService {
           url: url,
         };
       })
-      .filter((card): card is { name: string; url: string } => card !== null && card.name !== '' && card.url !== '');
+      .filter(
+        (card): card is { name: string; url: string } =>
+          card !== null && card.name !== '' && card.url !== ''
+      );
   }
-
 
   /**
    * Update list details
@@ -208,7 +210,6 @@ export class ListService {
       const validated = this.validateGiftCardPreferences(data.giftCardPreferences);
       updateData.giftCardPreferences = JSON.stringify(validated);
     }
-
 
     // Handle share token generation/removal based on visibility change
     if (data.visibility === 'public' || data.visibility === 'password') {

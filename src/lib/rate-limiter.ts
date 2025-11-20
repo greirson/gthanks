@@ -1,7 +1,7 @@
 /**
  * Simple in-memory rate limiter for MVP with memory exhaustion protection
  * For production, use Redis-based distributed rate limiting
- * 
+ *
  * Security enhancement: Added MAX_ENTRIES limit with LRU eviction to prevent
  * memory exhaustion attacks where attackers create unlimited entries.
  */
@@ -157,7 +157,7 @@ class SimpleRateLimiter {
   private cleanup() {
     const now = Date.now();
     let expiredCount = 0;
-    
+
     // Phase 1: Remove expired entries
     for (const [key, entry] of this.storage.entries()) {
       if (entry.resetTime <= now) {
@@ -170,24 +170,25 @@ class SimpleRateLimiter {
     if (this.storage.size > this.MAX_ENTRIES) {
       // Sort entries by resetTime (oldest first) for LRU eviction
       // This ensures we remove the least recently used entries
-      const sortedEntries = Array.from(this.storage.entries())
-        .sort(([, a], [, b]) => a.resetTime - b.resetTime);
-      
+      const sortedEntries = Array.from(this.storage.entries()).sort(
+        ([, a], [, b]) => a.resetTime - b.resetTime
+      );
+
       // Calculate how many entries to remove
       const entriesToRemove = this.storage.size - this.MAX_ENTRIES;
       const toDelete = sortedEntries.slice(0, entriesToRemove);
-      
+
       // Remove the oldest entries
       for (const [key] of toDelete) {
         this.storage.delete(key);
       }
-      
+
       // Log eviction event for monitoring (helps detect potential attacks)
       if (toDelete.length > 0) {
         console.warn(
           `[RateLimiter] Security: Evicted ${toDelete.length} entries due to MAX_ENTRIES limit (${this.MAX_ENTRIES}). ` +
-          `This may indicate a memory exhaustion attack or unusually high traffic. ` +
-          `Expired: ${expiredCount}, Total evicted: ${toDelete.length}, Current size: ${this.storage.size}`
+            `This may indicate a memory exhaustion attack or unusually high traffic. ` +
+            `Expired: ${expiredCount}, Total evicted: ${toDelete.length}, Current size: ${this.storage.size}`
         );
       }
     }
@@ -349,7 +350,7 @@ export function getClientIdentifier(request: Request): string {
   // Priority 3: X-Forwarded-For - use LAST IP (closest to server)
   const forwarded = request.headers.get('x-forwarded-for');
   if (forwarded) {
-    const ips = forwarded.split(',').map(ip => ip.trim());
+    const ips = forwarded.split(',').map((ip) => ip.trim());
     // Use the LAST IP in the chain (rightmost = closest to our server)
     // Example: "client-ip, proxy1-ip, proxy2-ip" -> use "proxy2-ip"
     return ips[ips.length - 1];

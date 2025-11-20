@@ -7,11 +7,7 @@ import { Page } from '@playwright/test';
  * @param description - List description (optional)
  * @returns The created list ID
  */
-export async function createList(
-  page: Page,
-  name: string,
-  description?: string
-): Promise<string> {
+export async function createList(page: Page, name: string, description?: string): Promise<string> {
   // Navigate to lists page
   await page.goto('/lists');
 
@@ -45,7 +41,7 @@ export async function createList(
 
 /**
  * Navigate to a list
- * @param page - Playwright page object  
+ * @param page - Playwright page object
  * @param listId - List ID
  */
 export async function navigateToList(page: Page, listId: string) {

@@ -151,7 +151,9 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
 
   // Helper to get the correct public URL (vanity URL if available, otherwise standard share token URL)
   const getPublicUrl = useCallback(() => {
-    if (!list?.shareToken) {return null;}
+    if (!list?.shareToken) {
+      return null;
+    }
 
     const username = session?.user?.username;
     const canUseVanityUrls = session?.user?.canUseVanityUrls ?? false;
@@ -360,12 +362,16 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
             onAddWish={() => addWishDialog.open()}
             onEditList={() => editListDialog.open()}
             onShare={() => sharingDialog.open()}
-            onPublicView={getPublicUrl() ? () => {
-              const url = getPublicUrl();
-              if (url) {
-                window.open(url, '_blank');
-              }
-            } : undefined}
+            onPublicView={
+              getPublicUrl()
+                ? () => {
+                    const url = getPublicUrl();
+                    if (url) {
+                      window.open(url, '_blank');
+                    }
+                  }
+                : undefined
+            }
           />
 
           {/* List Header - Centered */}
@@ -447,9 +453,9 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
                 variant="ghost"
                 size="icon"
                 onClick={toggleSelectionMode}
-                aria-label={isSelectionMode ? "Exit selection mode" : "Select wishes"}
+                aria-label={isSelectionMode ? 'Exit selection mode' : 'Select wishes'}
               >
-                <CheckSquare className={cn("h-4 w-4", isSelectionMode && "text-primary")} />
+                <CheckSquare className={cn('h-4 w-4', isSelectionMode && 'text-primary')} />
               </Button>
             )}
           </div>
@@ -483,7 +489,6 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
               void queryClient.invalidateQueries({ queryKey: ['lists', listId] });
             }}
           />
-
 
           {/* Mobile Selection Controls */}
           {isSelectionMode && list.isOwner && (
@@ -544,11 +549,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
 
             {/* Right side - Primary action */}
             {list.isOwner && (
-              <Button
-                onClick={() => addWishDialog.open()}
-                size="sm"
-                className="min-h-[44px]"
-              >
+              <Button onClick={() => addWishDialog.open()} size="sm" className="min-h-[44px]">
                 <Plus className="mr-2 h-5 w-5" />
                 Add Wish
               </Button>

@@ -227,7 +227,11 @@ export function GroupAvatarUpload({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="min-h-[44px]">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void handleRemove()} disabled={isUploading} className="min-h-[44px]">
+            <AlertDialogAction
+              onClick={() => void handleRemove()}
+              disabled={isUploading}
+              className="min-h-[44px]"
+            >
               {isUploading ? 'Removing...' : 'Remove'}
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -34,7 +34,9 @@ export function OnboardingScreen({ defaultName = '', defaultAvatar = '' }: Onboa
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) {return;}
+    if (!file) {
+      return;
+    }
 
     // Validate file type
     const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -99,7 +101,8 @@ export function OnboardingScreen({ defaultName = '', defaultAvatar = '' }: Onboa
       console.error('Onboarding error:', error);
       showToast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to complete setup. Please try again.',
+        description:
+          error instanceof Error ? error.message : 'Failed to complete setup. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -158,7 +161,7 @@ export function OnboardingScreen({ defaultName = '', defaultAvatar = '' }: Onboa
                 <Label className="text-sm font-medium">Add a profile photo (optional)</Label>
 
                 {avatarUrl && (
-                  <div className="flex items-center gap-4 mt-4">
+                  <div className="mt-4 flex items-center gap-4">
                     <UserAvatar
                       user={{
                         id: 'preview',
@@ -185,7 +188,7 @@ export function OnboardingScreen({ defaultName = '', defaultAvatar = '' }: Onboa
                 <Button
                   type="button"
                   variant="outline"
-                  className="min-h-[44px] w-full mt-4"
+                  className="mt-4 min-h-[44px] w-full"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isLoading}
                 >
@@ -193,7 +196,7 @@ export function OnboardingScreen({ defaultName = '', defaultAvatar = '' }: Onboa
                   {avatarUrl ? 'Change Photo' : 'Upload Photo'}
                 </Button>
 
-                <p className="text-xs text-muted-foreground mt-2">
+                <p className="mt-2 text-xs text-muted-foreground">
                   JPEG, PNG, GIF, or WebP. Maximum size 2MB.
                 </p>
               </div>

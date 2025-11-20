@@ -75,7 +75,9 @@ async function fetchListByVanityUrl(
   });
 
   if (!response.ok) {
-    const error: { error?: string } = await response.json().catch(() => ({ error: 'Failed to fetch list' }));
+    const error: { error?: string } = await response
+      .json()
+      .catch(() => ({ error: 'Failed to fetch list' }));
     throw new Error(error.error ?? 'Failed to fetch list');
   }
 
@@ -326,7 +328,7 @@ export default function PublicListVanityUrlPage() {
             <X className="h-5 w-5" />
           </button>
 
-          <CardContent className="pt-6 pr-12">
+          <CardContent className="pr-12 pt-6">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-info/10">
@@ -342,12 +344,14 @@ export default function PublicListVanityUrlPage() {
                 <p className="text-sm text-muted-foreground">
                   {currentUserId === list.owner.id ? (
                     <>
-                      This is how others see your wishlist. They can reserve items, but you can&apos;t
-                      reserve your own wishes.
+                      This is how others see your wishlist. They can reserve items, but you
+                      can&apos;t reserve your own wishes.
                     </>
                   ) : (
                     <>
-                      Click the &quot;Reserve&quot; button on any item you plan to buy. Your name stays hidden from {list.owner.name} until after the gift is given. This prevents duplicate gifts!
+                      Click the &quot;Reserve&quot; button on any item you plan to buy. Your name
+                      stays hidden from {list.owner.name} until after the gift is given. This
+                      prevents duplicate gifts!
                     </>
                   )}
                 </p>
@@ -367,9 +371,7 @@ export default function PublicListVanityUrlPage() {
             id: listWish.wish.id,
             ownerId: list.owner.id,
             createdAt: new Date(listWish.wish.createdAt).toISOString(),
-            updatedAt: new Date(
-              listWish.wish.updatedAt || listWish.wish.createdAt
-            ).toISOString(),
+            updatedAt: new Date(listWish.wish.updatedAt || listWish.wish.createdAt).toISOString(),
             title: listWish.wish.title,
             color: listWish.wish.color,
             size: listWish.wish.size,

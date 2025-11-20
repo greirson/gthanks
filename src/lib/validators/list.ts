@@ -103,9 +103,8 @@ export const GiftCardSchema = z.object({
 
 // List update schema with gift cards
 export const ListUpdateSchema = ListCreateSchema.partial().extend({
-  giftCardPreferences: z.array(GiftCardSchema).max(10).optional()
+  giftCardPreferences: z.array(GiftCardSchema).max(10).optional(),
 });
-
 
 // Add wish to list schema
 export const AddWishToListSchema = z.object({

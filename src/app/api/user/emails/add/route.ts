@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
         },
         {
           status: 429,
-          headers: getRateLimitHeaders(rateLimitResult)
+          headers: getRateLimitHeaders(rateLimitResult),
         }
       );
     }

@@ -61,6 +61,7 @@ openssl rand -base64 32
 ```
 
 **Output example:**
+
 ```
 zT6X7gIkWiBNFlwerg3kDxuVZWk3JeZjkY2h9VVIetc=
 ```
@@ -74,6 +75,7 @@ OAUTH_ENCRYPTION_KEY=zT6X7gIkWiBNFlwerg3kDxuVZWk3JeZjkY2h9VVIetc=
 ```
 
 **IMPORTANT:**
+
 - Never commit this key to git
 - Use different keys for production/staging/development
 - Store production keys in secure secrets management (Vercel Env Vars, AWS Secrets Manager, etc.)
@@ -95,6 +97,7 @@ pnpm prisma studio
 ```
 
 Navigate to the `Account` table and verify:
+
 - `encryptedAccessToken` is populated (base64 string)
 - `encryptedRefreshToken` is populated (base64 string)
 - `tokenIv` is populated (base64 string)
@@ -136,10 +139,7 @@ import { encryptToken } from '@/lib/crypto/oauth-encryption';
 async function migrateOAuthTokens() {
   const accounts = await db.account.findMany({
     where: {
-      OR: [
-        { access_token: { not: null } },
-        { refresh_token: { not: null } },
-      ],
+      OR: [{ access_token: { not: null } }, { refresh_token: { not: null } }],
       encryptedAccessToken: null, // Not yet encrypted
     },
   });
@@ -181,6 +181,7 @@ migrateOAuthTokens().catch(console.error);
 ```
 
 **Run Migration:**
+
 ```bash
 pnpm tsx scripts/migrate-oauth-tokens.ts
 ```
@@ -190,12 +191,14 @@ pnpm tsx scripts/migrate-oauth-tokens.ts
 ### Encryption Key Management
 
 **Best Practices:**
+
 - Use a dedicated encryption key (don't reuse NEXTAUTH_SECRET)
 - Rotate keys annually or after suspected compromise
 - Use hardware security modules (HSM) for production keys
 - Never log the encryption key
 
 **Key Storage:**
+
 - **Vercel**: Environment Variables (encrypted at rest)
 - **AWS**: Secrets Manager or Parameter Store
 - **Docker**: Kubernetes Secrets or Docker Secrets
@@ -204,12 +207,14 @@ pnpm tsx scripts/migrate-oauth-tokens.ts
 ### Threat Model
 
 **What This Protects Against:**
+
 - Database dumps or leaks
 - Compromised database backups
 - Unauthorized database access
 - SQL injection attacks that expose tokens
 
 **What This Doesn't Protect Against:**
+
 - Compromised encryption key
 - Runtime memory access (tokens decrypted in memory)
 - Application-level vulnerabilities
@@ -218,6 +223,7 @@ pnpm tsx scripts/migrate-oauth-tokens.ts
 ### Encryption Algorithm
 
 **AES-256-GCM Details:**
+
 - **Algorithm**: AES (Advanced Encryption Standard)
 - **Key Size**: 256 bits (highest standard)
 - **Mode**: GCM (Galois/Counter Mode)
@@ -225,6 +231,7 @@ pnpm tsx scripts/migrate-oauth-tokens.ts
 - **IV**: Randomly generated 128-bit IV per encryption
 
 **Why GCM?**
+
 - Provides both confidentiality (encryption) and authenticity (integrity verification)
 - Prevents tampering attacks (modified ciphertext detected)
 - Industry standard (used by TLS 1.3, IPSec, etc.)
@@ -234,16 +241,19 @@ pnpm tsx scripts/migrate-oauth-tokens.ts
 ### Issue: Authentication Fails After Deployment
 
 **Symptom:**
+
 ```
 Error: Token decryption failed
 ```
 
 **Causes:**
+
 1. `OAUTH_ENCRYPTION_KEY` not set or incorrect
 2. Key changed between deployments
 3. Database migration not applied
 
 **Solution:**
+
 1. Verify `OAUTH_ENCRYPTION_KEY` is set correctly
 2. Ensure same key used across all instances
 3. Run `pnpm db:push` to apply schema changes
@@ -251,14 +261,17 @@ Error: Token decryption failed
 ### Issue: Tokens Not Encrypted
 
 **Symptom:**
+
 - `encryptedAccessToken` is null in database
 - Only `access_token` populated
 
 **Causes:**
+
 1. Encryption key not set (fallback to plaintext)
 2. Encryption error during account creation
 
 **Solution:**
+
 1. Check logs for encryption errors
 2. Verify `OAUTH_ENCRYPTION_KEY` is valid base64
 3. Test encryption manually:
@@ -273,16 +286,19 @@ console.log(result); // Should show { encrypted: '...', iv: '...' }
 ### Issue: Decryption Failures
 
 **Symptom:**
+
 ```
 Failed to decrypt OAuth token (invalid key, tampered data, or corrupted IV)
 ```
 
 **Causes:**
+
 1. Encryption key changed
 2. Database corruption
 3. IV mismatch
 
 **Solution:**
+
 - System automatically falls back to plaintext tokens
 - Re-authenticate affected users (generates new encrypted tokens)
 - If widespread: roll back encryption key to previous value
@@ -290,12 +306,14 @@ Failed to decrypt OAuth token (invalid key, tampered data, or corrupted IV)
 ## Performance Impact
 
 **Negligible:**
+
 - Encryption: < 1ms per token
 - Decryption: < 1ms per token
 - Database overhead: +3 string fields per Account
 - No impact on request latency
 
 **Benchmarks:**
+
 - 1000 encryptions: ~50ms
 - 1000 decryptions: ~40ms
 - Average: 0.05ms per operation
@@ -309,6 +327,7 @@ pnpm test oauth-encryption.test.ts
 ```
 
 **Coverage:**
+
 - Encryption/decryption round-trip
 - Invalid input handling
 - Fallback mechanism
@@ -333,21 +352,25 @@ pnpm test oauth-encryption.test.ts
 ### Logs to Watch
 
 **Success:**
+
 ```
 [INFO] Created UserEmail record for new OAuth user
 ```
 
 **Encryption Failure:**
+
 ```
 [ERROR] Failed to encrypt access token during account creation
 ```
 
 **Decryption Fallback:**
+
 ```
 [INFO] Using plaintext access token (migration pending)
 ```
 
 **Decryption Failure:**
+
 ```
 [ERROR] Failed to decrypt OAuth token (invalid key, tampered data, or corrupted IV)
 ```
@@ -364,12 +387,14 @@ pnpm test oauth-encryption.test.ts
 If encryption causes issues:
 
 1. **Keep encryption code but disable**:
+
    ```env
    # Remove encryption key to force plaintext fallback
    # OAUTH_ENCRYPTION_KEY=
    ```
 
 2. **Revert code changes**:
+
    ```bash
    git revert <commit-hash>
    pnpm db:push
@@ -397,6 +422,7 @@ If encryption causes issues:
 ## Support
 
 For issues or questions:
+
 1. Check logs for encryption/decryption errors
 2. Verify encryption key is set correctly
 3. Test encryption manually with unit tests

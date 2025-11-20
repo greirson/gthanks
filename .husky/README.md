@@ -7,17 +7,20 @@ This directory contains Git hooks managed by Husky v9 to maintain code quality.
 ### pre-commit
 
 **Enforced Checks (Blocking):**
+
 1. **lint-staged** - Auto-fixes formatting and lint issues on changed files
 2. **TypeScript type check** - Blocks commit if any type errors exist
 3. **ESLint** - Blocks commit if any lint errors exist
 
 **Why TypeScript and ESLint are blocking:**
+
 - Prevents broken code from entering the repository
 - Catches errors early (before CI/CD)
 - Ensures code quality standards are met
 - Faster feedback loop for developers
 
 **Performance:**
+
 - Lint-staged: Fast (only processes staged files)
 - TypeScript: ~2-5 seconds (incremental build)
 - ESLint: ~2-5 seconds
@@ -48,6 +51,7 @@ HUSKY=0 git commit -m "..."
 ```
 
 **Important:**
+
 - You must still fix the errors before creating a PR
 - CI/CD will catch any issues you bypass locally
 - Use `--no-verify` only for genuine emergencies (hotfixes, deployment blockers)
@@ -59,6 +63,7 @@ HUSKY=0 git commit -m "..."
 **Symptom:** Pre-commit hook blocks your commit with type errors
 
 **Solution:**
+
 ```bash
 # See all type errors
 pnpm typecheck
@@ -75,6 +80,7 @@ pnpm typecheck
 **Symptom:** Pre-commit hook blocks your commit with lint errors
 
 **Solution:**
+
 ```bash
 # Auto-fix issues
 pnpm lint:fix
@@ -93,11 +99,13 @@ pnpm lint
 **Symptom:** Hook takes > 10 seconds
 
 **Possible Causes:**
+
 - Large number of staged files
 - Complex type dependencies
 - Slow disk I/O
 
 **Solutions:**
+
 ```bash
 # Commit smaller batches of files
 git add src/components/MyComponent.tsx
@@ -115,6 +123,7 @@ git commit --no-verify -m "wip: work in progress"
 ## Workflow Example
 
 **Normal workflow (no errors):**
+
 ```bash
 git add .
 git commit -m "feat: add wish templates"
@@ -126,6 +135,7 @@ git commit -m "feat: add wish templates"
 ```
 
 **Workflow with errors:**
+
 ```bash
 git add .
 git commit -m "feat: add wish templates"
@@ -176,6 +186,7 @@ The pre-commit hook runs these checks in order:
 ## Best Practices
 
 1. **Run checks before committing:**
+
    ```bash
    pnpm lint        # Check for lint errors
    pnpm typecheck   # Check for type errors
@@ -187,6 +198,7 @@ The pre-commit hook runs these checks in order:
    - Run `pnpm lint:fix` frequently
 
 3. **Use meaningful commit messages:**
+
    ```bash
    git commit -m "feat: add wish template system"
    git commit -m "fix: resolve TypeScript errors in wish service"

@@ -87,7 +87,10 @@ export async function POST(request: NextRequest, { params }: { params: { listId:
     }
     if (error instanceof ValidationError) {
       return NextResponse.json(
-        { error: getUserFriendlyError('VALIDATION_ERROR', error.message), code: 'VALIDATION_ERROR' },
+        {
+          error: getUserFriendlyError('VALIDATION_ERROR', error.message),
+          code: 'VALIDATION_ERROR',
+        },
         { status: 400 }
       );
     }

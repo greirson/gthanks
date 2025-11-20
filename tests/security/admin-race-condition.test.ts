@@ -66,8 +66,7 @@ describe('Admin Assignment Race Condition Prevention', () => {
       // Verify the logic checks if admin exists
       const hasAdminCheck =
         authContent.includes('adminExists') ||
-        authContent.includes('findFirst') &&
-        authContent.includes('isAdmin: true');
+        (authContent.includes('findFirst') && authContent.includes('isAdmin: true'));
 
       expect(hasAdminCheck).toBe(true);
     });
@@ -82,10 +81,7 @@ describe('Admin Assignment Race Condition Prevention', () => {
 
       // Extract the transaction section (look backwards for the start)
       const transactionStart = authContent.lastIndexOf('$transaction', serializableIndex);
-      const transactionSection = authContent.substring(
-        transactionStart,
-        serializableIndex + 500
-      );
+      const transactionSection = authContent.substring(transactionStart, serializableIndex + 500);
 
       // Verify admin assignment happens in transaction
       expect(transactionSection).toContain('isAdmin');
@@ -112,7 +108,8 @@ describe('Admin Assignment Race Condition Prevention', () => {
         expect(transactionCode).toContain('findFirst');
 
         // 2. Checks for no admin
-        expect(transactionCode).toContain('!adminExists') || expect(transactionCode).toContain('adminExists');
+        expect(transactionCode).toContain('!adminExists') ||
+          expect(transactionCode).toContain('adminExists');
 
         // 3. Updates user to admin
         expect(transactionCode).toContain('user.update');
@@ -154,11 +151,7 @@ describe('Admin Assignment Race Condition Prevention', () => {
         }
 
         // Exit transaction block after closing braces
-        if (
-          inTransactionBlock &&
-          line.trim().startsWith('}') &&
-          line.includes('isolationLevel')
-        ) {
+        if (inTransactionBlock && line.trim().startsWith('}') && line.includes('isolationLevel')) {
           break;
         }
       }
@@ -229,15 +222,11 @@ describe('Admin Assignment Race Condition Prevention', () => {
 
       // Extract a large section around the transaction
       const transactionStart = authContent.lastIndexOf('$transaction', serializableIndex);
-      const transactionSection = authContent.substring(
-        transactionStart,
-        serializableIndex + 500
-      );
+      const transactionSection = authContent.substring(transactionStart, serializableIndex + 500);
 
       // Must check if admin exists before assignment
       const hasAdminCheck =
-        transactionSection.includes('findFirst') ||
-        transactionSection.includes('adminExists');
+        transactionSection.includes('findFirst') || transactionSection.includes('adminExists');
       expect(hasAdminCheck).toBe(true);
     });
 

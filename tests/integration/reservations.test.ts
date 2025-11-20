@@ -1,12 +1,12 @@
 /**
  * Integration tests for reservation system critical paths
- * 
+ *
  * Tests cover:
  * - Creating reservations on wishes
  * - Reservation visibility (hidden from wish owner)
  * - Cancelling reservations
  * - Anonymous reservations (if supported)
- * 
+ *
  * Core feature: prevents duplicate gifts by managing reservations
  */
 
@@ -42,16 +42,16 @@ describe('Reservation System Integration Tests', () => {
       data: {
         id: 'owner-123',
         email: 'owner@example.com',
-        name: 'Wish Owner'
-      }
+        name: 'Wish Owner',
+      },
     });
 
     testUser = await db.user.create({
       data: {
         id: 'reserver-456',
         email: 'reserver@example.com',
-        name: 'Gift Giver'
-      }
+        name: 'Gift Giver',
+      },
     });
 
     // Create test list
@@ -60,8 +60,8 @@ describe('Reservation System Integration Tests', () => {
         id: 'list-789',
         name: 'Birthday List',
         description: 'My birthday wishlist',
-        ownerId: wishOwner.id
-      }
+        ownerId: wishOwner.id,
+      },
     });
 
     // Create test wish
@@ -73,16 +73,16 @@ describe('Reservation System Integration Tests', () => {
         url: 'https://example.com/product',
         price: 49.99,
         wishLevel: 3, // High priority
-        ownerId: wishOwner.id
-      }
+        ownerId: wishOwner.id,
+      },
     });
 
     // Add wish to list
     await db.listWish.create({
       data: {
         listId: testList.id,
-        wishId: testWish.id
-      }
+        wishId: testWish.id,
+      },
     });
   });
 
@@ -100,8 +100,8 @@ describe('Reservation System Integration Tests', () => {
         data: {
           wishId: testWish.id,
           reserverName: testUser.name,
-          reserverEmail: testUser.email
-        }
+          reserverEmail: testUser.email,
+        },
       });
 
       expect(reservation).toBeTruthy();
@@ -120,15 +120,15 @@ describe('Reservation System Integration Tests', () => {
         data: {
           wishId: testWish.id,
           reserverName: testUser.name,
-          reserverEmail: testUser.email
-        }
+          reserverEmail: testUser.email,
+        },
       });
 
       expect(firstReservation).toBeTruthy();
 
       // Check if wish already has reservation
       const existingReservation = await db.reservation.findFirst({
-        where: { wishId: testWish.id }
+        where: { wishId: testWish.id },
       });
 
       expect(existingReservation).toBeTruthy();
@@ -151,8 +151,8 @@ describe('Reservation System Integration Tests', () => {
           wishId: testWish.id,
           reserverName: anonymousName,
           reserverEmail: anonymousEmail,
-          accessToken
-        }
+          accessToken,
+        },
       });
 
       expect(anonymousReservation).toBeTruthy();
@@ -162,7 +162,7 @@ describe('Reservation System Integration Tests', () => {
 
       // Verify token can be used to access reservation
       const reservationByToken = await db.reservation.findUnique({
-        where: { accessToken }
+        where: { accessToken },
       });
 
       expect(reservationByToken).toBeTruthy();
@@ -177,11 +177,11 @@ describe('Reservation System Integration Tests', () => {
         data: {
           wishId: testWish.id,
           reserverName: testUser.name,
-          reserverEmail: testUser.email
+          reserverEmail: testUser.email,
         },
         include: {
-          wish: true
-        }
+          wish: true,
+        },
       });
 
       expect(reservation.wish).toBeTruthy();
@@ -198,8 +198,8 @@ describe('Reservation System Integration Tests', () => {
         data: {
           wishId: testWish.id,
           reserverName: testUser.name,
-          reserverEmail: testUser.email
-        }
+          reserverEmail: testUser.email,
+        },
       });
 
       // Mock current user as wish owner
@@ -209,8 +209,8 @@ describe('Reservation System Integration Tests', () => {
       const wish = await db.wish.findUnique({
         where: { id: testWish.id },
         include: {
-          reservation: true
-        }
+          reservation: true,
+        },
       });
 
       // In real implementation, reservation details would be filtered
@@ -221,7 +221,7 @@ describe('Reservation System Integration Tests', () => {
       // Simulate filtered response for owner
       const ownerView = {
         ...wish,
-        reservation: wish?.reservation ? { reserved: true } : null
+        reservation: wish?.reservation ? { reserved: true } : null,
       };
 
       expect(ownerView.reservation?.reserved).toBe(true);
@@ -235,8 +235,8 @@ describe('Reservation System Integration Tests', () => {
         data: {
           wishId: testWish.id,
           reserverName: testUser.name,
-          reserverEmail: testUser.email
-        }
+          reserverEmail: testUser.email,
+        },
       });
 
       // Mock current user as reserver
@@ -245,7 +245,7 @@ describe('Reservation System Integration Tests', () => {
       // Get user's reservations
       const userReservations = await db.reservation.findMany({
         where: { reserverEmail: testUser.email },
-        include: { wish: true }
+        include: { wish: true },
       });
 
       expect(userReservations).toHaveLength(1);
@@ -260,8 +260,8 @@ describe('Reservation System Integration Tests', () => {
         data: {
           id: 'member-789',
           email: 'member@example.com',
-          name: 'Group Member'
-        }
+          name: 'Group Member',
+        },
       });
 
       // Create group and add members
@@ -269,24 +269,24 @@ describe('Reservation System Integration Tests', () => {
         data: {
           id: 'group-001',
           name: 'Family Group',
-          description: 'Our family'
-        }
+          description: 'Our family',
+        },
       });
 
       await db.userGroup.create({
         data: {
           userId: wishOwner.id,
           groupId: group.id,
-          role: 'admin'
-        }
+          role: 'admin',
+        },
       });
 
       await db.userGroup.create({
         data: {
           userId: otherMember.id,
           groupId: group.id,
-          role: 'member'
-        }
+          role: 'member',
+        },
       });
 
       // Share list with group
@@ -294,8 +294,8 @@ describe('Reservation System Integration Tests', () => {
         data: {
           listId: testList.id,
           groupId: group.id,
-          sharedBy: wishOwner.id
-        }
+          sharedBy: wishOwner.id,
+        },
       });
 
       // Create reservation
@@ -303,8 +303,8 @@ describe('Reservation System Integration Tests', () => {
         data: {
           wishId: testWish.id,
           reserverName: testUser.name,
-          reserverEmail: testUser.email
-        }
+          reserverEmail: testUser.email,
+        },
       });
 
       // Mock current user as other group member
@@ -313,15 +313,15 @@ describe('Reservation System Integration Tests', () => {
       // Get wish status - other members should see it's reserved
       const wishWithReservation = await db.wish.findUnique({
         where: { id: testWish.id },
-        include: { reservation: true }
+        include: { reservation: true },
       });
 
       expect(wishWithReservation?.reservation).toBeTruthy();
-      
+
       // Other members see reservation exists but not details
       const memberView = {
         ...wishWithReservation,
-        reservation: wishWithReservation?.reservation ? { reserved: true } : null
+        reservation: wishWithReservation?.reservation ? { reserved: true } : null,
       };
 
       expect(memberView.reservation?.reserved).toBe(true);
@@ -336,8 +336,8 @@ describe('Reservation System Integration Tests', () => {
           id: 'res-to-cancel',
           wishId: testWish.id,
           reserverName: testUser.name,
-          reserverEmail: testUser.email
-        }
+          reserverEmail: testUser.email,
+        },
       });
 
       // Mock current user as reserver
@@ -345,38 +345,38 @@ describe('Reservation System Integration Tests', () => {
 
       // Verify reservation exists
       let existingReservation = await db.reservation.findUnique({
-        where: { id: reservation.id }
+        where: { id: reservation.id },
       });
       expect(existingReservation).toBeTruthy();
 
       // Cancel reservation
       await db.reservation.delete({
-        where: { id: reservation.id }
+        where: { id: reservation.id },
       });
 
       // Verify reservation is deleted
       const deletedReservation = await db.reservation.findUnique({
-        where: { id: reservation.id }
+        where: { id: reservation.id },
       });
       expect(deletedReservation).toBeNull();
 
       // Verify wish is available again
       const availableWish = await db.wish.findUnique({
         where: { id: testWish.id },
-        include: { reservation: true }
+        include: { reservation: true },
       });
       expect(availableWish?.reservation).toBeNull();
     });
 
-    it('should not allow user to cancel another user\'s reservation', async () => {
+    it("should not allow user to cancel another user's reservation", async () => {
       // Create reservation by testUser
       const reservation = await db.reservation.create({
         data: {
           id: 'res-protected',
           wishId: testWish.id,
           reserverName: testUser.name,
-          reserverEmail: testUser.email
-        }
+          reserverEmail: testUser.email,
+        },
       });
 
       // Create another user
@@ -384,8 +384,8 @@ describe('Reservation System Integration Tests', () => {
         data: {
           id: 'another-user',
           email: 'another@example.com',
-          name: 'Another User'
-        }
+          name: 'Another User',
+        },
       });
 
       // Mock current user as different user
@@ -397,7 +397,7 @@ describe('Reservation System Integration Tests', () => {
 
       // Verify reservation still exists
       const protectedReservation = await db.reservation.findUnique({
-        where: { id: reservation.id }
+        where: { id: reservation.id },
       });
       expect(protectedReservation).toBeTruthy();
       expect(protectedReservation?.reserverEmail).toBe(testUser.email);
@@ -413,8 +413,8 @@ describe('Reservation System Integration Tests', () => {
           wishId: testWish.id,
           reserverName: 'Anonymous',
           reserverEmail: 'anon@example.com',
-          accessToken
-        }
+          accessToken,
+        },
       });
 
       // No authenticated user
@@ -422,7 +422,7 @@ describe('Reservation System Integration Tests', () => {
 
       // Find reservation by token
       const reservationByToken = await db.reservation.findUnique({
-        where: { accessToken }
+        where: { accessToken },
       });
 
       expect(reservationByToken).toBeTruthy();
@@ -431,13 +431,13 @@ describe('Reservation System Integration Tests', () => {
       // Cancel with token
       if (reservationByToken) {
         await db.reservation.delete({
-          where: { id: reservationByToken.id }
+          where: { id: reservationByToken.id },
         });
       }
 
       // Verify deleted
       const deleted = await db.reservation.findUnique({
-        where: { accessToken }
+        where: { accessToken },
       });
       expect(deleted).toBeNull();
     });
@@ -451,8 +451,8 @@ describe('Reservation System Integration Tests', () => {
           id: 'wish-002',
           title: 'Second Gift',
           price: 29.99,
-          ownerId: wishOwner.id
-        }
+          ownerId: wishOwner.id,
+        },
       });
 
       const wish3 = await db.wish.create({
@@ -460,8 +460,8 @@ describe('Reservation System Integration Tests', () => {
           id: 'wish-003',
           title: 'Third Gift',
           price: 79.99,
-          ownerId: wishOwner.id
-        }
+          ownerId: wishOwner.id,
+        },
       });
 
       // Create reservations for testUser
@@ -469,24 +469,24 @@ describe('Reservation System Integration Tests', () => {
         data: {
           wishId: testWish.id,
           reserverEmail: testUser.email,
-          reserverName: testUser.name
-        }
+          reserverName: testUser.name,
+        },
       });
 
       await db.reservation.create({
         data: {
           wishId: wish2.id,
           reserverEmail: testUser.email,
-          reserverName: testUser.name
-        }
+          reserverName: testUser.name,
+        },
       });
 
       await db.reservation.create({
         data: {
           wishId: wish3.id,
           reserverEmail: testUser.email,
-          reserverName: testUser.name
-        }
+          reserverName: testUser.name,
+        },
       });
 
       // Mock current user
@@ -496,7 +496,7 @@ describe('Reservation System Integration Tests', () => {
       const userReservations = await db.reservation.findMany({
         where: { reserverEmail: testUser.email },
         include: { wish: true },
-        orderBy: { reservedAt: 'desc' }
+        orderBy: { reservedAt: 'desc' },
       });
 
       expect(userReservations).toHaveLength(3);
@@ -511,14 +511,14 @@ describe('Reservation System Integration Tests', () => {
       expect(totalValue).toBe(159.97); // 49.99 + 29.99 + 79.99
     });
 
-    it('should not show reservations in wish owner\'s list view', async () => {
+    it("should not show reservations in wish owner's list view", async () => {
       // Create reservation
       await db.reservation.create({
         data: {
           wishId: testWish.id,
           reserverEmail: testUser.email,
-          reserverName: testUser.name
-        }
+          reserverName: testUser.name,
+        },
       });
 
       // Mock current user as wish owner
@@ -527,15 +527,15 @@ describe('Reservation System Integration Tests', () => {
       // Get owner's wishes
       const ownerWishes = await db.wish.findMany({
         where: { ownerId: wishOwner.id },
-        include: { reservation: true }
+        include: { reservation: true },
       });
 
       // Simulate filtered view for owner
-      const ownerView = ownerWishes.map(wish => ({
+      const ownerView = ownerWishes.map((wish) => ({
         ...wish,
         reservation: wish.reservation ? { reserved: true } : null,
         // Hide reserver details from owner
-        _isReserved: !!wish.reservation
+        _isReserved: !!wish.reservation,
       }));
 
       expect(ownerView).toHaveLength(1);
@@ -551,18 +551,18 @@ describe('Reservation System Integration Tests', () => {
         data: {
           wishId: testWish.id,
           reserverEmail: testUser.email,
-          reserverName: testUser.name
-        }
+          reserverName: testUser.name,
+        },
       });
 
       // Delete wish (cascade should delete reservation)
       await db.wish.delete({
-        where: { id: testWish.id }
+        where: { id: testWish.id },
       });
 
       // Verify reservation is also deleted (cascade)
       const deletedReservation = await db.reservation.findUnique({
-        where: { id: reservation.id }
+        where: { id: reservation.id },
       });
 
       // Due to cascade delete in schema
@@ -575,8 +575,8 @@ describe('Reservation System Integration Tests', () => {
         data: {
           id: 'user2',
           email: 'user2@example.com',
-          name: 'User 2'
-        }
+          name: 'User 2',
+        },
       });
 
       // First reservation succeeds
@@ -584,15 +584,15 @@ describe('Reservation System Integration Tests', () => {
         data: {
           wishId: testWish.id,
           reserverEmail: testUser.email,
-          reserverName: testUser.name
-        }
+          reserverName: testUser.name,
+        },
       });
 
       expect(firstReservation).toBeTruthy();
 
       // Check for existing reservation before second attempt
       const existingReservation = await db.reservation.findFirst({
-        where: { wishId: testWish.id }
+        where: { wishId: testWish.id },
       });
 
       // Second reservation should be prevented
@@ -601,14 +601,14 @@ describe('Reservation System Integration Tests', () => {
           data: {
             wishId: testWish.id,
             reserverEmail: user2.email,
-            reserverName: user2.name
-          }
+            reserverName: user2.name,
+          },
         });
       }
 
       // Verify only one reservation exists
       const allReservations = await db.reservation.findMany({
-        where: { wishId: testWish.id }
+        where: { wishId: testWish.id },
       });
 
       expect(allReservations).toHaveLength(1);
@@ -620,21 +620,21 @@ describe('Reservation System Integration Tests', () => {
         data: {
           wishId: testWish.id,
           reserverEmail: testUser.email,
-          reserverName: testUser.name
-        }
+          reserverName: testUser.name,
+        },
       });
 
       const originalTime = reservation.reservedAt;
 
       // Wait a moment and update
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Update reservation (e.g., adding a note)
       const updated = await db.reservation.update({
         where: { id: reservation.id },
         data: {
-          reminderSentAt: new Date()
-        }
+          reminderSentAt: new Date(),
+        },
       });
 
       expect(updated.reminderSentAt).toBeTruthy();

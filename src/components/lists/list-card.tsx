@@ -1,14 +1,6 @@
 'use client';
 
-import {
-  Edit,
-  ExternalLink,
-  MoreVertical,
-  Share,
-  Trash,
-  Users,
-  UserPlus,
-} from 'lucide-react';
+import { Edit, ExternalLink, MoreVertical, Share, Trash, Users, UserPlus } from 'lucide-react';
 
 import { useState } from 'react';
 
@@ -112,7 +104,12 @@ export function ListCard({ list, onEdit, onDelete, onShare }: ListCardProps) {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="min-h-[44px] min-w-[44px] p-0" aria-label="More options">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="min-h-[44px] min-w-[44px] p-0"
+                aria-label="More options"
+              >
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>

@@ -33,7 +33,9 @@ export function AvatarCrop({ value, onChange, disabled = false, className }: Ava
   const handleFileSelect = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
-      if (!file) {return;}
+      if (!file) {
+        return;
+      }
 
       // Validate file type
       const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -68,7 +70,9 @@ export function AvatarCrop({ value, onChange, disabled = false, className }: Ava
   );
 
   const handleCropAndUpload = useCallback(async () => {
-    if (!selectedImage || !croppedAreaPixels) {return;}
+    if (!selectedImage || !croppedAreaPixels) {
+      return;
+    }
 
     setIsUploading(true);
 

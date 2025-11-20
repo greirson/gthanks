@@ -32,7 +32,10 @@ test.describe('Gift Cards - Public List Views', () => {
 
     // Add gift cards using the Manage Gift Cards dialog
     for (const card of giftCards) {
-      await page.getByRole('button', { name: /manage gift cards/i }).first().click();
+      await page
+        .getByRole('button', { name: /manage gift cards/i })
+        .first()
+        .click();
       await page.getByLabel('Name *').fill(card.name);
       await page.getByLabel('URL *').fill(card.url);
       if (card.amount) {
@@ -69,7 +72,10 @@ test.describe('Gift Cards - Public List Views', () => {
 
     // Verify gift cards section appears ABOVE wish list
     const giftCardSection = page.locator('text=Favorite Stores').first();
-    const wishSection = page.locator('h2, h3').filter({ hasText: /wish|filter/i }).first();
+    const wishSection = page
+      .locator('h2, h3')
+      .filter({ hasText: /wish|filter/i })
+      .first();
 
     const giftCardBox = await giftCardSection.boundingBox();
     const wishBox = await wishSection.boundingBox();
@@ -151,7 +157,10 @@ test.describe('Gift Cards - Public List Views', () => {
 
     // Navigate and add one gift card
     await page.goto(`/lists/${listId}`);
-    await page.getByRole('button', { name: /manage gift cards/i }).first().click();
+    await page
+      .getByRole('button', { name: /manage gift cards/i })
+      .first()
+      .click();
     await page.getByLabel('Name *').fill('Amazon');
     await page.getByLabel('URL *').fill('https://www.amazon.com/gift-cards');
     await page.getByRole('button', { name: /add gift card/i }).click();
@@ -191,7 +200,10 @@ test.describe('Gift Cards - Public List Views', () => {
     const listId = await createListHelper(page, 'Gift List', 'Test list');
 
     await page.goto(`/lists/${listId}`);
-    await page.getByRole('button', { name: /manage gift cards/i }).first().click();
+    await page
+      .getByRole('button', { name: /manage gift cards/i })
+      .first()
+      .click();
     await page.getByLabel('Name *').fill('Target');
     await page.getByLabel('URL *').fill('https://www.target.com/gift-cards');
     await page.getByRole('button', { name: /add gift card/i }).click();
@@ -229,7 +241,10 @@ test.describe('Gift Cards - Public List Views', () => {
     const listId = await createListHelper(page, 'Mobile Test List', 'Mobile test');
 
     await page.goto(`/lists/${listId}`);
-    await page.getByRole('button', { name: /manage gift cards/i }).first().click();
+    await page
+      .getByRole('button', { name: /manage gift cards/i })
+      .first()
+      .click();
 
     const mobileCards = [
       { name: 'Amazon', url: 'https://www.amazon.com/gift-cards' },
@@ -335,9 +350,7 @@ test.describe('Gift Cards - Public List Views', () => {
 
     // Create list with gift cards
     const listId = createId();
-    const giftCards = [
-      { name: 'Amazon', url: 'https://www.amazon.com/gift-cards' },
-    ];
+    const giftCards = [{ name: 'Amazon', url: 'https://www.amazon.com/gift-cards' }];
 
     await db.list.create({
       data: {
@@ -382,7 +395,10 @@ test.describe('Gift Cards - Public List Views', () => {
     const listId = await createListHelper(page, 'Animation Test', 'Testing animations');
 
     await page.goto(`/lists/${listId}`);
-    await page.getByRole('button', { name: /manage gift cards/i }).first().click();
+    await page
+      .getByRole('button', { name: /manage gift cards/i })
+      .first()
+      .click();
     await page.getByLabel('Name *').fill('Amazon');
     await page.getByLabel('URL *').fill('https://www.amazon.com/gift-cards');
     await page.getByRole('button', { name: /add gift card/i }).click();
@@ -398,11 +414,14 @@ test.describe('Gift Cards - Public List Views', () => {
     await page.goto(`/share/${list!.shareToken}`);
 
     // Verify chevron icon rotates on collapse/expand
-    const chevronIcon = page.locator('svg').filter({ has: page.locator('path') }).first();
+    const chevronIcon = page
+      .locator('svg')
+      .filter({ has: page.locator('path') })
+      .first();
 
     // Should start without rotation (expanded state)
-    const initialTransform = await chevronIcon.evaluate((el) =>
-      window.getComputedStyle(el).transform
+    const initialTransform = await chevronIcon.evaluate(
+      (el) => window.getComputedStyle(el).transform
     );
 
     // Click to collapse
@@ -412,8 +431,8 @@ test.describe('Gift Cards - Public List Views', () => {
     await expect(page.getByText('Amazon')).not.toBeVisible();
 
     // Chevron should have rotated (180deg transform)
-    const collapsedTransform = await chevronIcon.evaluate((el) =>
-      window.getComputedStyle(el).transform
+    const collapsedTransform = await chevronIcon.evaluate(
+      (el) => window.getComputedStyle(el).transform
     );
 
     // Transforms should be different (rotation applied)
@@ -427,7 +446,10 @@ test.describe('Gift Cards - Public List Views', () => {
     const listId = await createListHelper(page, 'Tooltip Test', 'Testing tooltips');
 
     await page.goto(`/lists/${listId}`);
-    await page.getByRole('button', { name: /manage gift cards/i }).first().click();
+    await page
+      .getByRole('button', { name: /manage gift cards/i })
+      .first()
+      .click();
     await page.getByLabel('Name *').fill('Target');
     await page.getByLabel('URL *').fill('https://www.target.com/gift-cards');
     await page.getByRole('button', { name: /add gift card/i }).click();
@@ -447,11 +469,7 @@ test.describe('Gift Cards - Public List Views', () => {
     await infoButton.hover();
 
     // Tooltip should appear with expected text
-    await expect(
-      page.getByText(/gift cards the list owner would appreciate/i)
-    ).toBeVisible();
-    await expect(
-      page.getByText(/click any card to visit the store/i)
-    ).toBeVisible();
+    await expect(page.getByText(/gift cards the list owner would appreciate/i)).toBeVisible();
+    await expect(page.getByText(/click any card to visit the store/i)).toBeVisible();
   });
 });

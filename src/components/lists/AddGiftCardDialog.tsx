@@ -117,9 +117,7 @@ export function AddGiftCardDialog({
             <Link className="h-4 w-4" />
             Add Gift Card
           </DialogTitle>
-          <DialogDescription>
-            Add a quick link to a gift card for this list.
-          </DialogDescription>
+          <DialogDescription>Add a quick link to a gift card for this list.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <DialogBody className="space-y-4">

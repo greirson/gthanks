@@ -77,10 +77,7 @@ export async function ensureOnePrimaryEmail(
  * @param userId - User ID
  * @returns Promise<boolean> - True if valid, false otherwise
  */
-export async function validateUserPrimaryEmail(
-  db: PrismaClient,
-  userId: string
-): Promise<boolean> {
+export async function validateUserPrimaryEmail(db: PrismaClient, userId: string): Promise<boolean> {
   const primaryCount = await db.userEmail.count({
     where: {
       userId,
@@ -128,10 +125,7 @@ export async function syncUserEmailWithPrimary(
  * @param userId - User ID
  * @returns Promise<UserEmail | null>
  */
-export async function getPrimaryEmail(
-  db: PrismaClient,
-  userId: string
-) {
+export async function getPrimaryEmail(db: PrismaClient, userId: string) {
   return await db.userEmail.findFirst({
     where: {
       userId,
@@ -245,10 +239,7 @@ export async function updateEmailPrimaryStatus(
  * @returns Promise<void>
  * @throws Error if trying to delete the only email or primary email
  */
-export async function deleteUserEmail(
-  db: PrismaClient,
-  emailId: string
-): Promise<void> {
+export async function deleteUserEmail(db: PrismaClient, emailId: string): Promise<void> {
   return await db.$transaction(async (tx) => {
     // Get the email
     const email = await tx.userEmail.findUnique({

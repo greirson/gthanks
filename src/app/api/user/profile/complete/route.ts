@@ -45,7 +45,10 @@ export async function POST(request: NextRequest) {
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
       return NextResponse.json(
         {
-          error: getUserFriendlyError('VALIDATION_ERROR', 'Name is required and must be a non-empty string'),
+          error: getUserFriendlyError(
+            'VALIDATION_ERROR',
+            'Name is required and must be a non-empty string'
+          ),
           code: 'VALIDATION_ERROR',
         },
         { status: 400 }
@@ -140,7 +143,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
-        error: getUserFriendlyError('INTERNAL_ERROR', 'Failed to complete profile. Please try again.'),
+        error: getUserFriendlyError(
+          'INTERNAL_ERROR',
+          'Failed to complete profile. Please try again.'
+        ),
         code: 'INTERNAL_ERROR',
       },
       { status: 500 }

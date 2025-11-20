@@ -13,6 +13,7 @@ cat test-failures-tracker.json | jq '.summary'
 ```
 
 Understand current state:
+
 - Total failures
 - Pending vs investigating
 - Priority distribution
@@ -26,6 +27,7 @@ cat test-failures-tracker.json | jq '.failures | to_entries | map(select(.value.
 ```
 
 Look for:
+
 - **Authentication patterns**: Tests redirecting to `/login`
 - **Configuration issues**: Same error across multiple files
 - **Data setup failures**: Database/fixture problems
@@ -35,6 +37,7 @@ Look for:
 ## Step 3: Group & Prioritize
 
 Create groups:
+
 1. **Root cause affects 10+ tests** → FIX FIRST (biggest impact)
 2. **High priority (@critical) failures** → FIX SECOND
 3. **Feature-specific patterns** → FIX THIRD
@@ -45,7 +48,9 @@ Create groups:
 For each group, follow this workflow:
 
 ### A. Claim the Tasks
+
 Update tracker for all related failures:
+
 ```typescript
 const tracker = JSON.parse(fs.readFileSync('test-failures-tracker.json', 'utf-8'));
 
@@ -63,6 +68,7 @@ fs.writeFileSync('test-failures-tracker.json', JSON.stringify(tracker, null, 2))
 Use the Task tool to delegate based on failure type:
 
 **Authentication/Auth Issues:**
+
 ```
 Use Task tool with general-purpose subagent to:
 1. Review playwright.config.ts authentication setup
@@ -73,6 +79,7 @@ Use Task tool with general-purpose subagent to:
 ```
 
 **Playwright Configuration:**
+
 ```
 Use Task tool with general-purpose subagent to:
 1. Review playwright.config.ts
@@ -83,6 +90,7 @@ Use Task tool with general-purpose subagent to:
 ```
 
 **Test Data/Database:**
+
 ```
 Use Task tool with general-purpose subagent to:
 1. Review tests/e2e/helpers/db-helpers.ts
@@ -93,6 +101,7 @@ Use Task tool with general-purpose subagent to:
 ```
 
 **Component/UI Issues:**
+
 ```
 Use Task tool with frontend-developer subagent to:
 1. Review failing component
@@ -103,6 +112,7 @@ Use Task tool with frontend-developer subagent to:
 ```
 
 ### C. Update Tracker After Delegation
+
 ```typescript
 tracker.failures['STABLE_ID'].notes += '\nDelegated to [agent-name]. Findings: [summary]';
 tracker.failures['STABLE_ID'].lastUpdated = new Date().toISOString();
@@ -112,6 +122,7 @@ fs.writeFileSync('test-failures-tracker.json', JSON.stringify(tracker, null, 2))
 ## Step 5: Verify Fixes
 
 After implementing fixes:
+
 ```bash
 # Run affected tests
 pnpm exec playwright test tests/e2e/specs/SPECIFIC_FILE.spec.ts
@@ -123,6 +134,7 @@ pnpm test:e2e:sync
 ## Step 6: Report Progress
 
 Summarize:
+
 - **Patterns identified**: List groups
 - **Tasks claimed**: Count
 - **Fixes implemented**: Summary

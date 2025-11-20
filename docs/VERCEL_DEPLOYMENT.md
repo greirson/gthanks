@@ -22,28 +22,28 @@ vercel env add VARIABLE_NAME
 
 **Required Environment Variables:**
 
-| Variable | Description | How to Generate | Required For |
-|----------|-------------|-----------------|--------------|
-| `DATABASE_URL` | PostgreSQL connection string | Vercel Postgres / External | All features |
-| `NEXTAUTH_URL` | Production URL | `https://your-domain.vercel.app` | Authentication |
-| `NEXTAUTH_SECRET` | Auth session encryption key | `openssl rand -base64 32` | Authentication |
-| `CRON_SECRET` | Cron job authentication token | `openssl rand -base64 32` | Token cleanup cron |
-| `SMTP_HOST` | SMTP server hostname | From email provider | Magic links |
-| `SMTP_PORT` | SMTP server port | Usually `587` | Magic links |
-| `SMTP_USER` | SMTP username | From email provider | Magic links |
-| `SMTP_PASS` | SMTP password | From email provider | Magic links |
-| `EMAIL_FROM` | Sender email address | `noreply@your-domain.com` | Magic links |
+| Variable          | Description                   | How to Generate                  | Required For       |
+| ----------------- | ----------------------------- | -------------------------------- | ------------------ |
+| `DATABASE_URL`    | PostgreSQL connection string  | Vercel Postgres / External       | All features       |
+| `NEXTAUTH_URL`    | Production URL                | `https://your-domain.vercel.app` | Authentication     |
+| `NEXTAUTH_SECRET` | Auth session encryption key   | `openssl rand -base64 32`        | Authentication     |
+| `CRON_SECRET`     | Cron job authentication token | `openssl rand -base64 32`        | Token cleanup cron |
+| `SMTP_HOST`       | SMTP server hostname          | From email provider              | Magic links        |
+| `SMTP_PORT`       | SMTP server port              | Usually `587`                    | Magic links        |
+| `SMTP_USER`       | SMTP username                 | From email provider              | Magic links        |
+| `SMTP_PASS`       | SMTP password                 | From email provider              | Magic links        |
+| `EMAIL_FROM`      | Sender email address          | `noreply@your-domain.com`        | Magic links        |
 
 **Optional OAuth Variables (if using OAuth):**
 
-| Variable | Description | Where to Get |
-|----------|-------------|--------------|
-| `GOOGLE_CLIENT_ID` | Google OAuth client ID | [Google Cloud Console](https://console.cloud.google.com) |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth secret | Google Cloud Console |
-| `FACEBOOK_CLIENT_ID` | Facebook OAuth app ID | [Facebook Developers](https://developers.facebook.com) |
-| `FACEBOOK_CLIENT_SECRET` | Facebook OAuth secret | Facebook Developers |
-| `APPLE_ID` | Apple OAuth client ID | [Apple Developer](https://developer.apple.com) |
-| `APPLE_SECRET` | Apple OAuth secret | Apple Developer |
+| Variable                 | Description            | Where to Get                                             |
+| ------------------------ | ---------------------- | -------------------------------------------------------- |
+| `GOOGLE_CLIENT_ID`       | Google OAuth client ID | [Google Cloud Console](https://console.cloud.google.com) |
+| `GOOGLE_CLIENT_SECRET`   | Google OAuth secret    | Google Cloud Console                                     |
+| `FACEBOOK_CLIENT_ID`     | Facebook OAuth app ID  | [Facebook Developers](https://developers.facebook.com)   |
+| `FACEBOOK_CLIENT_SECRET` | Facebook OAuth secret  | Facebook Developers                                      |
+| `APPLE_ID`               | Apple OAuth client ID  | [Apple Developer](https://developer.apple.com)           |
+| `APPLE_SECRET`           | Apple OAuth secret     | Apple Developer                                          |
 
 ---
 
@@ -57,6 +57,7 @@ openssl rand -base64 32
 ```
 
 **Example output:**
+
 ```
 zT6X7gIkWiBNFlwerg3kDxuVZWk3JeZjkY2h9VVIetc=
 ```
@@ -72,6 +73,7 @@ vercel env add CRON_SECRET
 ```
 
 When prompted:
+
 - Enter the secret from Step 1
 - Select all environments: **Production**, **Preview**, **Development**
 
@@ -90,10 +92,12 @@ The cron job is already configured in `vercel.json`:
 
 ```json
 {
-  "crons": [{
-    "path": "/api/cron/cleanup-tokens",
-    "schedule": "0 0 * * *"
-  }]
+  "crons": [
+    {
+      "path": "/api/cron/cleanup-tokens",
+      "schedule": "0 0 * * *"
+    }
+  ]
 }
 ```
 
@@ -101,12 +105,12 @@ The cron job is already configured in `vercel.json`:
 
 **To change the schedule**, edit `vercel.json` before deploying:
 
-| Schedule | Description |
-|----------|-------------|
-| `0 0 * * *` | Daily at midnight UTC |
-| `0 */6 * * *` | Every 6 hours |
-| `0 */12 * * *` | Every 12 hours |
-| `0 0 * * 0` | Weekly on Sunday at midnight |
+| Schedule       | Description                  |
+| -------------- | ---------------------------- |
+| `0 0 * * *`    | Daily at midnight UTC        |
+| `0 */6 * * *`  | Every 6 hours                |
+| `0 */12 * * *` | Every 12 hours               |
+| `0 0 * * 0`    | Weekly on Sunday at midnight |
 
 ### Step 4: Deploy to Production
 
@@ -120,6 +124,7 @@ git push origin main
 ```
 
 Vercel will automatically:
+
 1. Deploy the new code
 2. Register the cron job from `vercel.json`
 3. Add the `Authorization: Bearer {CRON_SECRET}` header to cron requests
@@ -145,6 +150,7 @@ Vercel will automatically:
 3. Wait for midnight UTC or manually trigger (if available on your plan)
 
 **Expected log output:**
+
 ```
 Cleaned up expired tokens: MagicLinks: 5, VerificationTokens: 12
 ```
@@ -172,6 +178,7 @@ curl -X GET "$PROD_URL/api/cron/cleanup-tokens" \
 ```
 
 **Expected response:**
+
 ```json
 {
   "success": true,
@@ -194,6 +201,7 @@ vercel logs --filter="/api/cron/cleanup-tokens" --since=24h
 ```
 
 **What to look for:**
+
 - ✅ Cron executes daily at midnight UTC
 - ✅ No 401 Unauthorized errors (indicates CRON_SECRET is correct)
 - ✅ Token cleanup counts are reasonable (not too high/low)
@@ -201,13 +209,13 @@ vercel logs --filter="/api/cron/cleanup-tokens" --since=24h
 
 ### Error Troubleshooting
 
-| Error | Cause | Solution |
-|-------|-------|----------|
-| `401 Unauthorized` | CRON_SECRET mismatch | Regenerate secret, update Vercel env vars, redeploy |
-| `500 Internal Server Error` | CRON_SECRET not set | Add CRON_SECRET to Vercel, redeploy |
-| `Database connection failed` | DATABASE_URL invalid | Check Vercel Postgres connection string |
-| Cron not appearing in dashboard | vercel.json not in root | Move vercel.json to project root, redeploy |
-| Cron not executing | Free plan limitation | Upgrade to Vercel Pro (cron requires Pro+) |
+| Error                           | Cause                   | Solution                                            |
+| ------------------------------- | ----------------------- | --------------------------------------------------- |
+| `401 Unauthorized`              | CRON_SECRET mismatch    | Regenerate secret, update Vercel env vars, redeploy |
+| `500 Internal Server Error`     | CRON_SECRET not set     | Add CRON_SECRET to Vercel, redeploy                 |
+| `Database connection failed`    | DATABASE_URL invalid    | Check Vercel Postgres connection string             |
+| Cron not appearing in dashboard | vercel.json not in root | Move vercel.json to project root, redeploy          |
+| Cron not executing              | Free plan limitation    | Upgrade to Vercel Pro (cron requires Pro+)          |
 
 ---
 

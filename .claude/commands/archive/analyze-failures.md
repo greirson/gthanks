@@ -13,6 +13,7 @@ cat test-failures-tracker.json | jq '.summary'
 ```
 
 Display current state:
+
 - Total failures
 - Status breakdown (pending, investigating, fixed, wont-fix)
 - Priority distribution (high, medium, low)
@@ -29,6 +30,7 @@ cat test-failures-tracker.json | jq '.failures | to_entries[] | {id: .key, test:
 
 **1. Authentication Patterns**
 Look for:
+
 - Tests redirecting to `/login`
 - `storageState` errors
 - Session/token issues
@@ -36,6 +38,7 @@ Look for:
 
 **2. Configuration Issues**
 Look for:
+
 - Same error across multiple files
 - Playwright config problems
 - Missing dependencies
@@ -43,6 +46,7 @@ Look for:
 
 **3. Data Setup Failures**
 Look for:
+
 - Database seeding errors
 - Fixture creation failures
 - Test data not found
@@ -50,6 +54,7 @@ Look for:
 
 **4. Timeout Patterns**
 Look for:
+
 - Specific selectors timing out
 - Page load timeouts
 - Navigation timeouts
@@ -57,12 +62,14 @@ Look for:
 
 **5. Feature-Specific**
 Look for:
+
 - All tests in same directory failing
 - All tests for specific feature (admin, reservations, groups)
 - Related test suites failing together
 
 **6. Flaky Tests**
 Look for:
+
 - Tests with `retry > 0` in tracker notes
 - Intermittent failures
 - Timing-sensitive tests
@@ -78,14 +85,16 @@ For each pattern found, provide:
 
 **Count**: 312 tests affected
 **Priority Impact**:
-  - High: 45 tests
-  - Medium: 267 tests
-  - Low: 0 tests
+
+- High: 45 tests
+- Medium: 267 tests
+- Low: 0 tests
 
 **Root Cause Hypothesis**:
 storageState not configured in playwright.config.ts, causing all authenticated tests to redirect to /login
 
 **Affected Files**:
+
 - admin/user-management.spec.ts (45 tests)
 - wishes/wish-crud.spec.ts (67 tests)
 - lists/list-management.spec.ts (89 tests)
@@ -93,8 +102,10 @@ storageState not configured in playwright.config.ts, causing all authenticated t
 
 **Sample Error Messages**:
 ```
+
 Expected page to be on /admin/users, but was on /login
 Failed to load user session from storageState
+
 ```
 
 **Fix Impact**: HIGH - One configuration change could resolve 312 failures
@@ -117,6 +128,7 @@ Rank patterns by fix efficiency:
 ## Recommended Fix Order
 
 ### 1. CRITICAL ROOT CAUSES (Fix First)
+
 Patterns affecting 50+ tests with simple fixes
 
 - **Authentication Configuration** (312 tests)
@@ -126,6 +138,7 @@ Patterns affecting 50+ tests with simple fixes
   - Priority: IMMEDIATE
 
 ### 2. FEATURE-SPECIFIC PATTERNS (Fix Second)
+
 Patterns affecting 10-49 tests in related areas
 
 - **Admin Route Configuration** (45 tests)
@@ -141,6 +154,7 @@ Patterns affecting 10-49 tests in related areas
   - Priority: MEDIUM
 
 ### 3. INDIVIDUAL FAILURES (Fix Last)
+
 Tests with unique issues (< 10 related tests)
 
 - **8 individual failures** (2% of failures)
@@ -163,11 +177,13 @@ Provide overview statistics:
 **Individual Issues**: 8 (2%)
 
 **Pattern Efficiency Score**:
+
 - Fixing top 1 pattern resolves: 312 tests (81%)
 - Fixing top 2 patterns resolves: 357 tests (92%)
 - Fixing top 3 patterns resolves: 378 tests (98%)
 
 **Estimated Total Fix Time**:
+
 - If done individually: 193 hours (386 tests × 30 min avg)
 - If done by patterns: 3-4 hours (fix 4 root causes)
 
@@ -183,6 +199,7 @@ cat test-failures-tracker.json | jq '.failures | to_entries | map(select(.value.
 ```
 
 Report:
+
 - Which failures are already being investigated
 - Who is working on them
 - What patterns remain untouched
@@ -209,6 +226,7 @@ Generate a comprehensive analysis report with:
 
 ```markdown
 # E2E Test Failure Analysis Report
+
 Generated: 2025-11-09T16:45:00Z
 
 ## Executive Summary
@@ -220,15 +238,19 @@ Generated: 2025-11-09T16:45:00Z
 - 💡 **EFFICIENCY**: Fixing 4 root causes resolves 98% of failures (189+ hours saved)
 
 ## Pattern 1: Authentication Failures [CRITICAL]
+
 [Full pattern report as shown above...]
 
 ## Pattern 2: Admin Route Configuration [HIGH]
+
 [Pattern details...]
 
 ## Pattern 3: Reservation Data Setup [MEDIUM]
+
 [Pattern details...]
 
 ## Pattern 4: Individual Issues [LOW]
+
 [Brief summary...]
 
 ## Recommended Next Steps

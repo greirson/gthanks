@@ -153,9 +153,9 @@ export function WishesView() {
               variant="ghost"
               size="icon"
               onClick={toggleSelectionMode}
-              aria-label={isSelectionMode ? "Exit selection mode" : "Select wishes"}
+              aria-label={isSelectionMode ? 'Exit selection mode' : 'Select wishes'}
             >
-              <CheckSquare className={cn("h-4 w-4", isSelectionMode && "text-primary")} />
+              <CheckSquare className={cn('h-4 w-4', isSelectionMode && 'text-primary')} />
             </Button>
           </div>
 
@@ -203,77 +203,71 @@ export function WishesView() {
           )}
         >
           <div className="container mx-auto px-4 py-8">
-          {/* Header */}
-          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-2xl font-bold sm:text-3xl">My Wishes</h1>
-              <p className="mt-2 text-sm text-muted-foreground sm:text-base">
-                Create and manage your wishlist items
-              </p>
+            {/* Header */}
+            <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h1 className="text-2xl font-bold sm:text-3xl">My Wishes</h1>
+                <p className="mt-2 text-sm text-muted-foreground sm:text-base">
+                  Create and manage your wishlist items
+                </p>
+              </div>
+              {/* Add Wish Button - Desktop Only */}
+              <ThemeButton onClick={() => setShowAddWishDialog(true)} className="hidden sm:flex">
+                <PlusIcon className="mr-2 h-4 w-4" />
+                Add Wish
+              </ThemeButton>
             </div>
-            {/* Add Wish Button - Desktop Only */}
-            <ThemeButton onClick={() => setShowAddWishDialog(true)} className="hidden sm:flex">
-              <PlusIcon className="mr-2 h-4 w-4" />
-              Add Wish
-            </ThemeButton>
-          </div>
 
-          {/* Controls Bar - Desktop Only */}
-          <div className="hidden md:block">
-            <WishControlsBar
-              isHydrated={isHydrated}
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-              filterCount={activeFilterCount}
-              onToggleFilters={() => {
-                const isMobile = window.innerWidth < 1024;
-                if (isMobile) {
-                  setIsMobileFilterOpen(!isMobileFilterOpen);
-                } else {
-                  setIsDesktopFilterOpen(!isDesktopFilterOpen);
-                }
-              }}
-              isFiltersOpen={isDesktopFilterOpen || isMobileFilterOpen}
-              showSelectButton={true}
-              isSelectionMode={isSelectionMode}
-              onToggleSelection={toggleSelectionMode}
-              showMobileActions={true}
-              onAddAction={() => setShowAddWishDialog(true)}
-            />
-          </div>
-
-          {/* Content with bottom padding for mobile */}
-          <div className="pb-24 md:pb-0">
-            {/* Loading Skeleton */}
-            {isLoading && (
-              <WishesLoadingSkeleton
-                variant={viewMode}
-                count={8}
+            {/* Controls Bar - Desktop Only */}
+            <div className="hidden md:block">
+              <WishControlsBar
+                isHydrated={isHydrated}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                filterCount={activeFilterCount}
+                onToggleFilters={() => {
+                  const isMobile = window.innerWidth < 1024;
+                  if (isMobile) {
+                    setIsMobileFilterOpen(!isMobileFilterOpen);
+                  } else {
+                    setIsDesktopFilterOpen(!isDesktopFilterOpen);
+                  }
+                }}
+                isFiltersOpen={isDesktopFilterOpen || isMobileFilterOpen}
+                showSelectButton={true}
+                isSelectionMode={isSelectionMode}
+                onToggleSelection={toggleSelectionMode}
+                showMobileActions={true}
+                onAddAction={() => setShowAddWishDialog(true)}
               />
-            )}
+            </div>
 
-            {/* Wishes Display or Empty State */}
-            {!isLoading && (
-              filteredWishes.length === 0 ? (
-                <EmptyStateWithFilters
-                  hasActiveFilters={activeFilterCount > 0}
-                  totalWishCount={currentWishes.length}
-                  onClearFilters={resetFilters}
-                />
-              ) : (
-                <WishesDisplay
-                  wishes={filteredWishes}
-                  isSelectionMode={isSelectionMode}
-                  selectedWishIds={selectedWishIds}
-                  onToggleSelection={toggleWishSelection}
-                  onEdit={handleEditWish}
-                  onDelete={handleDeleteWish}
-                  showAddToList={false}
-                  viewMode={viewMode}
-                />
-              )
-            )}
-          </div>
+            {/* Content with bottom padding for mobile */}
+            <div className="pb-24 md:pb-0">
+              {/* Loading Skeleton */}
+              {isLoading && <WishesLoadingSkeleton variant={viewMode} count={8} />}
+
+              {/* Wishes Display or Empty State */}
+              {!isLoading &&
+                (filteredWishes.length === 0 ? (
+                  <EmptyStateWithFilters
+                    hasActiveFilters={activeFilterCount > 0}
+                    totalWishCount={currentWishes.length}
+                    onClearFilters={resetFilters}
+                  />
+                ) : (
+                  <WishesDisplay
+                    wishes={filteredWishes}
+                    isSelectionMode={isSelectionMode}
+                    selectedWishIds={selectedWishIds}
+                    onToggleSelection={toggleWishSelection}
+                    onEdit={handleEditWish}
+                    onDelete={handleDeleteWish}
+                    showAddToList={false}
+                    viewMode={viewMode}
+                  />
+                ))}
+            </div>
           </div>
         </div>
       </div>

@@ -305,7 +305,9 @@ describe('CollapsibleSection', () => {
 
       // Get all buttons and find the trigger (the one that's NOT the info button)
       const allButtons = screen.getAllByRole('button');
-      const trigger = allButtons.find(btn => btn !== infoButton && btn.textContent?.includes('Test Title'));
+      const trigger = allButtons.find(
+        (btn) => btn !== infoButton && btn.textContent?.includes('Test Title')
+      );
 
       expect(trigger).toBeDefined();
 
@@ -417,11 +419,12 @@ describe('CollapsibleSection', () => {
       // Get all buttons to find trigger and info button
       const allButtons = screen.getAllByRole('button');
       const infoButton = screen.getByRole('button', { name: /about test title/i });
-      const trigger = allButtons.find(btn =>
-        btn !== beforeButton &&
-        btn !== afterButton &&
-        btn !== infoButton &&
-        btn.textContent?.includes('Test Title')
+      const trigger = allButtons.find(
+        (btn) =>
+          btn !== beforeButton &&
+          btn !== afterButton &&
+          btn !== infoButton &&
+          btn.textContent?.includes('Test Title')
       );
 
       expect(trigger).toBeDefined();
@@ -540,7 +543,7 @@ describe('CollapsibleSection', () => {
     });
 
     it('handles title with special characters', () => {
-      const specialTitle = "Test & Title <with> 'quotes' and \"symbols\"";
+      const specialTitle = 'Test & Title <with> \'quotes\' and "symbols"';
 
       render(
         <CollapsibleSection title={specialTitle}>

@@ -11,7 +11,6 @@ interface RouteParams {
   params: { listId: string };
 }
 
-
 // Validation schema for bulk remove request
 const BulkRemoveSchema = z.object({
   wishIds: z.array(z.string()).min(1, 'wishIds cannot be empty'),
@@ -57,7 +56,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   // Parse and validate request body
   let wishIds: string[];
   try {
-    const body = await request.json() as unknown;
+    const body = (await request.json()) as unknown;
     const validated = BulkRemoveSchema.parse(body);
     wishIds = validated.wishIds;
   } catch (error) {

@@ -50,7 +50,9 @@ test.describe('Reservation Privacy - HIGHEST PRIORITY', () => {
         // Step 3: User B reserves the wish
         // Look for reserve button - try multiple possible selectors
         const reserveButton = page
-          .locator(`button:has-text("Reserve"), button:has-text("Mark as Reserved"), [data-testid="reserve-btn-${targetWish.id}"]`)
+          .locator(
+            `button:has-text("Reserve"), button:has-text("Mark as Reserved"), [data-testid="reserve-btn-${targetWish.id}"]`
+          )
           .first();
 
         // ERROR: Reserve button should be visible to group member viewing the list
@@ -65,7 +67,10 @@ test.describe('Reservation Privacy - HIGHEST PRIORITY', () => {
 
         // Verify reservation was created in database
         const dbReservation = await getReservationByWishId(targetWish.id);
-        expect(dbReservation, 'ERROR: Reservation should exist in database after reserve action').toBeTruthy();
+        expect(
+          dbReservation,
+          'ERROR: Reservation should exist in database after reserve action'
+        ).toBeTruthy();
         expect(dbReservation?.reserverEmail).toBe(reserver.email);
         expect(dbReservation?.reserverName).toBe(reserver.name);
 
@@ -77,7 +82,7 @@ test.describe('Reservation Privacy - HIGHEST PRIORITY', () => {
 
         // Wait for reservations API call to complete (returns isReserved: false for owners)
         await page.waitForResponse(
-          response =>
+          (response) =>
             response.url().includes(`/api/lists/${list.id}/reservations`) &&
             response.status() === 200,
           { timeout: 10000 }
@@ -87,12 +92,17 @@ test.describe('Reservation Privacy - HIGHEST PRIORITY', () => {
         // Owner should NOT see "Reserved" indicator (privacy protection)
         // Split text and CSS selectors to avoid Playwright parsing errors
         const reservedText = page.getByText(/Reserved|This item has been reserved/i);
-        const reservedBadge = page.locator(`[data-testid="reserved-indicator-${targetWish.id}"], .reserved-badge`);
+        const reservedBadge = page.locator(
+          `[data-testid="reserved-indicator-${targetWish.id}"], .reserved-badge`
+        );
 
         // CRITICAL PRIVACY: Owner should NOT see that wish is reserved
         const hasReservedText = (await reservedText.count()) > 0;
         const hasReservedBadge = (await reservedBadge.count()) > 0;
-        expect(hasReservedText || hasReservedBadge, 'Owner should NOT see reserved indicator').toBeFalsy();
+        expect(
+          hasReservedText || hasReservedBadge,
+          'Owner should NOT see reserved indicator'
+        ).toBeFalsy();
 
         // CRITICAL: Owner should NOT see reserver's name
         // CRITICAL PRIVACY VIOLATION: Owner should NOT see reserver name
@@ -109,7 +119,10 @@ test.describe('Reservation Privacy - HIGHEST PRIORITY', () => {
 
         // Owner should not have access to cancel button
         const ownerCancelButtonCount = await ownerCancelButton.count();
-        expect(ownerCancelButtonCount, 'CRITICAL ERROR: Owner should NOT have cancel reservation button').toBe(0);
+        expect(
+          ownerCancelButtonCount,
+          'CRITICAL ERROR: Owner should NOT have cancel reservation button'
+        ).toBe(0);
 
         // Step 7: Verify via API that owner cannot see reserver details
         const apiResponse = await page.request.get(`/api/lists/${list.id}/wishes`);
@@ -168,7 +181,7 @@ test.describe('Reservation Privacy - HIGHEST PRIORITY', () => {
 
         // Wait for reservations API call to complete
         await page.waitForResponse(
-          response =>
+          (response) =>
             response.url().includes(`/api/lists/${list.id}/reservations`) &&
             response.status() === 200,
           { timeout: 10000 }
@@ -223,7 +236,7 @@ test.describe('Reservation Privacy - HIGHEST PRIORITY', () => {
 
         // Wait for reservations API call to complete
         await page.waitForResponse(
-          response =>
+          (response) =>
             response.url().includes(`/api/lists/${list.id}/reservations`) &&
             response.status() === 200,
           { timeout: 10000 }
@@ -235,7 +248,8 @@ test.describe('Reservation Privacy - HIGHEST PRIORITY', () => {
         const reservationBadge = page.locator(`[data-testid="my-reservation-${targetWish.id}"]`);
 
         // Allow some flexibility in UI text
-        const hasReservationIndicator = (await reservationText.count()) > 0 || (await reservationBadge.count()) > 0;
+        const hasReservationIndicator =
+          (await reservationText.count()) > 0 || (await reservationBadge.count()) > 0;
         const hasReservedStatus = (await page.getByText(/Reserved/i).count()) > 0;
 
         expect(
@@ -263,16 +277,24 @@ test.describe('Reservation Privacy - HIGHEST PRIORITY', () => {
 
         // Step 5: Verify reservation is removed from database
         dbReservation = await getReservationByWishId(targetWish.id);
-        expect(dbReservation, 'ERROR: Reservation should be deleted from database after cancel').toBeNull();
+        expect(
+          dbReservation,
+          'ERROR: Reservation should be deleted from database after cancel'
+        ).toBeNull();
 
         // Step 6: Verify UI updates to show wish is available again
         await page.waitForLoadState('networkidle');
 
         // Should see Reserve button again (not Cancel)
-        const reserveButtonAgain = page.locator(`button:has-text("Reserve"), [data-testid="reserve-btn-${targetWish.id}"]`);
+        const reserveButtonAgain = page.locator(
+          `button:has-text("Reserve"), [data-testid="reserve-btn-${targetWish.id}"]`
+        );
 
         const reserveButtonCount = await reserveButtonAgain.count();
-        expect(reserveButtonCount, 'ERROR: After canceling, Reserve button should be visible again').toBeGreaterThan(0);
+        expect(
+          reserveButtonCount,
+          'ERROR: After canceling, Reserve button should be visible again'
+        ).toBeGreaterThan(0);
 
         // Step 7: Owner views list and sees wish is available
         await page.context().clearCookies();
@@ -286,10 +308,15 @@ test.describe('Reservation Privacy - HIGHEST PRIORITY', () => {
         );
 
         const ownerSeesReserved = (await ownerReservedIndicator.count()) > 0;
-        expect(ownerSeesReserved, 'ERROR: After cancellation, owner should see wish as available').toBeFalsy();
+        expect(
+          ownerSeesReserved,
+          'ERROR: After cancellation, owner should see wish as available'
+        ).toBeFalsy();
 
         // SUCCESS
-        console.log('✅ CANCEL RESERVATION TEST PASSED: Reserver can view and cancel their reservation');
+        console.log(
+          '✅ CANCEL RESERVATION TEST PASSED: Reserver can view and cancel their reservation'
+        );
       } finally {
         await cleanupTestData([owner.id, reserver.id, scenario.otherUser.id]);
       }
@@ -323,7 +350,10 @@ test.describe('Reservation Privacy - HIGHEST PRIORITY', () => {
             ? reservationsData
             : reservationsData.reservations || [];
 
-          expect(userReservations.length, 'User should see all their reservations').toBeGreaterThanOrEqual(2);
+          expect(
+            userReservations.length,
+            'User should see all their reservations'
+          ).toBeGreaterThanOrEqual(2);
 
           // Verify all reservations belong to this user
           userReservations.forEach((res: any) => {
@@ -355,10 +385,7 @@ test.describe('Reservation Privacy - HIGHEST PRIORITY', () => {
         await loginAsUser(page2, otherUser.email);
 
         // Navigate both to the list
-        await Promise.all([
-          page1.goto(`/lists/${list.id}`),
-          page2.goto(`/lists/${list.id}`),
-        ]);
+        await Promise.all([page1.goto(`/lists/${list.id}`), page2.goto(`/lists/${list.id}`)]);
 
         await Promise.all([
           page1.waitForLoadState('networkidle'),
@@ -388,7 +415,10 @@ test.describe('Reservation Privacy - HIGHEST PRIORITY', () => {
         });
 
         // Execute both requests concurrently
-        const [response1, response2] = await Promise.all([reservation1Promise, reservation2Promise]);
+        const [response1, response2] = await Promise.all([
+          reservation1Promise,
+          reservation2Promise,
+        ]);
 
         // Step 2: Verify only one succeeded
         const success1 = response1.ok();
@@ -410,15 +440,19 @@ test.describe('Reservation Privacy - HIGHEST PRIORITY', () => {
 
         // Step 4: Verify database has exactly 1 reservation
         const reservationCount = await countReservationsForWish(targetWish.id);
-        expect(reservationCount, 'CRITICAL ERROR: Database should have exactly 1 reservation for the wish').toBe(1);
+        expect(
+          reservationCount,
+          'CRITICAL ERROR: Database should have exactly 1 reservation for the wish'
+        ).toBe(1);
 
         // Step 5: Verify the reservation belongs to the user whose request succeeded
         const dbReservation = await getReservationByWishId(targetWish.id);
         const expectedEmail = success1 ? reserver.email : otherUser.email;
 
-        expect(dbReservation?.reserverEmail, 'Reservation should belong to the user whose request succeeded').toBe(
-          expectedEmail
-        );
+        expect(
+          dbReservation?.reserverEmail,
+          'Reservation should belong to the user whose request succeeded'
+        ).toBe(expectedEmail);
 
         // Step 6: Verify the other user sees the wish as reserved (cannot reserve again)
         const loserPage = success1 ? page2 : page1;
@@ -487,7 +521,10 @@ test.describe('Reservation Privacy - HIGHEST PRIORITY', () => {
 
         // Verify database has exactly 1 reservation
         const reservationCount = await countReservationsForWish(targetWish.id);
-        expect(reservationCount, 'Database should have exactly 1 reservation despite multiple attempts').toBe(1);
+        expect(
+          reservationCount,
+          'Database should have exactly 1 reservation despite multiple attempts'
+        ).toBe(1);
       } finally {
         await cleanupTestData([owner.id, reserver.id, scenario.otherUser.id]);
       }
@@ -557,7 +594,9 @@ test.describe('Reservation Privacy - HIGHEST PRIORITY', () => {
 
         // Non-owner SHOULD see "Reserved" indicator
         // Wait for the badge to appear (gives time for React Query to fetch and render)
-        const reservedBadge = page.locator(`[data-testid="reserved-indicator-${targetWish.id}"], .reserved-badge`);
+        const reservedBadge = page.locator(
+          `[data-testid="reserved-indicator-${targetWish.id}"], .reserved-badge`
+        );
         await expect(reservedBadge).toBeVisible({ timeout: 15000 });
 
         // But should NOT see who reserved it (privacy)
@@ -607,7 +646,10 @@ test.describe('Reservation Privacy - HIGHEST PRIORITY', () => {
           .locator(`[data-testid="wish-${wishes[1].id}"]`)
           .locator(`text=${otherUser.name}`);
 
-        expect(await otherUserNameNearWish2.count(), 'User should not see who reserved other wishes').toBe(0);
+        expect(
+          await otherUserNameNearWish2.count(),
+          'User should not see who reserved other wishes'
+        ).toBe(0);
       } finally {
         await cleanupTestData([owner.id, reserver.id, otherUser.id]);
       }

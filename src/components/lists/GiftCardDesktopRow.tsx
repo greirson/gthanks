@@ -48,7 +48,7 @@ export function GiftCardDesktopRow({
       {/* Column 1: Drag Handle (w-12 for larger click target on desktop) */}
       <TableCell className="w-12 p-3">
         <button
-          className="cursor-grab active:cursor-grabbing touch-none"
+          className="cursor-grab touch-none active:cursor-grabbing"
           {...attributes}
           {...listeners}
           aria-label="Drag to reorder"
@@ -60,7 +60,7 @@ export function GiftCardDesktopRow({
       {/* Column 2: Name Input */}
       <TableCell className="p-3">
         <div className="relative">
-          <Store className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <Store className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={card.name}
             onChange={(e) => onUpdate(index, 'name', e.target.value)}
@@ -76,7 +76,7 @@ export function GiftCardDesktopRow({
       {/* Column 3: URL Input */}
       <TableCell className="p-3">
         <div className="relative">
-          <Link className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <Link className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="url"
             value={card.url}

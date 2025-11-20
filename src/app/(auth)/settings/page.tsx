@@ -35,7 +35,7 @@ function ConnectedAccounts({ accounts }: { accounts: Array<{ id: string; provide
       {accounts.map((account) => (
         <div
           key={account.id}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary rounded-full text-xs"
+          className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs"
         >
           {getProviderIcon(account.provider)}
           <span className="capitalize">{account.provider}</span>
@@ -82,7 +82,7 @@ export default async function SettingsPage({ searchParams }: PageProps) {
   const message = params.message;
 
   return (
-    <div className="container max-w-2xl py-6 space-y-6">
+    <div className="container max-w-2xl space-y-6 py-6">
       <h1 className="text-2xl font-bold">Settings</h1>
 
       {/* Display verification status messages */}

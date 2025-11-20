@@ -38,7 +38,7 @@ export function ControlsBar({
   isHydrated = true,
 }: ControlsBarProps) {
   return (
-    <div className="mb-2 sm:mb-4 flex flex-col gap-3 border-b pb-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mb-2 flex flex-col gap-3 border-b pb-4 sm:mb-4 sm:flex-row sm:items-center sm:justify-between">
       {/* Desktop: Filter + Select on left */}
       <div className="hidden sm:flex sm:items-center sm:gap-3">
         <Button
@@ -61,10 +61,7 @@ export function ControlsBar({
 
         {/* Select Button - Desktop Only */}
         {showSelectButton && onToggleSelection && (
-          <Button
-            variant={isSelectionMode ? 'default' : 'outline'}
-            onClick={onToggleSelection}
-          >
+          <Button variant={isSelectionMode ? 'default' : 'outline'} onClick={onToggleSelection}>
             {isSelectionMode ? 'Exit Selection' : 'Select'}
           </Button>
         )}

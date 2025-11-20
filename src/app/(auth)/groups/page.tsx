@@ -80,9 +80,7 @@ export default function GroupsPage() {
         }
         throw new Error('Failed to fetch invitations');
       }
-      const data = (await response.json()) as
-        | { invitations: unknown[] }
-        | unknown[];
+      const data = (await response.json()) as { invitations: unknown[] } | unknown[];
       // API returns { invitations: [...], pagination: {...} }, extract invitations array
       return 'invitations' in data ? data.invitations : data;
     },

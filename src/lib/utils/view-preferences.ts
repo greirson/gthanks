@@ -13,7 +13,10 @@ export type ViewMode = 'list' | 'grid';
  * @param defaultMode - default view mode if no preference is stored
  * @returns [currentMode, setMode, isHydrated]
  */
-export function useViewPreference(storageKey: string, defaultMode: ViewMode): [ViewMode, (mode: ViewMode) => void, boolean] {
+export function useViewPreference(
+  storageKey: string,
+  defaultMode: ViewMode
+): [ViewMode, (mode: ViewMode) => void, boolean] {
   const [viewMode, setViewMode] = useState<ViewMode>(defaultMode);
   const [isHydrated, setIsHydrated] = useState(false);
 

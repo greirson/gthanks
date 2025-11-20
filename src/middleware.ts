@@ -165,9 +165,11 @@ export async function middleware(request: NextRequest) {
     ];
 
     // Check for specific patterns that should allow anonymous access
-    const isReservationEndpoint = /^\/api\/(lists\/[^/]+\/reservations|wishes\/[^/]+\/reservation)/.test(pathname);
+    const isReservationEndpoint =
+      /^\/api\/(lists\/[^/]+\/reservations|wishes\/[^/]+\/reservation)/.test(pathname);
 
-    const isPublicEndpoint = publicEndpoints.some((ep) => pathname.startsWith(ep)) || isReservationEndpoint;
+    const isPublicEndpoint =
+      publicEndpoints.some((ep) => pathname.startsWith(ep)) || isReservationEndpoint;
 
     if (!token && !isPublicEndpoint) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

@@ -273,9 +273,7 @@ export class WishService {
     const unauthorizedIds = wishIds.filter((id) => !ownedWishIds.includes(id));
 
     if (unauthorizedIds.length > 0) {
-      throw new ForbiddenError(
-        `Cannot add wishes you don't own: ${unauthorizedIds.join(', ')}`
-      );
+      throw new ForbiddenError(`Cannot add wishes you don't own: ${unauthorizedIds.join(', ')}`);
     }
 
     // Add to list in transaction
@@ -314,9 +312,7 @@ export class WishService {
     const unauthorizedIds = wishIds.filter((id) => !ownedWishIds.includes(id));
 
     if (unauthorizedIds.length > 0) {
-      throw new ForbiddenError(
-        `Cannot delete wishes you don't own: ${unauthorizedIds.join(', ')}`
-      );
+      throw new ForbiddenError(`Cannot delete wishes you don't own: ${unauthorizedIds.join(', ')}`);
     }
 
     // Delete in transaction
@@ -335,14 +331,11 @@ export class WishService {
         try {
           await imageProcessor.deleteImage(wish.localImagePath);
         } catch (error) {
-          console.error(
-            'Failed to delete local image file during bulk wish deletion:',
-            {
-              wishId: wish.id,
-              localImagePath: wish.localImagePath,
-              error,
-            }
-          );
+          console.error('Failed to delete local image file during bulk wish deletion:', {
+            wishId: wish.id,
+            localImagePath: wish.localImagePath,
+            error,
+          });
           // Continue to next image
         }
       }
@@ -365,9 +358,7 @@ export class WishService {
     const unauthorizedIds = wishIds.filter((id) => !ownedWishIds.includes(id));
 
     if (unauthorizedIds.length > 0) {
-      throw new ForbiddenError(
-        `Cannot remove wishes you don't own: ${unauthorizedIds.join(', ')}`
-      );
+      throw new ForbiddenError(`Cannot remove wishes you don't own: ${unauthorizedIds.join(', ')}`);
     }
 
     // Remove from all lists in transaction

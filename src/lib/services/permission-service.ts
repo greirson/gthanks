@@ -255,10 +255,7 @@ export class PermissionService {
 
         // Always verify password even if null (constant-time operation)
         const passwordToCheck = list.password || '';
-        const isValidPassword = await listService.verifyPassword(
-          context.password,
-          passwordToCheck
-        );
+        const isValidPassword = await listService.verifyPassword(context.password, passwordToCheck);
 
         if (!isValidPassword) {
           // Same delay as "not found" to prevent timing analysis

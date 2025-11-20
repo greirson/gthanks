@@ -105,11 +105,11 @@ export function RemoveOptionsDialog({
         </DialogHeader>
 
         <p className="text-sm text-muted-foreground">
-          This will remove the selected wishes from all lists they belong to. The wishes will
-          remain in your My Wishes collection.
+          This will remove the selected wishes from all lists they belong to. The wishes will remain
+          in your My Wishes collection.
         </p>
 
-        <div className="flex gap-2 justify-end">
+        <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={isRemoving}>
             Cancel
           </Button>

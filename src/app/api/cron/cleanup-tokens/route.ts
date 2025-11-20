@@ -17,10 +17,7 @@ export async function GET(request: NextRequest) {
 
   if (!process.env.CRON_SECRET) {
     logger.error('CRON_SECRET environment variable not set');
-    return NextResponse.json(
-      { error: 'Server configuration error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
   }
 
   if (authHeader !== expectedAuth) {
@@ -36,9 +33,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(result);
   } catch (error) {
     logger.error('Cron job failed:', error);
-    return NextResponse.json(
-      { error: 'Cleanup failed', details: String(error) },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Cleanup failed', details: String(error) }, { status: 500 });
   }
 }

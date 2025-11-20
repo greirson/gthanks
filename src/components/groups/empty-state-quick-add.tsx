@@ -111,9 +111,7 @@ export function EmptyStateQuickAdd({ groupId }: EmptyStateQuickAddProps) {
     <div className="space-y-4">
       <div className="text-center">
         <h3 className="text-lg font-semibold">Quick Add</h3>
-        <p className="text-sm text-muted-foreground">
-          Add your lists to this group with one click
-        </p>
+        <p className="text-sm text-muted-foreground">Add your lists to this group with one click</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
@@ -139,7 +137,7 @@ export function EmptyStateQuickAdd({ groupId }: EmptyStateQuickAddProps) {
               onClick={() => shareListMutation.mutate(list.id)}
               disabled={shareListMutation.isPending}
               size="sm"
-              className="w-full min-h-[44px] touch-manipulation"
+              className="min-h-[44px] w-full touch-manipulation"
               data-testid={`quick-add-list-${list.id}`}
             >
               {shareListMutation.isPending ? (

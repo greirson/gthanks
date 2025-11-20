@@ -140,7 +140,9 @@ export function UserEditDialog({ user, isOpen, onClose, onSuccess }: UserEditDia
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Edit User</DialogTitle>
-          <DialogDescription>Update user information. Changes will be saved immediately.</DialogDescription>
+          <DialogDescription>
+            Update user information. Changes will be saved immediately.
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -212,9 +214,7 @@ export function UserEditDialog({ user, isOpen, onClose, onSuccess }: UserEditDia
                     </FormControl>
                     <div className="space-y-1 leading-none">
                       <FormLabel className="cursor-pointer">Suspend User</FormLabel>
-                      <FormDescription>
-                        Suspended users cannot access their account
-                      </FormDescription>
+                      <FormDescription>Suspended users cannot access their account</FormDescription>
                     </div>
                   </FormItem>
                 )}

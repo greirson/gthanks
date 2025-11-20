@@ -1,14 +1,6 @@
 'use client';
 
-import {
-  MoreVertical,
-  FileText,
-  Calendar,
-  Share2,
-  User,
-  Users,
-  UserPlus,
-} from 'lucide-react';
+import { MoreVertical, FileText, Calendar, Share2, User, Users, UserPlus } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -86,17 +78,12 @@ export function ListCardCompact({
   };
 
   return (
-    <Card
-      className="group cursor-pointer p-3 transition-all hover:shadow-md"
-      onClick={handleClick}
-    >
+    <Card className="group cursor-pointer p-3 transition-all hover:shadow-md" onClick={handleClick}>
       <div className="flex items-start justify-between gap-3">
         {/* Left: Title + Description */}
         <div className="min-w-0 flex-1">
           <div className="flex items-start gap-2">
-            <h3 className="flex-1 truncate text-sm font-semibold">
-              {list.name}
-            </h3>
+            <h3 className="flex-1 truncate text-sm font-semibold">{list.name}</h3>
             {getSharingBadge()}
           </div>
 

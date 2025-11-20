@@ -36,11 +36,9 @@ export function InvitationsModal({ className }: InvitationsModalProps) {
         }
         throw new Error('Failed to fetch invitations');
       }
-      const data = (await response.json()) as
-        | { invitations: unknown[] }
-        | unknown[];
+      const data = (await response.json()) as { invitations: unknown[] } | unknown[];
       // API returns { invitations: [...], pagination: {...} }, extract invitations array
-      return Array.isArray(data) ? data : (data.invitations);
+      return Array.isArray(data) ? data : data.invitations;
     },
     refetchInterval: 30000, // Refetch every 30 seconds
   });

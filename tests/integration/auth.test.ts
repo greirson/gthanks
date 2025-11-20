@@ -1,12 +1,12 @@
 /**
  * Integration tests for authentication critical paths
- * 
+ *
  * Tests cover:
  * - Magic link authentication flow
  * - OAuth authentication (if configured)
  * - Session persistence
  * - Protected route access
- * 
+ *
  * These tests focus on the MVP critical path: users must be able to sign up and log in
  */
 
@@ -21,7 +21,7 @@ import { db } from '@/lib/db';
 // Mock NextAuth getServerSession
 jest.mock('next-auth', () => ({
   ...jest.requireActual('next-auth'),
-  getServerSession: jest.fn()
+  getServerSession: jest.fn(),
 }));
 
 describe('Authentication Integration Tests', () => {
@@ -53,8 +53,8 @@ describe('Authentication Integration Tests', () => {
         data: {
           identifier: testEmail,
           token,
-          expires
-        }
+          expires,
+        },
       });
 
       // Verify token was created
@@ -64,7 +64,8 @@ describe('Authentication Integration Tests', () => {
       expect(verificationToken.expires).toEqual(expires);
 
       // Verify magic link URL can be constructed
-      const magicLinkUrl = 'http://localhost:3000/api/auth/callback/email?token=' + token + '&email=' + testEmail;
+      const magicLinkUrl =
+        'http://localhost:3000/api/auth/callback/email?token=' + token + '&email=' + testEmail;
       expect(magicLinkUrl).toContain('token=' + token);
       expect(magicLinkUrl).toContain('email=' + testEmail);
     });
@@ -79,13 +80,13 @@ describe('Authentication Integration Tests', () => {
         data: {
           identifier: testEmail,
           token,
-          expires
-        }
+          expires,
+        },
       });
 
       // Create or find user
       let user = await db.user.findUnique({
-        where: { email: testEmail }
+        where: { email: testEmail },
       });
 
       if (!user) {
@@ -93,8 +94,8 @@ describe('Authentication Integration Tests', () => {
           data: {
             email: testEmail,
             name: 'Test User',
-            emailVerified: new Date()
-          }
+            emailVerified: new Date(),
+          },
         });
       }
 
@@ -104,8 +105,8 @@ describe('Authentication Integration Tests', () => {
         data: {
           sessionToken,
           userId: user.id,
-          expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-        }
+          expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+        },
       });
 
       // Verify session was created
@@ -115,7 +116,7 @@ describe('Authentication Integration Tests', () => {
 
       // Verify token exists (would be deleted after use in real flow)
       const usedToken = await db.verificationToken.findUnique({
-        where: { token }
+        where: { token },
       });
 
       expect(usedToken).toBeTruthy();
@@ -132,13 +133,13 @@ describe('Authentication Integration Tests', () => {
         data: {
           identifier: testEmail,
           token,
-          expires
-        }
+          expires,
+        },
       });
 
       // Verify token exists but is expired
       const expiredToken = await db.verificationToken.findUnique({
-        where: { token }
+        where: { token },
       });
 
       expect(expiredToken).toBeTruthy();
@@ -154,7 +155,7 @@ describe('Authentication Integration Tests', () => {
 
       // Verify token doesn't exist
       const token = await db.verificationToken.findUnique({
-        where: { token: invalidToken }
+        where: { token: invalidToken },
       });
 
       expect(token).toBeNull();
@@ -170,12 +171,12 @@ describe('Authentication Integration Tests', () => {
       const testUser = {
         id: 'user-123',
         email: 'session@example.com',
-        name: 'Session User'
+        name: 'Session User',
       };
 
       // Create user
       await db.user.create({
-        data: testUser
+        data: testUser,
       });
 
       // Create session
@@ -184,14 +185,14 @@ describe('Authentication Integration Tests', () => {
         data: {
           sessionToken,
           userId: testUser.id,
-          expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-        }
+          expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
       });
 
       // First request - verify session exists
       const firstSession = await db.session.findUnique({
         where: { sessionToken },
-        include: { user: true }
+        include: { user: true },
       });
 
       expect(firstSession).toBeTruthy();
@@ -200,7 +201,7 @@ describe('Authentication Integration Tests', () => {
       // Second request - verify same session is valid
       const secondSession = await db.session.findUnique({
         where: { sessionToken },
-        include: { user: true }
+        include: { user: true },
       });
 
       expect(secondSession).toBeTruthy();
@@ -212,8 +213,8 @@ describe('Authentication Integration Tests', () => {
       const testUser = await db.user.create({
         data: {
           email: 'cleanup@example.com',
-          name: 'Cleanup User'
-        }
+          name: 'Cleanup User',
+        },
       });
 
       // Create expired session
@@ -222,8 +223,8 @@ describe('Authentication Integration Tests', () => {
         data: {
           sessionToken: expiredToken,
           userId: testUser.id,
-          expires: new Date(Date.now() - 60 * 1000) // Expired
-        }
+          expires: new Date(Date.now() - 60 * 1000), // Expired
+        },
       });
 
       // Create valid session
@@ -232,18 +233,18 @@ describe('Authentication Integration Tests', () => {
         data: {
           sessionToken: validToken,
           userId: testUser.id,
-          expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-        }
+          expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
       });
 
       // Get all sessions for user
       const sessions = await db.session.findMany({
-        where: { userId: testUser.id }
+        where: { userId: testUser.id },
       });
 
       // Filter active sessions
-      const activeSessions = sessions.filter(s => s.expires.getTime() > Date.now());
-      const expiredSessions = sessions.filter(s => s.expires.getTime() <= Date.now());
+      const activeSessions = sessions.filter((s) => s.expires.getTime() > Date.now());
+      const expiredSessions = sessions.filter((s) => s.expires.getTime() <= Date.now());
 
       expect(activeSessions.length).toBe(1);
       expect(expiredSessions.length).toBe(1);
@@ -256,12 +257,12 @@ describe('Authentication Integration Tests', () => {
       const authenticatedUser = {
         id: 'auth-user-123',
         email: 'authenticated@example.com',
-        name: 'Authenticated User'
+        name: 'Authenticated User',
       };
 
       // Create user and session
       await db.user.create({
-        data: authenticatedUser
+        data: authenticatedUser,
       });
 
       const sessionToken = 'auth-session-' + Date.now();
@@ -269,19 +270,19 @@ describe('Authentication Integration Tests', () => {
         data: {
           sessionToken,
           userId: authenticatedUser.id,
-          expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-        }
+          expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
       });
 
       // Mock getServerSession to return authenticated user
       (getServerSession as jest.Mock).mockResolvedValue({
         user: authenticatedUser,
-        expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       });
 
       // Simulate accessing protected route
       const session = await getServerSession();
-      
+
       expect(session).toBeTruthy();
       expect(session?.user).toBeTruthy();
       expect(session?.user.email).toBe(authenticatedUser.email);
@@ -306,7 +307,7 @@ describe('Authentication Integration Tests', () => {
 
       // Try to find session with invalid token
       const session = await db.session.findUnique({
-        where: { sessionToken: invalidToken }
+        where: { sessionToken: invalidToken },
       });
 
       expect(session).toBeNull();
@@ -322,9 +323,10 @@ describe('Authentication Integration Tests', () => {
   describe('OAuth Authentication (if configured)', () => {
     it('should handle OAuth account linking', async () => {
       // Skip if OAuth not configured
-      const hasOAuthConfig = process.env.GOOGLE_CLIENT_ID || 
-                            process.env.FACEBOOK_CLIENT_ID || 
-                            process.env.APPLE_CLIENT_ID;
+      const hasOAuthConfig =
+        process.env.GOOGLE_CLIENT_ID ||
+        process.env.FACEBOOK_CLIENT_ID ||
+        process.env.APPLE_CLIENT_ID;
 
       if (!hasOAuthConfig) {
         console.log('OAuth not configured, skipping OAuth tests');
@@ -335,12 +337,12 @@ describe('Authentication Integration Tests', () => {
       const oauthUser = {
         email: 'oauth@example.com',
         name: 'OAuth User',
-        image: 'https://example.com/avatar.jpg'
+        image: 'https://example.com/avatar.jpg',
       };
 
       // Create user
       const user = await db.user.create({
-        data: oauthUser
+        data: oauthUser,
       });
 
       // Create OAuth account link
@@ -352,8 +354,8 @@ describe('Authentication Integration Tests', () => {
           providerAccountId: 'google-account-123',
           access_token: 'mock-access-token',
           token_type: 'Bearer',
-          scope: 'openid email profile'
-        }
+          scope: 'openid email profile',
+        },
       });
 
       // Verify account is linked
@@ -366,10 +368,10 @@ describe('Authentication Integration Tests', () => {
         where: {
           provider_providerAccountId: {
             provider: 'google',
-            providerAccountId: 'google-account-123'
-          }
+            providerAccountId: 'google-account-123',
+          },
         },
-        include: { user: true }
+        include: { user: true },
       });
 
       expect(linkedAccount).toBeTruthy();
@@ -383,7 +385,7 @@ describe('Authentication Integration Tests', () => {
 
       // Verify user doesn't exist
       let user = await db.user.findUnique({
-        where: { email: newUserEmail }
+        where: { email: newUserEmail },
       });
       expect(user).toBeNull();
 
@@ -392,8 +394,8 @@ describe('Authentication Integration Tests', () => {
         data: {
           email: newUserEmail,
           emailVerified: new Date(),
-          name: null // Name not set on first login
-        }
+          name: null, // Name not set on first login
+        },
       });
 
       expect(user).toBeTruthy();
@@ -406,8 +408,8 @@ describe('Authentication Integration Tests', () => {
         where: { id: user.id },
         data: {
           name: 'Updated Name',
-          lastLoginAt: new Date()
-        }
+          lastLoginAt: new Date(),
+        },
       });
 
       expect(updatedUser.name).toBe('Updated Name');
@@ -421,15 +423,15 @@ describe('Authentication Integration Tests', () => {
       const firstUser = await db.user.create({
         data: {
           email: duplicateEmail,
-          name: 'First User'
-        }
+          name: 'First User',
+        },
       });
 
       expect(firstUser).toBeTruthy();
 
       // Check for existing user
       const existingUser = await db.user.findUnique({
-        where: { email: duplicateEmail }
+        where: { email: duplicateEmail },
       });
 
       if (existingUser) {
@@ -441,14 +443,14 @@ describe('Authentication Integration Tests', () => {
         await db.user.create({
           data: {
             email: duplicateEmail,
-            name: 'Second User'
-          }
+            name: 'Second User',
+          },
         });
       }
 
       // Verify we properly handle duplicate
       const users = await db.user.findMany();
-      const matchingUsers = users.filter(u => u.email === duplicateEmail);
+      const matchingUsers = users.filter((u) => u.email === duplicateEmail);
       expect(matchingUsers.length).toBeGreaterThanOrEqual(1);
     });
   });

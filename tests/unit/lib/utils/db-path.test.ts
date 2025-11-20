@@ -85,7 +85,8 @@ describe('resolveDatabaseUrl', () => {
     });
 
     it('should pass through PostgreSQL URLs with query parameters', () => {
-      const input = 'postgresql://user:password@localhost:5432/gthanks?schema=public&sslmode=require';
+      const input =
+        'postgresql://user:password@localhost:5432/gthanks?schema=public&sslmode=require';
 
       const result = resolveDatabaseUrl(input);
 
@@ -323,9 +324,7 @@ describe('resolveDatabaseUrl', () => {
     });
 
     it('should accept string | undefined union type', () => {
-      const input: string | undefined = Math.random() > 0.5
-        ? 'file:./data/gthanks.db'
-        : undefined;
+      const input: string | undefined = Math.random() > 0.5 ? 'file:./data/gthanks.db' : undefined;
 
       const result = resolveDatabaseUrl(input);
 

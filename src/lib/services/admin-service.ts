@@ -2,9 +2,11 @@ import { z } from 'zod';
 
 import { db } from '@/lib/db';
 
-
 // Type for Prisma transaction client
-type PrismaTransactionClient = Omit<typeof db, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>;
+type PrismaTransactionClient = Omit<
+  typeof db,
+  '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'
+>;
 
 // Types for admin operations
 export interface AdminStats {
@@ -314,20 +316,35 @@ export class AdminService {
   /**
    * Suspend user
    */
-  static async suspendUser(userId: string, adminId: string, reason: string, tx?: PrismaTransactionClient) {
-    return this.updateUser(userId, adminId, {
-      role: 'suspended',
-      suspensionReason: reason,
-    }, tx);
+  static async suspendUser(
+    userId: string,
+    adminId: string,
+    reason: string,
+    tx?: PrismaTransactionClient
+  ) {
+    return this.updateUser(
+      userId,
+      adminId,
+      {
+        role: 'suspended',
+        suspensionReason: reason,
+      },
+      tx
+    );
   }
 
   /**
    * Unsuspend user
    */
   static async unsuspendUser(userId: string, adminId: string, tx?: PrismaTransactionClient) {
-    return this.updateUser(userId, adminId, {
-      role: 'user',
-    }, tx);
+    return this.updateUser(
+      userId,
+      adminId,
+      {
+        role: 'user',
+      },
+      tx
+    );
   }
 
   /**
@@ -359,6 +376,4 @@ export class AdminService {
       createdAt: new Date(),
     };
   }
-
-
 }

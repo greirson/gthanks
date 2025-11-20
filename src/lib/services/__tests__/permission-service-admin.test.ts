@@ -12,7 +12,9 @@ jest.mock('@/lib/services/list-service', () => ({
 }));
 
 // Use requireActual to get the real permission service implementation
-const { permissionService } = jest.requireActual('@/lib/services/permission-service') as typeof import('../permission-service');
+const { permissionService } = jest.requireActual(
+  '@/lib/services/permission-service'
+) as typeof import('../permission-service');
 
 // Add missing mock methods
 if (!db.userGroup.findFirst) {

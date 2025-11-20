@@ -117,7 +117,11 @@ export class GroupService {
 
   // ===== Invitation Operations =====
 
-  async inviteUsers(groupId: string, data: GroupInviteInput, userId: string): Promise<{ sent: number; skipped: string[] }> {
+  async inviteUsers(
+    groupId: string,
+    data: GroupInviteInput,
+    userId: string
+  ): Promise<{ sent: number; skipped: string[] }> {
     return this.groupInvitation.inviteUsers(groupId, data, userId);
   }
 

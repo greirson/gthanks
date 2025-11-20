@@ -334,7 +334,10 @@ const authOptions: NextAuthOptions = {
                   encryptedAccessToken = encrypted.encrypted;
                   tokenIv = encrypted.iv;
                 } catch (encryptError) {
-                  logger.error('Failed to encrypt access token during manual account linking', encryptError);
+                  logger.error(
+                    'Failed to encrypt access token during manual account linking',
+                    encryptError
+                  );
                   // Continue with plaintext on encryption failure
                 }
               }
@@ -344,7 +347,10 @@ const authOptions: NextAuthOptions = {
                   const encrypted = encryptToken(account.refresh_token);
                   encryptedRefreshToken = encrypted.encrypted;
                 } catch (encryptError) {
-                  logger.error('Failed to encrypt refresh token during manual account linking', encryptError);
+                  logger.error(
+                    'Failed to encrypt refresh token during manual account linking',
+                    encryptError
+                  );
                   // Continue with plaintext on encryption failure
                 }
               }

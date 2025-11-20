@@ -52,14 +52,14 @@ export function ListDetailTopNav({
 
       {/* Action Buttons */}
       {isOwner && (
-        <div className={`flex ${isMobile ? "gap-1" : "gap-2"}`}>
+        <div className={`flex ${isMobile ? 'gap-1' : 'gap-2'}`}>
           {isMobile && (
             <ThemeButton
-              variant={isSelectionMode ? "default" : "outline"}
+              variant={isSelectionMode ? 'default' : 'outline'}
               onClick={onToggleSelection}
               size="sm"
             >
-              {isSelectionMode ? "Exit" : "Select"}
+              {isSelectionMode ? 'Exit' : 'Select'}
             </ThemeButton>
           )}
           <ThemeButton onClick={onAddWish} size="sm">

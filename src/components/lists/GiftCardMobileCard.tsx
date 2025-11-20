@@ -46,12 +46,12 @@ export function GiftCardMobileCard({
     <div
       ref={setNodeRef}
       style={dragStyle}
-      className="border rounded-lg p-4 mb-3 bg-card hover:bg-accent/5 transition-colors"
+      className="mb-3 rounded-lg border bg-card p-4 transition-colors hover:bg-accent/5"
     >
       {/* Top Row: Drag Handle + Store Name + Delete Button */}
-      <div className="flex items-center gap-3 mb-3">
+      <div className="mb-3 flex items-center gap-3">
         <button
-          className="cursor-grab active:cursor-grabbing touch-none p-2 -ml-2 hover:bg-accent/10 rounded transition-colors flex-shrink-0"
+          className="-ml-2 flex-shrink-0 cursor-grab touch-none rounded p-2 transition-colors hover:bg-accent/10 active:cursor-grabbing"
           {...attributes}
           {...listeners}
           aria-label="Drag to reorder"
@@ -59,15 +59,15 @@ export function GiftCardMobileCard({
           <GripVertical className="h-5 w-5 text-muted-foreground" />
         </button>
 
-        <div className="flex-1 min-w-0 relative">
-          <Store className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+        <div className="relative min-w-0 flex-1">
+          <Store className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={card.name}
             onChange={(e) => onUpdate(index, 'name', e.target.value)}
             onBlur={onBlur}
             placeholder="Store name"
             maxLength={14}
-            className="h-11 text-base pl-9"
+            className="h-11 pl-9 text-base"
             aria-label="Gift card store name"
           />
         </div>
@@ -77,7 +77,7 @@ export function GiftCardMobileCard({
             <Button
               variant="ghost"
               size="icon"
-              className="h-11 w-11 hover:bg-destructive/20 flex-shrink-0"
+              className="h-11 w-11 flex-shrink-0 hover:bg-destructive/20"
               aria-label="Delete gift card"
             >
               <Trash2 className="h-5 w-5" />
@@ -100,14 +100,14 @@ export function GiftCardMobileCard({
 
       {/* URL Input (Full Width) */}
       <div className="relative">
-        <Link className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+        <Link className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="url"
           value={card.url}
           onChange={(e) => onUpdate(index, 'url', e.target.value)}
           onBlur={onBlur}
           placeholder="https://..."
-          className="h-11 text-base pl-9"
+          className="h-11 pl-9 text-base"
           aria-label="Gift card URL"
         />
       </div>

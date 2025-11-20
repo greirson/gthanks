@@ -64,18 +64,20 @@ async function createTestSession() {
 
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
-    console.log(JSON.stringify({
-      name: 'next-auth.session-token',
-      value: sessionToken,
-      domain: 'localhost',
-      path: '/',
-      expires: Math.floor(expiresAt.getTime() / 1000),
-      httpOnly: true,
-      secure: false,
-      sameSite: 'Lax',
-      userId: user.id,
-      email: user.email,
-    }));
+    console.log(
+      JSON.stringify({
+        name: 'next-auth.session-token',
+        value: sessionToken,
+        domain: 'localhost',
+        path: '/',
+        expires: Math.floor(expiresAt.getTime() / 1000),
+        httpOnly: true,
+        secure: false,
+        sameSite: 'Lax',
+        userId: user.id,
+        email: user.email,
+      })
+    );
 
     await db.$disconnect();
   } catch (error) {

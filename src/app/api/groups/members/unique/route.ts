@@ -65,9 +65,7 @@ export async function GET() {
     });
 
     // Create a map of user ID to group count
-    const countMap = new Map(
-      memberGroupCounts.map((item) => [item.userId, item._count.groupId])
-    );
+    const countMap = new Map(memberGroupCounts.map((item) => [item.userId, item._count.groupId]));
 
     // Enhance members with group count
     const membersWithCount = uniqueMembers.map((member) => ({

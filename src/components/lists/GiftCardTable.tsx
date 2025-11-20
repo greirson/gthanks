@@ -9,8 +9,19 @@ import {
   useSensors,
   DragEndEvent,
 } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  sortableKeyboardCoordinates,
+} from '@dnd-kit/sortable';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from '@/components/ui/table';
 import { GiftCardMobileCard } from '@/components/lists/GiftCardMobileCard';
 import { GiftCardDesktopRow } from '@/components/lists/GiftCardDesktopRow';
 import type { GiftCard } from '@/components/lists/hooks/useManageGiftCardsDialog';
@@ -55,15 +66,11 @@ export function GiftCardTable({
   };
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-    >
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       {/* Mobile Card List (< md breakpoint) */}
       <div className="md:hidden">
         {cards.length === 0 ? (
-          <div className="text-center text-muted-foreground py-12 px-4">
+          <div className="px-4 py-12 text-center text-muted-foreground">
             Click &quot;Add Card&quot; to create your first gift card
           </div>
         ) : (
@@ -102,7 +109,7 @@ export function GiftCardTable({
         <TableBody>
           {cards.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4} className="text-center text-muted-foreground p-8">
+              <TableCell colSpan={4} className="p-8 text-center text-muted-foreground">
                 Click &quot;Add Card&quot; to create your first gift card
               </TableCell>
             </TableRow>

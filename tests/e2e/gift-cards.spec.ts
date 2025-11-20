@@ -15,7 +15,7 @@ test.describe('Gift Cards', () => {
 
     // Navigate to list detail
     await page.goto(`/lists/${listId}`);
-    
+
     // Check gift cards section is visible
     await expect(page.getByText('Gift Cards')).toBeVisible();
 
@@ -24,7 +24,10 @@ test.describe('Gift Cards', () => {
     await page.getByLabel('Name *').fill('Amazon Gift Card');
     await page.getByLabel('URL *').fill('https://www.amazon.com/gift-cards');
     await page.getByLabel('Amount (optional)').fill('25');
-    await page.getByRole('button', { name: /add gift card/i }).last().click();
+    await page
+      .getByRole('button', { name: /add gift card/i })
+      .last()
+      .click();
 
     // Verify gift card appears
     await expect(page.getByText('Amazon Gift Card')).toBeVisible();
@@ -34,10 +37,13 @@ test.describe('Gift Cards', () => {
     const giftCard = page.locator('div:has-text("Amazon Gift Card")').first();
     await giftCard.hover();
     await giftCard.getByRole('button').first().click(); // Edit button
-    
+
     // Update amount
     await page.getByLabel('Amount (optional)').fill('50');
-    await page.getByRole('button', { name: /add gift card/i }).last().click();
+    await page
+      .getByRole('button', { name: /add gift card/i })
+      .last()
+      .click();
 
     // Verify update
     await expect(page.getByText('$50')).toBeVisible();
@@ -45,7 +51,10 @@ test.describe('Gift Cards', () => {
     // Remove gift card (hover and click remove)
     await giftCard.hover();
     await giftCard.getByRole('button').last().click(); // Remove button
-    await page.getByRole('button', { name: /remove/i }).last().click(); // Confirm
+    await page
+      .getByRole('button', { name: /remove/i })
+      .last()
+      .click(); // Confirm
 
     // Verify gift card is removed
     await expect(page.getByText('Amazon Gift Card')).not.toBeVisible();
@@ -62,7 +71,10 @@ test.describe('Gift Cards', () => {
       await page.getByRole('button', { name: /add/i }).first().click();
       await page.getByLabel('Name *').fill(`Gift Card ${i}`);
       await page.getByLabel('URL *').fill(`https://example.com/gift${i}`);
-      await page.getByRole('button', { name: /add gift card/i }).last().click();
+      await page
+        .getByRole('button', { name: /add gift card/i })
+        .last()
+        .click();
       await page.waitForTimeout(200); // Small delay to ensure save
     }
 
@@ -88,7 +100,10 @@ test.describe('Gift Cards', () => {
     await page.getByLabel('Name *').fill('Mobile Gift Card');
     await page.getByLabel('URL *').fill('https://example.com/mobile');
     await page.getByLabel('Amount (optional)').fill('15');
-    await page.getByRole('button', { name: /add gift card/i }).last().click();
+    await page
+      .getByRole('button', { name: /add gift card/i })
+      .last()
+      .click();
 
     // Verify gift card is visible on mobile
     await expect(page.getByText('Mobile Gift Card')).toBeVisible();
@@ -113,7 +128,10 @@ test.describe('Gift Cards', () => {
     await page.getByLabel('Name *').fill('Amazon Gift Card');
     await page.getByLabel('URL *').fill('https://www.amazon.com/gift-cards');
     await page.getByLabel('Amount (optional)').fill('50');
-    await page.getByRole('button', { name: /add gift card/i }).last().click();
+    await page
+      .getByRole('button', { name: /add gift card/i })
+      .last()
+      .click();
 
     // Verify gift card is visible
     await expect(page.getByText('Amazon Gift Card')).toBeVisible();
@@ -136,7 +154,10 @@ test.describe('Gift Cards', () => {
 
   test('other authenticated users see read-only mode', async ({ page, context }) => {
     // Create User A and login
-    const userA = await createAndLoginUser(page, { email: 'owner@example.com', name: 'List Owner' });
+    const userA = await createAndLoginUser(page, {
+      email: 'owner@example.com',
+      name: 'List Owner',
+    });
     const listId = await createList(page, 'Public Gift Card List', 'Shared list');
 
     // Add a gift card as owner
@@ -145,7 +166,10 @@ test.describe('Gift Cards', () => {
     await page.getByLabel('Name *').fill('Target Gift Card');
     await page.getByLabel('URL *').fill('https://www.target.com/gift-cards');
     await page.getByLabel('Amount (optional)').fill('25');
-    await page.getByRole('button', { name: /add gift card/i }).last().click();
+    await page
+      .getByRole('button', { name: /add gift card/i })
+      .last()
+      .click();
 
     // Verify gift card was added
     await expect(page.getByText('Target Gift Card')).toBeVisible();
@@ -155,12 +179,15 @@ test.describe('Gift Cards', () => {
     const { db } = await import('@/lib/db');
     await db.list.update({
       where: { id: listId },
-      data: { visibility: 'public' }
+      data: { visibility: 'public' },
     });
 
     // Create User B in a new context
     await context.clearCookies();
-    const userB = await createAndLoginUser(page, { email: 'viewer@example.com', name: 'Viewer User' });
+    const userB = await createAndLoginUser(page, {
+      email: 'viewer@example.com',
+      name: 'Viewer User',
+    });
 
     // Navigate to User A's list as User B
     await page.goto(`/lists/${listId}`);

@@ -18,11 +18,11 @@ interface GiftCardSectionProps {
   onUpdate?: (cards: GiftCard[]) => void;
 }
 
-export function GiftCardSection({ 
-  listId, 
-  giftCards: initialCards, 
+export function GiftCardSection({
+  listId,
+  giftCards: initialCards,
   canEdit,
-  onUpdate 
+  onUpdate,
 }: GiftCardSectionProps) {
   const { toast } = useToast();
   const [giftCards, setGiftCards] = useState<GiftCard[]>(initialCards || []);
@@ -34,7 +34,7 @@ export function GiftCardSection({
   const updateMutation = useMutation({
     mutationFn: async (cards: GiftCard[]) => {
       const response = await listsApi.updateList(listId, {
-        giftCardPreferences: cards
+        giftCardPreferences: cards,
       });
       return response;
     },
@@ -64,41 +64,40 @@ export function GiftCardSection({
     setGiftCards(initialCards || []);
   }, [initialCards]);
 
-  const handleManageCards = useCallback(async (updatedCards: GiftCard[]) => {
-    try {
-      await updateMutation.mutateAsync(updatedCards);
-      setGiftCards(updatedCards);
-      onUpdate?.(updatedCards);
-      toast({
-        title: 'Gift cards updated',
-        description: 'Your gift card preferences have been saved',
-      });
-    } catch (error) {
-      console.error('Failed to update gift cards:', error);
-      toast({
-        title: 'Failed to save',
-        description: 'Please try again',
-        variant: 'destructive',
-      });
-    }
-  }, [updateMutation, onUpdate, toast]);
+  const handleManageCards = useCallback(
+    async (updatedCards: GiftCard[]) => {
+      try {
+        await updateMutation.mutateAsync(updatedCards);
+        setGiftCards(updatedCards);
+        onUpdate?.(updatedCards);
+        toast({
+          title: 'Gift cards updated',
+          description: 'Your gift card preferences have been saved',
+        });
+      } catch (error) {
+        console.error('Failed to update gift cards:', error);
+        toast({
+          title: 'Failed to save',
+          description: 'Please try again',
+          variant: 'destructive',
+        });
+      }
+    },
+    [updateMutation, onUpdate, toast]
+  );
 
   // Hide entire section when no gift cards (Fix #1)
   if (!giftCards || giftCards.length === 0) {
     // Only show Add button for owners when there are no cards
     if (canEdit) {
       return (
-        <div className="mb-6 sm:mb-8 md:mb-12"> {/* Fix #3: Increased spacing */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => manageDialog.open()}
-            className="gap-2"
-          >
+        <div className="mb-6 sm:mb-8 md:mb-12">
+          {' '}
+          {/* Fix #3: Increased spacing */}
+          <Button variant="outline" size="sm" onClick={() => manageDialog.open()} className="gap-2">
             <CreditCard className="h-4 w-4" />
             Manage Gift Cards
           </Button>
-
           {/* Manage Dialog */}
           <ManageGiftCardsDialog
             isOpen={manageDialog.isOpen}
@@ -114,13 +113,15 @@ export function GiftCardSection({
   }
 
   return (
-    <div className="space-y-3 mb-4"> {/* Reduced spacing from mb-12 to mb-4 (1rem) */}
+    <div className="mb-4 space-y-3">
+      {' '}
+      {/* Reduced spacing from mb-12 to mb-4 (1rem) */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+        <h3 className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
           <CreditCard className="h-4 w-4" />
           Gift Cards
         </h3>
-        
+
         {canEdit && (
           <Button
             variant="ghost"
@@ -128,21 +129,16 @@ export function GiftCardSection({
             onClick={() => manageDialog.open()}
             disabled={giftCards.length >= 8}
           >
-            <Plus className="h-4 w-4 mr-1" />
+            <Plus className="mr-1 h-4 w-4" />
             Manage Gift Cards
           </Button>
         )}
       </div>
-
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
         {giftCards.map((card, index) => (
-          <GiftCardItem
-            key={`${card.name}-${index}`}
-            card={card}
-          />
+          <GiftCardItem key={`${card.name}-${index}`} card={card} />
         ))}
       </div>
-
       {/* Manage Dialog */}
       <ManageGiftCardsDialog
         isOpen={manageDialog.isOpen}

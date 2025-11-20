@@ -358,7 +358,6 @@ describe('DELETE /api/lists/[listId]/admins/[userId]', () => {
 
       // Capture the transaction callback
       mockDb.$transaction.mockImplementation(async (callback) => {
-
         // Simulate partial failure - list check passes, admin check passes, but delete fails
         mockDb.list.findUnique.mockResolvedValue(createMockList('list-1', mockOwner.id) as any);
 

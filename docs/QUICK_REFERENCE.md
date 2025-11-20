@@ -42,13 +42,13 @@ production (main) ──────────────────► Live
 
 **Quick Decision Tree:**
 
-| Situation | Branch | Base |
-|-----------|--------|------|
-| Daily work | `feature/name` | `dev` |
-| Production bug (can wait) | `fix/name` | `dev` |
-| Production bug (urgent) | `hotfix/name` | `production` |
-| Weekly release | `release/v1.2.3` | `staging` |
-| Production release | `release/v1.2.3-prod` | `production` |
+| Situation                 | Branch                | Base         |
+| ------------------------- | --------------------- | ------------ |
+| Daily work                | `feature/name`        | `dev`        |
+| Production bug (can wait) | `fix/name`            | `dev`        |
+| Production bug (urgent)   | `hotfix/name`         | `production` |
+| Weekly release            | `release/v1.2.3`      | `staging`    |
+| Production release        | `release/v1.2.3-prod` | `production` |
 
 ---
 
@@ -104,19 +104,19 @@ git push origin v1.2.0
 
 ## Testing Commands
 
-| Command | What It Does | When to Run |
-|---------|--------------|-------------|
-| `pnpm dev` | Start dev server | Always when coding |
-| `pnpm test` | Unit tests | Before every commit |
-| `pnpm test:watch` | Unit tests (watch) | During development |
-| `pnpm test:integration` | Integration tests | Before PR |
-| `pnpm test:e2e` | E2E tests | Before PR |
-| `pnpm test:all` | Unit + integration | Before PR |
-| `pnpm lint` | Check code style | Before PR |
-| `pnpm lint:strict` | Zero warnings | Before PR |
-| `pnpm typecheck` | TypeScript check | Before PR |
-| `pnpm lint:service-layer` | Service compliance | Before PR |
-| `pnpm build` | Production build | Before release PR |
+| Command                   | What It Does       | When to Run         |
+| ------------------------- | ------------------ | ------------------- |
+| `pnpm dev`                | Start dev server   | Always when coding  |
+| `pnpm test`               | Unit tests         | Before every commit |
+| `pnpm test:watch`         | Unit tests (watch) | During development  |
+| `pnpm test:integration`   | Integration tests  | Before PR           |
+| `pnpm test:e2e`           | E2E tests          | Before PR           |
+| `pnpm test:all`           | Unit + integration | Before PR           |
+| `pnpm lint`               | Check code style   | Before PR           |
+| `pnpm lint:strict`        | Zero warnings      | Before PR           |
+| `pnpm typecheck`          | TypeScript check   | Before PR           |
+| `pnpm lint:service-layer` | Service compliance | Before PR           |
+| `pnpm build`              | Production build   | Before release PR   |
 
 ---
 
@@ -138,14 +138,14 @@ pnpm build                 # ✓ Build succeeds (optional but recommended)
 
 ## Branch Naming
 
-| Type | Pattern | Example |
-|------|---------|---------|
-| Feature | `feature/name` | `feature/wish-templates` |
-| Bug fix | `fix/name` | `fix/email-duplicate` |
-| Hotfix | `hotfix/name` | `hotfix/auth-bypass` |
-| Refactor | `refactor/name` | `refactor/wish-service` |
-| Docs | `docs/name` | `docs/deployment` |
-| Release | `release/v1.2.3` | `release/v1.2.0` |
+| Type     | Pattern          | Example                  |
+| -------- | ---------------- | ------------------------ |
+| Feature  | `feature/name`   | `feature/wish-templates` |
+| Bug fix  | `fix/name`       | `fix/email-duplicate`    |
+| Hotfix   | `hotfix/name`    | `hotfix/auth-bypass`     |
+| Refactor | `refactor/name`  | `refactor/wish-service`  |
+| Docs     | `docs/name`      | `docs/deployment`        |
+| Release  | `release/v1.2.3` | `release/v1.2.0`         |
 
 ---
 
@@ -158,6 +158,7 @@ Types: feat, fix, refactor, test, docs, chore
 ```
 
 **Examples:**
+
 ```bash
 git commit -m "feat: add wish template system"
 git commit -m "fix: resolve email duplicate bug"
@@ -386,15 +387,15 @@ openssl rand -base64 48
 
 ## Troubleshooting
 
-| Problem | Solution |
-|---------|----------|
-| Tests fail | `pnpm install && pnpm db:generate && pnpm test` |
-| Build fails | `pnpm build` and check error messages |
-| Database locked | Stop dev server, restart: `pnpm dev:clean` |
-| Port 3000 in use | `lsof -ti:3000 \| xargs kill -9` |
-| Prisma Client outdated | `pnpm db:generate` |
-| Can't push to branch | Branch protected, create PR instead |
-| Merge conflicts | See "Resolve Merge Conflicts" above |
+| Problem                | Solution                                        |
+| ---------------------- | ----------------------------------------------- |
+| Tests fail             | `pnpm install && pnpm db:generate && pnpm test` |
+| Build fails            | `pnpm build` and check error messages           |
+| Database locked        | Stop dev server, restart: `pnpm dev:clean`      |
+| Port 3000 in use       | `lsof -ti:3000 \| xargs kill -9`                |
+| Prisma Client outdated | `pnpm db:generate`                              |
+| Can't push to branch   | Branch protected, create PR instead             |
+| Merge conflicts        | See "Resolve Merge Conflicts" above             |
 
 ---
 

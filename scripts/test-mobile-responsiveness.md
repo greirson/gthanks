@@ -1,8 +1,8 @@
 # Mobile Responsiveness Test Checklist
 
-**Test Date:** _________
-**Tester:** _________
-**App Version:** _________
+**Test Date:** ****\_****
+**Tester:** ****\_****
+**App Version:** ****\_****
 
 ## Setup
 
@@ -18,7 +18,7 @@
 
 - [ ] Hamburger menu button visible (not desktop nav)
 - [ ] Hamburger button ≥ 44x44px (use DevTools inspector)
-  - **Actual size:** ______ x ______ px
+  - **Actual size:** **\_\_** x **\_\_** px
 - [ ] Click hamburger - menu opens smoothly
 - [ ] Mobile menu items visible and readable
 - [ ] Click menu item - navigates correctly
@@ -39,9 +39,10 @@
 - [ ] Active page has `aria-current="page"`
 
 **ARIA Labels found:**
-- Menu button (closed): _______________
-- Menu button (opened): _______________
-- aria-expanded: _______________
+
+- Menu button (closed): ******\_\_\_******
+- Menu button (opened): ******\_\_\_******
+- aria-expanded: ******\_\_\_******
 
 **Issues found:**
 
@@ -51,7 +52,7 @@
 
 - [ ] Wish cards stack vertically (one per row)
 - [ ] Card dropdown button (⋮) ≥ 44x44px
-  - **Actual size:** ______ x ______ px
+  - **Actual size:** **\_\_** x **\_\_** px
 - [ ] Dropdown opens on tap
 - [ ] All dropdown menu items tappable
 - [ ] Images scale correctly (no overflow)
@@ -67,9 +68,9 @@
 
 - [ ] List cards stack vertically
 - [ ] Share button tappable (≥ 44x44px)
-  - **Actual size:** ______ x ______ px
+  - **Actual size:** **\_\_** x **\_\_** px
 - [ ] Dropdown button ≥ 44x44px
-  - **Actual size:** ______ x ______ px
+  - **Actual size:** **\_\_** x **\_\_** px
 - [ ] Card content doesn't overflow
 - [ ] Member avatars visible
 - [ ] Card titles readable
@@ -83,9 +84,9 @@
 - [ ] Input fields full-width on mobile
 - [ ] Labels visible above inputs
 - [ ] Text inputs ≥ 44px height
-  - **Actual size:** ______ px
+  - **Actual size:** **\_\_** px
 - [ ] Buttons ≥ 44x44px
-  - **Submit button size:** ______ x ______ px
+  - **Submit button size:** **\_\_** x **\_\_** px
 - [ ] Error messages visible and readable
 - [ ] Can scroll to see all form fields
 - [ ] Keyboard doesn't obscure submit button (test on actual device)
@@ -97,6 +98,7 @@
 ### Touch Targets (Use DevTools Inspector)
 
 **Test Method:**
+
 1. Right-click element → Inspect
 2. Check computed height/width in DevTools
 3. Verify ≥ 44x44px
@@ -111,7 +113,7 @@
 **Failed elements:**
 
 | Element | Actual Size | Expected Size |
-|---------|-------------|---------------|
+| ------- | ----------- | ------------- |
 |         |             | 44x44px       |
 
 ---
@@ -119,6 +121,7 @@
 ### Horizontal Scroll Test
 
 **Test Method:**
+
 1. Open DevTools Console
 2. Run: `document.documentElement.scrollWidth`
 3. Run: `document.documentElement.clientWidth`
@@ -126,12 +129,12 @@
 
 **Pages to test:**
 
-| Page | scrollWidth | clientWidth | Pass/Fail |
-|------|-------------|-------------|-----------|
-| /wishes | _____ px | _____ px | ☐ Pass ☐ Fail |
-| /lists | _____ px | _____ px | ☐ Pass ☐ Fail |
-| /groups | _____ px | _____ px | ☐ Pass ☐ Fail |
-| /wishes/new | _____ px | _____ px | ☐ Pass ☐ Fail |
+| Page        | scrollWidth | clientWidth | Pass/Fail     |
+| ----------- | ----------- | ----------- | ------------- |
+| /wishes     | **\_** px   | **\_** px   | ☐ Pass ☐ Fail |
+| /lists      | **\_** px   | **\_** px   | ☐ Pass ☐ Fail |
+| /groups     | **\_** px   | **\_** px   | ☐ Pass ☐ Fail |
+| /wishes/new | **\_** px   | **\_** px   | ☐ Pass ☐ Fail |
 
 **Issues found:**
 
@@ -174,6 +177,7 @@
 ## Accessibility - Screen Reader Testing (Optional)
 
 **VoiceOver on iOS:**
+
 1. Enable: Settings > Accessibility > VoiceOver
 
 - [ ] Navigate to mobile menu button
@@ -230,11 +234,11 @@
 
 ## Summary
 
-**Total Issues Found:** _____
+**Total Issues Found:** **\_**
 
-**Critical Issues (blocking):** _____
+**Critical Issues (blocking):** **\_**
 
-**Minor Issues (nice-to-fix):** _____
+**Minor Issues (nice-to-fix):** **\_**
 
 **Overall Status:**
 ☐ PASS - All critical tests passed
@@ -247,6 +251,6 @@
 
 ## Sign-off
 
-**Tested by:** ___________________
-**Date:** ___________________
+**Tested by:** ********\_\_\_********
+**Date:** ********\_\_\_********
 **Status:** ☐ Approved ☐ Needs Fixes

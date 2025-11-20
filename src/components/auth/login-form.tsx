@@ -123,131 +123,131 @@ export function LoginForm({ availableProviders, oauthConfig }: LoginFormProps) {
         <CardContent>
           <div className={hasAnyOAuthProvider ? 'space-y-6' : ''}>
             {/* OAuth Buttons - Only show if providers are available */}
-              {hasAnyOAuthProvider && (
-                <>
-                  <div className="space-y-3">
-                    {availableProviders.google && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => void handleOAuthSignIn('google')}
-                        disabled={oauthLoading !== null}
-                        aria-label="Sign in with Google"
-                        className="w-full"
-                      >
-                        {oauthLoading === 'google' ? (
-                          'Signing in...'
-                        ) : (
-                          <>
-                            <ProviderIcon provider="google" size={18} className="mr-2" />
-                            Continue with Google
-                          </>
-                        )}
-                      </Button>
-                    )}
+            {hasAnyOAuthProvider && (
+              <>
+                <div className="space-y-3">
+                  {availableProviders.google && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => void handleOAuthSignIn('google')}
+                      disabled={oauthLoading !== null}
+                      aria-label="Sign in with Google"
+                      className="w-full"
+                    >
+                      {oauthLoading === 'google' ? (
+                        'Signing in...'
+                      ) : (
+                        <>
+                          <ProviderIcon provider="google" size={18} className="mr-2" />
+                          Continue with Google
+                        </>
+                      )}
+                    </Button>
+                  )}
 
-                    {availableProviders.facebook && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => void handleOAuthSignIn('facebook')}
-                        disabled={oauthLoading !== null}
-                        className="w-full"
-                      >
-                        {oauthLoading === 'facebook' ? (
-                          'Signing in...'
-                        ) : (
-                          <>
-                            <ProviderIcon provider="facebook" size={18} className="mr-2" />
-                            Continue with Facebook
-                          </>
-                        )}
-                      </Button>
-                    )}
+                  {availableProviders.facebook && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => void handleOAuthSignIn('facebook')}
+                      disabled={oauthLoading !== null}
+                      className="w-full"
+                    >
+                      {oauthLoading === 'facebook' ? (
+                        'Signing in...'
+                      ) : (
+                        <>
+                          <ProviderIcon provider="facebook" size={18} className="mr-2" />
+                          Continue with Facebook
+                        </>
+                      )}
+                    </Button>
+                  )}
 
-                    {availableProviders.apple && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => void handleOAuthSignIn('apple')}
-                        disabled={oauthLoading !== null}
-                        className="w-full"
-                      >
-                        {oauthLoading === 'apple' ? (
-                          'Signing in...'
-                        ) : (
-                          <>
-                            <ProviderIcon provider="apple" size={18} className="mr-2" />
-                            Continue with Apple
-                          </>
-                        )}
-                      </Button>
-                    )}
+                  {availableProviders.apple && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => void handleOAuthSignIn('apple')}
+                      disabled={oauthLoading !== null}
+                      className="w-full"
+                    >
+                      {oauthLoading === 'apple' ? (
+                        'Signing in...'
+                      ) : (
+                        <>
+                          <ProviderIcon provider="apple" size={18} className="mr-2" />
+                          Continue with Apple
+                        </>
+                      )}
+                    </Button>
+                  )}
 
-                    {availableProviders.oauth && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => void handleOAuthSignIn('oauth')}
-                        disabled={oauthLoading !== null}
-                        className="w-full"
-                      >
-                        {oauthLoading === 'oauth' ? (
-                          'Signing in...'
-                        ) : (
-                          <>
-                            <ProviderIcon provider="oauth" size={18} className="mr-2" />
-                            Continue with {oauthConfig.displayName}
-                          </>
-                        )}
-                      </Button>
-                    )}
+                  {availableProviders.oauth && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => void handleOAuthSignIn('oauth')}
+                      disabled={oauthLoading !== null}
+                      className="w-full"
+                    >
+                      {oauthLoading === 'oauth' ? (
+                        'Signing in...'
+                      ) : (
+                        <>
+                          <ProviderIcon provider="oauth" size={18} className="mr-2" />
+                          Continue with {oauthConfig.displayName}
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+
+                {/* Divider */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
                   </div>
-
-                  {/* Divider */}
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">
-                        Or continue with email
-                      </span>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Magic Link Form */}
-              <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
-                <div>
-                  <label htmlFor="email-input" className="sr-only">
-                    Email address
-                  </label>
-                  <Input
-                    id="email-input"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={isLoading || oauthLoading !== null}
-                    required
-                    aria-describedby="email-help"
-                    className="w-full"
-                  />
-                  <div id="email-help" className="sr-only">
-                    Enter your email address to receive a magic login link
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                      Or continue with email
+                    </span>
                   </div>
                 </div>
-                <ThemeButton
-                  type="submit"
+              </>
+            )}
+
+            {/* Magic Link Form */}
+            <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
+              <div>
+                <label htmlFor="email-input" className="sr-only">
+                  Email address
+                </label>
+                <Input
+                  id="email-input"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading || oauthLoading !== null}
+                  required
+                  aria-describedby="email-help"
                   className="w-full"
-                >
-                  {isLoading ? 'Sending...' : 'Send Login Link'}
-                </ThemeButton>
-              </form>
-            </div>
+                />
+                <div id="email-help" className="sr-only">
+                  Enter your email address to receive a magic login link
+                </div>
+              </div>
+              <ThemeButton
+                type="submit"
+                disabled={isLoading || oauthLoading !== null}
+                className="w-full"
+              >
+                {isLoading ? 'Sending...' : 'Send Login Link'}
+              </ThemeButton>
+            </form>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -6,84 +6,86 @@ import { ThemeToggle } from '@/components/theme/theme-toggle';
 
 export default function HomePage() {
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-gray-900 dark:via-slate-900 dark:to-blue-950 flex items-center justify-center px-3 py-8 sm:p-6 lg:p-8">
+    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50 px-3 py-8 dark:from-gray-900 dark:via-slate-900 dark:to-blue-950 sm:p-6 lg:p-8">
       {/* Theme Switcher */}
-      <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
+      <div className="absolute right-4 top-4 sm:right-6 sm:top-6">
         <ThemeToggle />
       </div>
 
-      <div className="w-full max-w-[1080px] mx-auto grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+      <div className="mx-auto grid w-full max-w-[1080px] items-center gap-8 lg:grid-cols-12 lg:gap-12">
         {/* Main Card - Offset to Left on Desktop */}
-        <div className="lg:col-start-2 lg:col-span-6 xl:col-start-2 xl:col-span-5">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 sm:p-8 lg:p-10 xl:p-12 border border-slate-100 dark:border-gray-700">
-            <div className="flex items-center gap-3 mb-4 sm:mb-6">
-              <div className="w-12 h-12 bg-blue-600 dark:bg-blue-500 rounded-xl flex items-center justify-center">
-                <Gift className="w-6 h-6 text-white" />
+        <div className="lg:col-span-6 lg:col-start-2 xl:col-span-5 xl:col-start-2">
+          <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-xl dark:border-gray-700 dark:bg-gray-800 sm:p-8 lg:p-10 xl:p-12">
+            <div className="mb-4 flex items-center gap-3 sm:mb-6">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 dark:bg-blue-500">
+                <Gift className="h-6 w-6 text-white" />
               </div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">gthanks</h1>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white sm:text-3xl">
+                gthanks
+              </h1>
             </div>
 
-            <p className="text-base sm:text-lg lg:text-xl text-slate-600 dark:text-gray-300 mb-6 sm:mb-8 leading-relaxed">
+            <p className="mb-6 text-base leading-relaxed text-slate-600 dark:text-gray-300 sm:mb-8 sm:text-lg lg:text-xl">
               Share wish lists with friends and family.
             </p>
 
             {/* Feature Grid - Horizontal on mobile, 2 columns on larger screens */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+            <div className="mb-6 grid grid-cols-1 gap-4 sm:mb-8 sm:grid-cols-2 sm:gap-6">
               {/* Feature 1 */}
-              <div className="flex flex-row sm:flex-col items-start gap-3 sm:gap-0">
-                <div className="w-12 h-12 flex-shrink-0 bg-blue-50 dark:bg-blue-900/30 rounded-lg flex items-center justify-center sm:mb-3">
-                  <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <div className="flex flex-row items-start gap-3 sm:flex-col sm:gap-0">
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/30 sm:mb-3">
+                  <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div className="flex-1 sm:flex-initial">
-                  <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white mb-0.5 sm:mb-1">
+                  <h3 className="mb-0.5 text-sm font-semibold text-slate-900 dark:text-white sm:mb-1 sm:text-base">
                     Family Groups
                   </h3>
-                  <p className="text-xs sm:text-sm text-slate-600 dark:text-gray-400">
+                  <p className="text-xs text-slate-600 dark:text-gray-400 sm:text-sm">
                     Coordinate with loved ones
                   </p>
                 </div>
               </div>
 
               {/* Feature 2 */}
-              <div className="flex flex-row sm:flex-col items-start gap-3 sm:gap-0">
-                <div className="w-12 h-12 flex-shrink-0 bg-blue-50 dark:bg-blue-900/30 rounded-lg flex items-center justify-center sm:mb-3">
-                  <Lock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <div className="flex flex-row items-start gap-3 sm:flex-col sm:gap-0">
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/30 sm:mb-3">
+                  <Lock className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div className="flex-1 sm:flex-initial">
-                  <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white mb-0.5 sm:mb-1">
+                  <h3 className="mb-0.5 text-sm font-semibold text-slate-900 dark:text-white sm:mb-1 sm:text-base">
                     Private Lists
                   </h3>
-                  <p className="text-xs sm:text-sm text-slate-600 dark:text-gray-400">
+                  <p className="text-xs text-slate-600 dark:text-gray-400 sm:text-sm">
                     Control who sees what
                   </p>
                 </div>
               </div>
 
               {/* Feature 3 */}
-              <div className="flex flex-row sm:flex-col items-start gap-3 sm:gap-0">
-                <div className="w-12 h-12 flex-shrink-0 bg-blue-50 dark:bg-blue-900/30 rounded-lg flex items-center justify-center sm:mb-3">
-                  <Gift className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <div className="flex flex-row items-start gap-3 sm:flex-col sm:gap-0">
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/30 sm:mb-3">
+                  <Gift className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div className="flex-1 sm:flex-initial">
-                  <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white mb-0.5 sm:mb-1">
+                  <h3 className="mb-0.5 text-sm font-semibold text-slate-900 dark:text-white sm:mb-1 sm:text-base">
                     Gift Tracking
                   </h3>
-                  <p className="text-xs sm:text-sm text-slate-600 dark:text-gray-400">
+                  <p className="text-xs text-slate-600 dark:text-gray-400 sm:text-sm">
                     Never duplicate again
                   </p>
                 </div>
               </div>
 
               {/* Feature 4 */}
-              <div className="flex flex-row sm:flex-col items-start gap-3 sm:gap-0">
-                <div className="w-12 h-12 flex-shrink-0 bg-blue-50 dark:bg-blue-900/30 rounded-lg flex items-center justify-center sm:mb-3">
-                  <Heart className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <div className="flex flex-row items-start gap-3 sm:flex-col sm:gap-0">
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/30 sm:mb-3">
+                  <Heart className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div className="flex-1 sm:flex-initial">
-                  <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white mb-0.5 sm:mb-1">
+                  <h3 className="mb-0.5 text-sm font-semibold text-slate-900 dark:text-white sm:mb-1 sm:text-base">
                     Easy Sharing
                   </h3>
-                  <p className="text-xs sm:text-sm text-slate-600 dark:text-gray-400">
+                  <p className="text-xs text-slate-600 dark:text-gray-400 sm:text-sm">
                     One-click invites
                   </p>
                 </div>
@@ -91,16 +93,16 @@ export default function HomePage() {
             </div>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/auth/login"
-                className="flex-1 bg-blue-600 dark:bg-blue-500 text-white text-center font-semibold py-3.5 px-6 rounded-xl hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors min-h-[44px] flex items-center justify-center"
+                className="flex min-h-[44px] flex-1 items-center justify-center rounded-xl bg-blue-600 px-6 py-3.5 text-center font-semibold text-white transition-colors hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
               >
                 Get Started
               </Link>
               <Link
                 href="/auth/login"
-                className="flex-1 bg-slate-100 dark:bg-gray-700 text-slate-700 dark:text-gray-200 text-center font-semibold py-3.5 px-6 rounded-xl hover:bg-slate-200 dark:hover:bg-gray-600 transition-colors min-h-[44px] flex items-center justify-center"
+                className="flex min-h-[44px] flex-1 items-center justify-center rounded-xl bg-slate-100 px-6 py-3.5 text-center font-semibold text-slate-700 transition-colors hover:bg-slate-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
               >
                 Sign In
               </Link>
@@ -108,31 +110,37 @@ export default function HomePage() {
           </div>
 
           {/* Badge Pills */}
-          <div className="mt-4 sm:mt-6 flex flex-wrap gap-2 sm:gap-3 justify-center sm:justify-start">
-            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-white dark:bg-gray-800 rounded-full border border-slate-200 dark:border-gray-700 shadow-sm">
-              <Code className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" />
-              <span className="text-xs sm:text-sm font-medium text-slate-700 dark:text-gray-300">Open Source</span>
+          <div className="mt-4 flex flex-wrap justify-center gap-2 sm:mt-6 sm:justify-start sm:gap-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:px-4">
+              <Code className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 sm:h-4 sm:w-4" />
+              <span className="text-xs font-medium text-slate-700 dark:text-gray-300 sm:text-sm">
+                Open Source
+              </span>
             </div>
-            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-white dark:bg-gray-800 rounded-full border border-slate-200 dark:border-gray-700 shadow-sm">
-              <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" />
-              <span className="text-xs sm:text-sm font-medium text-slate-700 dark:text-gray-300">Secure</span>
+            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:px-4">
+              <Shield className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 sm:h-4 sm:w-4" />
+              <span className="text-xs font-medium text-slate-700 dark:text-gray-300 sm:text-sm">
+                Secure
+              </span>
             </div>
-            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-white dark:bg-gray-800 rounded-full border border-slate-200 dark:border-gray-700 shadow-sm">
-              <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" />
-              <span className="text-xs sm:text-sm font-medium text-slate-700 dark:text-gray-300">Family Friendly</span>
+            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:px-4">
+              <Heart className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 sm:h-4 sm:w-4" />
+              <span className="text-xs font-medium text-slate-700 dark:text-gray-300 sm:text-sm">
+                Family Friendly
+              </span>
             </div>
           </div>
 
           {/* GitHub Link */}
-          <div className="mt-3 sm:mt-4 text-center sm:text-left">
+          <div className="mt-3 text-center sm:mt-4 sm:text-left">
             <Link
               href="https://github.com/greirson/gthanks"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              className="inline-flex items-center gap-2 text-sm text-slate-600 transition-colors hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400"
             >
-              <Github className="w-4 h-4" />
-              <span className="underline decoration-slate-400 dark:decoration-gray-600 underline-offset-4">
+              <Github className="h-4 w-4" />
+              <span className="underline decoration-slate-400 underline-offset-4 dark:decoration-gray-600">
                 View on GitHub
               </span>
             </Link>
@@ -140,20 +148,20 @@ export default function HomePage() {
         </div>
 
         {/* Right Side Accent - Blue Gradient Block (Hidden on Mobile) */}
-        <div className="hidden lg:block lg:col-span-4 xl:col-span-5">
+        <div className="hidden lg:col-span-4 lg:block xl:col-span-5">
           <div className="relative">
             {/* Decorative Blue Accent */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-700 rounded-3xl opacity-10 blur-3xl transform -translate-x-8 translate-y-8"></div>
+            <div className="absolute inset-0 -translate-x-8 translate-y-8 transform rounded-3xl bg-gradient-to-br from-blue-500 to-blue-700 opacity-10 blur-3xl"></div>
 
             {/* Feature Highlights */}
             <div className="relative space-y-6">
-              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-blue-100 dark:border-blue-900">
+              <div className="rounded-2xl border border-blue-100 bg-white/80 p-6 shadow-lg backdrop-blur-sm dark:border-blue-900 dark:bg-gray-800/80">
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-blue-600 dark:bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Users className="w-5 h-5 text-white" />
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-blue-600 dark:bg-blue-500">
+                    <Users className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-slate-900 dark:text-white mb-1">
+                    <h4 className="mb-1 font-semibold text-slate-900 dark:text-white">
                       Coordinate with Family
                     </h4>
                     <p className="text-sm text-slate-600 dark:text-gray-400">
@@ -163,13 +171,13 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-blue-100 dark:border-blue-900 transform translate-x-8">
+              <div className="translate-x-8 transform rounded-2xl border border-blue-100 bg-white/80 p-6 shadow-lg backdrop-blur-sm dark:border-blue-900 dark:bg-gray-800/80">
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-blue-600 dark:bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Lock className="w-5 h-5 text-white" />
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-blue-600 dark:bg-blue-500">
+                    <Lock className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-slate-900 dark:text-white mb-1">
+                    <h4 className="mb-1 font-semibold text-slate-900 dark:text-white">
                       Hidden Reservations
                     </h4>
                     <p className="text-sm text-slate-600 dark:text-gray-400">
@@ -179,13 +187,13 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-blue-100 dark:border-blue-900">
+              <div className="rounded-2xl border border-blue-100 bg-white/80 p-6 shadow-lg backdrop-blur-sm dark:border-blue-900 dark:bg-gray-800/80">
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-blue-600 dark:bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Gift className="w-5 h-5 text-white" />
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-blue-600 dark:bg-blue-500">
+                    <Gift className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-slate-900 dark:text-white mb-1">
+                    <h4 className="mb-1 font-semibold text-slate-900 dark:text-white">
                       Priority Guidance
                     </h4>
                     <p className="text-sm text-slate-600 dark:text-gray-400">

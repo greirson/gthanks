@@ -28,9 +28,7 @@ const RESERVED_ROUTES = [
   'profile',
 ];
 
-export async function generateMetadata({
-  params,
-}: UserProfilePageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: UserProfilePageProps): Promise<Metadata> {
   const { username } = await params;
 
   // Check for reserved routes
@@ -158,7 +156,9 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
                       )}
                     </div>
                     {list.description && (
-                      <p className="line-clamp-2 text-sm text-muted-foreground">{list.description}</p>
+                      <p className="line-clamp-2 text-sm text-muted-foreground">
+                        {list.description}
+                      </p>
                     )}
                   </CardHeader>
                   <CardContent>

@@ -98,21 +98,25 @@ REDIS_URL=redis://localhost:6379
 **Purpose:** Encrypts session cookies and JWT tokens
 
 **Generate:**
+
 ```bash
 openssl rand -base64 32
 ```
 
 **Example output:**
+
 ```
 zT6X7gIkWiBNFlwerg3kDxuVZWk3JeZjkY2h9VVIetc=
 ```
 
 **Requirements:**
+
 - Minimum 32 characters
 - Use cryptographically secure random generator
 - Different value per environment
 
 **Set in environment:**
+
 ```env
 NEXTAUTH_SECRET=zT6X7gIkWiBNFlwerg3kDxuVZWk3JeZjkY2h9VVIetc=
 ```
@@ -124,16 +128,19 @@ NEXTAUTH_SECRET=zT6X7gIkWiBNFlwerg3kDxuVZWk3JeZjkY2h9VVIetc=
 **Purpose:** Authenticates cron job requests (prevents unauthorized execution)
 
 **Generate:**
+
 ```bash
 openssl rand -base64 32
 ```
 
 **Set in environment:**
+
 ```env
 CRON_SECRET=your-generated-secret
 ```
 
 **Usage:**
+
 ```bash
 # Cron jobs include this in Authorization header
 curl -H "Authorization: Bearer $CRON_SECRET" https://your-app.com/api/cron/cleanup-tokens
@@ -146,16 +153,19 @@ curl -H "Authorization: Bearer $CRON_SECRET" https://your-app.com/api/cron/clean
 **Purpose:** Database authentication
 
 **Generate:**
+
 ```bash
 openssl rand -base64 48
 ```
 
 **Set in DATABASE_URL:**
+
 ```env
 DATABASE_URL=postgresql://gthanks:your-password-here@host:5432/gthanks
 ```
 
 **Requirements:**
+
 - Minimum 16 characters (48 recommended)
 - Include special characters
 - Different password per environment
@@ -169,6 +179,7 @@ OAuth credentials must be configured separately for each environment because cal
 ### Google OAuth
 
 **Create credentials:**
+
 1. Go to [Google Cloud Console](https://console.cloud.google.com)
 2. Create project: `gthanks-dev` (development) or `gthanks-prod` (production)
 3. Enable Google+ API
@@ -176,21 +187,25 @@ OAuth credentials must be configured separately for each environment because cal
 5. Add authorized redirect URIs:
 
 **Development:**
+
 ```
 http://localhost:3000/api/auth/callback/google
 ```
 
 **Staging:**
+
 ```
 https://staging.yourdomain.com/api/auth/callback/google
 ```
 
 **Production:**
+
 ```
 https://yourdomain.com/api/auth/callback/google
 ```
 
 **Set in environment:**
+
 ```env
 GOOGLE_CLIENT_ID=123456789-abc.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=GOCSPX-your-secret-here
@@ -201,27 +216,32 @@ GOOGLE_CLIENT_SECRET=GOCSPX-your-secret-here
 ### Facebook OAuth
 
 **Create credentials:**
+
 1. Go to [Facebook Developers](https://developers.facebook.com)
 2. Create app: `gthanks Dev` (development) or `gthanks` (production)
 3. Add Facebook Login product
 4. Configure OAuth redirect URIs:
 
 **Development:**
+
 ```
 http://localhost:3000/api/auth/callback/facebook
 ```
 
 **Staging:**
+
 ```
 https://staging.yourdomain.com/api/auth/callback/facebook
 ```
 
 **Production:**
+
 ```
 https://yourdomain.com/api/auth/callback/facebook
 ```
 
 **Set in environment:**
+
 ```env
 FACEBOOK_CLIENT_ID=1234567890123456
 FACEBOOK_CLIENT_SECRET=your-facebook-app-secret
@@ -232,21 +252,25 @@ FACEBOOK_CLIENT_SECRET=your-facebook-app-secret
 ### Apple OAuth
 
 **Create credentials:**
+
 1. Go to [Apple Developer](https://developer.apple.com)
 2. Create Service ID
 3. Configure Return URLs:
 
 **Development:**
+
 ```
 http://localhost:3000/api/auth/callback/apple
 ```
 
 **Production:**
+
 ```
 https://yourdomain.com/api/auth/callback/apple
 ```
 
 **Set in environment:**
+
 ```env
 APPLE_ID=com.yourdomain.gthanks.service
 APPLE_SECRET=<private-key-content>
@@ -291,6 +315,7 @@ EMAIL_FROM=staging@yourdomain.com
 Use a production-grade transactional email service:
 
 **Option 1: Gmail (small deployments)**
+
 ```env
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
@@ -300,6 +325,7 @@ EMAIL_FROM=noreply@yourdomain.com
 ```
 
 **Option 2: SendGrid (scalable)**
+
 ```env
 SMTP_HOST=smtp.sendgrid.net
 SMTP_PORT=587
@@ -309,6 +335,7 @@ EMAIL_FROM=noreply@yourdomain.com
 ```
 
 **Option 3: Resend (modern API)**
+
 ```env
 # Resend uses API key, not SMTP
 RESEND_API_KEY=re_your_api_key
@@ -322,12 +349,14 @@ EMAIL_FROM=noreply@yourdomain.com
 ### When to Rotate Secrets
 
 **Immediate rotation required:**
+
 - [ ] Secret leaked to public repository
 - [ ] Secret exposed in logs or error messages
 - [ ] Employee with access leaves team
 - [ ] Suspected security breach
 
 **Scheduled rotation (recommended):**
+
 - [ ] Every 90 days for NEXTAUTH_SECRET
 - [ ] Every 180 days for database passwords
 - [ ] Every 365 days for OAuth credentials
@@ -342,11 +371,13 @@ EMAIL_FROM=noreply@yourdomain.com
 **Procedure:**
 
 1. **Generate new secret:**
+
    ```bash
    openssl rand -base64 32
    ```
 
 2. **Update environment variable:**
+
    ```bash
    # For Docker
    # Edit .env or docker-compose.yml
@@ -358,6 +389,7 @@ EMAIL_FROM=noreply@yourdomain.com
    ```
 
 3. **Deploy application:**
+
    ```bash
    docker compose up -d  # Docker
    # OR
@@ -374,6 +406,7 @@ EMAIL_FROM=noreply@yourdomain.com
 
 **Rollback plan:**
 Keep old secret for 24 hours. If issues arise:
+
 ```bash
 # Revert to old secret
 NEXTAUTH_SECRET=old-secret-here
@@ -393,22 +426,26 @@ docker compose up -d
    - Notify users via status page
 
 2. **Generate new password:**
+
    ```bash
    openssl rand -base64 48
    ```
 
 3. **Update database password:**
+
    ```bash
    # For PostgreSQL
    docker compose exec postgres psql -U gthanks -c "ALTER USER gthanks PASSWORD 'new-password';"
    ```
 
 4. **Update environment variable:**
+
    ```env
    DATABASE_URL=postgresql://gthanks:new-password@host:5432/gthanks
    ```
 
 5. **Restart application:**
+
    ```bash
    docker compose restart app
    ```
@@ -430,12 +467,14 @@ docker compose up -d
    - Keep old credentials active during transition
 
 2. **Update environment variables:**
+
    ```env
    GOOGLE_CLIENT_ID=new-client-id
    GOOGLE_CLIENT_SECRET=new-client-secret
    ```
 
 3. **Deploy application:**
+
    ```bash
    docker compose up -d
    ```
@@ -477,6 +516,7 @@ EMAIL_FROM=dev@gthanks.local
 ```
 
 **Security notes:**
+
 - Use test OAuth credentials (not production)
 - Use test email service (not production SMTP)
 - Database contains test data only
@@ -512,6 +552,7 @@ SENTRY_DSN=https://staging-sentry-dsn@sentry.io/...
 ```
 
 **Security notes:**
+
 - Use separate OAuth credentials (different callback URL)
 - Use dedicated email address for staging
 - Database contains test data (but treat as semi-sensitive)
@@ -558,6 +599,7 @@ REDIS_URL=redis://prod-redis.example.com:6379
 ```
 
 **Security notes:**
+
 - NEVER commit production secrets to Git
 - Store secrets in secure vault (1Password, AWS Secrets Manager)
 - Rotate secrets every 90 days
@@ -571,6 +613,7 @@ REDIS_URL=redis://prod-redis.example.com:6379
 ### Local Development
 
 **Store in `.env.local`:**
+
 ```bash
 # Create .env.local (gitignored)
 cp .env.example .env.local
@@ -578,11 +621,13 @@ cp .env.example .env.local
 ```
 
 **Never commit:**
+
 - `.env.local`
 - `.env`
 - `.env.production`
 
 **Already in `.gitignore`:**
+
 ```
 .env
 .env.local
@@ -594,6 +639,7 @@ cp .env.example .env.local
 ### Docker Deployment
 
 **Option 1: Environment file**
+
 ```bash
 # Create .env file (gitignored)
 cat > .env <<EOF
@@ -606,6 +652,7 @@ docker compose --env-file .env up -d
 ```
 
 **Option 2: Docker secrets** (recommended for production)
+
 ```bash
 # Create secrets
 echo "your-secret" | docker secret create nextauth_secret -
@@ -624,6 +671,7 @@ services:
 ### Vercel Deployment
 
 **Add secrets via CLI:**
+
 ```bash
 # Production
 vercel env add NEXTAUTH_SECRET production
@@ -636,6 +684,7 @@ vercel env add NEXTAUTH_SECRET development
 ```
 
 **Add secrets via Dashboard:**
+
 1. Go to Vercel dashboard
 2. Select project
 3. Settings → Environment Variables
@@ -643,6 +692,7 @@ vercel env add NEXTAUTH_SECRET development
 5. Select environment (Production, Preview, Development)
 
 **Pull secrets for local development:**
+
 ```bash
 vercel env pull .env.local
 ```
@@ -689,6 +739,7 @@ vercel env pull .env.local
 **Immediate actions:**
 
 1. **Rotate secret immediately:**
+
    ```bash
    # Generate new secret
    openssl rand -base64 32

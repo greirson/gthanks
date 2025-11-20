@@ -4,12 +4,12 @@ Production-ready automation scripts for deploying, monitoring, and managing the 
 
 ## Overview
 
-| Script | Purpose | Use Case |
-|--------|---------|----------|
-| `deploy.sh` | Automated production deployment | Deploy new version to production |
-| `backup-database.sh` | Database backup with retention | Manual backups or pre-deployment safety |
-| `health-check.sh` | Application health verification | Verify deployment success |
-| `rollback.sh` | Emergency rollback procedure | Revert to previous working version |
+| Script               | Purpose                         | Use Case                                |
+| -------------------- | ------------------------------- | --------------------------------------- |
+| `deploy.sh`          | Automated production deployment | Deploy new version to production        |
+| `backup-database.sh` | Database backup with retention  | Manual backups or pre-deployment safety |
+| `health-check.sh`    | Application health verification | Verify deployment success               |
+| `rollback.sh`        | Emergency rollback procedure    | Revert to previous working version      |
 
 ## Quick Start
 
@@ -60,6 +60,7 @@ AUTO_CONFIRM=true ./scripts/rollback.sh
 **Purpose**: Automated production deployment with safety checks
 
 **Features**:
+
 - Git version tagging
 - Pre-deployment database backup
 - Docker image building with version tags
@@ -67,6 +68,7 @@ AUTO_CONFIRM=true ./scripts/rollback.sh
 - Post-deployment health verification
 
 **Environment Variables**:
+
 ```bash
 COMPOSE_FILE=docker-compose.postgres.yml  # Compose file to use (default: docker-compose.yml)
 BRANCH=main                               # Git branch to deploy (default: main)
@@ -75,6 +77,7 @@ SKIP_HEALTH_CHECK=true                    # Skip post-deployment health check
 ```
 
 **Examples**:
+
 ```bash
 # Standard production deployment
 ./scripts/deploy.sh
@@ -87,6 +90,7 @@ SKIP_BACKUP=true ./scripts/deploy.sh
 ```
 
 **Exit Codes**:
+
 - `0`: Deployment successful
 - `1`: Deployment failed (check logs)
 
@@ -97,12 +101,14 @@ SKIP_BACKUP=true ./scripts/deploy.sh
 **Purpose**: Create timestamped database backups with automatic retention
 
 **Features**:
+
 - Supports SQLite and PostgreSQL
 - Automatic compression (PostgreSQL only)
 - 30-day retention policy (configurable)
 - Validates database existence before backup
 
 **Environment Variables**:
+
 ```bash
 DB_TYPE=sqlite                # Database type: sqlite or postgres (auto-detected by default)
 BACKUP_DIR=data/backups       # Backup directory (default: data/backups)
@@ -110,6 +116,7 @@ RETENTION_DAYS=30             # Number of backups to keep (default: 30)
 ```
 
 **Examples**:
+
 ```bash
 # Auto-detect database type
 ./scripts/backup-database.sh
@@ -122,10 +129,12 @@ RETENTION_DAYS=90 ./scripts/backup-database.sh
 ```
 
 **Output Files**:
+
 - SQLite: `data/backups/gthanks-YYYYMMDD-HHMMSS.db`
 - PostgreSQL: `data/backups/gthanks-YYYYMMDD-HHMMSS.sql.gz`
 
 **Exit Codes**:
+
 - `0`: Backup successful
 - `1`: Backup failed (database not found, container not running, etc.)
 
@@ -136,6 +145,7 @@ RETENTION_DAYS=90 ./scripts/backup-database.sh
 **Purpose**: Verify application health and infrastructure status
 
 **Features**:
+
 - HTTP health endpoint verification with retries
 - Database connectivity check
 - Disk space monitoring (warning at 80%, critical at 90%)
@@ -143,6 +153,7 @@ RETENTION_DAYS=90 ./scripts/backup-database.sh
 - JSON response parsing
 
 **Environment Variables**:
+
 ```bash
 HEALTH_URL=http://localhost:3000/api/health  # Health endpoint URL
 MAX_RETRIES=5                                # Number of retry attempts
@@ -150,6 +161,7 @@ RETRY_DELAY=3                                # Seconds between retries
 ```
 
 **Examples**:
+
 ```bash
 # Check local deployment
 ./scripts/health-check.sh
@@ -162,10 +174,12 @@ MAX_RETRIES=2 RETRY_DELAY=1 ./scripts/health-check.sh
 ```
 
 **Exit Codes**:
+
 - `0`: All checks passed
 - `1`: Health check failed or warnings detected
 
 **Output Example**:
+
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🏥 gthanks Health Check
@@ -204,6 +218,7 @@ Attempt 1/5...
 **Purpose**: Emergency rollback to previous deployment
 
 **Features**:
+
 - Git-based rollback to previous commit
 - Confirmation prompts (can be disabled for automation)
 - Database restoration guidance
@@ -211,12 +226,14 @@ Attempt 1/5...
 - Clear next-step instructions
 
 **Environment Variables**:
+
 ```bash
 COMPOSE_FILE=docker-compose.postgres.yml  # Compose file to use
 AUTO_CONFIRM=true                         # Skip confirmation prompts (use in CI/CD)
 ```
 
 **Examples**:
+
 ```bash
 # Interactive rollback (recommended)
 ./scripts/rollback.sh
@@ -233,6 +250,7 @@ COMPOSE_FILE=docker-compose.postgres.yml ./scripts/rollback.sh
 For safety, database restoration is manual and provides clear instructions:
 
 **SQLite**:
+
 ```bash
 # 1. Stop containers
 docker compose down
@@ -245,6 +263,7 @@ docker compose up -d
 ```
 
 **PostgreSQL**:
+
 ```bash
 # 1. Decompress backup
 gunzip data/backups/gthanks-TIMESTAMP.sql.gz
@@ -257,6 +276,7 @@ docker compose restart
 ```
 
 **Exit Codes**:
+
 - `0`: Rollback successful
 - `1`: Rollback failed or cancelled
 
@@ -347,6 +367,7 @@ docker compose logs --tail=100 gthanks
 **Symptoms**: Deploy completes but health check fails
 
 **Solution**:
+
 ```bash
 # 1. Check container logs
 docker compose logs gthanks
@@ -366,6 +387,7 @@ docker compose exec gthanks npx prisma db pull
 **Symptoms**: Backup script exits with error
 
 **Solution**:
+
 ```bash
 # SQLite: Verify database exists
 ls -lh data/gthanks.db
@@ -382,6 +404,7 @@ docker compose exec postgres pg_dump -U gthanks gthanks > test-backup.sql
 **Symptoms**: Git status shows "HEAD detached at..."
 
 **Solution**:
+
 ```bash
 # Return to main branch
 git checkout main
@@ -401,12 +424,14 @@ git checkout -b hotfix/emergency-fix
 4. **Keep backups organized**: The 30-day retention policy prevents disk exhaustion
 
 5. **Use version tags**: Git tags make rollbacks easier to identify
+
    ```bash
    git tag -a v1.0.0 -m "Release 1.0.0"
    git push origin v1.0.0
    ```
 
 6. **Document changes**: Use clear commit messages for easier debugging
+
    ```bash
    git commit -m "fix: resolve database connection timeout issue"
    ```

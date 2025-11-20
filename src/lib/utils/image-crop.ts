@@ -39,7 +39,7 @@ export async function getCroppedImg(
 
   if (imageSrc instanceof File) {
     try {
-      orientationValue = await orientation(imageSrc) || 1;
+      orientationValue = (await orientation(imageSrc)) || 1;
     } catch (error) {
       console.warn('Could not read EXIF orientation:', error);
       orientationValue = 1; // Fallback to normal
@@ -47,9 +47,7 @@ export async function getCroppedImg(
   }
 
   // Convert File to data URL if needed
-  const imageUrl = imageSrc instanceof File
-    ? URL.createObjectURL(imageSrc)
-    : imageSrc;
+  const imageUrl = imageSrc instanceof File ? URL.createObjectURL(imageSrc) : imageSrc;
 
   return new Promise((resolve, reject) => {
     const image = new Image();
@@ -140,27 +138,37 @@ export async function getCroppedImg(
       // Scale the cropped image to fit output dimensions
       outputCtx.drawImage(
         canvas,
-        0, 0, pixelCrop.width, pixelCrop.height,
-        0, 0, outputWidth, outputHeight
+        0,
+        0,
+        pixelCrop.width,
+        pixelCrop.height,
+        0,
+        0,
+        outputWidth,
+        outputHeight
       );
 
-      outputCanvas.toBlob((blob) => {
-        if (!blob) {
-          reject(new Error('Failed to create blob'));
+      outputCanvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error('Failed to create blob'));
+            if (imageSrc instanceof File) {
+              URL.revokeObjectURL(imageUrl);
+            }
+            return;
+          }
+          const url = URL.createObjectURL(blob);
+
+          // Clean up object URL if we created one
           if (imageSrc instanceof File) {
             URL.revokeObjectURL(imageUrl);
           }
-          return;
-        }
-        const url = URL.createObjectURL(blob);
 
-        // Clean up object URL if we created one
-        if (imageSrc instanceof File) {
-          URL.revokeObjectURL(imageUrl);
-        }
-
-        resolve({ file: blob, url });
-      }, 'image/jpeg', JPEG_QUALITY);
+          resolve({ file: blob, url });
+        },
+        'image/jpeg',
+        JPEG_QUALITY
+      );
     };
     image.onerror = () => {
       if (imageSrc instanceof File) {

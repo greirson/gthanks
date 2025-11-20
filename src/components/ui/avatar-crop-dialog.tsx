@@ -177,9 +177,7 @@ export function AvatarCropDialog({
       <DialogContent className="max-h-[90vh] max-w-full sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Crop Photo</DialogTitle>
-          <DialogDescription>
-            Adjust the photo position and zoom to your liking.
-          </DialogDescription>
+          <DialogDescription>Adjust the photo position and zoom to your liking.</DialogDescription>
         </DialogHeader>
 
         <DialogBody>

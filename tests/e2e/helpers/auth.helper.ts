@@ -43,7 +43,9 @@ export async function loginAsUser(page: Page, email: string): Promise<TestUser> 
   });
 
   if (!user) {
-    throw new Error(`User with email ${email} not found. Create user first with createAndLoginUser()`);
+    throw new Error(
+      `User with email ${email} not found. Create user first with createAndLoginUser()`
+    );
   }
 
   // Create a JWE token for the user (NextAuth uses encrypted JWT strategy)

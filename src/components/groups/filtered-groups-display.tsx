@@ -140,7 +140,6 @@ export function FilteredGroupsDisplay({
 
       {/* Main Content */}
       <div className="flex-1">
-
         {/* Results Count */}
         <div className="mb-4 text-sm text-muted-foreground">
           {filteredGroups.length === groups.length ? (
