@@ -1,5 +1,6 @@
 {
   "name": "gthanks",
+  "packageManager": "pnpm@10.20.0",
   "version": "0.0.1",
   "private": true,
   "scripts": {
