@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { usePreventUnsavedClose } from '@/hooks/use-form-dirty-state';
 
 export interface GiftCard {
@@ -15,6 +15,11 @@ export function useManageGiftCardsDialog(initialCards: GiftCard[]) {
   const [cards, setCards] = useState<GiftCard[]>(initialCards);
   const [isOpen, setIsOpen] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+
+  // Debug: log when initialCards changes
+  useEffect(() => {
+    console.log('[useManageGiftCardsDialog] initialCards changed:', initialCards);
+  }, [initialCards]);
 
   const closeHandler = usePreventUnsavedClose(isDirty, () => {
     setIsOpen(false);
@@ -66,6 +71,7 @@ export function useManageGiftCardsDialog(initialCards: GiftCard[]) {
   }, []);
 
   const resetCards = useCallback(() => {
+    console.log('[useManageGiftCardsDialog] resetCards called, initialCards:', initialCards);
     setCards(initialCards);
     setIsDirty(false);
   }, [initialCards]);

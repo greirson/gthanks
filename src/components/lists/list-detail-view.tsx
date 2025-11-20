@@ -115,7 +115,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
     queryFn: () => listsApi.getList(listId),
     initialData: convertedInitialList,
     refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false, // Prevent refetch on tab switch - fixes gift card dialog reset bug
   });
 
   // Fetch reservation data (privacy-aware: owners see isReserved: false)
@@ -148,6 +148,16 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
     const currentWishIds = new Set(list.wishes.map((lw) => lw.wish.id));
     return allUserWishesData.items.filter((w) => currentWishIds.has(w.id));
   }, [allUserWishesData?.items, list?.wishes]);
+
+  // Memoize giftCards to prevent creating new array references on every render
+  const giftCards = useMemo(() => {
+    if (!list?.giftCardPreferences) {
+      return [];
+    }
+    return typeof list.giftCardPreferences === 'string'
+      ? (JSON.parse(list.giftCardPreferences || '[]') as GiftCard[])
+      : (list.giftCardPreferences as GiftCard[] | undefined) || [];
+  }, [list?.giftCardPreferences]);
 
   // Helper to get the correct public URL (vanity URL if available, otherwise standard share token URL)
   const getPublicUrl = useCallback(() => {
@@ -399,11 +409,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
           {/* Gift Cards Section */}
           <GiftCardSection
             listId={list.id}
-            giftCards={
-              typeof list.giftCardPreferences === 'string'
-                ? (JSON.parse(list.giftCardPreferences || '[]') as GiftCard[])
-                : (list.giftCardPreferences as GiftCard[] | undefined) || []
-            }
+            giftCards={giftCards}
             canEdit={list.canEdit ?? false}
             onUpdate={() => {
               void queryClient.invalidateQueries({ queryKey: ['lists', listId] });
@@ -479,11 +485,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
           {/* Gift Cards Section - Mobile */}
           <GiftCardSection
             listId={list.id}
-            giftCards={
-              typeof list.giftCardPreferences === 'string'
-                ? (JSON.parse(list.giftCardPreferences || '[]') as GiftCard[])
-                : (list.giftCardPreferences as GiftCard[] | undefined) || []
-            }
+            giftCards={giftCards}
             canEdit={list.canEdit ?? false}
             onUpdate={() => {
               void queryClient.invalidateQueries({ queryKey: ['lists', listId] });

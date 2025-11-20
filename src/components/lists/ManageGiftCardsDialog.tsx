@@ -50,13 +50,26 @@ export function ManageGiftCardsDialog({
 }: ManageGiftCardsDialogProps) {
   const dialog = useManageGiftCardsDialog(initialCards);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const wasOpenRef = useRef(false);
 
-  // Reset cards when dialog opens
+  // Reset cards ONLY when dialog first opens (not on every parent re-render)
   useEffect(() => {
-    if (isOpen) {
+    console.log('[ManageGiftCardsDialog] Effect triggered:', {
+      isOpen,
+      wasOpen: wasOpenRef.current,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Only reset when transitioning from closed to open
+    if (isOpen && !wasOpenRef.current) {
+      console.log('[ManageGiftCardsDialog] Dialog opened - resetting cards');
       dialog.resetCards();
+      wasOpenRef.current = true;
+    } else if (!isOpen && wasOpenRef.current) {
+      console.log('[ManageGiftCardsDialog] Dialog closed');
+      wasOpenRef.current = false;
     }
-  }, [isOpen, dialog.resetCards]);
+  }, [isOpen]); // Only depend on isOpen, not dialog.resetCards
 
   // Cleanup auto-save timeout on unmount
   useEffect(() => {
