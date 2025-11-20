@@ -39,7 +39,7 @@ const authOptions: NextAuthOptions = {
           pass: process.env.SMTP_PASS || '',
         },
       },
-      sendVerificationRequest: async ({ identifier: email, url, provider }) => {
+      sendVerificationRequest: async ({ identifier: email, url, provider: _provider }) => {
         const emailService = createEmailService();
 
         await emailService.send({

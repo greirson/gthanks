@@ -37,7 +37,7 @@ jobs:
         run: pnpm run db:generate
 
       - name: Run tests
-        run: pnpm run test -- --passWithNoTests
+        run: pnpm exec jest --passWithNoTests
         env:
           NODE_ENV: test
 
@@ -148,6 +148,11 @@ jobs:
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install chromium --with-deps
+
+      - name: Configure Prisma for PostgreSQL
+        run: |
+          sed -i 's/provider = "sqlite"/provider = "postgresql"/' prisma/schema.prisma
+        shell: bash
 
       - name: Generate Prisma client
         run: pnpm run db:generate

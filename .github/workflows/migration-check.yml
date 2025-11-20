@@ -75,6 +75,8 @@ jobs:
 
       - name: Validate Prisma schema
         run: pnpm prisma validate
+        env:
+          DATABASE_URL: file:./dev.db
 
       - name: Check Prisma format
         run: |
