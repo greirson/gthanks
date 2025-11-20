@@ -1,6 +1,7 @@
 'use client';
 
 import { Wish } from '@prisma/client';
+import { Wish as ApiWish } from '@/lib/validators/api-responses/wishes';
 import { useQuery } from '@tanstack/react-query';
 import { Lock, ArrowLeft, X, Info } from 'lucide-react';
 
@@ -17,6 +18,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { FilteredWishesDisplay } from '@/components/wishes/filtered-wishes-display';
 import { reservationsApi } from '@/lib/api/reservations';
+import { PublicGiftCardSection } from '@/components/lists/PublicGiftCardSection';
 
 interface ApiError {
   response?: {
@@ -38,6 +40,7 @@ interface ListResponse {
   slug: string | null;
   hideFromProfile: boolean;
   shareToken: string | null;
+  giftCardPreferences?: string | null;
   owner: {
     id: string;
     name: string | null;
@@ -88,7 +91,7 @@ export default function PublicListVanityUrlPage() {
   const [password, setPassword] = useState('');
   const [passwordSubmitted, setPasswordSubmitted] = useState(false);
   const [showReservationDialog, setShowReservationDialog] = useState(false);
-  const [selectedWish, setSelectedWish] = useState<any>(null);
+  const [selectedWish, setSelectedWish] = useState<ApiWish | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
@@ -173,7 +176,7 @@ export default function PublicListVanityUrlPage() {
     }
   };
 
-  const handleReserveWish = (wish: any) => {
+  const handleReserveWish = (wish: ApiWish) => {
     setSelectedWish(wish);
     setShowReservationDialog(true);
   };
@@ -353,6 +356,9 @@ export default function PublicListVanityUrlPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Gift Cards Section */}
+      <PublicGiftCardSection list={list} />
 
       {/* Wishes Display with Filtering and View Toggle */}
       <FilteredWishesDisplay

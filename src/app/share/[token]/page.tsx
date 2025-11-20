@@ -17,6 +17,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { FilteredWishesDisplay } from '@/components/wishes/filtered-wishes-display';
 import { listsApi } from '@/lib/api/lists';
 import { reservationsApi } from '@/lib/api/reservations';
+import { PublicGiftCardSection } from '@/components/lists/PublicGiftCardSection';
 
 interface PageProps {
   params: { token: string };
@@ -40,7 +41,7 @@ export default function PublicListPage({ params }: PageProps) {
   const [password, setPassword] = useState('');
   const [_showPasswordForm, setShowPasswordForm] = useState(false);
   const [showReservationDialog, setShowReservationDialog] = useState(false);
-  const [selectedWish, setSelectedWish] = useState<any>(null);
+  const [selectedWish, setSelectedWish] = useState<ApiWish | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Fetch public list
@@ -110,7 +111,7 @@ export default function PublicListPage({ params }: PageProps) {
     }
   };
 
-  const handleReserveWish = (wish: any) => {
+  const handleReserveWish = (wish: ApiWish) => {
     setSelectedWish(wish);
     setShowReservationDialog(true);
   };
@@ -249,6 +250,9 @@ export default function PublicListPage({ params }: PageProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Gift Cards Section */}
+      <PublicGiftCardSection list={list} />
 
       {/* Wishes Display with Filtering and View Toggle */}
       <FilteredWishesDisplay
