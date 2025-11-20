@@ -73,9 +73,33 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
       include: {
         list: {
           include: {
+            owner: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatarUrl: true,
+              },
+            },
             _count: {
               select: {
                 wishes: true,
+                admins: true,
+              },
+            },
+            admins: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    avatarUrl: true,
+                  },
+                },
+              },
+              orderBy: {
+                addedAt: 'asc',
               },
             },
           },

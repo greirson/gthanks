@@ -581,10 +581,10 @@ export function WishForm({
       {showListSelection && (
         <div className="space-y-2">
           <Label>Add to Lists</Label>
-          {isLoadingLists && (
+          {(isLoadingLists || wishListsQuery.isLoading) && (
             <p className="text-sm text-muted-foreground">Loading lists...</p>
           )}
-          {listsData && 'items' in listsData && Array.isArray(listsData.items) && listsData.items.length > 0 && (
+          {listsData && 'items' in listsData && Array.isArray(listsData.items) && listsData.items.length > 0 && (!wish?.id || !wishListsQuery.isLoading) && (
             <fieldset
               disabled={createMutation.isPending || updateMutation.isPending}
               className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3"
