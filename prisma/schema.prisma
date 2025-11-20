@@ -169,19 +169,19 @@ model Wish {
 }
 
 model List {
-  id              String   @id @default(cuid())
-  name            String
-  description     String?
-  ownerId         String
-  owner           User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  visibility      String   @default("private") // private, public, password, link, group
-  password        String? // Hashed password for password-protected lists (Argon2)
-  shareToken      String?  @unique
-  slug            String? // Slug for vanity URLs (unique per owner)
-  hideFromProfile Boolean  @default(false) // Hide from public profile
+  id                  String   @id @default(cuid())
+  name                String
+  description         String?
+  ownerId             String
+  owner               User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  visibility          String   @default("private") // private, public, password, link, group
+  password            String? // Hashed password for password-protected lists (Argon2)
+  shareToken          String?  @unique
+  slug                String? // Slug for vanity URLs (unique per owner)
+  hideFromProfile     Boolean  @default(false) // Hide from public profile
   giftCardPreferences String?  @default("[]") // JSON string of gift card links: {name, url, amount?, currency?}
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   // Relations
   wishes      ListWish[]
