@@ -1,6 +1,6 @@
 'use client';
 
-import { MoreVertical, FileText, Share2, User, Calendar } from 'lucide-react';
+import { MoreVertical, FileText, Share2, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,7 +11,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ListWithOwner } from '@/lib/validators/api-responses/lists';
-import { formatDistanceToNow } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { getVisibilityIcon } from '@/lib/utils/visibility-badges';
 
@@ -31,26 +30,6 @@ export function ListListView({
   currentUserId,
 }: ListListViewProps) {
   const router = useRouter();
-
-  const formatRelativeTime = (date: string) => {
-    try {
-      const distance = formatDistanceToNow(new Date(date), { addSuffix: false });
-      // Shorten the output
-      return distance
-        .replace(' minutes', 'm')
-        .replace(' minute', 'm')
-        .replace(' hours', 'h')
-        .replace(' hour', 'h')
-        .replace(' days', 'd')
-        .replace(' day', 'd')
-        .replace(' months', 'mo')
-        .replace(' month', 'mo')
-        .replace(' years', 'y')
-        .replace(' year', 'y');
-    } catch {
-      return 'recently';
-    }
-  };
 
   if (lists.length === 0) {
     return (
@@ -138,12 +117,6 @@ export function ListListView({
                       <span className="hidden sm:inline">Shared</span>
                     </span>
                   )}
-
-                  {/* Updated time */}
-                  <span className="ml-auto flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    <span>{formatRelativeTime(list.updatedAt)} ago</span>
-                  </span>
                 </div>
               </div>
 
