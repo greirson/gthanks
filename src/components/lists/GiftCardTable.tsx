@@ -11,7 +11,8 @@ import {
 } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
-import { GiftCardTableRow } from '@/components/lists/GiftCardTableRow';
+import { GiftCardMobileCard } from '@/components/lists/GiftCardMobileCard';
+import { GiftCardDesktopRow } from '@/components/lists/GiftCardDesktopRow';
 import type { GiftCard } from '@/components/lists/hooks/useManageGiftCardsDialog';
 
 interface GiftCardTableProps {
@@ -71,7 +72,7 @@ export function GiftCardTable({
             strategy={verticalListSortingStrategy}
           >
             {cards.map((card, index) => (
-              <GiftCardTableRow
+              <GiftCardMobileCard
                 key={`card-${index}`}
                 card={card}
                 index={index}
@@ -111,7 +112,7 @@ export function GiftCardTable({
               strategy={verticalListSortingStrategy}
             >
               {cards.map((card, index) => (
-                <GiftCardTableRow
+                <GiftCardDesktopRow
                   key={`card-${index}`}
                   card={card}
                   index={index}
