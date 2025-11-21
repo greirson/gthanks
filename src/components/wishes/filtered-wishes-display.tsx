@@ -115,7 +115,7 @@ export function FilteredWishesDisplay({
       {/* Main Content */}
       <div className="flex-1">
         {/* Desktop Controls Bar */}
-        <div className="mb-4 hidden items-center justify-between lg:flex">
+        <div className="mb-4 hidden items-center justify-between lg:mt-2 lg:flex">
           <div className="text-sm text-muted-foreground">
             {filteredWishes.length === wishes.length ? (
               <span>
