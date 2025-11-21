@@ -175,3 +175,7 @@ prisma/*.backup-*
 # AI tool metadata
 .serena/
 zen_generated.code
+*.changeset
+
+# Playwright MCP authentication profile
+.playwright-profile/
