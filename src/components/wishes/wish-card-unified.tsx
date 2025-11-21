@@ -158,6 +158,7 @@ export function UnifiedWishCard({
 }: UnifiedWishCardProps) {
   const config = variantConfig[variant];
   const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [showAddToListDialog, setShowAddToListDialog] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -240,13 +241,19 @@ export function UnifiedWishCard({
               <div className="flex-shrink-0">
                 {(hasImage || wish.imageStatus === 'FAILED') && (
                   <div className={`relative rounded bg-muted ${config.imageSize}`}>
+                    {/* Skeleton loader */}
+                    {!imageLoaded && hasImage && !imageError && (
+                      <div className="absolute inset-0 animate-pulse rounded bg-muted" />
+                    )}
+
                     {hasImage && !imageError && (
                       <Image
                         src={imageSrc || ''}
                         alt={wish.title}
                         fill
                         sizes={config.imageSizes}
-                        className="rounded object-cover"
+                        className={`rounded object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                        onLoad={() => setImageLoaded(true)}
                         onError={() => setImageError(true)}
                         unoptimized={isImageProcessing}
                         priority={priority}
@@ -465,13 +472,19 @@ export function UnifiedWishCard({
         {/* Image */}
         {(hasImage || wish.imageStatus === 'FAILED') && (
           <div className={`relative bg-muted ${config.imageAspect}`}>
+            {/* Skeleton loader */}
+            {!imageLoaded && hasImage && !imageError && (
+              <div className="absolute inset-0 animate-pulse bg-muted" />
+            )}
+
             {hasImage && !imageError && (
               <Image
                 src={imageSrc || ''}
                 alt={wish.title}
                 fill
                 sizes={config.imageSizes}
-                className="object-cover"
+                className={`object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                onLoad={() => setImageLoaded(true)}
                 onError={() => setImageError(true)}
                 unoptimized={isImageProcessing}
                 priority={priority}
