@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import { Lock } from 'lucide-react';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
 import { SimpleThemeToggle } from '@/components/theme/simple-theme-toggle';

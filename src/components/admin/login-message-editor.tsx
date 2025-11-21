@@ -16,7 +16,9 @@ interface LoginMessageEditorProps {
  * Used for character counting.
  */
 function extractTextContent(html: string): string {
-  if (!html) {return '';}
+  if (!html) {
+    return '';
+  }
 
   // Remove all HTML tags
   const textOnly = html.replace(/<[^>]*>/g, '');
@@ -38,11 +40,11 @@ function extractTextContent(html: string): string {
   });
 
   // Handle numeric entities
-  decoded = decoded.replace(/&#(\d+);/g, (_, code) => {
+  decoded = decoded.replace(/&#(\d+);/g, (_match: string, code: string) => {
     return String.fromCharCode(parseInt(code, 10));
   });
 
-  decoded = decoded.replace(/&#x([0-9A-F]+);/gi, (_, code) => {
+  decoded = decoded.replace(/&#x([0-9A-F]+);/gi, (_match: string, code: string) => {
     return String.fromCharCode(parseInt(code, 16));
   });
 
@@ -101,8 +103,12 @@ export function LoginMessageEditor({ initialMessage }: LoginMessageEditorProps) 
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to save');
+        const data: unknown = await res.json();
+        const errorMessage =
+          data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
+            ? data.error
+            : 'Failed to save';
+        throw new Error(errorMessage);
       }
 
       toast({
@@ -121,7 +127,11 @@ export function LoginMessageEditor({ initialMessage }: LoginMessageEditorProps) 
   };
 
   const handleClear = () => {
-    if (confirm('Are you sure you want to clear the login message? This will remove it from the login page.')) {
+    if (
+      confirm(
+        'Are you sure you want to clear the login message? This will remove it from the login page.'
+      )
+    ) {
       setMessage('');
     }
   };
@@ -133,8 +143,9 @@ export function LoginMessageEditor({ initialMessage }: LoginMessageEditorProps) 
         <label htmlFor="message-editor" className="text-sm font-medium">
           HTML Content
         </label>
-        <p className="text-xs text-muted-foreground mt-1 mb-2">
-          Allowed tags: p, br, strong, em, a, ul, ol, li, h1-h6. Links automatically get security attributes.
+        <p className="mb-2 mt-1 text-xs text-muted-foreground">
+          Allowed tags: p, br, strong, em, a, ul, ol, li, h1-h6. Links automatically get security
+          attributes.
         </p>
         <Textarea
           id="message-editor"
@@ -145,22 +156,22 @@ export function LoginMessageEditor({ initialMessage }: LoginMessageEditorProps) 
           placeholder="<p>Welcome! Please sign in to continue.</p>"
           disabled={isLoading}
         />
-        <div className="flex items-center justify-between mt-2">
+        <div className="mt-2 flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
             Content: {contentLength} / 2000 characters
             {isTooLong && (
-              <span className="text-destructive ml-2 font-medium">
+              <span className="ml-2 font-medium text-destructive">
                 ⚠️ Too long! ({contentLength - 2000} over limit)
               </span>
             )}
           </p>
         </div>
         {hasValidationError && (
-          <div className="flex items-start gap-2 mt-2 rounded-md border border-destructive bg-destructive/10 p-3">
-            <AlertCircle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
+          <div className="mt-2 flex items-start gap-2 rounded-md border border-destructive bg-destructive/10 p-3">
+            <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-destructive" />
             <div className="text-sm">
               <p className="font-medium text-destructive">Invalid HTML</p>
-              <p className="text-muted-foreground mt-1">
+              <p className="mt-1 text-muted-foreground">
                 The HTML contains invalid or disallowed tags. Check the allowed tags list above.
               </p>
             </div>
@@ -170,8 +181,8 @@ export function LoginMessageEditor({ initialMessage }: LoginMessageEditorProps) 
 
       {/* Live Preview */}
       <div>
-        <label className="text-sm font-medium">Preview (as users will see it)</label>
-        <p className="text-xs text-muted-foreground mt-1 mb-2">
+        <p className="text-sm font-medium">Preview (as users will see it)</p>
+        <p className="mb-2 mt-1 text-xs text-muted-foreground">
           This is how the message will appear on the login page
         </p>
         <div className="rounded-lg border-l-4 border-blue-500 bg-blue-50 p-4 dark:bg-blue-950">
@@ -181,7 +192,7 @@ export function LoginMessageEditor({ initialMessage }: LoginMessageEditorProps) 
               dangerouslySetInnerHTML={{ __html: sanitizedPreview }}
             />
           ) : (
-            <p className="text-sm text-muted-foreground italic">
+            <p className="text-sm italic text-muted-foreground">
               {message ? 'Invalid HTML (see error above)' : 'No message set'}
             </p>
           )}
@@ -189,9 +200,9 @@ export function LoginMessageEditor({ initialMessage }: LoginMessageEditorProps) 
       </div>
 
       {/* Actions */}
-      <div className="flex flex-col sm:flex-row gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row">
         <Button
-          onClick={handleSave}
+          onClick={() => void handleSave()}
           disabled={isLoading || isTooLong || hasValidationError}
           className="w-full sm:w-auto"
         >
@@ -209,12 +220,18 @@ export function LoginMessageEditor({ initialMessage }: LoginMessageEditorProps) 
 
       {/* Helper Text */}
       <div className="rounded-md bg-muted p-4">
-        <h4 className="text-sm font-medium mb-2">HTML Tips</h4>
-        <ul className="text-sm text-muted-foreground space-y-1">
-          <li>• Use {'<p>'} for paragraphs, {'<strong>'} for bold, {'<em>'} for italics</li>
-          <li>• Links are automatically secured with rel="noopener noreferrer"</li>
-          <li>• Headings: {'<h1>'}, {'<h2>'}, {'<h3>'}, {'<h4>'}, {'<h5>'}, {'<h6>'}</li>
-          <li>• Lists: {'<ul><li>Item</li></ul>'} (unordered), {'<ol><li>Item</li></ol>'} (ordered)</li>
+        <h4 className="mb-2 text-sm font-medium">HTML Tips</h4>
+        <ul className="space-y-1 text-sm text-muted-foreground">
+          <li>
+            • Use {'<p>'} for paragraphs, {'<strong>'} for bold, {'<em>'} for italics
+          </li>
+          <li>• Links are automatically secured with rel=&quot;noopener noreferrer&quot;</li>
+          <li>
+            • Headings: {'<h1>'}, {'<h2>'}, {'<h3>'}, {'<h4>'}, {'<h5>'}, {'<h6>'}
+          </li>
+          <li>
+            • Lists: {'<ul><li>Item</li></ul>'} (unordered), {'<ol><li>Item</li></ol>'} (ordered)
+          </li>
           <li>• Scripts, iframes, and event handlers are automatically removed for security</li>
         </ul>
       </div>

@@ -31,7 +31,22 @@ export function sanitizeLoginMessage(html: string): string {
 
   // Configure sanitize-html with strict security rules
   const sanitized = sanitizeHtml(html, {
-    allowedTags: ['p', 'br', 'strong', 'em', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+    allowedTags: [
+      'p',
+      'br',
+      'strong',
+      'em',
+      'a',
+      'ul',
+      'ol',
+      'li',
+      'h1',
+      'h2',
+      'h3',
+      'h4',
+      'h5',
+      'h6',
+    ],
     allowedAttributes: {
       a: ['href', 'title', 'target', 'rel'],
       // All other tags have no attributes allowed (empty array means no attributes)
@@ -63,26 +78,25 @@ export function sanitizeLoginMessage(html: string): string {
  */
 function addLinkSecurityAttributes(html: string): string {
   // Use a simple regex to find all <a> tags and add/update rel attribute
-  return html.replace(/<a\s+([^>]*)>/gi, (match, attributes) => {
+  return html.replace(/<a\s+([^>]*)>/gi, (_match: string, attributes: string): string => {
     // Extract existing attributes
     let href = '';
     let title = '';
     let target = '';
-    const rel = '';
 
-    // Parse attributes
+    // Parse attributes with proper type guards
     const hrefMatch = attributes.match(/href=["']([^"']*)["']/i);
-    if (hrefMatch) {
+    if (hrefMatch && hrefMatch[0]) {
       href = hrefMatch[0];
     }
 
     const titleMatch = attributes.match(/title=["']([^"']*)["']/i);
-    if (titleMatch) {
+    if (titleMatch && titleMatch[0]) {
       title = titleMatch[0];
     }
 
     const targetMatch = attributes.match(/target=["']([^"']*)["']/i);
-    if (targetMatch) {
+    if (targetMatch && targetMatch[0]) {
       target = targetMatch[0];
     }
 
@@ -149,12 +163,13 @@ function decodeHtmlEntities(text: string): string {
     decoded = decoded.replace(new RegExp(entity, 'g'), char);
   });
 
-  // Handle numeric entities
-  decoded = decoded.replace(/&#(\d+);/g, (_, code) => {
+  // Handle numeric entities (decimal)
+  decoded = decoded.replace(/&#(\d+);/g, (_match: string, code: string): string => {
     return String.fromCharCode(parseInt(code, 10));
   });
 
-  decoded = decoded.replace(/&#x([0-9A-F]+);/gi, (_, code) => {
+  // Handle numeric entities (hexadecimal)
+  decoded = decoded.replace(/&#x([0-9A-F]+);/gi, (_match: string, code: string): string => {
     return String.fromCharCode(parseInt(code, 16));
   });
 

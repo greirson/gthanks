@@ -2,6 +2,7 @@ import { db } from '@/lib/db';
 import { sanitizeLoginMessage } from '@/lib/sanitize-html';
 import { permissionService } from './permission-service';
 import { ForbiddenError } from '@/lib/errors';
+import { logAuditEvent } from './logger';
 
 /**
  * Site Settings Service
@@ -49,10 +50,7 @@ export const settingsService = {
    * @param adminId - The admin user ID performing the update
    * @throws ForbiddenError if user is not an admin
    */
-  async updateLoginMessage(
-    message: string | null,
-    adminId: string
-  ): Promise<void> {
+  async updateLoginMessage(message: string | null, adminId: string): Promise<void> {
     // Use permissionService for authorization (CRITICAL from Zen feedback)
     const { allowed } = await permissionService.can(adminId, 'admin', {
       type: 'site-settings',
@@ -82,7 +80,7 @@ export const settingsService = {
     });
 
     // Audit log (required by Zen feedback)
-    console.log('[AUDIT] Login message updated', {
+    logAuditEvent('Login message updated', {
       adminId,
       timestamp: new Date().toISOString(),
       messageLength: sanitized?.length ?? 0,

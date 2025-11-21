@@ -111,11 +111,9 @@ describe('settingsService', () => {
 
       await settingsService.updateLoginMessage(newMessage, mockAdminId);
 
-      expect(permissionService.can).toHaveBeenCalledWith(
-        mockAdminId,
-        'admin',
-        { type: 'site-settings' }
-      );
+      expect(permissionService.can).toHaveBeenCalledWith(mockAdminId, 'admin', {
+        type: 'site-settings',
+      });
 
       expect(db.siteSettings.upsert).toHaveBeenCalledWith({
         where: { id: 'global' },
@@ -237,11 +235,9 @@ describe('settingsService', () => {
       await settingsService.updateLoginMessage('<p>Test</p>', mockAdminId);
 
       // Verify we're using the permission service, not checking isAdmin directly
-      expect(permissionService.can).toHaveBeenCalledWith(
-        mockAdminId,
-        'admin',
-        { type: 'site-settings' }
-      );
+      expect(permissionService.can).toHaveBeenCalledWith(mockAdminId, 'admin', {
+        type: 'site-settings',
+      });
     });
   });
 });

@@ -11,7 +11,12 @@ import { cn } from '@/lib/utils';
 import { useViewPreference } from '@/lib/utils/view-preferences';
 import { ViewToggle } from '@/components/ui/view-toggle';
 import { Badge } from '@/components/ui/badge';
-import type { FilterState, WishLevelSelection, SortOption, PriceRange } from '@/components/wishes/hooks/useWishFilters';
+import type {
+  FilterState,
+  WishLevelSelection,
+  SortOption,
+  PriceRange,
+} from '@/components/wishes/hooks/useWishFilters';
 
 interface FilteredWishesDisplayProps {
   wishes: (Wish & { isOwner?: boolean })[];

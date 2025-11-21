@@ -9,6 +9,7 @@ Simple family wishlist coordination to prevent duplicate gifts.
 **DO NOT use gthanks as your only storage solution for important wishlists.**
 
 **Recommendations:**
+
 - Keep external backups of critical wishlist data
 - Expect breaking changes during development
 - Use at your own risk until stable release (v1.0)

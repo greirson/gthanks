@@ -84,8 +84,25 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const body = await request.json();
-    const { password } = body;
+    const body: unknown = await request.json();
+
+    // Type guard: ensure body is an object with password property
+    if (!body || typeof body !== 'object' || !('password' in body)) {
+      return NextResponse.json(
+        { error: getUserFriendlyError('FORBIDDEN'), code: 'FORBIDDEN' },
+        { status: 403 }
+      );
+    }
+
+    const { password } = body as { password: unknown };
+
+    // Validate password is a string
+    if (typeof password !== 'string') {
+      return NextResponse.json(
+        { error: getUserFriendlyError('FORBIDDEN'), code: 'FORBIDDEN' },
+        { status: 403 }
+      );
+    }
 
     // Fetch list using service
     const list = await listService.getByVanityUrl(username, slug);

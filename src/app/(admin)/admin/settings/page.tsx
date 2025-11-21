@@ -18,8 +18,8 @@ export default async function SettingsPage() {
         <CardContent>
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-medium mb-1">Login Page Message</h3>
-              <p className="text-sm text-muted-foreground mb-4">
+              <h3 className="mb-1 text-lg font-medium">Login Page Message</h3>
+              <p className="mb-4 text-sm text-muted-foreground">
                 Display a custom message on the login page. This is useful for announcements,
                 maintenance notices, or welcome messages.
               </p>

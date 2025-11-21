@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
  * @description Serves the current user's avatar image with proper Content-Type headers.
  * Supports both session-based and API key authentication.
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const user = await getCurrentUser();
     if (!user) {

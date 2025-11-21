@@ -19,7 +19,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const { message } = await req.json();
+  const body: unknown = await req.json();
+
+  // Type guard: ensure body has message property of correct type
+  if (!body || typeof body !== 'object' || !('message' in body)) {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+  }
+
+  const { message } = body as { message: unknown };
+
+  // Validate message is string or null
+  if (message !== null && typeof message !== 'string') {
+    return NextResponse.json({ error: 'Message must be a string or null' }, { status: 400 });
+  }
 
   try {
     await settingsService.updateLoginMessage(message, user.id);

@@ -87,7 +87,10 @@ export function CollapsibleGiftCardSection({
                     aria-label="About Gift Cards"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <Info className="h-4 w-4 text-muted-foreground sm:h-5 sm:w-5" aria-hidden="true" />
+                    <Info
+                      className="h-4 w-4 text-muted-foreground sm:h-5 sm:w-5"
+                      aria-hidden="true"
+                    />
                   </button>
                 </TooltipPrimitive.Trigger>
 
@@ -108,7 +111,7 @@ export function CollapsibleGiftCardSection({
         </div>
 
         {/* Collapsible content */}
-        <CollapsibleContent className="overflow-hidden transition-all data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0">
+        <CollapsibleContent className="overflow-hidden transition-all data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0">
           <div className="px-4 pb-4 pt-4 sm:px-6">
             <GiftCardSection
               listId={listId}

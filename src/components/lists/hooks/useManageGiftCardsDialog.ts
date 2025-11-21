@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { usePreventUnsavedClose } from '@/hooks/use-form-dirty-state';
 
 export interface GiftCard {

@@ -423,7 +423,11 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
               }}
               onManage={list.canEdit ? () => manageGiftCardsDialog.open() : undefined}
               externalManageDialog={manageGiftCardsDialog}
-              infoTooltip={list.canEdit ? "Gift cards you'd appreciate. Manage them to keep your preferences up to date." : "Gift cards the list owner would appreciate."}
+              infoTooltip={
+                list.canEdit
+                  ? "Gift cards you'd appreciate. Manage them to keep your preferences up to date."
+                  : 'Gift cards the list owner would appreciate.'
+              }
             />
           </div>
 
@@ -506,7 +510,11 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
               }}
               onManage={list.canEdit ? () => manageGiftCardsDialog.open() : undefined}
               externalManageDialog={manageGiftCardsDialog}
-              infoTooltip={list.canEdit ? "Gift cards you'd appreciate. Manage them to keep your preferences up to date." : "Gift cards the list owner would appreciate."}
+              infoTooltip={
+                list.canEdit
+                  ? "Gift cards you'd appreciate. Manage them to keep your preferences up to date."
+                  : 'Gift cards the list owner would appreciate.'
+              }
             />
           </div>
 

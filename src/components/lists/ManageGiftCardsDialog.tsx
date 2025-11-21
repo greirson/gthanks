@@ -67,7 +67,7 @@ export function ManageGiftCardsDialog({
     } else if (!isOpen && wasOpenRef.current) {
       wasOpenRef.current = false;
     }
-  }, [isOpen, initialCards.length, dialog.resetCards, dialog.addCard]); // Added dependencies for auto-add logic
+  }, [isOpen, initialCards.length, dialog]); // dialog object includes all stable methods
 
   // Cleanup auto-save timeout on unmount
   useEffect(() => {
@@ -116,7 +116,7 @@ export function ManageGiftCardsDialog({
   const handleCancel = useCallback(() => {
     dialog.resetCards(); // Revert changes
     onClose();
-  }, [dialog.resetCards, onClose]);
+  }, [dialog, onClose]);
 
   return (
     <Dialog open={isOpen} onOpenChange={dialog.handleClose} {...dialogProps}>

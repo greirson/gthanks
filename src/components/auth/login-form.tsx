@@ -115,7 +115,7 @@ export function LoginForm({ availableProviders, oauthConfig, loginMessage }: Log
       {loginMessage && (
         <div className="mb-6 w-full max-w-md rounded-lg border-l-4 border-blue-500 bg-blue-50 p-4 dark:bg-blue-950">
           <div
-            className="prose prose-sm max-w-none dark:prose-invert"
+            className="prose prose-sm dark:prose-invert max-w-none"
             dangerouslySetInnerHTML={{ __html: loginMessage }}
           />
         </div>
