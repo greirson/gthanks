@@ -139,7 +139,7 @@ export function ManageGiftCardsDialog({
         </div>
 
         {/* Footer */}
-        <DialogFooter className="flex flex-col items-stretch gap-3 pt-4 sm:flex-row sm:items-center">
+        <DialogFooter className="mb-0 flex flex-col items-stretch gap-3 pb-2 pt-4 sm:flex-row sm:items-center">
           <Button
             variant="outline"
             onClick={dialog.addCard}

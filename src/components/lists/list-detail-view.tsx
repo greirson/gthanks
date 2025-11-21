@@ -398,7 +398,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
           />
 
           {/* Controls Bar - Filter button and View toggle */}
-          <div className="pt-2">
+          <div className="mt-4">
             <WishControlsBar
               isHydrated={isHydrated}
               onToggleFilters={() => setIsDesktopFilterOpen(!isDesktopFilterOpen)}
@@ -413,7 +413,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
           </div>
 
           {/* Gift Cards Section */}
-          <div className="pt-4">
+          <div className="mt-0 pt-4">
             <CollapsibleGiftCardSection
               listId={list.id}
               giftCards={giftCards}
@@ -432,7 +432,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
           </div>
 
           {/* Desktop Wishes Display */}
-          <div className="pt-4">
+          <div className="mt-0 pt-4">
             <ListDetailWishesSection
               wishes={filteredWishes}
               viewMode={viewMode}
@@ -500,7 +500,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
           />
 
           {/* Gift Cards Section - Mobile */}
-          <div className="pt-4">
+          <div className="mt-0 pt-4">
             <CollapsibleGiftCardSection
               listId={list.id}
               giftCards={giftCards}
@@ -531,7 +531,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
           )}
 
           {/* Mobile Wishes Display */}
-          <div className="pt-4">
+          <div className="mt-0 pt-4">
             <ListDetailWishesSection
               wishes={filteredWishes}
               viewMode={viewMode}

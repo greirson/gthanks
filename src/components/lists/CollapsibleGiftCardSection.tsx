@@ -107,7 +107,7 @@ export function CollapsibleGiftCardSection({
 
         {/* Collapsible content */}
         <CollapsibleContent className="overflow-hidden transition-all data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0">
-          <div className="px-4 pb-4 pt-4 sm:px-6">
+          <div className="mt-2 px-4 pb-4 pt-4 sm:px-6">
             <GiftCardSection
               listId={listId}
               giftCards={giftCards}

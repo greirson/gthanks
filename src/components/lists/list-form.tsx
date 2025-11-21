@@ -473,7 +473,7 @@ export function ListForm({
         </div>
       )}
 
-      <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:gap-4">
+      <div className="mb-0 flex flex-col gap-3 pb-2 pt-4 sm:flex-row sm:gap-4">
         <ThemeButton type="submit" disabled={isLoading} className="w-full sm:flex-1">
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isEditing ? 'Update List' : 'Create List'}
