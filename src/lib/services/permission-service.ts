@@ -6,7 +6,8 @@ export type Resource =
   | { type: 'list'; id: string }
   | { type: 'wish'; id: string }
   | { type: 'group'; id: string }
-  | { type: 'reservation'; id: string };
+  | { type: 'reservation'; id: string }
+  | { type: 'site-settings' };
 
 export type Action = 'view' | 'edit' | 'delete' | 'admin' | 'share' | 'invite' | 'reserve';
 

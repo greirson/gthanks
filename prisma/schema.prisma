@@ -364,3 +364,14 @@ model UserPreference {
 
   @@index([userId])
 }
+
+model SiteSettings {
+  id                    String    @id @default("global")
+  loginMessage          String?
+  loginMessageUpdatedAt DateTime?
+  loginMessageUpdatedBy String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("site_settings")
+}

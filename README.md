@@ -2,6 +2,17 @@
 
 Simple family wishlist coordination to prevent duplicate gifts.
 
+## ⚠️ ACTIVE DEVELOPMENT WARNING
+
+**This project is under very active development. Database schema changes may occur frequently and could potentially destroy or corrupt your wishes and lists.**
+
+**DO NOT use gthanks as your only storage solution for important wishlists.**
+
+**Recommendations:**
+- Keep external backups of critical wishlist data
+- Expect breaking changes during development
+- Use at your own risk until stable release (v1.0)
+
 ## Features
 
 - Magic link authentication with OAuth support (Google, Facebook, Apple, OIDC)
