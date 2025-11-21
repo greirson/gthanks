@@ -33,7 +33,9 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     }
 
     // Build the file path using STORAGE_PATH env var if set
-    const uploadsDir = process.env.STORAGE_PATH || path.join(process.cwd(), 'uploads');
+    // Must match the path used by image-processor.ts
+    const uploadsDir =
+      process.env.STORAGE_PATH || path.join(process.cwd(), 'public', 'uploads', 'items');
     const filePath = path.join(uploadsDir, filename);
 
     // Read the file directly (no TOCTOU vulnerability)
