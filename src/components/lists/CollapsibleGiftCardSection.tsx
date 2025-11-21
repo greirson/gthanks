@@ -48,33 +48,28 @@ export function CollapsibleGiftCardSection({
               Gift Cards
             </h3>
 
-            <div className="flex items-center gap-2">
-              {/* Manage button - only for owners */}
-              {canEdit && onManage && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation(); // Prevent collapse when clicking manage
-                    onManage();
-                  }}
-                  className="h-8 gap-1.5 px-2 text-xs sm:px-3 sm:text-sm"
-                >
-                  <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">Manage</span>
-                </Button>
+            {/* Chevron icon */}
+            <ChevronDown
+              className={cn(
+                'h-5 w-5 text-muted-foreground transition-transform duration-200 ease-in-out',
+                isOpen && 'rotate-180'
               )}
-
-              {/* Chevron icon */}
-              <ChevronDown
-                className={cn(
-                  'h-5 w-5 text-muted-foreground transition-transform duration-200 ease-in-out',
-                  isOpen && 'rotate-180'
-                )}
-                aria-hidden="true"
-              />
-            </div>
+              aria-hidden="true"
+            />
           </CollapsibleTrigger>
+
+          {/* Manage button - only for owners (outside trigger to avoid nested buttons) */}
+          {canEdit && onManage && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onManage}
+              className="h-11 gap-1.5 border-l border-border px-2 text-xs sm:h-14 sm:px-3 sm:text-sm"
+            >
+              <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Manage</span>
+            </Button>
+          )}
 
           {/* Info icon with tooltip - only for non-owners */}
           {!canEdit && infoTooltip && (
