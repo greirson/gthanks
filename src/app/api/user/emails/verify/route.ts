@@ -6,6 +6,7 @@ import { rateLimiter, getClientIdentifier } from '@/lib/rate-limiter';
 import { db } from '@/lib/db';
 import { updateEmailPrimaryStatus } from '@/lib/utils/email-constraints';
 import { logger } from '@/lib/services/logger';
+import { getAppBaseUrl } from '@/lib/utils';
 
 /**
  * Handles GET requests for email verification via token
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(
         new URL(
           '/settings?emailVerified=error&message=Too+many+verification+attempts.+Please+try+again+later.',
-          request.url
+          getAppBaseUrl()
         )
       );
     }
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest) {
 
     if (!token) {
       return NextResponse.redirect(
-        new URL('/settings?emailVerified=error&message=Missing+verification+token', request.url)
+        new URL('/settings?emailVerified=error&message=Missing+verification+token', getAppBaseUrl())
       );
     }
 
@@ -68,7 +69,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(
         new URL(
           '/settings?emailVerified=error&message=Invalid+or+expired+verification+token',
-          request.url
+          getAppBaseUrl()
         )
       );
     }
@@ -98,13 +99,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(
       new URL(
         `/settings?emailVerified=success&email=${encodeURIComponent(verifiedEmail.email)}${wasPromoted ? '&promoted=true' : ''}`,
-        request.url
+        getAppBaseUrl()
       )
     );
   } catch (error) {
     logger.error({ error: error }, 'Email verification error');
     return NextResponse.redirect(
-      new URL('/settings?emailVerified=error&message=Verification+failed', request.url)
+      new URL('/settings?emailVerified=error&message=Verification+failed', getAppBaseUrl())
     );
   }
 }

@@ -57,3 +57,22 @@ export function sanitizeForLogging(obj: unknown): unknown {
 
   return obj;
 }
+
+/**
+ * Get the application's public base URL
+ *
+ * IMPORTANT: Use this instead of `request.url` when constructing redirect URLs
+ * in API routes to avoid using internal Docker container hostnames.
+ *
+ * @returns The public-facing base URL from NEXTAUTH_URL environment variable
+ *
+ * @example
+ * // ✅ Correct - Uses public URL
+ * return NextResponse.redirect(new URL('/settings', getAppBaseUrl()));
+ *
+ * // ❌ Wrong - Uses internal Docker hostname
+ * return NextResponse.redirect(new URL('/settings', request.url));
+ */
+export function getAppBaseUrl(): string {
+  return process.env.NEXTAUTH_URL || 'http://localhost:3000';
+}
