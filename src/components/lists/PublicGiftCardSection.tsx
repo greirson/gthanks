@@ -1,6 +1,4 @@
-import { CreditCard } from 'lucide-react';
-import { CollapsibleSection } from '@/components/common/CollapsibleSection';
-import { GiftCardSection } from '@/components/lists/GiftCardSection';
+import { CollapsibleGiftCardSection } from '@/components/lists/CollapsibleGiftCardSection';
 
 interface GiftCard {
   name: string;
@@ -35,17 +33,11 @@ export function PublicGiftCardSection({ list }: PublicGiftCardSectionProps) {
   }
 
   return (
-    <CollapsibleSection
-      title={
-        <span className="flex items-center gap-2">
-          <CreditCard className="h-5 w-5" />
-          Gift Cards
-        </span>
-      }
-      defaultOpen={true}
+    <CollapsibleGiftCardSection
+      listId={list.id}
+      giftCards={giftCards}
+      canEdit={false}
       infoTooltip="These are gift cards the list owner would appreciate. Click any card to visit the store."
-    >
-      <GiftCardSection listId={list.id} giftCards={giftCards} canEdit={false} hideHeading={true} />
-    </CollapsibleSection>
+    />
   );
 }

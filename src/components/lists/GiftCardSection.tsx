@@ -11,12 +11,16 @@ import { useManageGiftCardsDialog, type GiftCard } from './hooks/useManageGiftCa
 import { listsApi } from '@/lib/api/lists';
 import { useDebounce } from '@/hooks/use-debounce';
 
+// Re-export for use in parent components
+export { useManageGiftCardsDialog } from './hooks/useManageGiftCardsDialog';
+
 interface GiftCardSectionProps {
   listId: string;
   giftCards: GiftCard[];
   canEdit: boolean;
   onUpdate?: (cards: GiftCard[]) => void;
   hideHeading?: boolean;
+  externalManageDialog?: ReturnType<typeof useManageGiftCardsDialog>;
 }
 
 export function GiftCardSection({
@@ -25,12 +29,14 @@ export function GiftCardSection({
   canEdit,
   onUpdate,
   hideHeading = false,
+  externalManageDialog,
 }: GiftCardSectionProps) {
   const { toast } = useToast();
   const [giftCards, setGiftCards] = useState<GiftCard[]>(initialCards || []);
   const debouncedGiftCards = useDebounce(giftCards, 500); // Auto-save after 500ms
 
-  const manageDialog = useManageGiftCardsDialog(giftCards);
+  const internalManageDialog = useManageGiftCardsDialog(giftCards);
+  const manageDialog = externalManageDialog || internalManageDialog;
 
   // Update mutation
   const updateMutation = useMutation({

@@ -9,7 +9,8 @@ import { cn } from '@/lib/utils';
 import { ViewToggle } from '@/components/ui/view-toggle';
 
 import { AddWishTabDialog } from '@/components/lists/add-wish-tab-dialog';
-import { GiftCardSection } from '@/components/lists/GiftCardSection';
+import { CollapsibleGiftCardSection } from '@/components/lists/CollapsibleGiftCardSection';
+import { useManageGiftCardsDialog } from '@/components/lists/GiftCardSection';
 import type { GiftCard } from '@/components/lists/hooks/useManageGiftCardsDialog';
 import { ListHeader } from '@/components/lists/list-header';
 import { ListDetailTopNav } from '@/components/lists/list-detail-top-nav';
@@ -158,6 +159,9 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
       ? (JSON.parse(list.giftCardPreferences || '[]') as GiftCard[])
       : (list.giftCardPreferences as GiftCard[] | undefined) || [];
   }, [list?.giftCardPreferences]);
+
+  // Gift card manage dialog
+  const manageGiftCardsDialog = useManageGiftCardsDialog(giftCards);
 
   // Helper to get the correct public URL (vanity URL if available, otherwise standard share token URL)
   const getPublicUrl = useCallback(() => {
@@ -394,40 +398,49 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
           />
 
           {/* Controls Bar - Filter button and View toggle */}
-          <WishControlsBar
-            isHydrated={isHydrated}
-            onToggleFilters={() => setIsDesktopFilterOpen(!isDesktopFilterOpen)}
-            isFiltersOpen={isDesktopFilterOpen}
-            filterCount={activeFilterCount}
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            showSelectButton={!!list.isOwner}
-            isSelectionMode={isSelectionMode}
-            onToggleSelection={toggleSelectionMode}
-          />
+          <div className="pt-2">
+            <WishControlsBar
+              isHydrated={isHydrated}
+              onToggleFilters={() => setIsDesktopFilterOpen(!isDesktopFilterOpen)}
+              isFiltersOpen={isDesktopFilterOpen}
+              filterCount={activeFilterCount}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              showSelectButton={!!list.isOwner}
+              isSelectionMode={isSelectionMode}
+              onToggleSelection={toggleSelectionMode}
+            />
+          </div>
 
           {/* Gift Cards Section */}
-          <GiftCardSection
-            listId={list.id}
-            giftCards={giftCards}
-            canEdit={list.canEdit ?? false}
-            onUpdate={() => {
-              void queryClient.invalidateQueries({ queryKey: ['lists', listId] });
-            }}
-          />
+          <div className="pt-4">
+            <CollapsibleGiftCardSection
+              listId={list.id}
+              giftCards={giftCards}
+              canEdit={list.canEdit ?? false}
+              onUpdate={() => {
+                void queryClient.invalidateQueries({ queryKey: ['lists', listId] });
+              }}
+              onManage={list.canEdit ? () => manageGiftCardsDialog.open() : undefined}
+              externalManageDialog={manageGiftCardsDialog}
+              infoTooltip={list.canEdit ? "Gift cards you'd appreciate. Manage them to keep your preferences up to date." : "Gift cards the list owner would appreciate."}
+            />
+          </div>
 
           {/* Desktop Wishes Display */}
-          <ListDetailWishesSection
-            wishes={filteredWishes}
-            viewMode={viewMode}
-            isOwner={!!list.isOwner}
-            isSelectionMode={!!(isSelectionMode && list.isOwner)}
-            selectedWishIds={selectedWishIds}
-            reservedWishIds={reservedWishIds}
-            onEdit={editWishDialog.open}
-            onDelete={removeWishDialog.open}
-            onToggleSelection={toggleWishSelection}
-          />
+          <div className="pt-4">
+            <ListDetailWishesSection
+              wishes={filteredWishes}
+              viewMode={viewMode}
+              isOwner={!!list.isOwner}
+              isSelectionMode={!!(isSelectionMode && list.isOwner)}
+              selectedWishIds={selectedWishIds}
+              reservedWishIds={reservedWishIds}
+              onEdit={editWishDialog.open}
+              onDelete={removeWishDialog.open}
+              onToggleSelection={toggleWishSelection}
+            />
+          </div>
         </div>
       </div>
 
@@ -483,14 +496,19 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
           />
 
           {/* Gift Cards Section - Mobile */}
-          <GiftCardSection
-            listId={list.id}
-            giftCards={giftCards}
-            canEdit={list.canEdit ?? false}
-            onUpdate={() => {
-              void queryClient.invalidateQueries({ queryKey: ['lists', listId] });
-            }}
-          />
+          <div className="pt-4">
+            <CollapsibleGiftCardSection
+              listId={list.id}
+              giftCards={giftCards}
+              canEdit={list.canEdit ?? false}
+              onUpdate={() => {
+                void queryClient.invalidateQueries({ queryKey: ['lists', listId] });
+              }}
+              onManage={list.canEdit ? () => manageGiftCardsDialog.open() : undefined}
+              externalManageDialog={manageGiftCardsDialog}
+              infoTooltip={list.canEdit ? "Gift cards you'd appreciate. Manage them to keep your preferences up to date." : "Gift cards the list owner would appreciate."}
+            />
+          </div>
 
           {/* Mobile Selection Controls */}
           {isSelectionMode && list.isOwner && (
@@ -505,17 +523,19 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
           )}
 
           {/* Mobile Wishes Display */}
-          <ListDetailWishesSection
-            wishes={filteredWishes}
-            viewMode={viewMode}
-            isOwner={!!list.isOwner}
-            isSelectionMode={!!(isSelectionMode && list.isOwner)}
-            selectedWishIds={selectedWishIds}
-            reservedWishIds={reservedWishIds}
-            onEdit={editWishDialog.open}
-            onDelete={removeWishDialog.open}
-            onToggleSelection={toggleWishSelection}
-          />
+          <div className="pt-4">
+            <ListDetailWishesSection
+              wishes={filteredWishes}
+              viewMode={viewMode}
+              isOwner={!!list.isOwner}
+              isSelectionMode={!!(isSelectionMode && list.isOwner)}
+              selectedWishIds={selectedWishIds}
+              reservedWishIds={reservedWishIds}
+              onEdit={editWishDialog.open}
+              onDelete={removeWishDialog.open}
+              onToggleSelection={toggleWishSelection}
+            />
+          </div>
         </div>
       </div>
 
