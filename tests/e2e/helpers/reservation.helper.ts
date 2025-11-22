@@ -175,14 +175,13 @@ export async function seedReservation(
     },
   });
 
-  // Create reservation with email/name (current schema)
+  // Create reservation with userId (authentication-required schema from PHASE 2)
   const reservationId = createId();
   const reservation = await db.reservation.create({
     data: {
       id: reservationId,
       wishId: wish.id,
-      reserverEmail: reserver.email,
-      reserverName: reserver.name,
+      userId: reserver.id,
     },
   });
 
