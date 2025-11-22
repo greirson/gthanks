@@ -61,11 +61,11 @@ else
   echo "WARNING: Unknown DATABASE_URL protocol, assuming PostgreSQL"
 fi
 
-# Generate Prisma Client for runtime platform, then push schema
+# Generate Prisma Client for runtime platform, then apply migrations
 # Use direct binary path to ensure version consistency (avoid npx downloading latest)
 node_modules/.bin/prisma generate
-node_modules/.bin/prisma db push || {
-  echo "ERROR: Database initialization failed"
+node_modules/.bin/prisma migrate deploy || {
+  echo "ERROR: Database migration failed"
   exit 1
 }
 

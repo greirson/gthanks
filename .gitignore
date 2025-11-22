@@ -123,8 +123,8 @@ Thumbs.db
 .vercel
 
 # Prisma
-prisma/migrations/
-!prisma/migrations/.gitkeep
+# Note: Migrations MUST be committed for production deployments
+# Only the .gitkeep is ignored (we don't need it with real migrations)
 
 # Jest
 coverage/
