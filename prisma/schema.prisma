@@ -58,6 +58,7 @@ model User {
   groupsJoined    UserGroup[]
   groupsInvited   GroupInvitation[] @relation("InvitedBy")
   listInvitations ListInvitation[]  @relation("ListInvitedBy")
+  reservations    Reservation[]
   sessions        Session[]
   accounts        Account[]
   userPreference  UserPreference?
@@ -321,19 +322,16 @@ model ListInvitation {
 }
 
 model Reservation {
-  id             String    @id @default(cuid())
-  wishId         String
-  reserverName   String?
-  reserverEmail  String?
-  accessToken    String?   @unique // Secure token for anonymous access
-  reservedAt     DateTime  @default(now())
-  reminderSentAt DateTime?
+  id         String   @id @default(cuid())
+  wishId     String
+  userId     String
+  reservedAt DateTime @default(now())
 
   wish Wish @relation(fields: [wishId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([wishId])
-  @@index([reserverEmail])
-  @@index([accessToken])
+  @@index([userId])
 }
 
 model MagicLink {
