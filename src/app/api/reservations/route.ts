@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
         to: session.user.email || '',
         userName: session.user.name || 'there',
         wishTitle: wish.title,
-        ownerName: wish.owner.name || wish.owner.email,
+        ownerName: wish.owner.name || wish.owner.email || 'List Owner',
         productUrl: wish.url ?? undefined,
       });
     }
