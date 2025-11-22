@@ -34,6 +34,7 @@ export function createEncryptedPrismaAdapter(): Adapter {
   const baseAdapter = PrismaAdapter(db);
 
   // Store original linkAccount method with proper binding
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
   const originalLinkAccount = baseAdapter.linkAccount?.bind(baseAdapter);
 
   /**

@@ -48,15 +48,34 @@ jobs:
             exit 0
           fi
 
+          # Check PR title for v0.0.2 release (intentional breaking changes for reservation auth)
+          if echo "$PR_TITLE" | grep -qi "v0\.0\.2\|Release v0\.0\.2"; then
+            echo "✅ v0.0.2 release detected in PR title - skipping migration safety check (breaking changes expected)"
+            echo "ℹ️  This release includes Prisma migrations for reservation authentication"
+            exit 0
+          fi
+
           # Check for v0.0.1 tag (initial production release - no data to migrate)
           if git describe --tags --exact-match 2>/dev/null | grep -q "^v0\.0\.1$"; then
             echo "✅ v0.0.1 initial release - skipping migration safety check (no production data)"
             exit 0
           fi
 
+          # Check for v0.0.2 tag (reservation auth migration)
+          if git describe --tags --exact-match 2>/dev/null | grep -q "^v0\.0\.2$"; then
+            echo "✅ v0.0.2 release - skipping migration safety check (breaking changes expected)"
+            exit 0
+          fi
+
           # Check commit message for v0.0.1 marker (for untagged commits)
           if git log -1 --pretty=%B | grep -qi "v0\.0\.1\|Release v0\.0\.1"; then
             echo "✅ v0.0.1 initial release commit - skipping migration safety check"
+            exit 0
+          fi
+
+          # Check commit message for v0.0.2 marker (for untagged commits)
+          if git log -1 --pretty=%B | grep -qi "v0\.0\.2\|Release v0\.0\.2"; then
+            echo "✅ v0.0.2 release commit - skipping migration safety check (breaking changes expected)"
             exit 0
           fi
 

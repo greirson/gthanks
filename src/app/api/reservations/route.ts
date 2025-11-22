@@ -11,6 +11,11 @@ import { reservationService } from '@/lib/services/reservation-service';
 import { db } from '@/lib/db';
 import { sendReservationConfirmation } from '@/lib/email';
 
+// Request body schema
+const createReservationSchema = z.object({
+  wishId: z.string(),
+});
+
 // Helper function to get list ID for rate limiting
 async function getListIdFromWish(wishId: string): Promise<string | null> {
   const listWish = await db.listWish.findFirst({
@@ -55,7 +60,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { wishId } = await request.json();
+    const body: unknown = await request.json();
+    const parsed = createReservationSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request body', details: parsed.error.issues },
+        { status: 400 }
+      );
+    }
+
+    const { wishId } = parsed.data;
 
     // Apply rate limiting first (per list, per user)
     const listId = await getListIdFromWish(wishId);
@@ -82,7 +97,12 @@ export async function POST(request: NextRequest) {
     );
 
     // Fetch wish details for confirmation email (simple read, acceptable per architecture guide)
-    const wish = await db.wish.findUnique({
+    const wish: {
+      id: string;
+      title: string;
+      url: string | null;
+      owner: { name: string | null; email: string | null };
+    } | null = await db.wish.findUnique({
       where: { id: wishId },
       include: {
         owner: {
