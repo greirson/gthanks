@@ -405,6 +405,7 @@ export function UnifiedWishCard({
                       variant={isReserved ? 'secondary' : 'default'}
                       size={config.buttonSize}
                       className="ml-auto flex-shrink-0"
+                      data-testid={`reserve-${wish.id}`}
                     >
                       <ShoppingCart className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
                       <span className="hidden sm:inline">
@@ -695,6 +696,7 @@ export function UnifiedWishCard({
                 variant={isReserved ? 'secondary' : 'default'}
                 size={config.buttonSize}
                 className={variant === 'compact' ? 'flex-1 text-xs' : 'w-full sm:flex-1'}
+                data-testid={`reserve-${wish.id}`}
               >
                 <ShoppingCart className={variant === 'compact' ? 'mr-1 h-3 w-3' : 'mr-2 h-4 w-4'} />
                 {isReserved ? 'Reserved' : config.reserveText}
