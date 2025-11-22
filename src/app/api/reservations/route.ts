@@ -74,11 +74,11 @@ export async function POST(request: NextRequest) {
 
     // Apply rate limiting (per list, per user)
     const listId = await getListIdFromWish(wishId);
-    const rateLimitKey = `reservation:${session.user.id}:${listId}`;
-    const rateLimitResult = await rateLimiter.check(rateLimitKey, session.user.id, {
-      windowMs: 3600000, // 1 hour
-      maxRequests: 10, // 10 reservations per hour per list
-    });
+    const rateLimitIdentifier = `${session.user.id}:${listId}`;
+    const rateLimitResult = await rateLimiter.check(
+      'reservation-authenticated',
+      rateLimitIdentifier
+    );
 
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
