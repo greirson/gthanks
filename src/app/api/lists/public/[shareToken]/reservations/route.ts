@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { AppError } from '@/lib/errors';
+import { getCurrentUser } from '@/lib/auth-utils';
 import { rateLimiter, getRateLimitHeaders, getClientIdentifier } from '@/lib/rate-limiter';
 import { reservationService } from '@/lib/services/reservation-service';
 import { ReservationCreateSchema } from '@/lib/validators/reservation';
@@ -10,13 +11,14 @@ import { logger } from '@/lib/services/logger';
 
 /**
  * POST /api/lists/public/[shareToken]/reservations
- * Create a reservation on a public list via share token (no authentication required)
+ * Create a reservation on a public list via share token (authenticated users only)
  *
- * @description Allows anonymous users to reserve wishes on public lists
+ * @description Allows authenticated users to reserve wishes on public lists
  * @param {NextRequest} request - The incoming HTTP request with reservation data
  * @param {Object} params - Route parameters containing the share token
  * @returns {Promise<NextResponse>} JSON response with created reservation or error
  *
+ * @throws {401} Unauthorized - User not authenticated
  * @throws {400} Bad Request - Invalid reservation data or wish already reserved
  * @throws {403} Forbidden - List is private or wish not in shared list
  * @throws {404} Not Found - Invalid share token or wish not found
@@ -24,15 +26,13 @@ import { logger } from '@/lib/services/logger';
  * @throws {500} Internal Server Error - Database or service errors
  *
  * @example
- * // Create reservation on public list
+ * // Create reservation on public list (authenticated)
  * POST /api/lists/public/abc123/reservations
  * {
- *   "wishId": "wish456",
- *   "reserverEmail": "john@example.com",
- *   "reserverName": "John Doe"
+ *   "wishId": "wish456"
  * }
  *
- * @security Rate limited to prevent abuse. No authentication required.
+ * @security Rate limited to prevent abuse. Authentication required.
  */
 export async function POST(request: NextRequest, { params }: { params: { shareToken: string } }) {
   // Rate limiting - prevent abuse (declare outside try-catch for error handler access)
@@ -54,6 +54,21 @@ export async function POST(request: NextRequest, { params }: { params: { shareTo
   }
 
   try {
+    // Check authentication
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json(
+        {
+          error: 'Authentication required to reserve wishes',
+          code: 'UNAUTHORIZED',
+        },
+        {
+          status: 401,
+          headers: getRateLimitHeaders(rateLimitResult),
+        }
+      );
+    }
+
     // Parse and validate request body
     const body = (await request.json()) as unknown;
     const validatedData = ReservationCreateSchema.parse(body);
@@ -61,14 +76,14 @@ export async function POST(request: NextRequest, { params }: { params: { shareTo
     // Create reservation via share token
     const reservation = await reservationService.createReservationViaShareToken(
       params.shareToken,
-      validatedData
+      validatedData,
+      user.id
     );
 
     // Convert dates to ISO strings for JSON serialization
     const serializedReservation = {
       ...reservation,
       reservedAt: reservation.reservedAt.toISOString(),
-      reminderSentAt: reservation.reminderSentAt?.toISOString() || null,
     };
 
     return NextResponse.json(serializedReservation, {

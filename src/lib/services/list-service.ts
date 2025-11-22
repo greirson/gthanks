@@ -42,8 +42,7 @@ export interface ListWithDetails extends Omit<List, 'password'> {
 
 export interface ReservationWithDetails {
   id: string;
-  reserverName: string | null;
-  reserverEmail: string | null;
+  userId: string;
   reservedAt: Date;
   wish: {
     id: string;
@@ -631,70 +630,6 @@ export class ListService {
     return { removed: result.count };
   }
 
-  /**
-   * Create reservation (for anonymous users)
-   */
-  async createReservation(
-    wishId: string,
-    reserverName: string,
-    reserverEmail: string
-  ): Promise<void> {
-    // Get wish and check if it exists
-    const wish = await db.wish.findUnique({
-      where: { id: wishId },
-      include: {
-        reservations: true,
-      },
-    });
-
-    if (!wish) {
-      throw new NotFoundError('Wish not found');
-    }
-
-    // Check if there's enough quantity available
-    const totalReserved = wish.reservations.length;
-    const availableQuantity = wish.quantity - totalReserved;
-
-    if (availableQuantity <= 0) {
-      throw new ValidationError('This item is fully reserved');
-    }
-
-    // Check if this email already has a reservation
-    const existingReservation = wish.reservations.find((r) => r.reserverEmail === reserverEmail);
-
-    if (existingReservation) {
-      throw new ValidationError('You already have a reservation for this item');
-    }
-
-    // Create new reservation
-    await db.reservation.create({
-      data: {
-        wishId,
-        reserverName,
-        reserverEmail,
-      },
-    });
-  }
-
-  /**
-   * Cancel reservation
-   */
-  async cancelReservation(wishId: string, reserverEmail: string): Promise<void> {
-    const reservation = await db.reservation.findFirst({
-      where: {
-        wishId,
-        reserverEmail,
-      },
-    });
-
-    if (!reservation) {
-      throw new NotFoundError('Reservation not found');
-    }
-
-    await db.reservation.delete({
-      where: { id: reservation.id },
-    });
-  }
 
   /**
    * Get reservations for a wish (owner only)

@@ -15,7 +15,7 @@ interface ReservationCardProps {
     reservedAt: Date;
     wish: {
       title: string;
-      url?: string;
+      url: string | null;
     };
   };
 }
@@ -44,11 +44,11 @@ export function ReservationCard({ reservation }: ReservationCardProps) {
       toast({
         title: 'Reservation cancelled',
         description: 'The item is now available for others.',
-        action: undoToken && (
+        action: undoToken ? (
           <Button variant="outline" size="sm" onClick={handleUndo}>
             Undo
           </Button>
-        )
+        ) : undefined
       });
     }
   });

@@ -6,8 +6,7 @@ import { UnifiedPaginatedResponseSchema } from '@/lib/validators/pagination';
 export const ReservationSchema = z.object({
   id: z.string(),
   wishId: z.string(),
-  reserverName: z.string().nullable(),
-  reserverEmail: z.string().nullable(),
+  userId: z.string(),
   reservedAt: z.string().or(z.date()),
 });
 
@@ -68,8 +67,6 @@ export const BulkReservationOperationResultSchema = z.object({
 
 // Reservation with wish details (for user's own reservations)
 export const ReservationWithWishSchema = ReservationSchema.extend({
-  reminderSentAt: z.string().or(z.date()).nullable(),
-  accessToken: z.string().nullable(),
   wish: z.object({
     id: z.string(),
     title: z.string(),
