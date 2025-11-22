@@ -1,47 +1,33 @@
+import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
 
-import { getCurrentUser } from '@/lib/auth-utils';
-import { AppError } from '@/lib/errors';
-import { reservationService } from '@/lib/services/reservation-service';
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { reservationId: string } }
+) {
+  const session = await getServerSession();
 
-interface RouteParams {
-  params: {
-    reservationId: string;
-  };
-}
-
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
-  try {
-    const user = await getCurrentUser();
-
-    // For anonymous users, we would need a secure way to verify their identity
-    // (e.g., a signed token sent to their email). For now, only authenticated
-    // users can delete reservations.
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Authentication required to delete reservations' },
-        { status: 401 }
-      );
-    }
-
-    // The user's email MUST come from the session, never from client input
-    const userEmail = user.email || undefined;
-
-    // Remove reservation
-    await reservationService.removeReservation(params.reservationId, userEmail);
-
-    return new NextResponse(null, { status: 204 });
-  } catch (error) {
-    if (error instanceof AppError) {
-      return NextResponse.json(
-        {
-          error: error.message,
-          code: error.code,
-        },
-        { status: error.statusCode }
-      );
-    }
-
-    return NextResponse.json({ error: 'Failed to remove reservation' }, { status: 500 });
+  if (!session?.user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  // Verify user owns this reservation
+  const reservation = await db.reservation.findUnique({
+    where: { id: params.reservationId },
+  });
+
+  if (!reservation) {
+    return NextResponse.json({ error: 'Reservation not found' }, { status: 404 });
+  }
+
+  if (reservation.userId !== session.user.id) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  await db.reservation.delete({
+    where: { id: params.reservationId },
+  });
+
+  return new NextResponse(null, { status: 204 });
 }
