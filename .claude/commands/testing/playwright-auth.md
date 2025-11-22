@@ -5,6 +5,7 @@
 ## What This Does
 
 This command automates the complete Playwright authentication flow:
+
 1. ✅ Starts dedicated dev server with log capture
 2. ✅ Launches browser to login page
 3. ✅ Monitors server logs for magic link
@@ -97,6 +98,7 @@ The script uses a two-stage profile approach to avoid conflicts:
    - MCP picks up new session on Claude Code restart
 
 **Why this approach?**
+
 - Chromium enforces singleton lock on profile directories
 - MCP server and auth script cannot share same profile simultaneously
 - Temporary profile isolates authentication from active MCP sessions
@@ -146,12 +148,14 @@ This command uses a **two-script architecture**:
 ### Why Node.js Instead of Bash?
 
 The previous bash-only approach had critical flaws:
+
 - ❌ Silent browser launch failures (backgrounding with `&`)
 - ❌ State loss across separate bash invocations
 - ❌ Fragile log scraping with `tail | grep`
 - ❌ No error handling or recovery
 
 The Node.js approach provides:
+
 - ✅ Direct Playwright API control with error handling
 - ✅ Single-process state management
 - ✅ Real-time log monitoring via stdout events

@@ -55,9 +55,7 @@ test.describe('Magic Link Reservation Flow', () => {
 
     // Look for sign-in related text
     const authDialog = page.locator('[role="dialog"]');
-    await expect(
-      authDialog.getByText(/sign in|log in|email/i).first()
-    ).toBeVisible();
+    await expect(authDialog.getByText(/sign in|log in|email/i).first()).toBeVisible();
 
     // 4. Enter email for magic link
     const emailInput = page.locator('[type="email"]').first();
@@ -123,9 +121,7 @@ test.describe('Magic Link Reservation Flow', () => {
 
     // Should see success feedback immediately (toast or message)
     // The exact UI element may vary, but there should be some confirmation
-    await expect(
-      page.getByText(/reserved|success|added to.*reservation/i).first()
-    ).toBeVisible({
+    await expect(page.getByText(/reserved|success|added to.*reservation/i).first()).toBeVisible({
       timeout: 5000,
     });
 
@@ -184,9 +180,7 @@ test.describe('Magic Link Reservation Flow', () => {
     await cancelButton.click();
 
     // Should see cancellation confirmation message
-    await expect(
-      page.getByText(/cancelled|removed|unreserved/i).first()
-    ).toBeVisible({
+    await expect(page.getByText(/cancelled|removed|unreserved/i).first()).toBeVisible({
       timeout: 5000,
     });
 
@@ -237,9 +231,7 @@ test.describe('Magic Link Reservation Flow', () => {
 
     // Should see authentication-related content
     const authDialog = page.locator('[role="dialog"]');
-    await expect(
-      authDialog.getByText(/sign in|log in|email|continue/i).first()
-    ).toBeVisible({
+    await expect(authDialog.getByText(/sign in|log in|email|continue/i).first()).toBeVisible({
       timeout: 5000,
     });
   });

@@ -91,10 +91,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create reservation using service layer (includes permission checks)
-    const reservation = await reservationService.createReservation(
-      { wishId },
-      session.user.id
-    );
+    const reservation = await reservationService.createReservation({ wishId }, session.user.id);
 
     // Fetch wish details for confirmation email (simple read, acceptable per architecture guide)
     const wish: {

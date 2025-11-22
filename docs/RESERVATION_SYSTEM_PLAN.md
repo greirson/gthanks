@@ -145,6 +145,7 @@ model Reservation {
 ```
 
 **Key Changes:**
+
 - Add `reservations` relation to User
 - Add `userId` FK to Reservation (**required, not optional**)
 - Remove `reserverEmail`, `reserverName`, `accessToken` fields
@@ -157,6 +158,7 @@ model Reservation {
 ### PHASE 0: Prerequisites & Environment Setup (Before Day 1)
 
 **Tasks:**
+
 - [ ] Verify shadcn/ui components installed (dialog, button, input, toast, separator)
 - [ ] Confirm database is set up and accessible
 - [ ] Verify all required environment variables are configured
@@ -228,6 +230,7 @@ cat .env.local | grep -E "(NEXTAUTH|SMTP|DATABASE)"
 ```
 
 **Expected Outcome:**
+
 - ✅ All shadcn/ui components available
 - ✅ Database accessible via Prisma Studio
 - ✅ Environment variables set correctly
@@ -238,6 +241,7 @@ cat .env.local | grep -E "(NEXTAUTH|SMTP|DATABASE)"
 ### PHASE 1: Enable Magic Link Login (Day 1)
 
 **Tasks:**
+
 - [ ] Verify `src/lib/auth.ts` has EmailProvider configured
 - [ ] Confirm SMTP environment variables are set (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, EMAIL_FROM)
 - [ ] Test magic link: Visit `/api/auth/signin/email`
@@ -272,6 +276,7 @@ export const authOptions = {
 ```
 
 **If not enabled:**
+
 - Add EmailProvider to providers array
 - Test magic link: Visit `/api/auth/signin/email`
 - Enter email → Receive magic link → Click → Logged in
@@ -281,6 +286,7 @@ export const authOptions = {
 ### PHASE 2: Update Schema & Migrate (Day 1)
 
 **Tasks:**
+
 - [ ] Update `prisma/schema.prisma` with new Reservation model
 - [ ] Add `reservations` relation to User model
 - [ ] Make `userId` required (NOT optional)
@@ -341,6 +347,7 @@ pnpm prisma studio
 ### PHASE 3: Email Confirmation Template (Day 1)
 
 **Tasks:**
+
 - [ ] Create `src/lib/email/templates/reservation-confirmation.ts`
 - [ ] Use plain text format (per user preference)
 - [ ] Include product URL if available
@@ -420,6 +427,7 @@ export async function sendReservationConfirmation(data: {
 ```
 
 **Key Points:**
+
 - ✅ Simple plain text (per user preference)
 - ✅ Links to /my-reservations (requires login)
 - ✅ Includes product URL if available
@@ -430,6 +438,7 @@ export async function sendReservationConfirmation(data: {
 ### PHASE 4: Protect Reservation Endpoint (Day 1)
 
 **Tasks:**
+
 - [ ] Update POST handler to require authentication
 - [ ] Add session check (return 401 if not logged in)
 - [ ] Add data fetching for wish and owner details
@@ -452,7 +461,7 @@ import { sendReservationConfirmation } from '@/lib/email';
 async function getListIdFromWish(wishId: string): Promise<string | null> {
   const listWish = await db.listWish.findFirst({
     where: { wishId },
-    select: { listId: true }
+    select: { listId: true },
   });
   return listWish?.listId || null;
 }
@@ -462,10 +471,7 @@ export async function POST(request: NextRequest) {
   const session = await getServerSession();
 
   if (!session?.user) {
-    return NextResponse.json(
-      { error: 'You must be logged in to reserve items' },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: 'You must be logged in to reserve items' }, { status: 401 });
   }
 
   const { wishId } = await request.json();
@@ -475,16 +481,13 @@ export async function POST(request: NextRequest) {
     where: { id: wishId },
     include: {
       owner: {
-        select: { name: true, email: true }
-      }
-    }
+        select: { name: true, email: true },
+      },
+    },
   });
 
   if (!wish) {
-    return NextResponse.json(
-      { error: 'Wish not found' },
-      { status: 404 }
-    );
+    return NextResponse.json({ error: 'Wish not found' }, { status: 404 });
   }
 
   // Apply rate limiting (per list, per user)
@@ -503,9 +506,9 @@ export async function POST(request: NextRequest) {
   const reservation = await db.reservation.create({
     data: {
       wishId,
-      userId: session.user.id,  // Direct user link
+      userId: session.user.id, // Direct user link
       reservedAt: new Date(),
-    }
+    },
   });
 
   // Send confirmation email
@@ -522,6 +525,7 @@ export async function POST(request: NextRequest) {
 ```
 
 **Key Changes:**
+
 - ✅ Check session first (authentication required)
 - ✅ Return 401 if not logged in
 - ✅ Fetch wish with owner details for email
@@ -535,6 +539,7 @@ export async function POST(request: NextRequest) {
 ### PHASE 5: Create Reserve Dialog with Hybrid Auth (Day 2)
 
 **Tasks:**
+
 - [ ] Create `src/components/reservations/reserve-dialog.tsx`
 - [ ] Implement magic link flow with `redirect: false`
 - [ ] Implement OAuth flow with full page redirect
@@ -775,6 +780,7 @@ export function WishCard({ wish }: Props) {
 **Hybrid Dialog Flow:**
 
 **For Magic Link Users (Best UX):**
+
 1. Dialog opens, user enters email
 2. Calls `signIn('email', { redirect: false })` - stays on page
 3. Shows "Check your email" message in dialog
@@ -782,6 +788,7 @@ export function WishCard({ wish }: Props) {
 5. Sees reservation immediately
 
 **For OAuth Users (Required Redirect):**
+
 1. Dialog opens, user clicks "Continue with Google"
 2. Calls `signIn('google', { callbackUrl })` - full page redirect (OAuth spec requirement)
 3. Google auth flow (leaves your domain)
@@ -789,6 +796,7 @@ export function WishCard({ wish }: Props) {
 5. Sees reservation immediately
 
 **For Logged In Users:**
+
 1. Dialog detects session via useEffect
 2. Reserves immediately without showing dialog
 3. Shows success toast
@@ -798,6 +806,7 @@ export function WishCard({ wish }: Props) {
 ### PHASE 6: Create My Reservations Page (Day 2)
 
 **Tasks:**
+
 - [ ] Create `src/app/my-reservations/page.tsx`
 - [ ] Add authentication check (redirect if not logged in)
 - [ ] Fetch user's reservations with wish details
@@ -916,6 +925,7 @@ export function BrowseListsButton() {
 ### PHASE 7: Create Reservation Card Component & DELETE Endpoint (Day 3)
 
 **Tasks:**
+
 - [ ] Create `src/components/reservations/reservation-card.tsx`
 - [ ] Display wish title and reservation date
 - [ ] Add product link (if available)
@@ -1033,17 +1043,11 @@ import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession();
 
   if (!session?.user) {
-    return NextResponse.json(
-      { error: 'Unauthorized' },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   // Verify user owns this reservation
@@ -1052,17 +1056,11 @@ export async function DELETE(
   });
 
   if (!reservation) {
-    return NextResponse.json(
-      { error: 'Reservation not found' },
-      { status: 404 }
-    );
+    return NextResponse.json({ error: 'Reservation not found' }, { status: 404 });
   }
 
   if (reservation.userId !== session.user.id) {
-    return NextResponse.json(
-      { error: 'Forbidden' },
-      { status: 403 }
-    );
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   await db.reservation.delete({
@@ -1074,6 +1072,7 @@ export async function DELETE(
 ```
 
 **Key Points:**
+
 - ✅ Uses `router.refresh()` instead of React Query invalidation (works with Server Components)
 - ✅ DELETE endpoint verifies ownership before deletion
 - ✅ Proper HTTP status codes (204 for successful deletion)
@@ -1084,6 +1083,7 @@ export async function DELETE(
 ### PHASE 8: Add Navigation Link (Day 3)
 
 **Tasks:**
+
 - [ ] Add "My Reservations" link to main navigation
 - [ ] Position link logically (after "My Lists", before "Groups")
 - [ ] Test navigation on mobile and desktop
@@ -1127,6 +1127,7 @@ const { data: reservationCount } = useQuery({
 ### PHASE 9: E2E Testing (Day 4)
 
 **Tasks:**
+
 - [ ] Create `tests/e2e/reservations/magic-link-flow.spec.ts`
 - [ ] Test: New user → magic link → reservation visible
 - [ ] Test: Logged in user → instant reservation
@@ -1221,6 +1222,7 @@ test.describe('Magic Link Reservation Flow', () => {
 ### UX Flow
 
 **New Users:**
+
 1. Click "Reserve" → Dialog opens
 2. Enter email → Receive magic link
 3. Click magic link → Logged in
@@ -1228,6 +1230,7 @@ test.describe('Magic Link Reservation Flow', () => {
 5. See their reservation
 
 **Returning Users:**
+
 1. Click "Reserve" → Instant (already logged in)
 2. Success toast
 3. Can visit /my-reservations anytime
@@ -1249,6 +1252,7 @@ test.describe('Magic Link Reservation Flow', () => {
 ## Deployment Checklist
 
 **Pre-deployment:**
+
 - [ ] Environment variables configured (see Phase 0)
 - [ ] NextAuth EmailProvider verified and working
 - [ ] SMTP credentials tested (send test magic link)
@@ -1263,6 +1267,7 @@ test.describe('Magic Link Reservation Flow', () => {
 - [ ] Email template renders correctly
 
 **Post-deployment monitoring:**
+
 - Monitor magic link delivery rate
 - Track reservation completion rate
 - Watch for failed login attempts
@@ -1335,6 +1340,7 @@ src/components/common/Nav.tsx (add My Reservations link)
 ## Why This is Better
 
 ### Complexity Reduction
+
 - No shadow accounts
 - No verification codes
 - No account cleanup cron
@@ -1342,6 +1348,7 @@ src/components/common/Nav.tsx (add My Reservations link)
 - Standard NextAuth flow
 
 ### Better UX
+
 - Instant access to reservations (no email wait)
 - Works offline after login
 - Familiar login pattern
@@ -1351,6 +1358,7 @@ src/components/common/Nav.tsx (add My Reservations link)
 - **Smart Auth Detection:** Dialog automatically reserves if already logged in
 
 ### Hybrid Dialog Benefits
+
 - **Magic Link:** Stays on page, shows "Check your email" message (best UX)
 - **OAuth:** Full page redirect only when necessary (OAuth 2.0 spec requirement)
 - **Consistent Pattern:** Users expect "Continue with Google" to open OAuth flow
@@ -1358,12 +1366,14 @@ src/components/common/Nav.tsx (add My Reservations link)
 - **Mobile-Friendly:** Dialog works seamlessly on mobile (375px+)
 
 ### OAuth 2.0 Technical Constraint
+
 - OAuth providers (Google, Facebook, Apple) REQUIRE full page redirects
 - This is a security feature of OAuth 2.0 spec (prevents iframe attacks)
 - Unavoidable - trying to use modal/iframe violates X-Frame-Options
 - Hybrid approach respects this while optimizing magic link flow
 
 ### Security
+
 - Proper authentication required
 - No tokens in URLs
 - Session-based access
@@ -1371,6 +1381,7 @@ src/components/common/Nav.tsx (add My Reservations link)
 - OAuth redirect validates origin
 
 ### Maintenance
+
 - Simpler codebase
 - Fewer edge cases
 - Standard patterns

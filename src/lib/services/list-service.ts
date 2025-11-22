@@ -630,7 +630,6 @@ export class ListService {
     return { removed: result.count };
   }
 
-
   /**
    * Get reservations for a wish (owner only)
    */

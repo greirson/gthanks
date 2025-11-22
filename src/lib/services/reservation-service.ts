@@ -6,11 +6,7 @@ import { ReservationCreateInput } from '@/lib/validators/reservation';
 
 import { logger } from './logger';
 import { permissionService } from './permission-service';
-import {
-  PublicReservation,
-  ReservationStatus,
-  ReservationWithWish,
-} from './reservation-types';
+import { PublicReservation, ReservationStatus, ReservationWithWish } from './reservation-types';
 
 export class ReservationService {
   /**

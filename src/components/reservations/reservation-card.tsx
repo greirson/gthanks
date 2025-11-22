@@ -30,7 +30,9 @@ export function ReservationCard({ reservation }: ReservationCardProps) {
       const response = await fetch(`/api/reservations/${reservationId}`, {
         method: 'DELETE',
       });
-      if (!response.ok) {throw new Error('Failed to cancel');}
+      if (!response.ok) {
+        throw new Error('Failed to cancel');
+      }
       return { id: reservationId };
     },
     onSuccess: ({ id }) => {
@@ -48,9 +50,9 @@ export function ReservationCard({ reservation }: ReservationCardProps) {
           <Button variant="outline" size="sm" onClick={handleUndo}>
             Undo
           </Button>
-        ) : undefined
+        ) : undefined,
       });
-    }
+    },
   });
 
   const handleUndo = async () => {
@@ -63,7 +65,7 @@ export function ReservationCard({ reservation }: ReservationCardProps) {
       <CardContent className="pt-6">
         <div className="flex items-start justify-between">
           <div>
-            <h3 className="font-semibold text-lg">{reservation.wish.title}</h3>
+            <h3 className="text-lg font-semibold">{reservation.wish.title}</h3>
             <p className="text-sm text-muted-foreground">
               Reserved {formatDistanceToNow(reservation.reservedAt, { addSuffix: true })}
             </p>
@@ -72,7 +74,7 @@ export function ReservationCard({ reservation }: ReservationCardProps) {
                 href={reservation.wish.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-primary hover:underline mt-2 inline-block"
+                className="mt-2 inline-block text-sm text-primary hover:underline"
               >
                 View product →
               </a>

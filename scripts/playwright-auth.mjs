@@ -26,7 +26,7 @@ const SERVER_READY_TIMEOUT = 30000; // 30 seconds
 const MAGIC_LINK_REGEX = /http:\/\/localhost:3000\/api\/auth\/callback\/email[^\s\n]*/;
 
 // Helper functions
-const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function waitForServer(url, timeout) {
   const start = Date.now();
@@ -111,7 +111,7 @@ function checkPortInUse(port) {
     const serverPromise = new Promise((resolve, reject) => {
       serverProcess = spawn('pnpm', ['dev'], {
         stdio: ['ignore', 'pipe', 'pipe'],
-        env: process.env
+        env: process.env,
       });
 
       // Monitor server logs for magic link
@@ -181,7 +181,7 @@ function checkPortInUse(port) {
 
       console.log('✅ Browser launched successfully (using temporary profile)');
     } catch (error) {
-      if (error.message.includes('Executable doesn\'t exist')) {
+      if (error.message.includes("Executable doesn't exist")) {
         console.error('');
         console.error('❌ Chromium not installed');
         console.error('');
@@ -230,8 +230,10 @@ function checkPortInUse(port) {
     magicLink = await Promise.race([
       serverPromise,
       sleep(TIMEOUT_MS).then(() =>
-        Promise.reject(new Error('Magic link not found in server logs. Did you click "Send Magic Link"?'))
-      )
+        Promise.reject(
+          new Error('Magic link not found in server logs. Did you click "Send Magic Link"?')
+        )
+      ),
     ]);
 
     // Give user a moment to see the confirmation
@@ -256,16 +258,15 @@ function checkPortInUse(port) {
     console.log('Verifying session cookie...');
 
     const cookies = await browser.cookies();
-    const sessionCookie = cookies.find(c =>
-      c.name === 'next-auth.session-token' ||
-      c.name === '__Secure-next-auth.session-token'
+    const sessionCookie = cookies.find(
+      (c) => c.name === 'next-auth.session-token' || c.name === '__Secure-next-auth.session-token'
     );
 
     if (!sessionCookie) {
       console.error('');
       console.error('❌ Session cookie not found');
       console.error('');
-      console.error('Available cookies:', cookies.map(c => c.name).join(', '));
+      console.error('Available cookies:', cookies.map((c) => c.name).join(', '));
       console.error('');
       throw new Error('Authentication may have failed - session cookie not created');
     }
@@ -301,7 +302,6 @@ function checkPortInUse(port) {
       await cp(PROFILE_DIR_TEMP, PROFILE_DIR_FINAL, { recursive: true });
       console.log('✅ Profile copied successfully');
       console.log('');
-
     } catch (copyError) {
       console.error('');
       console.error('⚠️  Warning: Could not copy profile');
@@ -329,7 +329,6 @@ function checkPortInUse(port) {
     console.log('Note: The dev server has been stopped.');
     console.log('      Restart it with: pnpm dev');
     console.log('');
-
   } catch (error) {
     console.error('');
     console.error('='.repeat(50));
@@ -362,7 +361,6 @@ function checkPortInUse(port) {
     console.error('');
 
     process.exit(1);
-
   } finally {
     // Phase 8: Cleanup
     console.log('Cleaning up...');

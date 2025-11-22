@@ -3,7 +3,13 @@
 import { useState, useEffect } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
@@ -54,13 +60,13 @@ export function ReserveDialog({ wish, open, onOpenChange }: ReserveDialogProps) 
       toast({
         title: 'Item reserved!',
         description: 'Check "My Reservations" to see all your items.',
-        action: <Button onClick={() => router.push('/my-reservations')}>View</Button>
+        action: <Button onClick={() => router.push('/my-reservations')}>View</Button>,
       });
     } catch {
       toast({
         title: 'Failed to reserve',
         description: 'Please try again.',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
@@ -75,7 +81,7 @@ export function ReserveDialog({ wish, open, onOpenChange }: ReserveDialogProps) 
     const result = await signIn('email', {
       email,
       callbackUrl,
-      redirect: false // Keeps user on page, shows success message
+      redirect: false, // Keeps user on page, shows success message
     });
 
     setIsLoading(false);
@@ -86,7 +92,7 @@ export function ReserveDialog({ wish, open, onOpenChange }: ReserveDialogProps) 
       toast({
         title: 'Failed to send magic link',
         description: 'Please try again.',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
@@ -102,17 +108,13 @@ export function ReserveDialog({ wish, open, onOpenChange }: ReserveDialogProps) 
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Sign in to reserve</DialogTitle>
-          <DialogDescription>
-            Sign in to reserve "{wish.title}"
-          </DialogDescription>
+          <DialogDescription>Sign in to reserve "{wish.title}"</DialogDescription>
         </DialogHeader>
 
         {emailSent ? (
-          <div className="text-center py-6 space-y-2">
+          <div className="space-y-2 py-6 text-center">
             <p className="font-medium">Check your email!</p>
-            <p className="text-sm text-muted-foreground">
-              We sent a login link to {email}
-            </p>
+            <p className="text-sm text-muted-foreground">We sent a login link to {email}</p>
             <p className="text-sm text-muted-foreground">
               After signing in, you'll see this reservation in "My Reservations"
             </p>
@@ -143,11 +145,7 @@ export function ReserveDialog({ wish, open, onOpenChange }: ReserveDialogProps) 
                 )}
 
                 {availableProviders.apple && (
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => handleOAuth('apple')}
-                  >
+                  <Button variant="outline" className="w-full" onClick={() => handleOAuth('apple')}>
                     Continue with Apple
                   </Button>
                 )}

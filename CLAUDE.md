@@ -448,6 +448,7 @@ The Playwright MCP is configured to maintain persistent authentication across se
 ### First-Time Setup
 
 1. **Run the authentication command**:
+
    ```
    /playwright-auth
    ```
@@ -473,21 +474,25 @@ The Playwright MCP is configured to maintain persistent authentication across se
 After setup, Playwright MCP commands automatically use your authenticated session:
 
 **Navigate to authenticated pages**:
+
 ```
 mcp__playwright__browser_navigate {"url": "http://localhost:3000/lists"}
 ```
 
 **Take screenshot of user dashboard**:
+
 ```
 mcp__playwright__browser_take_screenshot {"filename": "dashboard.png"}
 ```
 
 **Interact with authenticated elements**:
+
 ```
 mcp__playwright__browser_click {"element": "Create New List", "ref": "..."}
 ```
 
 **Get page snapshot**:
+
 ```
 mcp__playwright__browser_snapshot
 ```
@@ -512,25 +517,31 @@ The `/playwright-auth` command:
 ### Troubleshooting
 
 **Session Expired**:
+
 ```
 /playwright-auth
 ```
+
 Re-run the command to refresh authentication.
 
 **Profile Corruption**:
+
 ```bash
 rm -rf .playwright-profile/
 ```
+
 Then run `/playwright-auth` to create fresh profile.
 
 **Manual Mode**:
 If automatic magic link detection fails:
+
 1. Check dev server console for magic link
 2. Copy the full URL: `http://localhost:3000/api/auth/callback/email?token=...&email=...`
 3. Paste when prompted by the command
 
 **Dev Server Not Running**:
 The command will start it automatically. If it fails:
+
 ```bash
 # Check port 3000 availability
 lsof -i :3000
@@ -543,6 +554,7 @@ pnpm dev
 Verify you completed the full login flow in the browser. You should see a success page after clicking the magic link.
 
 **MCP Not Using Profile**:
+
 - Verify `.mcp.json` contains playwright configuration
 - Check that `.playwright-profile/` directory exists
 - Restart Claude Code after configuration changes
@@ -559,28 +571,24 @@ Verify you completed the full login flow in the browser. You should see a succes
 For different environments (dev, staging, production):
 
 **Update `.mcp.json`**:
+
 ```json
 {
   "mcpServers": {
     "playwright-dev": {
       "command": "npx",
-      "args": [
-        "@playwright/mcp@latest",
-        "--user-data-dir=.playwright-profile-dev"
-      ]
+      "args": ["@playwright/mcp@latest", "--user-data-dir=.playwright-profile-dev"]
     },
     "playwright-staging": {
       "command": "npx",
-      "args": [
-        "@playwright/mcp@latest",
-        "--user-data-dir=.playwright-profile-staging"
-      ]
+      "args": ["@playwright/mcp@latest", "--user-data-dir=.playwright-profile-staging"]
     }
   }
 }
 ```
 
 **Create profiles manually**:
+
 ```bash
 npx playwright open http://staging.example.com/auth/login --user-data-dir=.playwright-profile-staging
 ```

@@ -11,12 +11,14 @@ This guide covers migrating from the old anonymous reservation system to the new
 ### Schema Changes
 
 **Removed Fields:**
+
 - `reserverEmail` (String?)
 - `reserverName` (String?)
 - `accessToken` (String?)
 - `reminderSentAt` (DateTime?)
 
 **Added Fields:**
+
 - `userId` (String, required)
 - `user` (relation to User model)
 
@@ -172,6 +174,7 @@ docker compose restart
 ## Support
 
 If migration fails:
+
 1. Check Docker logs: `docker compose logs app`
 2. Verify DATABASE_URL is correct
 3. Check Prisma schema matches source code

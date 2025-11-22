@@ -13,6 +13,7 @@ The Magic Link Reservation System from `@docs/RESERVATION_SYSTEM_PLAN.md` has be
 ## Phases Completed
 
 ### ✅ PHASE 0: Prerequisites & Environment Setup
+
 - Verified shadcn/ui components (dialog, button, input, separator)
 - Confirmed database accessibility
 - Verified EmailProvider in `src/lib/auth.ts`
@@ -22,6 +23,7 @@ The Magic Link Reservation System from `@docs/RESERVATION_SYSTEM_PLAN.md` has be
 ---
 
 ### ✅ PHASE 1: Magic Link Login
+
 - EmailProvider already configured in NextAuth
 - Magic link authentication flow working
 - SMTP configuration verified
@@ -31,15 +33,18 @@ The Magic Link Reservation System from `@docs/RESERVATION_SYSTEM_PLAN.md` has be
 ---
 
 ### ✅ PHASE 2: Database Schema Updates
+
 **Commit**: `4eadb6e`
 
 **Changes**:
+
 - Added `reservations` relation to User model
 - Updated Reservation model with required `userId` field
 - Removed anonymous fields: `reserverEmail`, `reserverName`, `accessToken`, `reminderSentAt`
 - Added proper foreign key constraints and indexes
 
 **Files Modified**:
+
 - `prisma/schema.prisma`
 
 **Migration Status**: Schema pushed to development database (use `docs/RESERVATION_MIGRATION_GUIDE.md` for production)
@@ -47,13 +52,16 @@ The Magic Link Reservation System from `@docs/RESERVATION_SYSTEM_PLAN.md` has be
 ---
 
 ### ✅ PHASE 3: Email Confirmation Template
+
 **Commit**: `2938f3e`
 
 **Created**:
+
 - `src/lib/email/templates/reservation-confirmation.ts` - Plain text template
 - `src/lib/email/index.ts` - Added `sendReservationConfirmation()` helper
 
 **Features**:
+
 - Plain text format (per user preference)
 - Includes product URL if available
 - Links to /my-reservations page
@@ -62,9 +70,11 @@ The Magic Link Reservation System from `@docs/RESERVATION_SYSTEM_PLAN.md` has be
 ---
 
 ### ✅ PHASE 4: Protected Reservation Endpoint
+
 **Commit**: `0f3bdc0`
 
 **Changes**:
+
 - Updated `POST /api/reservations` with authentication requirement
 - Added rate limiting: 10 reservations/hour per user per list
 - Fetches wish with owner details for confirmation email
@@ -72,6 +82,7 @@ The Magic Link Reservation System from `@docs/RESERVATION_SYSTEM_PLAN.md` has be
 - Uses `session.user.id` for reservation ownership
 
 **Files Modified**:
+
 - `src/app/api/reservations/route.ts`
 - `src/lib/rate-limiter.ts`
 
@@ -80,12 +91,15 @@ The Magic Link Reservation System from `@docs/RESERVATION_SYSTEM_PLAN.md` has be
 ---
 
 ### ✅ PHASE 5: Hybrid Auth Reserve Dialog
+
 **Commits**: `2938f3e`, `1a3ddc5`
 
 **Created**:
+
 - `src/components/reservations/reserve-dialog.tsx`
 
 **Features**:
+
 - **Magic Link Flow**: `redirect: false` (stays on page, shows "Check your email")
 - **OAuth Flow**: Full page redirect (OAuth 2.0 spec requirement)
 - **Logged-in Users**: Auto-detects session, reserves instantly
@@ -93,19 +107,23 @@ The Magic Link Reservation System from `@docs/RESERVATION_SYSTEM_PLAN.md` has be
 - **Environment-Aware**: Auto-detects configured OAuth providers
 
 **Files Modified**:
+
 - `src/components/wishes/wish-card-unified.tsx` - Integrated dialog
 - Added `data-testid="reserve-{wishId}"` to Reserve buttons
 
 ---
 
 ### ✅ PHASE 6: My Reservations Page
+
 **Commit**: `441851c`
 
 **Created**:
+
 - `src/app/my-reservations/page.tsx` (Server Component)
 - `src/components/my-reservations/BrowseListsButton.tsx` (Client Component)
 
 **Features**:
+
 - Authentication check with redirect to signin
 - Fetches reservations with wish details and owner information
 - Groups reservations by list owner (reduce pattern)
@@ -115,13 +133,16 @@ The Magic Link Reservation System from `@docs/RESERVATION_SYSTEM_PLAN.md` has be
 ---
 
 ### ✅ PHASE 7: Reservation Card & DELETE Endpoint
+
 **Commits**: `9834010`, `c6a73c1`, `ab85c02`
 
 **Created**:
+
 - `src/components/reservations/reservation-card.tsx`
 - Updated `src/app/api/reservations/[reservationId]/route.ts` (resolved naming conflict)
 
 **Features**:
+
 - Cancel button with DELETE mutation
 - Uses `router.refresh()` for Server Component data refresh (not React Query)
 - 5-second undo window with toast notification
@@ -134,9 +155,11 @@ The Magic Link Reservation System from `@docs/RESERVATION_SYSTEM_PLAN.md` has be
 ---
 
 ### ✅ PHASE 8: Navigation Link
+
 **Commit**: `60e3d9b`
 
 **Changes**:
+
 - Added "My Reservations" link to `src/components/navigation/main-nav.tsx`
 - Position: Between "My Lists" and "Groups"
 - Icon: Bookmark
@@ -145,13 +168,16 @@ The Magic Link Reservation System from `@docs/RESERVATION_SYSTEM_PLAN.md` has be
 ---
 
 ### ✅ PHASE 9: E2E Tests
+
 **Commits**: `530b56b`, `fb9710c`
 
 **Created**:
+
 - `tests/e2e/reservations/magic-link-flow.spec.ts` (5 test scenarios)
 - `tests/e2e/helpers/reservation.helper.ts` (4 helper functions)
 
 **Test Coverage**:
+
 - New user → magic link → dashboard flow
 - Logged-in user → instant reservation
 - Cancel reservation with undo
@@ -165,20 +191,24 @@ The Magic Link Reservation System from `@docs/RESERVATION_SYSTEM_PLAN.md` has be
 ## Files Created (14 new files)
 
 ### Backend/API
+
 1. `src/lib/email/templates/reservation-confirmation.ts`
 2. `src/app/api/reservations/[reservationId]/route.ts` (updated from old version)
 
-### Frontend Components  
+### Frontend Components
+
 3. `src/components/reservations/reserve-dialog.tsx`
 4. `src/app/my-reservations/page.tsx`
 5. `src/components/my-reservations/BrowseListsButton.tsx`
 6. `src/components/reservations/reservation-card.tsx`
 
 ### Testing
+
 7. `tests/e2e/reservations/magic-link-flow.spec.ts`
 8. `tests/e2e/helpers/reservation.helper.ts`
 
 ### Documentation
+
 9. `docs/RESERVATION_MIGRATION_GUIDE.md`
 10. `docs/RESERVATION_IMPLEMENTATION_STATUS.md` (this file)
 
@@ -218,41 +248,49 @@ The Magic Link Reservation System from `@docs/RESERVATION_SYSTEM_PLAN.md` has be
 ## Key Features Delivered
 
 ### 🔐 Authentication-Required Reservations
+
 - Users must be logged in to reserve items
 - No anonymous reservations
 - Direct user ownership via `userId` foreign key
 
 ### 📧 Magic Link Primary Authentication
+
 - Email-based passwordless login
 - OAuth available as alternative (Google, Facebook, Apple)
 - Hybrid dialog approach (best UX for each method)
 
 ### ⚡ Instant Reservation for Logged-In Users
+
 - Auto-detects session
 - Reserves immediately without dialog
 - Success toast with "View My Reservations" link
 
 ### 📱 Mobile-First Design
+
 - Works on 375px+ viewports (iPhone SE)
 - Touch-friendly buttons (44px minimum)
 - Responsive navigation
 
 ### 🔒 Rate Limiting
+
 - 10 reservations/hour per user per list
 - Prevents abuse and spam
 - Per-list granularity
 
 ### ✉️ Email Confirmations
+
 - Plain text format
 - Includes product URL if available
 - Links to /my-reservations page
 
 ### 📊 My Reservations Page
+
 - Server Component for performance
 - Groups by list owner
 - One-click cancellation with undo
 
 ### 🔄 Cancel with Undo
+
 - 5-second undo window
 - Uses `router.refresh()` for Server Components
 - Toast notifications
@@ -266,11 +304,13 @@ The Magic Link Reservation System from `@docs/RESERVATION_SYSTEM_PLAN.md` has be
 **Migration Guide**: See `docs/RESERVATION_MIGRATION_GUIDE.md`
 
 **Breaking Changes**:
+
 - Old reservations will be deleted (incompatible schema)
 - `userId` now required (no anonymous reservations)
 - Removed `reserverEmail`, `reserverName`, `accessToken` fields
 
 **Docker Deployment**:
+
 - No changes needed to `docker-entrypoint.sh` (auto-migrates)
 - Schema applied via `pnpm prisma db push` on container start
 
@@ -279,15 +319,18 @@ The Magic Link Reservation System from `@docs/RESERVATION_SYSTEM_PLAN.md` has be
 ## Testing Status
 
 ### ✅ Unit Tests
+
 Not required by plan - core logic is in service layer (already tested)
 
 ### ⚠️ E2E Tests
+
 - **Created**: 5 comprehensive test scenarios
 - **Status**: Schema fixed, Reserve button data-testid fixed
 - **Remaining**: Some UI integration issues (non-blocking)
 - **Run**: `pnpm test:e2e tests/e2e/reservations/magic-link-flow.spec.ts`
 
 ### Manual Testing Checklist
+
 - [ ] User can reserve a wish from public list
 - [ ] Magic link authentication works
 - [ ] OAuth authentication works (if configured)
@@ -306,6 +349,7 @@ Not required by plan - core logic is in service layer (already tested)
 ### Immediate (Pre-Deployment)
 
 1. **Backup Production Database**
+
    ```bash
    cp data/gthanks.db data/gthanks-backup-$(date +%Y%m%d).db
    ```
@@ -325,6 +369,7 @@ Not required by plan - core logic is in service layer (already tested)
 ### Deployment
 
 1. **Deploy to Production** (Docker)
+
    ```bash
    git push origin main
    docker compose build
@@ -360,16 +405,19 @@ Not required by plan - core logic is in service layer (already tested)
 ## Known Issues & Limitations
 
 ### E2E Tests
+
 - Tests can find Reserve button (data-testid added)
 - Some visibility/timing issues in test scenarios
 - Non-blocking - core functionality works
 
 ### Migration
+
 - **Data Loss**: Existing reservations will be deleted
 - No migration path for anonymous reservations
 - Users must re-reserve items after deployment
 
 ### Rate Limiting
+
 - Currently in-memory (single server only)
 - For multi-instance deployments, use Redis/Valkey (see docs/RATE_LIMITING.md)
 
@@ -378,6 +426,7 @@ Not required by plan - core logic is in service layer (already tested)
 ## Success Metrics (From Plan)
 
 **Target**:
+
 - Reservation completion rate: >90% (after login)
 - Magic link delivery: >95% (no bounces)
 - Login success rate: >95% (magic link clicks work)
@@ -391,16 +440,18 @@ Not required by plan - core logic is in service layer (already tested)
 ## Architecture Benefits
 
 ### vs Anonymous Reservations (Old System)
+
 - ✅ No shadow accounts
 - ✅ No verification codes
 - ✅ No account cleanup cron
-- ✅ No dual access patterns  
+- ✅ No dual access patterns
 - ✅ Standard NextAuth flow
 - ✅ Simpler codebase
 - ✅ Fewer edge cases
 - ✅ Better security (no tokens in URLs)
 
 ### Hybrid Dialog UX
+
 - ✅ Magic link users stay on page (best UX)
 - ✅ OAuth users get required full redirect (OAuth spec)
 - ✅ Consistent with industry patterns (Medium, Notion, Linear)

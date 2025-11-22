@@ -20,28 +20,33 @@ export default async function MyReservationsPage() {
       wish: {
         include: {
           owner: {
-            select: { name: true, email: true }
-          }
-        }
-      }
+            select: { name: true, email: true },
+          },
+        },
+      },
     },
-    orderBy: { reservedAt: 'desc' }
+    orderBy: { reservedAt: 'desc' },
   });
 
   // Group by list owner
-  const groupedByOwner = reservations.reduce((acc, res) => {
-    const ownerName = res.wish.owner.name || res.wish.owner.email;
-    if (!acc[ownerName]) {acc[ownerName] = [];}
-    acc[ownerName].push(res);
-    return acc;
-  }, {} as Record<string, typeof reservations>);
+  const groupedByOwner = reservations.reduce(
+    (acc, res) => {
+      const ownerName = res.wish.owner.name || res.wish.owner.email;
+      if (!acc[ownerName]) {
+        acc[ownerName] = [];
+      }
+      acc[ownerName].push(res);
+      return acc;
+    },
+    {} as Record<string, typeof reservations>
+  );
 
   return (
     <div className="container max-w-4xl py-8">
-      <h1 className="text-3xl font-bold mb-6">My Reservations</h1>
+      <h1 className="mb-6 text-3xl font-bold">My Reservations</h1>
 
       {reservations.length === 0 ? (
-        <div className="text-center py-12">
+        <div className="py-12 text-center">
           <p className="text-muted-foreground">You haven't reserved any items yet.</p>
           <BrowseListsButton />
         </div>
@@ -49,16 +54,13 @@ export default async function MyReservationsPage() {
         <>
           {Object.entries(groupedByOwner).map(([ownerName, items]) => (
             <div key={ownerName} className="mb-8">
-              <h2 className="text-xl font-semibold mb-4">
+              <h2 className="mb-4 text-xl font-semibold">
                 For {ownerName} ({items.length} {items.length === 1 ? 'item' : 'items'})
               </h2>
 
               <div className="space-y-3">
                 {items.map((reservation) => (
-                  <ReservationCard
-                    key={reservation.id}
-                    reservation={reservation}
-                  />
+                  <ReservationCard key={reservation.id} reservation={reservation} />
                 ))}
               </div>
             </div>
