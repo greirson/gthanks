@@ -33,6 +33,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     }
 
     // Build the file path using STORAGE_PATH env var if set
+    // Must match the path used by image-processor.ts
     const uploadsDir = process.env.STORAGE_PATH || path.join(process.cwd(), 'uploads');
     const filePath = path.join(uploadsDir, filename);
 

@@ -1,191 +1,301 @@
-diff --git a/.gitignore b/.gitignore
-index 97ead52..431eb3f 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -8,6 +8,7 @@ node_modules/
- out/
- build/
- dist/
-+data/
+=== ADMIN LOGIN MESSAGE FEATURE - COMPLETE CHANGESET ===
+
+=== Modified Files ===
+
+--- a/README.md
++++ b/README.md
+@@ -2,6 +2,17 @@
  
- # Environment variables
- .env
-diff --git a/Dockerfile b/Dockerfile
-index ae3658a..c53be6e 100644
---- a/Dockerfile
-+++ b/Dockerfile
-@@ -96,8 +96,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
- ENV HOME=/app
- ENV npm_config_cache=/tmp/.npm
+ Simple family wishlist coordination to prevent duplicate gifts.
  
--# Create data directory for SQLite (if used)
--RUN mkdir -p /app/data && chown nextjs:nodejs /app/data
-+# Create data directory for SQLite (if used) and uploads directory
-+RUN mkdir -p /app/data /app/uploads && chown nextjs:nodejs /app/data /app/uploads
++## ⚠️ ACTIVE DEVELOPMENT WARNING
++
++**This project is under very active development. Database schema changes may occur frequently and could potentially destroy or corrupt your wishes and lists.**
++
++**DO NOT use gthanks as your only storage solution for important wishlists.**
++
++**Recommendations:**
++- Keep external backups of critical wishlist data
++- Expect breaking changes during development
++- Use at your own risk until stable release (v1.0)
++
+ ## Features
  
- # Expose port
- EXPOSE 3000
-diff --git a/scripts/ensure-db.js b/scripts/ensure-db.js
-index f536e40..e050be7 100644
---- a/scripts/ensure-db.js
-+++ b/scripts/ensure-db.js
-@@ -16,10 +16,28 @@ try {
-   // dotenv might not be available in all environments
+ - Magic link authentication with OAuth support (Google, Facebook, Apple, OIDC)
+
+--- a/package.json
++++ b/package.json
+@@ -94,6 +94,7 @@
+     "react-easy-crop": "^5.5.3",
+     "react-hook-form": "^7.58.0",
+     "resend": "^6.0.1",
++    "sanitize-html": "^2.17.0",
+     "sharp": "^0.34.2",
+     "simple-icons": "^15.11.0",
+     "sonner": "^1.5.0",
+
+--- a/prisma/schema.prisma
++++ b/prisma/schema.prisma
+@@ -364,3 +364,14 @@ model UserPreference {
+ 
+   @@index([userId])
+ }
++
++model SiteSettings {
++  id                    String    @id @default("global")
++  loginMessage          String?
++  loginMessageUpdatedAt DateTime?
++  loginMessageUpdatedBy String?
++  createdAt             DateTime  @default(now())
++  updatedAt             DateTime  @updatedAt
++
++  @@map("site_settings")
++}
+
+--- a/src/lib/services/permission-service.ts
++++ b/src/lib/services/permission-service.ts
+@@ -6,7 +6,8 @@ export type Resource =
+   | { type: 'list'; id: string }
+   | { type: 'wish'; id: string }
+   | { type: 'group'; id: string }
+-  | { type: 'reservation'; id: string };
++  | { type: 'reservation'; id: string }
++  | { type: 'site-settings' };
+
+--- a/src/app/auth/login/page.tsx
++++ b/src/app/auth/login/page.tsx
+@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
+ 
+ import { LoginForm } from '@/components/auth/login-form';
+ import { authOptions } from '@/lib/auth';
++import { settingsService } from '@/lib/services/settings-service';
+ 
+ export default async function LoginPage() {
+   const session = await getServerSession(authOptions);
+@@ -29,5 +30,14 @@ export default async function LoginPage() {
+     displayName: process.env.OAUTH_NAME || 'OAuth Provider',
+   };
+ 
+-  return <LoginForm availableProviders={availableProviders} oauthConfig={oauthConfig} />;
++  // Fetch login message (Server Component, cached)
++  const loginMessage = await settingsService.getLoginMessage();
++
++  return (
++    <LoginForm
++      availableProviders={availableProviders}
++      oauthConfig={oauthConfig}
++      loginMessage={loginMessage}
++    />
++  );
+ }
+
+--- a/src/components/admin/admin-navigation.tsx
++++ b/src/components/admin/admin-navigation.tsx
+@@ -1,6 +1,6 @@
+ 'use client';
+ 
+-import { Home, Users } from 'lucide-react';
++import { Home, Users, Settings } from 'lucide-react';
+ import Link from 'next/link';
+ import { usePathname } from 'next/navigation';
+ 
+@@ -20,6 +20,7 @@ export function AdminNavigation({ admin }: AdminNavigationProps) {
+   const navigation = [
+     { name: 'Dashboard', href: '/admin', icon: Home },
+     { name: 'Users', href: '/admin/users', icon: Users },
++    { name: 'Settings', href: '/admin/settings', icon: Settings },
+   ];
+
+--- a/src/components/auth/login-form.tsx
++++ b/src/components/auth/login-form.tsx
+@@ -28,9 +28,10 @@ interface OAuthConfig {
+ interface LoginFormProps {
+   availableProviders: OAuthProvider;
+   oauthConfig: OAuthConfig;
++  loginMessage?: string | null;
  }
  
--const DATABASE_URL = process.env.DATABASE_URL || 'file:./prisma/dev2.db';
-+/**
-+ * Resolves DATABASE_URL relative paths to absolute paths from project root.
-+ * This ensures consistent behavior with the Next.js runtime.
-+ */
-+function resolveDatabaseUrl(url) {
-+  if (!url) return url;
-+
-+  // Check if it's a SQLite file URL with a relative path
-+  if (url.startsWith('file:./') || url.startsWith('file:../')) {
-+    const relativePath = url.replace('file:', '');
-+    const absolutePath = path.resolve(process.cwd(), relativePath);
-+    return `file:${absolutePath}`;
-+  }
-+
-+  return url;
-+}
-+
-+const DATABASE_URL = resolveDatabaseUrl(process.env.DATABASE_URL || 'file:./data/gthanks.db');
+-export function LoginForm({ availableProviders, oauthConfig }: LoginFormProps) {
++export function LoginForm({ availableProviders, oauthConfig, loginMessage }: LoginFormProps) {
+   const [email, setEmail] = useState('');
+   const [isLoading, setIsLoading] = useState(false);
+   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
+@@ -110,7 +111,15 @@ export function LoginForm({ availableProviders, oauthConfig }: LoginFormProps) {
+   const hasAnyOAuthProvider = Object.values(availableProviders).some(Boolean);
  
- async function ensureDatabase() {
-   console.log('[DB] Checking database initialization...');
-+  console.log('[DB] Using database:', DATABASE_URL);
- 
-   // For SQLite, ensure the directory exists
-   if (DATABASE_URL.startsWith('file:')) {
-diff --git a/src/app/api/images/[filename]/route.ts b/src/app/api/images/[filename]/route.ts
-index e1d0815..bed19e7 100644
---- a/src/app/api/images/[filename]/route.ts
-+++ b/src/app/api/images/[filename]/route.ts
-@@ -33,7 +33,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
-     }
- 
-     // Build the file path using STORAGE_PATH env var if set
--    const uploadsDir = process.env.STORAGE_PATH || path.join(process.cwd(), 'public', 'uploads', 'items');
-+    const uploadsDir = process.env.STORAGE_PATH || path.join(process.cwd(), 'uploads');
-     const filePath = path.join(uploadsDir, filename);
- 
-     // Read the file directly (no TOCTOU vulnerability)
-diff --git a/src/lib/db-init.ts b/src/lib/db-init.ts
-index bdd1fe8..e7d32b4 100644
---- a/src/lib/db-init.ts
-+++ b/src/lib/db-init.ts
-@@ -3,6 +3,23 @@ import * as fs from 'fs';
- import * as path from 'path';
- import { PrismaClient } from '@prisma/client';
- 
-+/**
-+ * Resolves DATABASE_URL relative paths to absolute paths from project root.
-+ * This ensures consistent behavior regardless of where Prisma is invoked from.
-+ */
-+function resolveDatabaseUrl(url: string | undefined): string | undefined {
-+  if (!url) {return url;}
-+
-+  // Check if it's a SQLite file URL with a relative path
-+  if (url.startsWith('file:./') || url.startsWith('file:../')) {
-+    const relativePath = url.replace('file:', '');
-+    const absolutePath = path.resolve(process.cwd(), relativePath);
-+    return `file:${absolutePath}`;
-+  }
-+
-+  return url;
-+}
-+
- /**
-  * Database initialization status tracking
-  */
-@@ -84,7 +101,13 @@ async function performDatabaseInitialization(): Promise<void> {
-   try {
-     // Check if database tables exist by trying to query the User table
-     // Use a temporary PrismaClient to avoid circular dependency
--    const tempDb = new PrismaClient();
-+    const tempDb = new PrismaClient({
-+      datasources: {
-+        db: {
-+          url: resolveDatabaseUrl(databaseUrl),
-+        },
-+      },
-+    });
-     try {
-       await tempDb.user.findFirst();
-       // Database tables already exist
-@@ -152,7 +175,13 @@ async function performDatabaseInitialization(): Promise<void> {
-       // Verify initialization was successful
-       try {
-         // Create a temporary client for verification
--        const verifyDb = new PrismaClient();
-+        const verifyDb = new PrismaClient({
-+          datasources: {
-+            db: {
-+              url: resolveDatabaseUrl(databaseUrl),
-+            },
-+          },
-+        });
-         try {
-           await verifyDb.user.findFirst();
-           // Database verification successful
-@@ -178,7 +207,14 @@ async function performDatabaseInitialization(): Promise<void> {
- export async function isDatabaseReady(): Promise<boolean> {
-   try {
-     // Use a temporary PrismaClient to avoid circular dependency
--    const tempDb = new PrismaClient();
-+    const databaseUrl = process.env.DATABASE_URL || 'file:./data/gthanks.db';
-+    const tempDb = new PrismaClient({
-+      datasources: {
-+        db: {
-+          url: resolveDatabaseUrl(databaseUrl),
-+        },
-+      },
-+    });
-     try {
-       await tempDb.user.findFirst();
-       return true;
-diff --git a/src/lib/db.ts b/src/lib/db.ts
-index 05ef57b..7acb791 100644
---- a/src/lib/db.ts
-+++ b/src/lib/db.ts
-@@ -1,11 +1,29 @@
- import { PrismaClient } from '@prisma/client';
- import { ensureDatabaseInitialized } from './db-init';
-+import path from 'path';
- 
- const globalForPrisma = globalThis as unknown as {
-   prisma: PrismaClient | undefined;
-   dbInitPromise: Promise<void> | undefined;
- };
- 
-+/**
-+ * Resolves DATABASE_URL relative paths to absolute paths from project root.
-+ * This ensures consistent behavior regardless of where Prisma is invoked from.
-+ */
-+function resolveDatabaseUrl(url: string | undefined): string | undefined {
-+  if (!url) {return url;}
-+
-+  // Check if it's a SQLite file URL with a relative path
-+  if (url.startsWith('file:./') || url.startsWith('file:../')) {
-+    const relativePath = url.replace('file:', '');
-+    const absolutePath = path.resolve(process.cwd(), relativePath);
-+    return `file:${absolutePath}`;
-+  }
-+
-+  return url;
-+}
-+
- // Initialize database on first import
- if (!globalForPrisma.dbInitPromise && typeof window === 'undefined') {
-   globalForPrisma.dbInitPromise = ensureDatabaseInitialized().catch((error) => {
-@@ -19,7 +37,7 @@ export const db =
-   new PrismaClient({
-     datasources: {
-       db: {
--        url: process.env.DATABASE_URL,
-+        url: resolveDatabaseUrl(process.env.DATABASE_URL),
-       },
-     },
-     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+   return (
+-    <div className="flex min-h-screen items-center justify-center bg-background">
++    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
++      {loginMessage && (
++        <div className="mb-6 w-full max-w-md rounded-lg border-l-4 border-blue-500 bg-blue-50 p-4 dark:bg-blue-950">
++          <div
++            className="prose prose-sm max-w-none dark:prose-invert"
++            dangerouslySetInnerHTML={{ __html: loginMessage }}
++          />
++        </div>
++      )}
+       <Card className="w-full max-w-md">
+         <CardTitle as="h1">Sign in to gthanks</CardTitle>
+
+
+=== New Files ===
+
++++ b/src/lib/services/settings-service.ts (NEW FILE)
+import { db } from '@/lib/db';
+import { sanitizeLoginMessage } from '@/lib/sanitize-html';
+import { permissionService } from './permission-service';
+import { ForbiddenError } from '@/lib/errors';
+
+/**
+ * Site Settings Service
+ *
+ * Manages global site settings including the login message banner.
+ *
+ * Security Features:
+ * - Uses permissionService for authorization (not direct admin checks)
+ * - Double sanitization: once before save, once on retrieval (defense in depth)
+ * - Audit logging for all updates (adminId + timestamp)
+ * - Singleton enforcement via upsert (id: 'global')
+ */
+export const settingsService = {
+  /**
+   * Get the current login message
+   *
+   * Returns the sanitized login message if it exists, otherwise null.
+   * Applies double sanitization for defense in depth.
+   *
+   * @returns Sanitized login message or null
+   */
+  async getLoginMessage(): Promise<string | null> {
+    const settings = await db.siteSettings.findUnique({
+      where: { id: 'global' },
+      select: { loginMessage: true },
+    });
+
+    // Double sanitization (defense in depth)
+    if (settings?.loginMessage) {
+      return sanitizeLoginMessage(settings.loginMessage);
+    }
+
+    return null;
+  },
+
+  /**
+   * Update the login message
+   *
+   * Requires admin permission via permissionService.
+   * Sanitizes message before saving to database.
+   * Logs audit trail with adminId and timestamp.
+   * Enforces singleton pattern via upsert.
+   *
+   * @param message - The new login message (HTML) or null to clear
+   * @param adminId - The admin user ID performing the update
+   * @throws ForbiddenError if user is not an admin
+   */
+  async updateLoginMessage(
+    message: string | null,
+    adminId: string
+  ): Promise<void> {
+    // Use permissionService for authorization (CRITICAL from Zen feedback)
+    const { allowed } = await permissionService.can(adminId, 'admin', {
+      type: 'site-settings',
+    });
+
+    if (!allowed) {
+      throw new ForbiddenError('Admin access required');
+    }
+
+    // Sanitize before saving (first layer of defense)
+    const sanitized = message ? sanitizeLoginMessage(message) : null;
+
+    // Upsert to enforce singleton (always id: 'global')
+    await db.siteSettings.upsert({
+      where: { id: 'global' },
+      update: {
+        loginMessage: sanitized,
+        loginMessageUpdatedAt: new Date(),
+        loginMessageUpdatedBy: adminId,
+      },
+      create: {
+        id: 'global',
+        loginMessage: sanitized,
+        loginMessageUpdatedAt: new Date(),
+        loginMessageUpdatedBy: adminId,
+      },
+    });
+
+    // Audit log (required by Zen feedback)
+    console.log('[AUDIT] Login message updated', {
+      adminId,
+      timestamp: new Date().toISOString(),
+      messageLength: sanitized?.length ?? 0,
+    });
+  },
+};
+
++++ b/src/app/api/admin/settings/route.ts (NEW FILE)
+import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
+import { settingsService } from '@/lib/services/settings-service';
+import { getCurrentUser } from '@/lib/auth-utils';
+
+export async function GET() {
+  const user = await getCurrentUser();
+  if (!user?.isAdmin) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  const message = await settingsService.getLoginMessage();
+  return NextResponse.json({ message });
+}
+
+export async function POST(req: Request) {
+  const user = await getCurrentUser();
+  if (!user?.isAdmin) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  const { message } = await req.json();
+
+  try {
+    await settingsService.updateLoginMessage(message, user.id);
+
+    // CRITICAL: Invalidate login page cache immediately
+    revalidatePath('/auth/login');
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to update' },
+      { status: 400 }
+    );
+  }
+}
+
++++ b/src/lib/sanitize-html.ts (NEW FILE - 163 lines)
+[See context - already read: XSS prevention, character limit enforcement, link security]
+
++++ b/src/components/admin/login-message-editor.tsx (NEW FILE - 224 lines)
+[See context - already read: Client component with editor, preview, validation]
+
++++ b/prisma/seed-settings.ts (NEW FILE)
+[See context - already read: Singleton initialization with upsert]
+
++++ b/src/app/(admin)/admin/settings/page.tsx (NEW FILE)
+[Server Component that fetches initial message and renders LoginMessageEditor]
+
++++ b/src/app/api/settings/login-message/route.ts (NEW FILE)
+[Public endpoint with 10-minute cache for fetching login message]
+
++++ b/tests/unit/lib/sanitize-html.test.ts (NEW FILE - 44 tests)
+[Comprehensive test suite covering XSS prevention, character limits, allowed tags]
+
++++ b/tests/unit/lib/services/settings-service.test.ts (NEW FILE - 11 tests)
+[Tests for getLoginMessage and updateLoginMessage including permission checks]
+
+=== Summary ===
+Modified: 8 files (README, package.json, schema, permission-service, login page, nav, login form, lockfile)
+New: 9 files (service, API routes, UI components, tests, seed script)
+Tests: 55 new tests (44 sanitization + 11 service), 423 total passing
+Security: HTML sanitization, permission checks, double sanitization, audit logging, cache invalidation
+

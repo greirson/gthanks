@@ -50,13 +50,24 @@ export function ManageGiftCardsDialog({
 }: ManageGiftCardsDialogProps) {
   const dialog = useManageGiftCardsDialog(initialCards);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const wasOpenRef = useRef(false);
 
-  // Reset cards when dialog opens
+  // Reset cards ONLY when dialog first opens (not on every parent re-render)
   useEffect(() => {
-    if (isOpen) {
+    // Only reset when transitioning from closed to open
+    if (isOpen && !wasOpenRef.current) {
       dialog.resetCards();
+
+      // Auto-add empty card if there are 0 cards (better UX)
+      if (initialCards.length === 0) {
+        dialog.addCard();
+      }
+
+      wasOpenRef.current = true;
+    } else if (!isOpen && wasOpenRef.current) {
+      wasOpenRef.current = false;
     }
-  }, [isOpen, dialog.resetCards]);
+  }, [isOpen, initialCards.length, dialog]); // dialog object includes all stable methods
 
   // Cleanup auto-save timeout on unmount
   useEffect(() => {
@@ -105,7 +116,7 @@ export function ManageGiftCardsDialog({
   const handleCancel = useCallback(() => {
     dialog.resetCards(); // Revert changes
     onClose();
-  }, [dialog.resetCards, onClose]);
+  }, [dialog, onClose]);
 
   return (
     <Dialog open={isOpen} onOpenChange={dialog.handleClose} {...dialogProps}>
@@ -128,7 +139,7 @@ export function ManageGiftCardsDialog({
         </div>
 
         {/* Footer */}
-        <DialogFooter className="flex flex-col items-stretch gap-3 pt-4 sm:flex-row sm:items-center">
+        <DialogFooter className="mb-0 flex flex-col items-stretch gap-3 pb-2 pt-4 sm:flex-row sm:items-center">
           <Button
             variant="outline"
             onClick={dialog.addCard}

@@ -1,98 +1,139 @@
 import { z } from 'zod';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
 
-import { getCurrentUser } from '@/lib/auth-utils';
-import { AppError } from '@/lib/errors';
-import { reservationService } from '@/lib/services/reservation-service';
-import { ReservationCreateSchema } from '@/lib/validators/reservation';
+import { AppError, NotFoundError, ForbiddenError, ValidationError } from '@/lib/errors';
 import { logger } from '@/lib/services/logger';
-import { rateLimiter, getClientIdentifier, getRateLimitHeaders } from '@/lib/rate-limiter';
+import { rateLimiter } from '@/lib/rate-limiter';
+import { reservationService } from '@/lib/services/reservation-service';
+// eslint-disable-next-line local-rules/no-direct-db-import -- Needed for rate limiting and email data
+import { db } from '@/lib/db';
+import { sendReservationConfirmation } from '@/lib/email';
+
+// Request body schema
+const createReservationSchema = z.object({
+  wishId: z.string(),
+});
+
+// Helper function to get list ID for rate limiting
+async function getListIdFromWish(wishId: string): Promise<string | null> {
+  const listWish = await db.listWish.findFirst({
+    where: { wishId },
+    select: { listId: true },
+  });
+  return listWish?.listId || null;
+}
 
 /**
  * Handles POST requests for creating new reservations
  *
- * @description Creates a new reservation for a wish, supports both authenticated and anonymous users with auto-population of user data
+ * @description Creates a new reservation for a wish. REQUIRES AUTHENTICATION.
  * @param {NextRequest} request - The incoming HTTP request object with reservation data in JSON body
  * @returns {Promise<NextResponse>} JSON response with created reservation data or error
  *
- * @throws {400} Bad Request - Invalid reservation data, validation errors, or wish already reserved
+ * @throws {401} Unauthorized - User must be logged in to reserve items
  * @throws {404} Not Found - Wish with specified ID does not exist
+ * @throws {429} Too Many Requests - Rate limit exceeded (10 reservations/hour per list)
  * @throws {500} Internal Server Error - Database or service errors
  *
  * @example
- * // Create reservation (authenticated user - email auto-populated)
+ * // Create reservation (authenticated user only)
  * POST /api/reservations
  * {
- *   "wishId": "wish456",
- *   "reserverName": "John Doe"
+ *   "wishId": "wish456"
  * }
  *
- * // Create reservation (anonymous user)
- * POST /api/reservations
- * {
- *   "wishId": "wish456",
- *   "reserverEmail": "john@example.com",
- *   "reserverName": "John Doe"
- * }
- *
- * @public Supports both authenticated and anonymous users for flexible gift coordination
- * @see {@link getCurrentUser} for authentication details
- * @see {@link ReservationCreateSchema} for request validation
- * @see {@link reservationService.createReservation} for business logic
+ * @protected Requires authentication - user must be logged in
+ * @see {@link getServerSession} for authentication details
+ * @see {@link sendReservationConfirmation} for email confirmation
  */
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    // REQUIRE AUTHENTICATION
+    const session = await getServerSession();
 
-    // Apply rate limit - use IP for anonymous, user ID for authenticated
-    const identifier = user ? user.id : getClientIdentifier(request);
-    const rateLimitResult = await rateLimiter.check('public-reservation', identifier);
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: 'You must be logged in to reserve items' },
+        { status: 401 }
+      );
+    }
+
+    const body: unknown = await request.json();
+    const parsed = createReservationSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request body', details: parsed.error.issues },
+        { status: 400 }
+      );
+    }
+
+    const { wishId } = parsed.data;
+
+    // Apply rate limiting first (per list, per user)
+    const listId = await getListIdFromWish(wishId);
+    const rateLimitIdentifier = `${session.user.id}:${listId}`;
+    const rateLimitResult = await rateLimiter.check(
+      'reservation-authenticated',
+      rateLimitIdentifier
+    );
 
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
         {
-          error: 'Too many requests. Please wait a moment and try again',
-          code: 'RATE_LIMIT_EXCEEDED',
+          error: 'Too many reservations. Please wait.',
           retryAfter: rateLimitResult.retryAfter,
         },
-        {
-          status: 429,
-          headers: getRateLimitHeaders(rateLimitResult),
-        }
+        { status: 429 }
       );
     }
 
-    const body = (await request.json()) as {
-      listId: string;
-      wishId: string;
-      reservedFor?: string;
-      message?: string;
-      metadata?: Record<string, unknown>;
-    };
+    // Create reservation using service layer (includes permission checks)
+    const reservation = await reservationService.createReservation({ wishId }, session.user.id);
 
-    // Validate input
-    const validatedData = ReservationCreateSchema.parse(body);
+    // Fetch wish details for confirmation email (simple read, acceptable per architecture guide)
+    const wish: {
+      id: string;
+      title: string;
+      url: string | null;
+      owner: { name: string | null; email: string | null };
+    } | null = await db.wish.findUnique({
+      where: { id: wishId },
+      include: {
+        owner: {
+          select: { name: true, email: true },
+        },
+      },
+    });
 
-    // If user is logged in, use their email
-    if (user && !validatedData.reserverEmail) {
-      validatedData.reserverEmail = user.email;
-      validatedData.reserverName = validatedData.reserverName || user.name;
+    // Send confirmation email if we have wish data
+    if (wish) {
+      await sendReservationConfirmation({
+        to: session.user.email || '',
+        userName: session.user.name || 'there',
+        wishTitle: wish.title,
+        ownerName: wish.owner.name || wish.owner.email || 'List Owner',
+        productUrl: wish.url ?? undefined,
+      });
     }
 
-    // Create reservation
-    const reservation = await reservationService.createReservation(validatedData, user?.id);
-
-    // Convert dates to ISO strings for JSON serialization
-    const serializedReservation = {
-      ...reservation,
-      reservedAt: reservation.reservedAt.toISOString(),
-      reminderSentAt: reservation.reminderSentAt?.toISOString() || null,
-    };
-
-    return NextResponse.json(serializedReservation, { status: 201 });
+    return NextResponse.json(reservation, { status: 201 });
   } catch (error) {
     logger.error({ error: error }, 'POST /api/reservations error');
+
+    if (error instanceof NotFoundError) {
+      return NextResponse.json({ error: error.message }, { status: 404 });
+    }
+
+    if (error instanceof ForbiddenError) {
+      return NextResponse.json({ error: error.message }, { status: 403 });
+    }
+
+    if (error instanceof ValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
 
     if (error instanceof z.ZodError) {
       const firstError = error.errors[0];

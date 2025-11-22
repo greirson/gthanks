@@ -1,6 +1,6 @@
 'use client';
 
-import { Gift, Heart, LogOut, Menu, Shield, User, Users, X } from 'lucide-react';
+import { Bookmark, Gift, Heart, LogOut, Menu, Shield, User, Users, X } from 'lucide-react';
 
 import { useState } from 'react';
 
@@ -74,6 +74,12 @@ export function MainNav({ user }: MainNavProps) {
       label: 'My Lists',
       icon: Gift,
       active: pathname.startsWith('/lists'),
+    },
+    {
+      href: '/my-reservations',
+      label: 'My Reservations',
+      icon: Bookmark,
+      active: pathname.startsWith('/my-reservations'),
     },
     {
       href: '/groups',

@@ -8,6 +8,7 @@ import { getUserFriendlyError } from '@/lib/errors';
 import { groupService } from '@/lib/services/group/group.service';
 import { imageProcessor } from '@/lib/services/image-processor';
 import { logger } from '@/lib/services/logger';
+import { getAppBaseUrl } from '@/lib/utils';
 
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2MB
 
@@ -161,7 +162,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     ) {
       // For MVP, redirect to the static file
       // In production, you might want to serve the file directly
-      return NextResponse.redirect(new URL(group.avatarUrl, req.url));
+      return NextResponse.redirect(new URL(group.avatarUrl, getAppBaseUrl()));
     }
 
     // Support legacy base64 avatars for backward compatibility

@@ -25,7 +25,9 @@ export function ListHeader({
   className,
 }: ListHeaderProps) {
   return (
-    <div className={cn('flex flex-col items-center gap-2 border-b pb-2 text-center', className)}>
+    <div
+      className={cn('flex flex-col items-center gap-2 border-b pb-4 pt-2 text-center', className)}
+    >
       {/* Title and description - Centered */}
       <div className="w-full max-w-2xl px-4">
         <h1 className="break-words text-xl font-bold">{name}</h1>

@@ -1,6 +1,6 @@
 'use client';
 
-import { MoreVertical, FileText, Calendar, Share2, User, Users, UserPlus } from 'lucide-react';
+import { MoreVertical, FileText, Share2, User, Users, UserPlus } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ListWithOwner } from '@/lib/validators/api-responses/lists';
-import { formatDistanceToNow } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { getVisibilityIcon } from '@/lib/utils/visibility-badges';
 
@@ -36,14 +35,6 @@ export function ListCardCompact({
   const isSharedWithUser =
     !isOwner && list.admins?.some((admin) => admin.user.id === currentUserId);
   const adminCount = list._count?.admins || 0;
-
-  const formatRelativeTime = (date: string) => {
-    try {
-      return formatDistanceToNow(new Date(date), { addSuffix: true });
-    } catch {
-      return 'recently';
-    }
-  };
 
   const handleClick = () => {
     router.push(`/lists/${list.id}`);
@@ -121,12 +112,6 @@ export function ListCardCompact({
                 </span>
               </span>
             )}
-
-            {/* Updated time - show on hover */}
-            <span className="ml-auto hidden items-center gap-1 group-hover:flex">
-              <Calendar className="h-3 w-3" />
-              {formatRelativeTime(list.updatedAt)}
-            </span>
           </div>
         </div>
 

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 
 import { LoginForm } from '@/components/auth/login-form';
 import { authOptions } from '@/lib/auth';
+import { settingsService } from '@/lib/services/settings-service';
 
 export default async function LoginPage() {
   const session = await getServerSession(authOptions);
@@ -29,5 +30,14 @@ export default async function LoginPage() {
     displayName: process.env.OAUTH_NAME || 'OAuth Provider',
   };
 
-  return <LoginForm availableProviders={availableProviders} oauthConfig={oauthConfig} />;
+  // Fetch login message (Server Component, cached)
+  const loginMessage = await settingsService.getLoginMessage();
+
+  return (
+    <LoginForm
+      availableProviders={availableProviders}
+      oauthConfig={oauthConfig}
+      loginMessage={loginMessage}
+    />
+  );
 }

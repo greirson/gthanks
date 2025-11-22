@@ -5,6 +5,7 @@ import { getUserFriendlyError } from '@/lib/errors';
 // eslint-disable-next-line local-rules/no-direct-db-import -- Avatar file serving requires direct db query; read-only operation with no business logic
 import { db } from '@/lib/db';
 import { logger } from '@/lib/services/logger';
+import { getAppBaseUrl } from '@/lib/utils';
 
 /**
  * GET /api/user/avatar/[userId] - Serves user avatar images by user ID
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest, { params }: { params: { userId: 
     if (user.avatarUrl && user.avatarUrl.startsWith('/uploads/')) {
       // For MVP, redirect to the static file
       // In production, you might want to serve the file directly
-      return NextResponse.redirect(new URL(user.avatarUrl, request.url));
+      return NextResponse.redirect(new URL(user.avatarUrl, getAppBaseUrl()));
     }
 
     // No avatar found

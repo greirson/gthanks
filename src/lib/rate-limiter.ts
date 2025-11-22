@@ -257,6 +257,12 @@ rateLimiter.configure('public-reservation', {
   maxRequests: 10, // 10 reservations per minute per IP (stricter than viewing)
 });
 
+// Configure rate limit for authenticated user reservations (per user per list)
+rateLimiter.configure('reservation-authenticated', {
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 10, // 10 reservations per hour per user per list
+});
+
 // Configure rate limit for password-protected list access (prevent brute-force)
 rateLimiter.configure('public-list-password', {
   windowMs: 5 * 60 * 1000, // 5 minutes

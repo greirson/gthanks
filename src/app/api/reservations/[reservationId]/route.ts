@@ -1,47 +1,30 @@
+import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
-
-import { getCurrentUser } from '@/lib/auth-utils';
-import { AppError } from '@/lib/errors';
 import { reservationService } from '@/lib/services/reservation-service';
+import { ForbiddenError, NotFoundError } from '@/lib/errors';
 
-interface RouteParams {
-  params: {
-    reservationId: string;
-  };
-}
-
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: { reservationId: string } }
+) {
   try {
-    const user = await getCurrentUser();
+    const session = await getServerSession();
 
-    // For anonymous users, we would need a secure way to verify their identity
-    // (e.g., a signed token sent to their email). For now, only authenticated
-    // users can delete reservations.
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Authentication required to delete reservations' },
-        { status: 401 }
-      );
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // The user's email MUST come from the session, never from client input
-    const userEmail = user.email || undefined;
-
-    // Remove reservation
-    await reservationService.removeReservation(params.reservationId, userEmail);
+    // Use service layer for deletion (includes permission checks)
+    await reservationService.removeReservation(params.reservationId, session.user.id);
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {
-    if (error instanceof AppError) {
-      return NextResponse.json(
-        {
-          error: error.message,
-          code: error.code,
-        },
-        { status: error.statusCode }
-      );
+    if (error instanceof NotFoundError) {
+      return NextResponse.json({ error: error.message }, { status: 404 });
     }
-
-    return NextResponse.json({ error: 'Failed to remove reservation' }, { status: 500 });
+    if (error instanceof ForbiddenError) {
+      return NextResponse.json({ error: error.message }, { status: 403 });
+    }
+    return NextResponse.json({ error: 'Failed to delete reservation' }, { status: 500 });
   }
 }

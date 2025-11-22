@@ -272,7 +272,7 @@ export function useWishFilters(wishes: Wish[], pageSize = 24) {
     });
 
     return result;
-  }, [safeWishes, filterState]);
+  }, [safeWishes, filterState, maxPrice]);
 
   // Paginate results
   const paginatedWishes = useMemo(() => {

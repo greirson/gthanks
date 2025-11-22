@@ -1,5 +1,4 @@
-import { CollapsibleSection } from '@/components/common/CollapsibleSection';
-import { GiftCardSection } from '@/components/lists/GiftCardSection';
+import { CollapsibleGiftCardSection } from '@/components/lists/CollapsibleGiftCardSection';
 
 interface GiftCard {
   name: string;
@@ -34,12 +33,11 @@ export function PublicGiftCardSection({ list }: PublicGiftCardSectionProps) {
   }
 
   return (
-    <CollapsibleSection
-      title={`${list.owner.name || 'List Owner'}'s Favorite Stores`}
-      defaultOpen={true}
+    <CollapsibleGiftCardSection
+      listId={list.id}
+      giftCards={giftCards}
+      canEdit={false}
       infoTooltip="These are gift cards the list owner would appreciate. Click any card to visit the store."
-    >
-      <GiftCardSection listId={list.id} giftCards={giftCards} canEdit={false} />
-    </CollapsibleSection>
+    />
   );
 }

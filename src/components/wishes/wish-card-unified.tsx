@@ -33,6 +33,7 @@ import {
 import { SelectionCheckbox } from '@/components/ui/selection-checkbox';
 import { StarRating } from '@/components/ui/star-rating';
 import { AddToListDialog } from '@/components/lists/add-to-list-dialog';
+import { ReserveDialog } from '@/components/reservations/reserve-dialog';
 import { formatPrice } from '@/lib/utils/currency';
 import { getWishImageSrc, isWishImageProcessing, hasWishImage } from '@/lib/utils/wish-images';
 import { safeOpenUrl } from '@/lib/utils/url-validation';
@@ -147,7 +148,7 @@ export function UnifiedWishCard({
   wish,
   onEdit,
   onDelete,
-  onReserve,
+  onReserve: _onReserve,
   onAddToList: _onAddToList,
   isReserved = false,
   showAddToList = false,
@@ -158,8 +159,10 @@ export function UnifiedWishCard({
 }: UnifiedWishCardProps) {
   const config = variantConfig[variant];
   const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [showAddToListDialog, setShowAddToListDialog] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [showReserveDialog, setShowReserveDialog] = useState(false);
 
   // Shared logic
   const imageSrc = getWishImageSrc(wish);
@@ -203,6 +206,10 @@ export function UnifiedWishCard({
     setIsDeleteDialogOpen(false);
   };
 
+  const handleReserve = () => {
+    setShowReserveDialog(true);
+  };
+
   // Render horizontal layout (list variant)
   if (config.layout === 'horizontal') {
     return (
@@ -240,13 +247,19 @@ export function UnifiedWishCard({
               <div className="flex-shrink-0">
                 {(hasImage || wish.imageStatus === 'FAILED') && (
                   <div className={`relative rounded bg-muted ${config.imageSize}`}>
+                    {/* Skeleton loader */}
+                    {!imageLoaded && hasImage && !imageError && (
+                      <div className="absolute inset-0 animate-pulse rounded bg-muted" />
+                    )}
+
                     {hasImage && !imageError && (
                       <Image
                         src={imageSrc || ''}
                         alt={wish.title}
                         fill
                         sizes={config.imageSizes}
-                        className="rounded object-cover"
+                        className={`rounded object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                        onLoad={() => setImageLoaded(true)}
                         onError={() => setImageError(true)}
                         unoptimized={isImageProcessing}
                         priority={priority}
@@ -382,16 +395,17 @@ export function UnifiedWishCard({
                   )}
 
                   {/* Reserve button for non-owners */}
-                  {!wish.isOwner && onReserve && (
+                  {!wish.isOwner && (
                     <Button
                       onClick={(e) => {
                         e.stopPropagation();
-                        onReserve(wish);
+                        handleReserve();
                       }}
                       disabled={isReserved}
                       variant={isReserved ? 'secondary' : 'default'}
                       size={config.buttonSize}
                       className="ml-auto flex-shrink-0"
+                      data-testid={`reserve-${wish.id}`}
                     >
                       <ShoppingCart className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
                       <span className="hidden sm:inline">
@@ -416,6 +430,13 @@ export function UnifiedWishCard({
             onOpenChange={setShowAddToListDialog}
           />
         )}
+
+        {/* Reserve Dialog */}
+        <ReserveDialog
+          wish={{ id: wish.id, title: wish.title }}
+          open={showReserveDialog}
+          onOpenChange={setShowReserveDialog}
+        />
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -465,13 +486,19 @@ export function UnifiedWishCard({
         {/* Image */}
         {(hasImage || wish.imageStatus === 'FAILED') && (
           <div className={`relative bg-muted ${config.imageAspect}`}>
+            {/* Skeleton loader */}
+            {!imageLoaded && hasImage && !imageError && (
+              <div className="absolute inset-0 animate-pulse bg-muted" />
+            )}
+
             {hasImage && !imageError && (
               <Image
                 src={imageSrc || ''}
                 alt={wish.title}
                 fill
                 sizes={config.imageSizes}
-                className="object-cover"
+                className={`object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                onLoad={() => setImageLoaded(true)}
                 onError={() => setImageError(true)}
                 unoptimized={isImageProcessing}
                 priority={priority}
@@ -662,13 +689,14 @@ export function UnifiedWishCard({
             className={`flex ${variant === 'compact' ? 'gap-1 p-3 pt-0' : 'flex-col gap-3 p-4 pt-0 sm:flex-row sm:gap-2'}`}
           >
             {/* Reserve button (for non-owners) */}
-            {!wish.isOwner && onReserve && (
+            {!wish.isOwner && (
               <Button
-                onClick={() => onReserve(wish)}
+                onClick={handleReserve}
                 disabled={isReserved}
                 variant={isReserved ? 'secondary' : 'default'}
                 size={config.buttonSize}
                 className={variant === 'compact' ? 'flex-1 text-xs' : 'w-full sm:flex-1'}
+                data-testid={`reserve-${wish.id}`}
               >
                 <ShoppingCart className={variant === 'compact' ? 'mr-1 h-3 w-3' : 'mr-2 h-4 w-4'} />
                 {isReserved ? 'Reserved' : config.reserveText}
@@ -701,6 +729,13 @@ export function UnifiedWishCard({
           onOpenChange={setShowAddToListDialog}
         />
       )}
+
+      {/* Reserve Dialog */}
+      <ReserveDialog
+        wish={{ id: wish.id, title: wish.title }}
+        open={showReserveDialog}
+        onOpenChange={setShowReserveDialog}
+      />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

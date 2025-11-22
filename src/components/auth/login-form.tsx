@@ -28,9 +28,10 @@ interface OAuthConfig {
 interface LoginFormProps {
   availableProviders: OAuthProvider;
   oauthConfig: OAuthConfig;
+  loginMessage?: string | null;
 }
 
-export function LoginForm({ availableProviders, oauthConfig }: LoginFormProps) {
+export function LoginForm({ availableProviders, oauthConfig, loginMessage }: LoginFormProps) {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
@@ -110,7 +111,15 @@ export function LoginForm({ availableProviders, oauthConfig }: LoginFormProps) {
   const hasAnyOAuthProvider = Object.values(availableProviders).some(Boolean);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
+      {loginMessage && (
+        <div className="mb-6 w-full max-w-md rounded-lg border-l-4 border-blue-500 bg-blue-50 p-4 dark:bg-blue-950">
+          <div
+            className="prose prose-sm dark:prose-invert max-w-none"
+            dangerouslySetInnerHTML={{ __html: loginMessage }}
+          />
+        </div>
+      )}
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle as="h1">Sign in to gthanks</CardTitle>

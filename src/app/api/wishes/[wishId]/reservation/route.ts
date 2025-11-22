@@ -40,7 +40,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Get public reservation info
     const status = await reservationService.getReservationStatus(
       [params.wishId],
-      user?.email || undefined
+      user?.id || undefined
     );
 
     return NextResponse.json(status[params.wishId]);
@@ -75,10 +75,18 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  * @see {@link ReservationCreateSchema} for request validation
  * @see {@link reservationService.createReservation} for reservation logic
  */
-// POST /api/wishes/[wishId]/reservation - Reserve a wish
+// POST /api/wishes/[wishId]/reservation - Reserve a wish (authenticated users only)
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const user = await getCurrentUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required to reserve wishes', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
+    }
+
     const body = (await request.json()) as unknown;
 
     // Add wishId to body - spread unknown type into object for validation
@@ -90,20 +98,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     // Validate
     const validatedData = ReservationCreateSchema.parse(dataWithWishId);
 
-    // If user is logged in, use their info
-    if (user) {
-      validatedData.reserverEmail = validatedData.reserverEmail || user.email;
-      validatedData.reserverName = validatedData.reserverName || user.name;
-    }
-
     // Create reservation
-    const reservation = await reservationService.createReservation(validatedData, user?.id);
+    const reservation = await reservationService.createReservation(validatedData, user.id);
 
     // Convert dates to ISO strings for JSON serialization
     const serializedReservation = {
       ...reservation,
       reservedAt: reservation.reservedAt.toISOString(),
-      reminderSentAt: reservation.reminderSentAt?.toISOString() || null,
     };
 
     return NextResponse.json(serializedReservation, { status: 201 });
@@ -161,21 +162,15 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const user = await getCurrentUser();
 
-    // For anonymous users, we would need a secure way to verify their identity
-    // (e.g., a signed token sent to their email). For now, only authenticated
-    // users can delete reservations.
     if (!user) {
       return NextResponse.json(
-        { error: 'Authentication required to delete reservations' },
+        { error: 'Authentication required to delete reservations', code: 'UNAUTHORIZED' },
         { status: 401 }
       );
     }
 
-    // The user's email MUST come from the session, never from client input
-    const userEmail = user.email || undefined;
-
     // Remove reservation
-    await reservationService.removeReservationByWishId(params.wishId, userEmail);
+    await reservationService.removeReservationByWishId(params.wishId, user.id);
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {

@@ -11,11 +11,16 @@ import { useManageGiftCardsDialog, type GiftCard } from './hooks/useManageGiftCa
 import { listsApi } from '@/lib/api/lists';
 import { useDebounce } from '@/hooks/use-debounce';
 
+// Re-export for use in parent components
+export { useManageGiftCardsDialog } from './hooks/useManageGiftCardsDialog';
+
 interface GiftCardSectionProps {
   listId: string;
   giftCards: GiftCard[];
   canEdit: boolean;
   onUpdate?: (cards: GiftCard[]) => void;
+  hideHeading?: boolean;
+  externalManageDialog?: ReturnType<typeof useManageGiftCardsDialog>;
 }
 
 export function GiftCardSection({
@@ -23,12 +28,15 @@ export function GiftCardSection({
   giftCards: initialCards,
   canEdit,
   onUpdate,
+  hideHeading = false,
+  externalManageDialog,
 }: GiftCardSectionProps) {
   const { toast } = useToast();
   const [giftCards, setGiftCards] = useState<GiftCard[]>(initialCards || []);
   const debouncedGiftCards = useDebounce(giftCards, 500); // Auto-save after 500ms
 
-  const manageDialog = useManageGiftCardsDialog(giftCards);
+  const internalManageDialog = useManageGiftCardsDialog(giftCards);
+  const manageDialog = externalManageDialog || internalManageDialog;
 
   // Update mutation
   const updateMutation = useMutation({
@@ -116,24 +124,26 @@ export function GiftCardSection({
     <div className="mb-4 space-y-3">
       {' '}
       {/* Reduced spacing from mb-12 to mb-4 (1rem) */}
-      <div className="flex items-center justify-between">
-        <h3 className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-          <CreditCard className="h-4 w-4" />
-          Gift Cards
-        </h3>
+      {!hideHeading && (
+        <div className="flex items-center justify-between">
+          <h3 className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <CreditCard className="h-4 w-4" />
+            Gift Cards
+          </h3>
 
-        {canEdit && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => manageDialog.open()}
-            disabled={giftCards.length >= 8}
-          >
-            <Plus className="mr-1 h-4 w-4" />
-            Manage Gift Cards
-          </Button>
-        )}
-      </div>
+          {canEdit && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => manageDialog.open()}
+              disabled={giftCards.length >= 8}
+            >
+              <Plus className="mr-1 h-4 w-4" />
+              Manage Gift Cards
+            </Button>
+          )}
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
         {giftCards.map((card, index) => (
           <GiftCardItem key={`${card.name}-${index}`} card={card} />

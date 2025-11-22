@@ -44,9 +44,8 @@ export class ImageProcessor {
   private uploadsDir: string;
 
   constructor() {
-    // Use STORAGE_PATH env var if set, otherwise fallback to default path for backward compatibility
-    this.uploadsDir =
-      process.env.STORAGE_PATH || path.join(process.cwd(), 'public', 'uploads', 'items');
+    // Use STORAGE_PATH env var if set, otherwise fallback to default path
+    this.uploadsDir = process.env.STORAGE_PATH || path.join(process.cwd(), 'uploads');
   }
 
   /**

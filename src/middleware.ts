@@ -1,6 +1,7 @@
 import { getToken } from 'next-auth/jwt';
 import { NextRequest, NextResponse } from 'next/server';
 import { rateLimiter, getClientIdentifier, getRateLimitHeaders } from '@/lib/rate-limiter';
+import { getAppBaseUrl } from '@/lib/utils';
 
 /**
  * Middleware for handling rate limiting, authentication, and username-based routing
@@ -129,7 +130,7 @@ export async function middleware(request: NextRequest) {
       // Existing users from before onboarding feature have undefined, treat as complete
       if (isOnboardingComplete === false) {
         // Redirect to onboarding page if not completed
-        return NextResponse.redirect(new URL('/onboarding', request.url));
+        return NextResponse.redirect(new URL('/onboarding', getAppBaseUrl()));
       }
     }
   }
@@ -142,7 +143,7 @@ export async function middleware(request: NextRequest) {
       if (pathname.startsWith('/api/')) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
-      return NextResponse.redirect(new URL('/auth/login', request.url));
+      return NextResponse.redirect(new URL('/auth/login', getAppBaseUrl()));
     }
   }
 

@@ -52,6 +52,14 @@ export {
   getList,
 } from './database.helper';
 
+// Reservation helpers
+export {
+  getMagicLink,
+  loginWithMagicLink,
+  seedReservation,
+  createPublicListWithWishes,
+} from './reservation.helper';
+
 // Navigation helpers
 export {
   goToWishes,

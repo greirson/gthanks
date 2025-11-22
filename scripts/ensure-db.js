@@ -46,21 +46,21 @@ async function ensureDatabase() {
     }
   }
 
-  // Run database push to ensure tables exist
+  // Sync database schema to ensure it's up to date
   try {
-    console.log('[DB] Ensuring database tables exist...');
-    execSync('npx prisma db push --skip-generate --accept-data-loss', {
+    console.log('[DB] Syncing database schema...');
+    execSync('npx prisma db push --skip-generate', {
       stdio: 'pipe',
       env: { ...process.env, DATABASE_URL },
     });
     console.log('[DB] Database ready!');
   } catch (error) {
-    // Check if it's just because tables already exist (which is fine)
+    // Check if it's just because schema is already in sync (which is fine)
     const errorStr = error.toString();
     if (errorStr.includes('already in sync') || errorStr.includes('No changes')) {
-      console.log('[DB] Database already up to date!');
+      console.log('[DB] Database already in sync!');
     } else {
-      console.warn('[DB] Warning during database sync:', error.message || 'Unknown error');
+      console.warn('[DB] Warning during sync:', error.message || 'Unknown error');
       console.log('[DB] The application will attempt to initialize on first request.');
     }
   }

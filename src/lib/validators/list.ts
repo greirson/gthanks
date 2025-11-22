@@ -116,16 +116,6 @@ export const RemoveWishFromListSchema = z.object({
   wishId: z.string().min(1, 'Wish ID is required'),
 });
 
-// Reservation schema (for anonymous users)
-export const ReservationCreateSchema = z.object({
-  wishId: z.string().min(1, 'Wish ID is required'),
-  reserverName: z
-    .string()
-    .min(1, 'Name is required')
-    .max(100, 'Name must be less than 100 characters'),
-  reserverEmail: z.string().email('Valid email is required'),
-});
-
 // List access schema (for password-protected lists)
 export const ListAccessSchema = z.object({
   password: z.string().min(1, 'Password is required'),
@@ -143,6 +133,5 @@ export type ListCreateInput = z.infer<typeof ListCreateSchema>;
 export type ListUpdateInput = z.infer<typeof ListUpdateSchema>;
 export type AddWishToListInput = z.infer<typeof AddWishToListSchema>;
 export type RemoveWishFromListInput = z.infer<typeof RemoveWishFromListSchema>;
-export type ReservationCreateInput = z.infer<typeof ReservationCreateSchema>;
 export type ListAccessInput = z.infer<typeof ListAccessSchema>;
 export type ListPaginationOptions = z.infer<typeof ListPaginationSchema>;

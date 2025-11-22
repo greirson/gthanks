@@ -6,7 +6,8 @@ export type Resource =
   | { type: 'list'; id: string }
   | { type: 'wish'; id: string }
   | { type: 'group'; id: string }
-  | { type: 'reservation'; id: string };
+  | { type: 'reservation'; id: string }
+  | { type: 'site-settings' };
 
 export type Action = 'view' | 'edit' | 'delete' | 'admin' | 'share' | 'invite' | 'reserve';
 
@@ -163,9 +164,6 @@ export class PermissionService {
           return { allowed: false, reason: 'List not found' };
         }
         break;
-      case 'reservation':
-        // Anonymous users can create reservations
-        return { allowed: action === 'reserve' };
     }
 
     return { allowed: false, reason: 'Anonymous users have limited permissions' };
@@ -401,7 +399,7 @@ export class PermissionService {
     const reservation = await db.reservation.findUnique({
       where: { id: reservationId },
       select: {
-        reserverEmail: true,
+        userId: true,
         wish: {
           select: { ownerId: true },
         },
@@ -412,20 +410,10 @@ export class PermissionService {
       return { allowed: false, reason: 'Reservation not found' };
     }
 
-    // Get user email for comparison
-    const user = await db.user.findUnique({
-      where: { id: userId },
-      select: { email: true },
-    });
-
-    if (!user) {
-      return { allowed: false, reason: 'User not found' };
-    }
-
     switch (action) {
       case 'view':
         // Wish owner can see reservations, reserver can see their own
-        if (reservation.wish.ownerId === userId || reservation.reserverEmail === user.email) {
+        if (reservation.wish.ownerId === userId || reservation.userId === userId) {
           return { allowed: true };
         }
         return {
@@ -435,7 +423,7 @@ export class PermissionService {
 
       case 'delete':
         // Only the reserver can cancel their reservation
-        if (reservation.reserverEmail === user.email) {
+        if (reservation.userId === userId) {
           return { allowed: true };
         }
         return { allowed: false, reason: 'Can only cancel your own reservations' };

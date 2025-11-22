@@ -436,3 +436,161 @@ Build fails if service layer violations are detected (configured as errors, not 
 - Review code: `@code-reviewer` before merging to main
 - Optimize performance: `@performance-optimizer` when users report slowness
 - Update docs: `@documentation-specialist` after major features
+
+---
+
+## Playwright MCP with Authentication
+
+### Overview
+
+The Playwright MCP is configured to maintain persistent authentication across sessions using a browser profile stored in `.playwright-profile/`. This enables Claude Code to access authenticated pages automatically.
+
+### First-Time Setup
+
+1. **Run the authentication command**:
+
+   ```
+   /playwright-auth
+   ```
+
+   This will:
+   - Check if dev server is running (start it if not)
+   - Open a browser with persistent profile
+   - Navigate to the login page
+   - Monitor logs for magic link
+   - Automatically navigate to magic link
+   - Verify session cookie is created
+
+2. **Complete the login flow**:
+   - Enter test email (e.g., `test@example.com`)
+   - Click "Send Magic Link"
+   - Wait for automatic navigation (or paste link if prompted)
+   - Verify authentication success message
+
+3. **Restart Claude Code** to reload MCP configuration
+
+### Usage
+
+After setup, Playwright MCP commands automatically use your authenticated session:
+
+**Navigate to authenticated pages**:
+
+```
+mcp__playwright__browser_navigate {"url": "http://localhost:3000/lists"}
+```
+
+**Take screenshot of user dashboard**:
+
+```
+mcp__playwright__browser_take_screenshot {"filename": "dashboard.png"}
+```
+
+**Interact with authenticated elements**:
+
+```
+mcp__playwright__browser_click {"element": "Create New List", "ref": "..."}
+```
+
+**Get page snapshot**:
+
+```
+mcp__playwright__browser_snapshot
+```
+
+### How It Works
+
+The `/playwright-auth` command:
+
+1. **Pre-flight**: Checks profile directory and dev server status
+2. **Server**: Starts dev server with log capture if not running
+3. **Monitoring**: Tails server logs for magic link in background
+4. **Browser**: Opens Playwright to `/auth/login` with persistent profile
+5. **Extraction**: Captures magic link from server console output
+6. **Navigation**: Automatically opens magic link in browser
+7. **Verification**: Confirms NextAuth session token exists
+8. **Cleanup**: Removes temp files and background processes
+
+**Automatic Mode**: When command starts the dev server, magic link is captured automatically
+
+**Manual Mode**: When server already running, paste magic link from console when prompted
+
+### Troubleshooting
+
+**Session Expired**:
+
+```
+/playwright-auth
+```
+
+Re-run the command to refresh authentication.
+
+**Profile Corruption**:
+
+```bash
+rm -rf .playwright-profile/
+```
+
+Then run `/playwright-auth` to create fresh profile.
+
+**Manual Mode**:
+If automatic magic link detection fails:
+
+1. Check dev server console for magic link
+2. Copy the full URL: `http://localhost:3000/api/auth/callback/email?token=...&email=...`
+3. Paste when prompted by the command
+
+**Dev Server Not Running**:
+The command will start it automatically. If it fails:
+
+```bash
+# Check port 3000 availability
+lsof -i :3000
+
+# Start manually
+pnpm dev
+```
+
+**Cookie Not Found**:
+Verify you completed the full login flow in the browser. You should see a success page after clicking the magic link.
+
+**MCP Not Using Profile**:
+
+- Verify `.mcp.json` contains playwright configuration
+- Check that `.playwright-profile/` directory exists
+- Restart Claude Code after configuration changes
+
+### Security Notes
+
+- `.playwright-profile/` is gitignored to prevent credential leaks
+- Only the directory structure (`.gitkeep`) is tracked in git
+- Profile contains sensitive session cookies - keep it secure
+- Re-authenticate periodically as sessions expire (typically 30 days)
+
+### Advanced: Multiple Profiles
+
+For different environments (dev, staging, production):
+
+**Update `.mcp.json`**:
+
+```json
+{
+  "mcpServers": {
+    "playwright-dev": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest", "--user-data-dir=.playwright-profile-dev"]
+    },
+    "playwright-staging": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest", "--user-data-dir=.playwright-profile-staging"]
+    }
+  }
+}
+```
+
+**Create profiles manually**:
+
+```bash
+npx playwright open http://staging.example.com/auth/login --user-data-dir=.playwright-profile-staging
+```
+
+Then complete authentication in the opened browser.
