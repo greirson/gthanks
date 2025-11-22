@@ -175,17 +175,14 @@ export async function seedReservation(
     },
   });
 
-  // Create reservation (connected to existing wish and user)
+  // Create reservation with email/name (current schema)
   const reservationId = createId();
   const reservation = await db.reservation.create({
     data: {
       id: reservationId,
-      wish: {
-        connect: { id: wish.id },
-      },
-      user: {
-        connect: { id: reserver.id },
-      },
+      wishId: wish.id,
+      reserverEmail: reserver.email,
+      reserverName: reserver.name,
     },
   });
 
