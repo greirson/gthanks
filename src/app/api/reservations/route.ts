@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
 
 import { getCurrentUser } from '@/lib/auth-utils';
 import { AppError } from '@/lib/errors';
@@ -8,89 +9,106 @@ import { reservationService } from '@/lib/services/reservation-service';
 import { ReservationCreateSchema } from '@/lib/validators/reservation';
 import { logger } from '@/lib/services/logger';
 import { rateLimiter, getClientIdentifier, getRateLimitHeaders } from '@/lib/rate-limiter';
+import { db } from '@/lib/db';
+import { sendReservationConfirmation } from '@/lib/email';
+
+// Helper function to get list ID from wish
+async function getListIdFromWish(wishId: string): Promise<string | null> {
+  const listWish = await db.listWish.findFirst({
+    where: { wishId },
+    select: { listId: true },
+  });
+  return listWish?.listId || null;
+}
 
 /**
  * Handles POST requests for creating new reservations
  *
- * @description Creates a new reservation for a wish, supports both authenticated and anonymous users with auto-population of user data
+ * @description Creates a new reservation for a wish. REQUIRES AUTHENTICATION.
  * @param {NextRequest} request - The incoming HTTP request object with reservation data in JSON body
  * @returns {Promise<NextResponse>} JSON response with created reservation data or error
  *
- * @throws {400} Bad Request - Invalid reservation data, validation errors, or wish already reserved
+ * @throws {401} Unauthorized - User must be logged in to reserve items
  * @throws {404} Not Found - Wish with specified ID does not exist
+ * @throws {429} Too Many Requests - Rate limit exceeded (10 reservations/hour per list)
  * @throws {500} Internal Server Error - Database or service errors
  *
  * @example
- * // Create reservation (authenticated user - email auto-populated)
+ * // Create reservation (authenticated user only)
  * POST /api/reservations
  * {
- *   "wishId": "wish456",
- *   "reserverName": "John Doe"
+ *   "wishId": "wish456"
  * }
  *
- * // Create reservation (anonymous user)
- * POST /api/reservations
- * {
- *   "wishId": "wish456",
- *   "reserverEmail": "john@example.com",
- *   "reserverName": "John Doe"
- * }
- *
- * @public Supports both authenticated and anonymous users for flexible gift coordination
- * @see {@link getCurrentUser} for authentication details
- * @see {@link ReservationCreateSchema} for request validation
- * @see {@link reservationService.createReservation} for business logic
+ * @protected Requires authentication - user must be logged in
+ * @see {@link getServerSession} for authentication details
+ * @see {@link sendReservationConfirmation} for email confirmation
  */
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    // REQUIRE AUTHENTICATION
+    const session = await getServerSession();
 
-    // Apply rate limit - use IP for anonymous, user ID for authenticated
-    const identifier = user ? user.id : getClientIdentifier(request);
-    const rateLimitResult = await rateLimiter.check('public-reservation', identifier);
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: 'You must be logged in to reserve items' },
+        { status: 401 }
+      );
+    }
+
+    const { wishId } = await request.json();
+
+    // Fetch wish with owner details
+    const wish = await db.wish.findUnique({
+      where: { id: wishId },
+      include: {
+        owner: {
+          select: { name: true, email: true },
+        },
+      },
+    });
+
+    if (!wish) {
+      return NextResponse.json({ error: 'Wish not found' }, { status: 404 });
+    }
+
+    // Apply rate limiting (per list, per user)
+    const listId = await getListIdFromWish(wishId);
+    const rateLimitKey = `reservation:${session.user.id}:${listId}`;
+    const rateLimitResult = await rateLimiter.check(rateLimitKey, session.user.id, {
+      windowMs: 3600000, // 1 hour
+      maxRequests: 10, // 10 reservations per hour per list
+    });
 
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
         {
-          error: 'Too many requests. Please wait a moment and try again',
-          code: 'RATE_LIMIT_EXCEEDED',
+          error: 'Too many reservations. Please wait.',
           retryAfter: rateLimitResult.retryAfter,
         },
-        {
-          status: 429,
-          headers: getRateLimitHeaders(rateLimitResult),
-        }
+        { status: 429 }
       );
     }
 
-    const body = (await request.json()) as {
-      listId: string;
-      wishId: string;
-      reservedFor?: string;
-      message?: string;
-      metadata?: Record<string, unknown>;
-    };
+    // Create reservation (linked to user)
+    const reservation = await db.reservation.create({
+      data: {
+        wishId,
+        userId: session.user.id, // Direct user link
+        reservedAt: new Date(),
+      },
+    });
 
-    // Validate input
-    const validatedData = ReservationCreateSchema.parse(body);
+    // Send confirmation email
+    await sendReservationConfirmation({
+      to: session.user.email || '',
+      userName: session.user.name || 'there',
+      wishTitle: wish.title,
+      ownerName: wish.owner.name || wish.owner.email,
+      productUrl: wish.url || undefined,
+    });
 
-    // If user is logged in, use their email
-    if (user && !validatedData.reserverEmail) {
-      validatedData.reserverEmail = user.email;
-      validatedData.reserverName = validatedData.reserverName || user.name;
-    }
-
-    // Create reservation
-    const reservation = await reservationService.createReservation(validatedData, user?.id);
-
-    // Convert dates to ISO strings for JSON serialization
-    const serializedReservation = {
-      ...reservation,
-      reservedAt: reservation.reservedAt.toISOString(),
-      reminderSentAt: reservation.reminderSentAt?.toISOString() || null,
-    };
-
-    return NextResponse.json(serializedReservation, { status: 201 });
+    return NextResponse.json(reservation, { status: 201 });
   } catch (error) {
     logger.error({ error: error }, 'POST /api/reservations error');
 

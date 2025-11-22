@@ -33,6 +33,7 @@ import {
 import { SelectionCheckbox } from '@/components/ui/selection-checkbox';
 import { StarRating } from '@/components/ui/star-rating';
 import { AddToListDialog } from '@/components/lists/add-to-list-dialog';
+import { ReserveDialog } from '@/components/reservations/reserve-dialog';
 import { formatPrice } from '@/lib/utils/currency';
 import { getWishImageSrc, isWishImageProcessing, hasWishImage } from '@/lib/utils/wish-images';
 import { safeOpenUrl } from '@/lib/utils/url-validation';
@@ -161,6 +162,7 @@ export function UnifiedWishCard({
   const [imageLoaded, setImageLoaded] = useState(false);
   const [showAddToListDialog, setShowAddToListDialog] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [showReserveDialog, setShowReserveDialog] = useState(false);
 
   // Shared logic
   const imageSrc = getWishImageSrc(wish);
@@ -202,6 +204,10 @@ export function UnifiedWishCard({
   const confirmDelete = () => {
     onDelete?.(wish);
     setIsDeleteDialogOpen(false);
+  };
+
+  const handleReserve = () => {
+    setShowReserveDialog(true);
   };
 
   // Render horizontal layout (list variant)
@@ -389,11 +395,11 @@ export function UnifiedWishCard({
                   )}
 
                   {/* Reserve button for non-owners */}
-                  {!wish.isOwner && onReserve && (
+                  {!wish.isOwner && (
                     <Button
                       onClick={(e) => {
                         e.stopPropagation();
-                        onReserve(wish);
+                        handleReserve();
                       }}
                       disabled={isReserved}
                       variant={isReserved ? 'secondary' : 'default'}
@@ -423,6 +429,13 @@ export function UnifiedWishCard({
             onOpenChange={setShowAddToListDialog}
           />
         )}
+
+        {/* Reserve Dialog */}
+        <ReserveDialog
+          wish={{ id: wish.id, title: wish.title }}
+          open={showReserveDialog}
+          onOpenChange={setShowReserveDialog}
+        />
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -675,9 +688,9 @@ export function UnifiedWishCard({
             className={`flex ${variant === 'compact' ? 'gap-1 p-3 pt-0' : 'flex-col gap-3 p-4 pt-0 sm:flex-row sm:gap-2'}`}
           >
             {/* Reserve button (for non-owners) */}
-            {!wish.isOwner && onReserve && (
+            {!wish.isOwner && (
               <Button
-                onClick={() => onReserve(wish)}
+                onClick={handleReserve}
                 disabled={isReserved}
                 variant={isReserved ? 'secondary' : 'default'}
                 size={config.buttonSize}
@@ -714,6 +727,13 @@ export function UnifiedWishCard({
           onOpenChange={setShowAddToListDialog}
         />
       )}
+
+      {/* Reserve Dialog */}
+      <ReserveDialog
+        wish={{ id: wish.id, title: wish.title }}
+        open={showReserveDialog}
+        onOpenChange={setShowReserveDialog}
+      />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

@@ -354,6 +354,30 @@ function createNewUserInvitationTemplate(data: ListInvitationEmailData): string 
   `;
 }
 
+export async function sendReservationConfirmation(data: {
+  to: string;
+  userName: string;
+  wishTitle: string;
+  ownerName: string;
+  productUrl?: string;
+}) {
+  const emailService = createEmailService();
+
+  const { getReservationConfirmationEmail } = await import('./templates/reservation-confirmation');
+  const text = getReservationConfirmationEmail({
+    userName: data.userName,
+    wishTitle: data.wishTitle,
+    ownerName: data.ownerName,
+    productUrl: data.productUrl,
+  });
+
+  await emailService.send({
+    to: data.to,
+    subject: `You reserved "${data.wishTitle}"`,
+    html: text.replace(/\n/g, '<br>'),
+  });
+}
+
 // Export for testing and verification
 export async function verifyEmailConfiguration(): Promise<{
   provider: string;
