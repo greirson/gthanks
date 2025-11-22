@@ -148,7 +148,7 @@ export function UnifiedWishCard({
   wish,
   onEdit,
   onDelete,
-  onReserve,
+  onReserve: _onReserve,
   onAddToList: _onAddToList,
   isReserved = false,
   showAddToList = false,

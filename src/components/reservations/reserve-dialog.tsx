@@ -56,7 +56,7 @@ export function ReserveDialog({ wish, open, onOpenChange }: ReserveDialogProps) 
         description: 'Check "My Reservations" to see all your items.',
         action: <Button onClick={() => router.push('/my-reservations')}>View</Button>
       });
-    } catch (error) {
+    } catch {
       toast({
         title: 'Failed to reserve',
         description: 'Please try again.',

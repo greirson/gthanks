@@ -3,16 +3,15 @@ import { z } from 'zod';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 
-import { getCurrentUser } from '@/lib/auth-utils';
-import { AppError } from '@/lib/errors';
-import { reservationService } from '@/lib/services/reservation-service';
-import { ReservationCreateSchema } from '@/lib/validators/reservation';
+import { AppError, NotFoundError, ForbiddenError, ValidationError } from '@/lib/errors';
 import { logger } from '@/lib/services/logger';
-import { rateLimiter, getClientIdentifier, getRateLimitHeaders } from '@/lib/rate-limiter';
+import { rateLimiter } from '@/lib/rate-limiter';
+import { reservationService } from '@/lib/services/reservation-service';
+// eslint-disable-next-line local-rules/no-direct-db-import -- Needed for rate limiting and email data
 import { db } from '@/lib/db';
 import { sendReservationConfirmation } from '@/lib/email';
 
-// Helper function to get list ID from wish
+// Helper function to get list ID for rate limiting
 async function getListIdFromWish(wishId: string): Promise<string | null> {
   const listWish = await db.listWish.findFirst({
     where: { wishId },
@@ -58,21 +57,7 @@ export async function POST(request: NextRequest) {
 
     const { wishId } = await request.json();
 
-    // Fetch wish with owner details
-    const wish = await db.wish.findUnique({
-      where: { id: wishId },
-      include: {
-        owner: {
-          select: { name: true, email: true },
-        },
-      },
-    });
-
-    if (!wish) {
-      return NextResponse.json({ error: 'Wish not found' }, { status: 404 });
-    }
-
-    // Apply rate limiting (per list, per user)
+    // Apply rate limiting first (per list, per user)
     const listId = await getListIdFromWish(wishId);
     const rateLimitIdentifier = `${session.user.id}:${listId}`;
     const rateLimitResult = await rateLimiter.check(
@@ -90,27 +75,48 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create reservation (linked to user)
-    const reservation = await db.reservation.create({
-      data: {
-        wishId,
-        userId: session.user.id, // Direct user link
-        reservedAt: new Date(),
+    // Create reservation using service layer (includes permission checks)
+    const reservation = await reservationService.createReservation(
+      { wishId },
+      session.user.id
+    );
+
+    // Fetch wish details for confirmation email (simple read, acceptable per architecture guide)
+    const wish = await db.wish.findUnique({
+      where: { id: wishId },
+      include: {
+        owner: {
+          select: { name: true, email: true },
+        },
       },
     });
 
-    // Send confirmation email
-    await sendReservationConfirmation({
-      to: session.user.email || '',
-      userName: session.user.name || 'there',
-      wishTitle: wish.title,
-      ownerName: wish.owner.name || wish.owner.email,
-      productUrl: wish.url || undefined,
-    });
+    // Send confirmation email if we have wish data
+    if (wish) {
+      await sendReservationConfirmation({
+        to: session.user.email || '',
+        userName: session.user.name || 'there',
+        wishTitle: wish.title,
+        ownerName: wish.owner.name || wish.owner.email,
+        productUrl: wish.url || undefined,
+      });
+    }
 
     return NextResponse.json(reservation, { status: 201 });
   } catch (error) {
     logger.error({ error: error }, 'POST /api/reservations error');
+
+    if (error instanceof NotFoundError) {
+      return NextResponse.json({ error: error.message }, { status: 404 });
+    }
+
+    if (error instanceof ForbiddenError) {
+      return NextResponse.json({ error: error.message }, { status: 403 });
+    }
+
+    if (error instanceof ValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
 
     if (error instanceof z.ZodError) {
       const firstError = error.errors[0];

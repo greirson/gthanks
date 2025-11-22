@@ -13,7 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
  *    - DELETE /api/wishes/[wishId]/reservation
  */
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   return NextResponse.json(
     {
       error: 'Anonymous reservations are no longer supported. Please sign in to reserve wishes.',
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
   );
 }
 
-export async function DELETE(request: NextRequest) {
+export async function DELETE(_request: NextRequest) {
   return NextResponse.json(
     {
       error:

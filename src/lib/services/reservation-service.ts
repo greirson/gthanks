@@ -8,7 +8,6 @@ import { logger } from './logger';
 import { permissionService } from './permission-service';
 import {
   PublicReservation,
-  ReminderStatus,
   ReservationStatus,
   ReservationWithWish,
 } from './reservation-types';
