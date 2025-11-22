@@ -26,12 +26,12 @@ export function ReservationCard({ reservation }: ReservationCardProps) {
   const router = useRouter();
 
   const cancelMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const response = await fetch(`/api/reservations/${id}`, {
+    mutationFn: async (reservationId: string) => {
+      const response = await fetch(`/api/reservations/${reservationId}`, {
         method: 'DELETE',
       });
       if (!response.ok) {throw new Error('Failed to cancel');}
-      return { id };
+      return { id: reservationId };
     },
     onSuccess: ({ id }) => {
       // Store for undo
