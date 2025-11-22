@@ -46,21 +46,21 @@ async function ensureDatabase() {
     }
   }
 
-  // Run database migrations to ensure schema is up to date
+  // Sync database schema to ensure it's up to date
   try {
-    console.log('[DB] Applying pending migrations...');
-    execSync('npx prisma migrate deploy', {
+    console.log('[DB] Syncing database schema...');
+    execSync('npx prisma db push --skip-generate', {
       stdio: 'pipe',
       env: { ...process.env, DATABASE_URL },
     });
     console.log('[DB] Database ready!');
   } catch (error) {
-    // Check if it's just because migrations are already applied (which is fine)
+    // Check if it's just because schema is already in sync (which is fine)
     const errorStr = error.toString();
-    if (errorStr.includes('No pending migrations') || errorStr.includes('already applied')) {
-      console.log('[DB] Database already up to date!');
+    if (errorStr.includes('already in sync') || errorStr.includes('No changes')) {
+      console.log('[DB] Database already in sync!');
     } else {
-      console.warn('[DB] Warning during migration:', error.message || 'Unknown error');
+      console.warn('[DB] Warning during sync:', error.message || 'Unknown error');
       console.log('[DB] The application will attempt to initialize on first request.');
     }
   }

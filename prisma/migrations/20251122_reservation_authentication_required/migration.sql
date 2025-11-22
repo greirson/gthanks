@@ -1,3 +1,6 @@
+-- BREAKING CHANGE: Delete all existing reservations (cannot migrate without userId)
+DELETE FROM Reservation WHERE 1=1;
+
 -- CreateTable
 CREATE TABLE "site_settings" (
     "id" TEXT NOT NULL PRIMARY KEY DEFAULT 'global',
