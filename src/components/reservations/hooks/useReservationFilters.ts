@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { ReservationWithWish } from '@/lib/validators/api-responses/reservations';
 import { reservationsApi } from '@/lib/api/reservations';

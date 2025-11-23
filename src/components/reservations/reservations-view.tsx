@@ -28,7 +28,7 @@ export function ReservationsView() {
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [isDesktopFilterOpen, setIsDesktopFilterOpen] = useState(false);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-  const [viewMode, setViewMode, isHydrated] = useViewPreference('viewMode.reservations', 'grid');
+  const [viewMode, setViewMode, _isHydrated] = useViewPreference('viewMode.reservations', 'grid');
   const [actioningReservation, setActioningReservation] = useState<ReservationWithWish | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);

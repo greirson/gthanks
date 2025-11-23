@@ -45,7 +45,7 @@ export function MobileReservationFilterSheet({
   setPurchaseStatus,
   setSortOption,
   setSearchQuery,
-  resetFilters,
+  resetFilters: _resetFilters,
   activeFilterCount,
 }: MobileReservationFilterSheetProps) {
   const [isOpen, setIsOpen] = useState(false);

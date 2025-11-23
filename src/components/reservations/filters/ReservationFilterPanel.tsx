@@ -73,8 +73,8 @@ const purchaseStatusOptions: { value: PurchaseStatus; label: string }[] = [
 ];
 
 export function ReservationFilterPanel({
-  open,
-  onOpenChange,
+  open: _open,
+  onOpenChange: _onOpenChange,
   filterState,
   uniqueOwners,
   setDateFilter,

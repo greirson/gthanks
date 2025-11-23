@@ -1,12 +1,10 @@
 'use client';
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Check, ShoppingBag, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { Progress } from '@/components/ui/progress';
 import { ThemeButton } from '@/components/ui/theme-button';
-import { useToast } from '@/components/ui/use-toast';
 
 interface BulkActionsBarProps {
   selectedCount: number;
@@ -31,7 +29,7 @@ export function BulkActionsBar({
   onClearSelection,
   onClose,
 }: BulkActionsBarProps) {
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isProcessing, _setIsProcessing] = useState(false);
   const [progress, setProgress] = useState<ProgressState>({
     current: 0,
     total: 0,
