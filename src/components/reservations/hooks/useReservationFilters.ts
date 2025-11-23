@@ -58,10 +58,12 @@ export function useReservationFilters(reservations: ReservationWithWish[]) {
   }, [safeReservations]);
 
   // Use shared filter persistence hook (localStorage only, no URL serialization)
+  // Exclude 'search' field from persistence - search queries are ephemeral
   const [filterState, setFilterState] = useFilterPersistence<FilterState>({
     storageKey: FILTER_STORAGE_KEY,
     defaultState: DEFAULT_FILTER_STATE,
     fallback: 'memory', // In-memory fallback if localStorage unavailable
+    excludeFromPersistence: ['search'], // Don't persist search queries
     onError: (error) => {
       console.warn('Filter persistence failed, using in-memory state:', error);
     },
@@ -114,7 +116,7 @@ export function useReservationFilters(reservations: ReservationWithWish[]) {
   const filteredReservations = useMemo(() => {
     let filtered = [...safeReservations];
 
-    // Apply search filter (includes title, owner, list name, and URL)
+    // Apply search filter (includes title, owner, and URL)
     if (debouncedSearch) {
       filtered = applySearchFilter(
         filtered,
@@ -123,10 +125,9 @@ export function useReservationFilters(reservations: ReservationWithWish[]) {
           res.wish.title,
           res.wish.user.name || '',
           res.wish.user.email,
-          res.wish.list?.name || '', // Search by list name
+          res.wish.user.username || '',
           res.wish.url || '', // Search by product URL
-        ],
-        'reservation'
+        ]
       );
     }
 

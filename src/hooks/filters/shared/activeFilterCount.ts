@@ -7,6 +7,7 @@
  *
  * @param filterState - Current filter state
  * @param defaults - Default filter state to compare against
+ * @param excludeFields - Optional array of field names to exclude from count (e.g., ['search', 'sort'])
  * @returns Number of filters that differ from defaults
  *
  * @example
@@ -14,12 +15,26 @@
  *   { search: 'gift', priority: [3], sortBy: 'date' },
  *   { search: '', priority: [], sortBy: 'priority' }
  * ); // Returns 2 (search and priority are active)
+ *
+ * @example
+ * // Exclude certain fields from count
+ * const count = countActiveFilters(
+ *   { search: 'gift', priority: [3], sort: 'date' },
+ *   { search: '', priority: [], sort: 'priority' },
+ *   ['search', 'sort'] // Don't count search and sort as active filters
+ * ); // Returns 1 (only priority is active)
  */
 export function countActiveFilters(
   filterState: Record<string, unknown>,
-  defaults: Record<string, unknown>
+  defaults: Record<string, unknown>,
+  excludeFields: string[] = []
 ): number {
   return Object.keys(filterState).reduce((count, key) => {
+    // Skip excluded fields
+    if (excludeFields.includes(key)) {
+      return count;
+    }
+
     const current = filterState[key];
     const defaultValue = defaults[key];
 
