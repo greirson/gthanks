@@ -343,20 +343,20 @@ export type WishQueryValidatedParams = z.infer<typeof WishQueryValidatedSchema>;
 // Bulk operation schemas
 export const BulkDeleteWishesSchema = z.object({
   wishIds: z
-    .array(z.string().uuid('Invalid wish ID format'))
+    .array(z.string().min(1, 'Wish ID is required'))
     .min(1, 'At least one wish ID is required'),
 });
 
 export const BulkAddToListSchema = z.object({
   wishIds: z
-    .array(z.string().uuid('Invalid wish ID format'))
+    .array(z.string().min(1, 'Wish ID is required'))
     .min(1, 'At least one wish ID is required'),
-  listId: z.string().uuid('Invalid list ID format'),
+  listId: z.string().min(1, 'List ID is required'),
 });
 
 export const BulkRemoveFromListsSchema = z.object({
   wishIds: z
-    .array(z.string().uuid('Invalid wish ID format'))
+    .array(z.string().min(1, 'Wish ID is required'))
     .min(1, 'At least one wish ID is required'),
 });
 
