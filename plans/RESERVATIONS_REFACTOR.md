@@ -45,8 +45,8 @@
 - [x] 5.3 Delete old page component ✅ cf0347a
 
 ### PHASE 6: Dialogs & Confirmations
-- [ ] 6.1 Create action dialog (RemoveOptionsDialog pattern)
-- [ ] 6.2 Create purchase date picker dialog
+- [x] 6.1 Create action dialog (RemoveOptionsDialog pattern) ✅ 747f5d3
+- [x] 6.2 Create purchase date picker dialog ✅ 43ef499
 
 ### PHASE 7: Performance Optimizations
 - [ ] 7.1 Install and configure @tanstack/react-virtual
