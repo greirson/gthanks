@@ -1,6 +1,11 @@
 import { Wish } from '@/lib/validators/api-responses/wishes';
 
 /**
+ * Type representing the minimal wish data needed for image utilities
+ */
+type WishImageData = Pick<Wish, 'imageStatus' | 'localImagePath' | 'imageUrl'>;
+
+/**
  * Get the appropriate image source for a wish based on its processing status.
  *
  * Priority order:
@@ -11,7 +16,7 @@ import { Wish } from '@/lib/validators/api-responses/wishes';
  * @param wish - The wish object containing image status and paths
  * @returns The image source URL or null if no image is available
  */
-export function getWishImageSrc(wish: Wish): string | null {
+export function getWishImageSrc(wish: WishImageData): string | null {
   // Priority 1: Show optimized local image if available
   if (wish.imageStatus === 'COMPLETED' && wish.localImagePath) {
     return wish.localImagePath;
@@ -29,7 +34,7 @@ export function getWishImageSrc(wish: Wish): string | null {
  * @param wish - The wish object to check
  * @returns True if the image is in PROCESSING or PENDING status
  */
-export function isWishImageProcessing(wish: Wish): boolean {
+export function isWishImageProcessing(wish: WishImageData): boolean {
   return wish.imageStatus === 'PROCESSING' || wish.imageStatus === 'PENDING';
 }
 
@@ -43,7 +48,7 @@ export function isWishImageProcessing(wish: Wish): boolean {
  * @param wish - The wish object to check
  * @returns True if the wish has a displayable image
  */
-export function hasWishImage(wish: Wish): boolean {
+export function hasWishImage(wish: WishImageData): boolean {
   return (
     (wish.imageStatus === 'COMPLETED' && !!wish.localImagePath) ||
     (isWishImageProcessing(wish) && !!wish.imageUrl)

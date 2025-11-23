@@ -110,7 +110,7 @@ export function ReservationsDisplay({
   const flatItems = useMemo(() => flattenGroups(groups), [groups]);
 
   // Virtual scrolling threshold: 50+ items
-  const useVirtualScroll = flatItems.length > 50;
+  const useVirtualScroll = flatItems.length > 500; // Raised from 50: current virtualization breaks grid layout
 
   // Virtual scrolling configuration
   const virtualizer = useVirtualizer({
@@ -124,7 +124,7 @@ export function ReservationsDisplay({
   // Regular rendering (no virtual scroll)
   if (!useVirtualScroll) {
     return (
-      <div className={cn(viewMode === 'grid' && 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3')}>
+      <div className={cn(viewMode === 'grid' && 'grid grid-cols-2 gap-3 md:grid-cols-4')}>
         {flatItems.map(({ reservation, isPurchased, isLastInSection }) => (
           <div
             key={reservation.id}

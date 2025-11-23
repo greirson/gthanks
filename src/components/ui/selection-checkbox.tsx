@@ -6,12 +6,15 @@ interface SelectionCheckboxProps {
   checked: boolean;
   onCheckedChange: (checked: boolean, event?: React.MouseEvent | React.KeyboardEvent) => void;
   className?: string;
+  position?: 'bottom-right' | 'top-right';
 }
 
-export function SelectionCheckbox({ checked, onCheckedChange, className }: SelectionCheckboxProps) {
+export function SelectionCheckbox({ checked, onCheckedChange, className, position = 'bottom-right' }: SelectionCheckboxProps) {
+  const positionClasses = position === 'top-right' ? 'top-2 right-2' : 'bottom-2 right-2';
+
   return (
     <div
-      className={`absolute bottom-2 right-2 z-20 ${className || ''}`}
+      className={`absolute ${positionClasses} z-20 ${className || ''}`}
       onClick={(e) => {
         e.stopPropagation();
         onCheckedChange(!checked, e);

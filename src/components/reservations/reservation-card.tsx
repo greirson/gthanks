@@ -1,8 +1,9 @@
 // File: src/components/reservations/reservation-card.tsx
 'use client';
 
+import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { ArrowRight, X, ShoppingBag } from 'lucide-react';
+import { ArrowRight, X, ShoppingBag, Clock } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { SelectionCheckbox } from '@/components/ui/selection-checkbox';
 import { cn } from '@/lib/utils';
+import { getWishImageSrc, isWishImageProcessing, hasWishImage } from '@/lib/utils/wish-images';
 import type { ReservationWithWish } from '@/lib/validators/api-responses/reservations';
 
 interface ReservationCardProps {
@@ -44,7 +46,12 @@ export function ReservationCard({
   onMarkPurchased,
   onCardClick,
 }: ReservationCardProps) {
-  const wishImageUrl = reservation.wish.localImagePath || reservation.wish.imageUrl;
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  const wishImageSrc = getWishImageSrc(reservation.wish);
+  const isImageProcessing = isWishImageProcessing(reservation.wish);
+  const hasImage = hasWishImage(reservation.wish);
   const ownerName = reservation.wish.user.name || reservation.wish.user.email;
   const listName = reservation.wish.list?.name || 'Wishlist';
   const listId = reservation.wish.list?.id;
@@ -66,29 +73,56 @@ export function ReservationCard({
         )}
         onClick={handleCardClick}
       >
-        {/* Checkbox - bottom-right corner, only visible in selection mode */}
+        {/* Checkbox - top-right corner, only visible in selection mode */}
         {isSelectionMode && (
-          <div className="absolute bottom-3 right-3 z-10">
-            <SelectionCheckbox
-              checked={isSelected}
-              onCheckedChange={(checked) => {
-                onToggleSelect(reservation.id);
-              }}
-            />
-          </div>
+          <SelectionCheckbox
+            position="top-right"
+            checked={isSelected}
+            onCheckedChange={() => onToggleSelect(reservation.id)}
+          />
         )}
 
         <CardContent className="space-y-3 p-4">
           {/* Wish Image */}
-          {wishImageUrl && (
+          {(hasImage || reservation.wish.imageStatus === 'FAILED') && (
             <div className="relative aspect-square w-full overflow-hidden rounded-md bg-muted">
-              <Image
-                src={wishImageUrl}
-                alt={reservation.wish.title}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              />
+              {/* Skeleton loader */}
+              {!imageLoaded && hasImage && !imageError && (
+                <div className="absolute inset-0 animate-pulse bg-muted" />
+              )}
+
+              {hasImage && !imageError && (
+                <Image
+                  src={wishImageSrc || ''}
+                  alt={reservation.wish.title}
+                  fill
+                  className={`object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  onLoad={() => setImageLoaded(true)}
+                  onError={() => setImageError(true)}
+                  unoptimized={isImageProcessing}
+                />
+              )}
+
+              {/* Processing overlay */}
+              {isImageProcessing && (
+                <div className="absolute inset-0 flex items-start justify-end p-3">
+                  <div className="flex items-center gap-1.5 rounded-full bg-blue-600/90 px-2.5 py-1.5 text-white shadow-lg">
+                    <Clock className="h-3.5 w-3.5 animate-spin" />
+                    <span className="text-xs font-medium">Optimizing...</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Failed state */}
+              {reservation.wish.imageStatus === 'FAILED' && (
+                <div className="flex h-full items-center justify-center">
+                  <div className="text-center text-muted-foreground">
+                    <div className="mb-1 text-lg">📷</div>
+                    <div className="text-sm">Image unavailable</div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -102,13 +136,13 @@ export function ReservationCard({
             {listId ? (
               <Link
                 href={`/lists/${listId}`}
-                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+                className="group flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
                 aria-label={`View ${ownerName}'s ${listName}`}
                 onClick={(e) => e.stopPropagation()}
               >
-                <span className="font-medium text-foreground">{ownerName}</span>
+                <span className="font-medium text-foreground group-hover:underline">{ownerName}</span>
                 <ArrowRight className="h-3 w-3 shrink-0" aria-hidden="true" />
-                <span className="truncate">{listName}</span>
+                <span className="truncate group-hover:underline">{listName}</span>
               </Link>
             ) : (
               <div
@@ -121,11 +155,6 @@ export function ReservationCard({
               </div>
             )}
 
-            {/* Reserved date (relative) */}
-            <p className="text-xs text-muted-foreground">
-              Reserved {formatDistanceToNow(new Date(reservation.reservedAt), { addSuffix: true })}
-            </p>
-
             {/* Purchased badge */}
             {isPurchased && (
               <Badge variant="outline" className="border-green-600 bg-green-50 text-green-700">
@@ -135,7 +164,7 @@ export function ReservationCard({
           </div>
 
           {/* Action buttons - Icon + Text format */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-2">
             <Button
               variant="ghost"
               size="sm"
@@ -144,7 +173,7 @@ export function ReservationCard({
                 onCancel(reservation);
               }}
               aria-label="Cancel reservation"
-              className="flex-1"
+              className="w-full"
             >
               <X className="mr-1 h-4 w-4" />
               Cancel
@@ -158,7 +187,7 @@ export function ReservationCard({
                   onMarkPurchased(reservation);
                 }}
                 aria-label="Mark as purchased"
-                className="flex-1"
+                className="w-full"
               >
                 <ShoppingBag className="mr-1 h-4 w-4" />
                 Mark Purchased
@@ -183,26 +212,57 @@ export function ReservationCard({
       <CardContent className="flex min-h-[60px] items-center gap-3 p-3">
         {/* Checkbox - left side, only visible in selection mode */}
         {isSelectionMode && (
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center">
-            <SelectionCheckbox
+          <label
+            htmlFor={`select-reservation-${reservation.id}`}
+            className="-m-3 flex cursor-pointer items-center justify-center p-3"
+          >
+            <input
+              id={`select-reservation-${reservation.id}`}
+              type="checkbox"
               checked={isSelected}
-              onCheckedChange={(checked) => {
-                onToggleSelect(reservation.id);
-              }}
+              onChange={() => onToggleSelect(reservation.id)}
+              className="h-4 w-4 rounded border"
+              aria-label={`Select ${reservation.wish.title}`}
             />
-          </div>
+          </label>
         )}
 
         {/* Thumbnail */}
-        {wishImageUrl && (
-          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md bg-muted">
-            <Image
-              src={wishImageUrl}
-              alt={reservation.wish.title}
-              fill
-              className="object-cover"
-              sizes="48px"
-            />
+        {(hasImage || reservation.wish.imageStatus === 'FAILED') && (
+          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded bg-muted">
+            {/* Skeleton loader */}
+            {!imageLoaded && hasImage && !imageError && (
+              <div className="absolute inset-0 animate-pulse bg-muted" />
+            )}
+
+            {hasImage && !imageError && (
+              <Image
+                src={wishImageSrc || ''}
+                alt={reservation.wish.title}
+                fill
+                className={`object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                sizes="48px"
+                onLoad={() => setImageLoaded(true)}
+                onError={() => setImageError(true)}
+                unoptimized={isImageProcessing}
+              />
+            )}
+
+            {/* Processing overlay */}
+            {isImageProcessing && (
+              <div className="absolute inset-0 flex items-center justify-center bg-blue-600/90">
+                <Clock className="h-4 w-4 animate-spin text-white" />
+              </div>
+            )}
+
+            {/* Failed state */}
+            {reservation.wish.imageStatus === 'FAILED' && (
+              <div className="flex h-full items-center justify-center">
+                <div className="text-center text-muted-foreground">
+                  <div className="text-2xl">📷</div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -213,13 +273,13 @@ export function ReservationCard({
           {listId ? (
             <Link
               href={`/lists/${listId}`}
-              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+              className="group flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
               aria-label={`View ${ownerName}'s ${listName}`}
               onClick={(e) => e.stopPropagation()}
             >
-              <span className="font-medium text-foreground">{ownerName}</span>
+              <span className="font-medium text-foreground group-hover:underline">{ownerName}</span>
               <ArrowRight className="h-3 w-3 shrink-0" aria-hidden="true" />
-              <span className="truncate">{listName}</span>
+              <span className="truncate group-hover:underline">{listName}</span>
             </Link>
           ) : (
             <div
