@@ -13,7 +13,7 @@ type MarkPurchasedBody = z.infer<typeof markPurchasedSchema>;
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { reservationId: string } }
 ) {
   try {
     const session = await getServerSession();
@@ -30,7 +30,7 @@ export async function PATCH(
 
     // Use service layer for authorization and update
     const updated = await reservationService.markAsPurchased(
-      params.id,
+      params.reservationId,
       session.user.id,
       purchasedDate
     );

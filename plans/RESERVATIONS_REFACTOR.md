@@ -510,7 +510,7 @@ export type BulkReservationResponse = z.infer<typeof BulkReservationResponseSche
 
 ### 1.3 Create Mark as Purchased API Endpoint
 
-**File:** `src/app/api/reservations/[id]/purchased/route.ts` (NEW)
+**File:** `src/app/api/reservations/[reservationId]/purchased/route.ts` (NEW)
 
 ```typescript
 import { NextRequest, NextResponse } from 'next/server';
@@ -1805,7 +1805,7 @@ describe('Virtual Scrolling Performance', () => {
 ### New Files (12) 🆕 +1
 
 1. **`src/lib/services/reservation-service.ts`** 🚨 BLOCKER FIX - Service layer for bulk operations
-2. `src/app/api/reservations/[id]/purchased/route.ts` - Mark as purchased endpoint
+2. `src/app/api/reservations/[reservationId]/purchased/route.ts` - Mark as purchased endpoint
 3. `src/app/api/reservations/bulk/route.ts` - Bulk operations endpoint (uses service)
 4. `src/components/reservations/filters/ReservationFilterPanel.tsx` - Desktop filter panel
 5. `src/components/reservations/filters/MobileReservationFilterSheet.tsx` - Mobile filter sheet

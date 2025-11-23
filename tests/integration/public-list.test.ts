@@ -145,8 +145,8 @@ describe('Public List API Integration Tests', () => {
       expect(data.id).toBe(publicList.id);
       expect(data.name).toBe('My Public Birthday List');
       expect(data.visibility).toBe('public');
-      expect(data.owner).toBeTruthy();
-      expect(data.owner.name).toBe('List Owner');
+      expect(data.user).toBeTruthy();
+      expect(data.user.name).toBe('List Owner');
     });
 
     it('should include wishes in public list response', async () => {
@@ -156,11 +156,11 @@ describe('Public List API Integration Tests', () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.wishes).toBeTruthy();
-      expect(Array.isArray(data.wishes)).toBe(true);
-      expect(data.wishes.length).toBeGreaterThan(0);
-      expect(data.wishes[0].wish.title).toBe('Shared Gift Item');
-      expect(data.wishes[0].wish.price).toBe(29.99);
+      expect(data.listWishes).toBeTruthy();
+      expect(Array.isArray(data.listWishes)).toBe(true);
+      expect(data.listWishes.length).toBeGreaterThan(0);
+      expect(data.listWishes[0].wish.title).toBe('Shared Gift Item');
+      expect(data.listWishes[0].wish.price).toBe(29.99);
     });
 
     it('should not expose password hash in public list response', async () => {
@@ -180,10 +180,10 @@ describe('Public List API Integration Tests', () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.owner).toBeTruthy();
-      expect(data.owner.id).toBe(testUser.id);
-      expect(data.owner.name).toBe(testUser.name);
-      expect(data.owner.email).toBe(testUser.email);
+      expect(data.user).toBeTruthy();
+      expect(data.user.id).toBe(testUser.id);
+      expect(data.user.name).toBe(testUser.name);
+      expect(data.user.email).toBe(testUser.email);
     });
   });
 
@@ -223,7 +223,7 @@ describe('Public List API Integration Tests', () => {
       expect(data.id).toBe(passwordProtectedList.id);
       expect(data.name).toBe('My Protected List');
       expect(data.visibility).toBe('password');
-      expect(data.wishes).toBeTruthy();
+      expect(data.listWishes).toBeTruthy();
     });
 
     it('should return 403 when accessing password-protected list with wrong password', async () => {
@@ -479,8 +479,8 @@ describe('Public List API Integration Tests', () => {
 
       expect(response.status).toBe(200);
       expect(data).toBeTruthy();
-      expect(data.wishes).toBeTruthy();
-      expect(data.wishes.length).toBe(0);
+      expect(data.listWishes).toBeTruthy();
+      expect(data.listWishes.length).toBe(0);
     });
 
     it('should handle list with null description', async () => {
@@ -534,7 +534,7 @@ describe('Public List API Integration Tests', () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.wishes.length).toBe(2);
+      expect(data.listWishes.length).toBe(2);
     });
 
     it('should return wishes in correct order', async () => {
@@ -544,11 +544,11 @@ describe('Public List API Integration Tests', () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.wishes).toBeTruthy();
-      expect(Array.isArray(data.wishes)).toBe(true);
-      if (data.wishes.length > 1) {
-        const firstAdded = new Date(data.wishes[0].addedAt);
-        const secondAdded = new Date(data.wishes[1].addedAt);
+      expect(data.listWishes).toBeTruthy();
+      expect(Array.isArray(data.listWishes)).toBe(true);
+      if (data.listWishes.length > 1) {
+        const firstAdded = new Date(data.listWishes[0].addedAt);
+        const secondAdded = new Date(data.listWishes[1].addedAt);
         expect(firstAdded >= secondAdded).toBe(true);
       }
     });

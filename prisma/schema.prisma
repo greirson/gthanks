@@ -9,7 +9,7 @@ datasource db {
 }
 
 model Account {
-  id                    String  @id
+  id                    String  @id @default(cuid())
   userId                String
   type                  String
   provider              String
@@ -31,20 +31,20 @@ model Account {
 }
 
 model Group {
-  id               String            @id
+  id               String            @id @default(cuid())
   name             String
   description      String?
   avatarUrl        String?
   visibility       String            @default("private")
   createdAt        DateTime          @default(now())
-  updatedAt        DateTime
+  updatedAt        DateTime          @updatedAt
   groupInvitations GroupInvitation[]
   listGroups       ListGroup[]
   userGroups       UserGroup[]
 }
 
 model GroupInvitation {
-  id         String    @id
+  id         String    @id @default(cuid())
   groupId    String
   email      String
   token      String    @unique
@@ -66,7 +66,7 @@ model GroupInvitation {
 }
 
 model List {
-  id                  String           @id
+  id                  String           @id @default(cuid())
   name                String
   description         String?
   ownerId             String
@@ -77,7 +77,7 @@ model List {
   hideFromProfile     Boolean          @default(false)
   giftCardPreferences String?          @default("[]")
   createdAt           DateTime         @default(now())
-  updatedAt           DateTime
+  updatedAt           DateTime         @updatedAt
   user                User             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   listAdmins          ListAdmin[]
   listGroups          ListGroup[]
@@ -122,7 +122,7 @@ model ListGroup {
 }
 
 model ListInvitation {
-  id         String    @id
+  id         String    @id @default(cuid())
   listId     String
   email      String
   token      String    @unique
@@ -157,7 +157,7 @@ model ListWish {
 }
 
 model MagicLink {
-  id        String   @id
+  id        String   @id @default(cuid())
   email     String
   token     String   @unique
   expiresAt DateTime
@@ -168,7 +168,7 @@ model MagicLink {
 }
 
 model Reservation {
-  id            String    @id
+  id            String    @id @default(cuid())
   wishId        String
   userId        String
   reservedAt    DateTime  @default(now())
@@ -183,7 +183,7 @@ model Reservation {
 }
 
 model Session {
-  id           String   @id
+  id           String   @id @default(cuid())
   sessionToken String   @unique
   userId       String
   expires      DateTime
@@ -193,12 +193,12 @@ model Session {
 }
 
 model User {
-  id                   String            @id
+  id                   String            @id @default(cuid())
   email                String            @unique
   name                 String?
   avatarUrl            String?
   createdAt            DateTime          @default(now())
-  updatedAt            DateTime
+  updatedAt            DateTime          @updatedAt
   emailVerified        DateTime?
   image                String?
   role                 String            @default("user")
@@ -233,7 +233,7 @@ model User {
 }
 
 model UserEmail {
-  id                String    @id
+  id                String    @id @default(cuid())
   userId            String
   email             String    @unique
   isPrimary         Boolean   @default(false)
@@ -242,7 +242,7 @@ model UserEmail {
   verificationToken String?   @unique
   tokenExpiresAt    DateTime?
   createdAt         DateTime  @default(now())
-  updatedAt         DateTime
+  updatedAt         DateTime  @updatedAt
   user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, isPrimary])
@@ -270,7 +270,7 @@ model UserGroup {
 }
 
 model UserPreference {
-  id                         String   @id
+  id                         String   @id @default(cuid())
   userId                     String   @unique
   sortBy                     String   @default("createdAt")
   sortOrder                  String   @default("desc")
@@ -280,7 +280,7 @@ model UserPreference {
   priceMax                   Float?
   autoAcceptGroupInvitations Boolean  @default(false)
   createdAt                  DateTime @default(now())
-  updatedAt                  DateTime
+  updatedAt                  DateTime @updatedAt
   user                       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -296,7 +296,7 @@ model VerificationToken {
 }
 
 model Wish {
-  id             String        @id
+  id             String        @id @default(cuid())
   title          String
   notes          String?
   url            String?
@@ -312,7 +312,7 @@ model Wish {
   wishLevel      Int           @default(1)
   ownerId        String
   createdAt      DateTime      @default(now())
-  updatedAt      DateTime
+  updatedAt      DateTime      @updatedAt
   listWishes     ListWish[]
   reservations   Reservation[]
   user           User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
@@ -331,7 +331,7 @@ model SiteSettings {
   loginMessageUpdatedAt DateTime?
   loginMessageUpdatedBy String?
   createdAt             DateTime  @default(now())
-  updatedAt             DateTime
+  updatedAt             DateTime  @updatedAt
 
   @@map("site_settings")
 }

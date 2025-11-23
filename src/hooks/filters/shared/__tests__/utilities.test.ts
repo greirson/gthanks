@@ -79,20 +79,24 @@ describe('filterStorage', () => {
 
   it('saves and retrieves filters from localStorage', () => {
     const filters = { search: 'test', priority: [1, 2] };
-    saveFilters('test-key', filters);
+    const saveResult = saveFilters('test-key', filters);
+    expect(saveResult.success).toBe(true);
 
     const retrieved = getStoredFilters<typeof filters>('test-key');
-    expect(retrieved).toEqual(filters);
+    expect(retrieved.success).toBe(true);
+    expect(retrieved.data).toEqual(filters);
   });
 
   it('returns null for non-existent keys', () => {
     const result = getStoredFilters('non-existent');
-    expect(result).toBeNull();
+    expect(result.success).toBe(true);
+    expect(result.data).toBeNull();
   });
 
   it('handles JSON parsing errors gracefully', () => {
     localStorage.setItem('invalid-json', 'not valid json{');
     const result = getStoredFilters('invalid-json');
-    expect(result).toBeNull();
+    expect(result.success).toBe(false);
+    expect(result.error).toBeTruthy();
   });
 });

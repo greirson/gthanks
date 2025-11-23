@@ -672,23 +672,18 @@ describe('Duplicate Reservation Cleanup Script', () => {
     });
 
     it('should handle large number of duplicates (100+ reservations)', async () => {
-      // Create 100 duplicate reservations
-      const reservationPromises = [];
+      // Create 100 duplicate reservations sequentially to avoid database locking
       for (let i = 0; i < 100; i++) {
-        reservationPromises.push(
-          db.reservation.create({
-            data: {
-              id: `res-${i}`,
-              wishId: testWish1.id,
-              userId: testUser1.id,
-              reserverName: 'User 1',
-              reserverEmail: testUser1.email,
-            },
-          })
-        );
+        await db.reservation.create({
+          data: {
+            id: `res-${i}`,
+            wishId: testWish1.id,
+            userId: testUser1.id,
+            reserverName: 'User 1',
+            reserverEmail: testUser1.email,
+          },
+        });
       }
-
-      await Promise.all(reservationPromises);
 
       const result = await cleanupDuplicateReservations(false);
 

@@ -617,18 +617,22 @@ const mockDb = {
       if (args.include) {
         const result = { ...list };
 
-        if (args.include.owner) {
-          const owner = mockDataStore.users.get(list.ownerId);
-          if (owner && args.include.owner.select) {
-            const selectedOwner = {};
-            Object.keys(args.include.owner.select).forEach((key) => {
-              if (args.include.owner.select[key] && owner[key] !== undefined) {
-                selectedOwner[key] = owner[key];
+        // Handle both 'user' (Prisma relation name) and 'owner' (legacy) for backward compatibility
+        if (args.include.user || args.include.owner) {
+          const userOrOwner = mockDataStore.users.get(list.ownerId);
+          const includeConfig = args.include.user || args.include.owner;
+          if (userOrOwner && includeConfig.select) {
+            const selectedUser = {};
+            Object.keys(includeConfig.select).forEach((key) => {
+              if (includeConfig.select[key] && userOrOwner[key] !== undefined) {
+                selectedUser[key] = userOrOwner[key];
               }
             });
-            result.owner = selectedOwner;
+            if (args.include.user) result.user = selectedUser;
+            if (args.include.owner) result.owner = selectedUser;
           } else {
-            result.owner = owner || null;
+            if (args.include.user) result.user = userOrOwner || null;
+            if (args.include.owner) result.owner = userOrOwner || null;
           }
         }
 
@@ -642,18 +646,21 @@ const mockDb = {
             (la) => la.listId === list.id
           );
           result._count = {
-            wishes: wishes.length,
-            admins: admins.length,
+            listWishes: wishes.length,
+            listAdmins: admins.length,
+            wishes: wishes.length, // Legacy
+            admins: admins.length, // Legacy
           };
         }
 
-        if (args.include.wishes) {
+        // Handle both 'listWishes' (Prisma relation name) and 'wishes' (legacy) for backward compatibility
+        if (args.include.listWishes || args.include.wishes) {
           mockDataStore.listWishes = mockDataStore.listWishes || new Map();
           mockDataStore.wishes = mockDataStore.wishes || new Map();
           const listWishes = Array.from(mockDataStore.listWishes.values()).filter(
             (lw) => lw.listId === list.id
           );
-          result.wishes = listWishes.map((lw) => {
+          const wishesData = listWishes.map((lw) => {
             const wish = mockDataStore.wishes.get(lw.wishId);
             return {
               ...lw,
@@ -662,14 +669,18 @@ const mockDb = {
           });
 
           // Apply orderBy if specified
-          if (args.include.wishes.orderBy?.addedAt) {
-            result.wishes.sort((a, b) => {
-              if (args.include.wishes.orderBy.addedAt === 'desc') {
+          const includeConfig = args.include.listWishes || args.include.wishes;
+          if (includeConfig.orderBy?.addedAt) {
+            wishesData.sort((a, b) => {
+              if (includeConfig.orderBy.addedAt === 'desc') {
                 return new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime();
               }
               return new Date(a.addedAt).getTime() - new Date(b.addedAt).getTime();
             });
           }
+
+          if (args.include.listWishes) result.listWishes = wishesData;
+          if (args.include.wishes) result.wishes = wishesData;
         }
 
         // IMPORTANT: Keep password field for service layer (password verification needs it)
@@ -1050,11 +1061,11 @@ const mockDb = {
 
       return Promise.resolve(reservation);
     }),
-    findMany: jest.fn().mockImplementation((args) => {
+    findMany: jest.fn().mockImplementation((args = {}) => {
       mockDataStore.reservations = mockDataStore.reservations || new Map();
       let reservations = Array.from(mockDataStore.reservations.values());
 
-      if (args?.where) {
+      if (args.where) {
         if (args.where.userId) {
           reservations = reservations.filter((r) => r.userId === args.where.userId);
         }
@@ -1100,10 +1111,18 @@ const mockDb = {
       } else {
         const toDelete = [];
         for (const [key, reservation] of mockDataStore.reservations.entries()) {
-          if (args.where.wishId && reservation.wishId === args.where.wishId) {
-            toDelete.push(key);
+          let shouldDelete = false;
+
+          // Handle id.in pattern (e.g., { id: { in: ['id1', 'id2'] } })
+          if (args.where.id?.in) {
+            shouldDelete = args.where.id.in.includes(reservation.id);
+          } else if (args.where.wishId) {
+            shouldDelete = reservation.wishId === args.where.wishId;
+          } else if (args.where.userId) {
+            shouldDelete = reservation.userId === args.where.userId;
           }
-          if (args.where.userId && reservation.userId === args.where.userId) {
+
+          if (shouldDelete) {
             toDelete.push(key);
           }
         }
