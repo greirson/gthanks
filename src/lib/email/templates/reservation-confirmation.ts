@@ -13,7 +13,7 @@ ${data.productUrl ? `Buy it here: ${data.productUrl}\n\n` : ''}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 View all your reservations anytime:
-https://gthanks.app/my-reservations
+https://gthanks.app/reservations
 
 (You'll be prompted to login if needed)
 

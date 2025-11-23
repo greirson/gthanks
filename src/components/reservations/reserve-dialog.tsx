@@ -60,7 +60,7 @@ export function ReserveDialog({ wish, open, onOpenChange }: ReserveDialogProps) 
       toast({
         title: 'Item reserved!',
         description: 'Check "My Reservations" to see all your items.',
-        action: <Button onClick={() => router.push('/my-reservations')}>View</Button>,
+        action: <Button onClick={() => router.push('/reservations')}>View</Button>,
       });
     } catch {
       toast({
@@ -75,7 +75,7 @@ export function ReserveDialog({ wish, open, onOpenChange }: ReserveDialogProps) 
     e.preventDefault();
     setIsLoading(true);
 
-    const callbackUrl = `/my-reservations?reserved=${wish.id}`;
+    const callbackUrl = `/reservations?reserved=${wish.id}`;
 
     // CRITICAL: Use redirect: false to keep user on page
     const result = await signIn('email', {
@@ -98,7 +98,7 @@ export function ReserveDialog({ wish, open, onOpenChange }: ReserveDialogProps) 
   };
 
   const handleOAuth = (provider: string) => {
-    const callbackUrl = `/my-reservations?reserved=${wish.id}`;
+    const callbackUrl = `/reservations?reserved=${wish.id}`;
     // OAuth MUST do full page redirect (OAuth 2.0 spec requirement)
     signIn(provider, { callbackUrl });
   };

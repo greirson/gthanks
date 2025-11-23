@@ -76,10 +76,10 @@ export function MainNav({ user }: MainNavProps) {
       active: pathname.startsWith('/lists'),
     },
     {
-      href: '/my-reservations',
-      label: 'My Reservations',
+      href: '/reservations',
+      label: 'Reservations',
       icon: Bookmark,
-      active: pathname.startsWith('/my-reservations'),
+      active: pathname.startsWith('/reservations'),
     },
     {
       href: '/groups',
