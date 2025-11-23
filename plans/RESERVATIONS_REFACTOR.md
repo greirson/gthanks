@@ -11,15 +11,15 @@
 ## IMPLEMENTATION PROGRESS
 
 ### PHASE 0: Pre-Migration (CRITICAL)
-- [ ] 0.1 Check for duplicate reservations (SQL query)
+- [x] 0.1 Check for duplicate reservations (SQL query) ✅ d2e2d2c
 - [ ] 0.2 Create cleanup script for duplicates (if found)
 - [ ] 0.3 Run cleanup script (dry-run then live)
-- [ ] 0.4 Create reservation-service.ts (BLOCKER FIX)
-- [ ] 0.5 Verify no duplicates remain
+- [x] 0.4 Create reservation-service.ts (BLOCKER FIX) ✅ ee6cc2f
+- [x] 0.5 Verify no duplicates remain ✅ (0 duplicates found)
 
 ### PHASE 1: Core Infrastructure
 - [ ] 1.1 Database schema migration (purchasedAt, purchasedDate, unique constraint)
-- [ ] 1.2 Update type definitions (ReservationWithWishSchema + bulk schemas)
+- [x] 1.2 Update type definitions (ReservationWithWishSchema + bulk schemas) ✅ d117037
 - [ ] 1.3 Create mark as purchased API endpoint
 - [ ] 1.4 Create bulk operations API endpoint
 - [ ] 1.5 Update API client (3 new methods)
