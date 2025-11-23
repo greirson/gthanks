@@ -141,12 +141,12 @@ export function ListSharingDialog({ list, open, onOpenChange }: ListSharingDialo
     // Owner (always first)
     items.push({
       type: 'owner',
-      id: list.owner.id,
-      name: list.owner.name || 'Unknown',
-      email: list.owner.email || undefined,
-      avatarUrl: list.owner.avatarUrl,
+      id: list.user.id,
+      name: list.user.name || 'Unknown',
+      email: list.user.email || undefined,
+      avatarUrl: list.user.avatarUrl,
       role: 'Owner',
-      isYou: list.owner.id === session?.user?.id,
+      isYou: list.user.id === session?.user?.id,
       canRemove: false,
     });
 

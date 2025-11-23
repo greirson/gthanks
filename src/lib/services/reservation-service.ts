@@ -33,7 +33,7 @@ export class ReservationService {
             const list = await tx.list.findUnique({
               where: { shareToken },
               include: {
-                wishes: {
+                listWishes: {
                   where: { wishId: data.wishId },
                   include: { wish: true },
                 },
@@ -45,7 +45,7 @@ export class ReservationService {
             }
 
             // Check if the wish is actually in this list
-            if (list.wishes.length === 0) {
+            if (list.listWishes.length === 0) {
               throw new ForbiddenError('This wish does not belong to the shared list');
             }
 
@@ -55,7 +55,7 @@ export class ReservationService {
             }
 
             // Can't reserve your own wish (surprise protection)
-            if (list.wishes[0].wish.ownerId === userId) {
+            if (list.listWishes[0].wish.ownerId === userId) {
               throw new ForbiddenError('You cannot reserve your own wishes');
             }
 
@@ -137,8 +137,8 @@ export class ReservationService {
             const wish = await tx.wish.findUnique({
               where: { id: data.wishId },
               include: {
-                owner: true,
-                lists: {
+                user: true,
+                listWishes: {
                   include: {
                     list: true,
                   },
@@ -156,13 +156,13 @@ export class ReservationService {
             }
 
             // Verify user has permission to view at least one list containing this wish
-            if (wish.lists.length === 0) {
+            if (wish.listWishes.length === 0) {
               throw new NotFoundError('Wish is not on any list');
             }
 
             // Check permission to view at least one list containing the wish
             let hasAccess = false;
-            for (const listWish of wish.lists) {
+            for (const listWish of wish.listWishes) {
               const permissionResult = await permissionService.can(userId, 'view', {
                 type: 'list',
                 id: listWish.list.id,
@@ -396,7 +396,7 @@ export class ReservationService {
     const list = await db.list.findUnique({
       where: { id: listId },
       include: {
-        wishes: {
+        listWishes: {
           include: {
             wish: true,
           },
@@ -409,7 +409,7 @@ export class ReservationService {
     }
 
     // Get all wish IDs
-    const wishIds = list.wishes.map((lw) => lw.wishId);
+    const wishIds = list.listWishes.map((lw) => lw.wishId);
 
     // Get all reservations
     const reservations = await db.reservation.findMany({
@@ -421,7 +421,7 @@ export class ReservationService {
     // Build reservation map
     const reservationMap: Record<string, PublicReservation> = {};
 
-    for (const listWish of list.wishes) {
+    for (const listWish of list.listWishes) {
       const reservation = reservations.find((r) => r.wishId === listWish.wishId);
       const isOwner = userId === listWish.wish.ownerId;
 
@@ -461,7 +461,7 @@ export class ReservationService {
       include: {
         wish: {
           include: {
-            owner: {
+            user: {
               select: {
                 id: true,
                 name: true,
@@ -481,7 +481,7 @@ export class ReservationService {
       wish: {
         id: r.wish.id,
         title: r.wish.title,
-        owner: r.wish.owner,
+        user: r.wish.user,
       },
     }));
   }

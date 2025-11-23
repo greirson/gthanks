@@ -110,7 +110,7 @@ export function useListFilters(lists: ListWithOwner[], currentUserId?: string) {
     // Item count filter
     if (filterState.itemCount !== 'all') {
       filtered = filtered.filter((list) => {
-        const count = list._count?.wishes || 0;
+        const count = list._count?.listWishes || 0;
         switch (filterState.itemCount) {
           case 'empty':
             return count === 0;
@@ -134,7 +134,7 @@ export function useListFilters(lists: ListWithOwner[], currentUserId?: string) {
         case 'name':
           return a.name.localeCompare(b.name);
         case 'items':
-          return (b._count?.wishes || 0) - (a._count?.wishes || 0);
+          return (b._count?.listWishes || 0) - (a._count?.listWishes || 0);
         case 'newest':
         default:
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();

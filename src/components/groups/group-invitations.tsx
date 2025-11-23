@@ -279,7 +279,7 @@ export function GroupInvitations({ groupId, currentUserRole }: GroupInvitationsP
                     </Badge>
                   </div>
                   <div className="mt-1 text-sm text-muted-foreground">
-                    Invited by {invitation.inviter.name || invitation.inviter.email} •{' '}
+                    Invited by {invitation.user.name || invitation.user.email} •{' '}
                     {new Date(invitation.createdAt).toLocaleDateString()}
                   </div>
                 </div>

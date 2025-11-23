@@ -187,7 +187,7 @@ export class PermissionService {
           ownerId: true,
           visibility: true,
           password: true, // Get password upfront
-          admins: {
+          listAdmins: {
             where: { userId },
             select: { userId: true },
           },
@@ -198,7 +198,7 @@ export class PermissionService {
         where: {
           userId,
           group: {
-            lists: {
+            listGroups: {
               some: { listId },
             },
           },
@@ -219,7 +219,7 @@ export class PermissionService {
     }
 
     // Co-manager (ListAdmin) permissions
-    const isCoManager = list.admins.some((admin) => admin.userId === userId);
+    const isCoManager = list.listAdmins.some((admin) => admin.userId === userId);
     if (isCoManager) {
       switch (action) {
         case 'view':
@@ -305,15 +305,15 @@ export class PermissionService {
               { ownerId: userId },
               { visibility: 'public' },
               {
-                admins: {
+                listAdmins: {
                   some: { userId },
                 },
               },
               {
-                groups: {
+                listGroups: {
                   some: {
                     group: {
-                      members: {
+                      userGroups: {
                         some: { userId },
                       },
                     },

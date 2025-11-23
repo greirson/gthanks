@@ -228,7 +228,7 @@ export class GroupService {
     const offset = (page - 1) * limit;
 
     const whereClause = {
-      members: {
+      userGroups: {
         some: { userId },
       },
       ...(options?.search && {
@@ -241,11 +241,11 @@ export class GroupService {
       include: {
         _count: {
           select: {
-            members: true,
-            lists: true,
+            userGroups: true,
+            listGroups: true,
           },
         },
-        members: {
+        userGroups: {
           include: {
             user: true,
           },
@@ -265,14 +265,14 @@ export class GroupService {
     // Resolve avatar URLs for groups and members, and add currentUserRole
     const groupsWithResolvedAvatars = groups.map((group) => {
       // Find the current user's membership in this group
-      const currentUserMembership = group.members.find((m) => m.userId === userId);
+      const currentUserMembership = group.userGroups.find((m) => m.userId === userId);
       const currentUserRole = currentUserMembership?.role as 'admin' | 'member' | null;
 
       return {
         ...group,
         avatarUrl: resolveGroupAvatarUrlSync(group),
         currentUserRole: currentUserRole || null, // Add the currentUserRole field
-        members: group.members.map((member) => ({
+        members: group.userGroups.map((member) => ({
           ...member,
           user: {
             ...member.user,
@@ -291,7 +291,7 @@ export class GroupService {
   async getGroupsCount(userId: string): Promise<{ count: number }> {
     const count = await db.group.count({
       where: {
-        members: {
+        userGroups: {
           some: { userId },
         },
       },

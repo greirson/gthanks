@@ -1,100 +1,186 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native"]
 }
 
 datasource db {
-  // IMPORTANT: Prisma does NOT support env() for the provider field
-  // Provider must be hardcoded to either "sqlite" or "postgresql"
-  //
-  // Local Development: Set to "sqlite" (matches file:./data/gthanks.db)
-  // Docker Deployment: Auto-detected in docker-entrypoint.sh via sed
-  //
-  // The docker-entrypoint.sh script automatically rewrites this line based on
-  // DATABASE_URL protocol (file: → sqlite, postgresql: → postgresql)
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  avatarUrl String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Account {
+  id                    String  @id
+  userId                String
+  type                  String
+  provider              String
+  providerAccountId     String
+  refresh_token         String?
+  access_token          String?
+  expires_at            Int?
+  token_type            String?
+  scope                 String?
+  id_token              String?
+  session_state         String?
+  encryptedAccessToken  String?
+  encryptedRefreshToken String?
+  tokenIv               String?
+  user                  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // OAuth fields
-  emailVerified DateTime?
-  image         String?
-
-  // Admin fields
-  role             String    @default("user") // user, admin, suspended
-  isAdmin          Boolean   @default(false)
-  lastLoginAt      DateTime?
-  suspendedAt      DateTime?
-  suspendedBy      String?
-  suspensionReason String?
-
-  // Theme preference
-  themePreference String? @default("system") // "light", "dark", "system"
-
-  // Onboarding status
-  isOnboardingComplete Boolean @default(false)
-
-  // Vanity URL fields
-  username          String?   @unique
-  usernameSetAt     DateTime?
-  canUseVanityUrls  Boolean   @default(true)
-  showPublicProfile Boolean   @default(false)
-
-  // Relations
-  wishes          Wish[]
-  lists           List[]
-  listAdmins      ListAdmin[]
-  groupsJoined    UserGroup[]
-  groupsInvited   GroupInvitation[] @relation("InvitedBy")
-  listInvitations ListInvitation[]  @relation("ListInvitedBy")
-  reservations    Reservation[]
-  sessions        Session[]
-  accounts        Account[]
-  userPreference  UserPreference?
-  emails          UserEmail[]
-
-  @@index([email])
-  @@index([role])
-  @@index([isAdmin])
-  @@index([username])
-  @@index([canUseVanityUrls])
+  @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
-model UserEmail {
-  id                String    @id @default(cuid())
-  userId            String
-  email             String    @unique
-  isPrimary         Boolean   @default(false)
-  isVerified        Boolean   @default(false)
-  verifiedAt        DateTime?
-  verificationToken String?   @unique
-  tokenExpiresAt    DateTime?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+model Group {
+  id               String            @id
+  name             String
+  description      String?
+  avatarUrl        String?
+  visibility       String            @default("private")
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime
+  groupInvitations GroupInvitation[]
+  listGroups       ListGroup[]
+  userGroups       UserGroup[]
+}
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+model GroupInvitation {
+  id         String    @id
+  groupId    String
+  email      String
+  token      String    @unique
+  invitedBy  String
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  user       User      @relation(fields: [invitedBy], references: [id], onDelete: Cascade)
+  group      Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([invitedBy, createdAt])
+  @@index([email, acceptedAt])
+  @@index([groupId, acceptedAt])
+  @@index([expiresAt])
+  @@index([invitedBy])
+  @@index([token])
+  @@index([email])
+  @@index([groupId])
+}
+
+model List {
+  id                  String           @id
+  name                String
+  description         String?
+  ownerId             String
+  visibility          String           @default("private")
+  password            String?
+  shareToken          String?          @unique
+  slug                String?
+  hideFromProfile     Boolean          @default(false)
+  giftCardPreferences String?          @default("[]")
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime
+  user                User             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  listAdmins          ListAdmin[]
+  listGroups          ListGroup[]
+  listInvitations     ListInvitation[]
+  listWishes          ListWish[]
+
+  @@unique([ownerId, slug])
+  @@index([ownerId, hideFromProfile])
+  @@index([slug])
+  @@index([createdAt])
+  @@index([ownerId, visibility])
+  @@index([shareToken])
+  @@index([ownerId])
+}
+
+model ListAdmin {
+  listId  String
+  userId  String
+  addedAt DateTime @default(now())
+  addedBy String
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  list    List     @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@id([listId, userId])
+  @@index([userId])
+  @@index([listId])
+}
+
+model ListGroup {
+  listId   String
+  groupId  String
+  sharedAt DateTime @default(now())
+  sharedBy String
+  group    Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  list     List     @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@id([listId, groupId])
+  @@index([listId, groupId])
+  @@index([groupId, sharedAt])
+  @@index([groupId])
+  @@index([listId])
+}
+
+model ListInvitation {
+  id         String    @id
+  listId     String
+  email      String
+  token      String    @unique
+  invitedBy  String
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  user       User      @relation(fields: [invitedBy], references: [id], onDelete: Cascade)
+  list       List      @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@unique([listId, email])
+  @@index([email, acceptedAt])
+  @@index([listId, acceptedAt])
+  @@index([expiresAt])
+  @@index([invitedBy])
+  @@index([token])
+  @@index([email])
+  @@index([listId])
+}
+
+model ListWish {
+  listId    String
+  wishId    String
+  wishLevel Int      @default(1)
+  addedAt   DateTime @default(now())
+  wish      Wish     @relation(fields: [wishId], references: [id], onDelete: Cascade)
+  list      List     @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@id([listId, wishId])
+  @@index([wishId])
+  @@index([listId])
+}
+
+model MagicLink {
+  id        String   @id
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([email])
+}
+
+model Reservation {
+  id         String   @id
+  wishId     String
+  userId     String
+  reservedAt DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wish       Wish     @relation(fields: [wishId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([email])
-  @@index([isPrimary])
-  @@index([isVerified])
-  @@index([verificationToken])
-  @@index([userId, isPrimary])
+  @@index([wishId])
 }
 
 model Session {
-  id           String   @id @default(cuid())
+  id           String   @id
   sessionToken String   @unique
   userId       String
   expires      DateTime
@@ -103,28 +189,97 @@ model Session {
   @@index([userId])
 }
 
-model Account {
-  id                String  @id @default(cuid())
+model User {
+  id                   String            @id
+  email                String            @unique
+  name                 String?
+  avatarUrl            String?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime
+  emailVerified        DateTime?
+  image                String?
+  role                 String            @default("user")
+  isAdmin              Boolean           @default(false)
+  lastLoginAt          DateTime?
+  suspendedAt          DateTime?
+  suspendedBy          String?
+  suspensionReason     String?
+  themePreference      String?           @default("system")
+  isOnboardingComplete Boolean           @default(false)
+  username             String?           @unique
+  usernameSetAt        DateTime?
+  canUseVanityUrls     Boolean           @default(true)
+  showPublicProfile    Boolean           @default(false)
+  accounts             Account[]
+  groupInvitations     GroupInvitation[]
+  lists                List[]
+  listAdmins           ListAdmin[]
+  listInvitations      ListInvitation[]
+  reservations         Reservation[]
+  sessions             Session[]
+  emails               UserEmail[]
+  userGroups           UserGroup[]
+  preference           UserPreference?
+  wishes               Wish[]
+
+  @@index([canUseVanityUrls])
+  @@index([username])
+  @@index([isAdmin])
+  @@index([role])
+  @@index([email])
+}
+
+model UserEmail {
+  id                String    @id
   userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
+  email             String    @unique
+  isPrimary         Boolean   @default(false)
+  isVerified        Boolean   @default(false)
+  verifiedAt        DateTime?
+  verificationToken String?   @unique
+  tokenExpiresAt    DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Encrypted token storage (new fields for security)
-  encryptedAccessToken  String?
-  encryptedRefreshToken String?
-  tokenIv               String?
+  @@index([userId, isPrimary])
+  @@index([verificationToken])
+  @@index([isVerified])
+  @@index([isPrimary])
+  @@index([email])
+  @@index([userId])
+}
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+model UserGroup {
+  userId    String
+  groupId   String
+  role      String   @default("member")
+  joinedAt  DateTime @default(now())
+  invitedBy String?
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([provider, providerAccountId])
+  @@id([userId, groupId])
+  @@index([joinedAt])
+  @@index([groupId, role])
+  @@index([groupId])
+  @@index([userId])
+}
+
+model UserPreference {
+  id                         String   @id
+  userId                     String   @unique
+  sortBy                     String   @default("createdAt")
+  sortOrder                  String   @default("desc")
+  wishLevelMin               Int?
+  wishLevelMax               Int?
+  priceMin                   Float?
+  priceMax                   Float?
+  autoAcceptGroupInvitations Boolean  @default(false)
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime
+  user                       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
 }
 
@@ -138,229 +293,33 @@ model VerificationToken {
 }
 
 model Wish {
-  id             String   @id @default(cuid())
+  id             String        @id
   title          String
   notes          String?
   url            String?
   price          Float?
-  currency       String? // Currency for the price (e.g., USD, EUR)
-  imageUrl       String? // Original image URL from metadata extraction
-  sourceImageUrl String? // Source URL for image processing
-  localImagePath String? // Path to locally stored processed image
-  imageStatus    String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
-  quantity       Int      @default(1)
+  currency       String?
+  imageUrl       String?
+  sourceImageUrl String?
+  localImagePath String?
+  imageStatus    String        @default("PENDING")
+  quantity       Int           @default(1)
   size           String?
   color          String?
-  wishLevel      Int      @default(1) // 1-3 wish level, defaults to 1
+  wishLevel      Int           @default(1)
   ownerId        String
-  owner          User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime
+  listWishes     ListWish[]
+  reservations   Reservation[]
+  user           User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
-  // Relations
-  lists        ListWish[]
-  reservations Reservation[]
-
-  @@index([ownerId])
-  @@index([imageStatus])
-  @@index([ownerId, createdAt])
-  @@index([wishLevel])
-  @@index([price])
   @@index([ownerId, wishLevel])
-}
-
-model List {
-  id                  String   @id @default(cuid())
-  name                String
-  description         String?
-  ownerId             String
-  owner               User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  visibility          String   @default("private") // private, public, password, link, group
-  password            String? // Hashed password for password-protected lists (Argon2)
-  shareToken          String?  @unique
-  slug                String? // Slug for vanity URLs (unique per owner)
-  hideFromProfile     Boolean  @default(false) // Hide from public profile
-  giftCardPreferences String?  @default("[]") // JSON string of gift card links: {name, url, amount?, currency?}
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-
-  // Relations
-  wishes      ListWish[]
-  admins      ListAdmin[]
-  groups      ListGroup[]
-  invitations ListInvitation[]
-
-  @@unique([ownerId, slug])
+  @@index([price])
+  @@index([wishLevel])
+  @@index([ownerId, createdAt])
+  @@index([imageStatus])
   @@index([ownerId])
-  @@index([shareToken])
-  @@index([ownerId, visibility])
-  @@index([createdAt])
-  @@index([slug])
-  @@index([ownerId, hideFromProfile])
-}
-
-model Group {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  avatarUrl   String?
-  visibility  String   @default("private") // private only - groups are invitation-based
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  members     UserGroup[]
-  invitations GroupInvitation[]
-  lists       ListGroup[]
-}
-
-model ListWish {
-  listId    String
-  wishId    String
-  wishLevel Int      @default(1) // 1-3 wish level, defaults to 1
-  addedAt   DateTime @default(now())
-
-  list List @relation(fields: [listId], references: [id], onDelete: Cascade)
-  wish Wish @relation(fields: [wishId], references: [id], onDelete: Cascade)
-
-  @@id([listId, wishId])
-  @@index([listId])
-  @@index([wishId])
-}
-
-model ListAdmin {
-  listId  String
-  userId  String
-  addedAt DateTime @default(now())
-  addedBy String
-
-  list List @relation(fields: [listId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@id([listId, userId])
-  @@index([listId])
-  @@index([userId])
-}
-
-model ListGroup {
-  listId   String
-  groupId  String
-  sharedAt DateTime @default(now())
-  sharedBy String
-
-  list  List  @relation(fields: [listId], references: [id], onDelete: Cascade)
-  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
-
-  @@id([listId, groupId])
-  @@index([listId])
-  @@index([groupId])
-  @@index([groupId, sharedAt])
-  @@index([listId, groupId])
-}
-
-model UserGroup {
-  userId    String
-  groupId   String
-  role      String   @default("member") // member, admin
-  joinedAt  DateTime @default(now())
-  invitedBy String?
-
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
-
-  @@id([userId, groupId])
-  @@index([userId])
-  @@index([groupId])
-  @@index([groupId, role])
-  @@index([joinedAt])
-}
-
-model GroupInvitation {
-  id         String    @id @default(cuid())
-  groupId    String
-  email      String
-  token      String    @unique
-  invitedBy  String
-  createdAt  DateTime  @default(now())
-  expiresAt  DateTime
-  acceptedAt DateTime?
-
-  group   Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  inviter User  @relation("InvitedBy", fields: [invitedBy], references: [id], onDelete: Cascade)
-
-  @@index([groupId])
-  @@index([email])
-  @@index([token])
-  @@index([invitedBy])
-  @@index([expiresAt])
-  @@index([groupId, acceptedAt])
-  @@index([email, acceptedAt])
-  @@index([invitedBy, createdAt])
-}
-
-model ListInvitation {
-  id         String    @id @default(cuid())
-  listId     String
-  email      String
-  token      String    @unique
-  invitedBy  String
-  createdAt  DateTime  @default(now())
-  expiresAt  DateTime
-  acceptedAt DateTime?
-
-  list    List @relation(fields: [listId], references: [id], onDelete: Cascade)
-  inviter User @relation("ListInvitedBy", fields: [invitedBy], references: [id], onDelete: Cascade)
-
-  @@unique([listId, email])
-  @@index([listId])
-  @@index([email])
-  @@index([token])
-  @@index([invitedBy])
-  @@index([expiresAt])
-  @@index([listId, acceptedAt])
-  @@index([email, acceptedAt])
-}
-
-model Reservation {
-  id         String   @id @default(cuid())
-  wishId     String
-  userId     String
-  reservedAt DateTime @default(now())
-
-  wish Wish @relation(fields: [wishId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([wishId])
-  @@index([userId])
-}
-
-model MagicLink {
-  id        String   @id @default(cuid())
-  email     String
-  token     String   @unique
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-
-  @@index([email])
-  @@index([token])
-}
-
-model UserPreference {
-  id                         String   @id @default(cuid())
-  userId                     String   @unique
-  sortBy                     String   @default("createdAt")
-  sortOrder                  String   @default("desc")
-  wishLevelMin               Int?
-  wishLevelMax               Int?
-  priceMin                   Float?
-  priceMax                   Float?
-  autoAcceptGroupInvitations Boolean  @default(false)
-  createdAt                  DateTime @default(now())
-  updatedAt                  DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
 }
 
 model SiteSettings {
@@ -369,7 +328,7 @@ model SiteSettings {
   loginMessageUpdatedAt DateTime?
   loginMessageUpdatedBy String?
   createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  updatedAt             DateTime
 
   @@map("site_settings")
 }

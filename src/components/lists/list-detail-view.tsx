@@ -92,7 +92,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
           initialList.updatedAt instanceof Date
             ? initialList.updatedAt.toISOString()
             : (initialList.updatedAt as string),
-        wishes: initialList.wishes?.map((lw) => ({
+        listWishes: initialList.listWishes?.map((lw) => ({
           ...lw,
           addedAt: lw.addedAt instanceof Date ? lw.addedAt.toISOString() : (lw.addedAt as string),
           wish: {
@@ -135,20 +135,20 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
 
   // Filter wishes for "Add Existing" dialog
   const availableWishes = useMemo(() => {
-    if (!allUserWishesData?.items || !list?.wishes) {
+    if (!allUserWishesData?.items || !list?.listWishes) {
       return [];
     }
-    const currentWishIds = new Set(list.wishes.map((lw) => lw.wish.id));
+    const currentWishIds = new Set(list.listWishes.map((lw) => lw.wish.id));
     return allUserWishesData.items.filter((w) => !currentWishIds.has(w.id));
-  }, [allUserWishesData?.items, list?.wishes]);
+  }, [allUserWishesData?.items, list?.listWishes]);
 
   const alreadyAddedWishes = useMemo(() => {
-    if (!allUserWishesData?.items || !list?.wishes) {
+    if (!allUserWishesData?.items || !list?.listWishes) {
       return [];
     }
-    const currentWishIds = new Set(list.wishes.map((lw) => lw.wish.id));
+    const currentWishIds = new Set(list.listWishes.map((lw) => lw.wish.id));
     return allUserWishesData.items.filter((w) => currentWishIds.has(w.id));
-  }, [allUserWishesData?.items, list?.wishes]);
+  }, [allUserWishesData?.items, list?.listWishes]);
 
   // Memoize giftCards to prevent creating new array references on every render
   const giftCards = useMemo(() => {
@@ -194,7 +194,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
 
   // Extract wishes from list for filtering
   const wishes =
-    list?.wishes?.map((lw) => ({
+    list?.listWishes?.map((lw) => ({
       ...lw.wish,
       isOwner: list.isOwner,
     })) || [];
@@ -393,7 +393,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
             name={list.name}
             description={list.description}
             visibility={list.visibility}
-            wishCount={list._count.wishes}
+            wishCount={list._count.listWishes}
             shareToken={list.shareToken}
           />
 
@@ -494,7 +494,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
             name={list.name}
             description={list.description}
             visibility={list.visibility}
-            wishCount={list._count.wishes}
+            wishCount={list._count.listWishes}
             shareToken={list.shareToken}
             className="mb-2 sm:mb-4"
           />

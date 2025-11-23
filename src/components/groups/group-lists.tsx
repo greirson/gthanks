@@ -239,7 +239,7 @@ export function GroupLists({ groupId, currentUserRole, useSearchMode = false }: 
                     </Badge>
                   </div>
                   <div className="mt-1 text-sm text-muted-foreground">
-                    by {list.owner.name} • {list._count?.wishes || 0} wishes
+                    by {list.user.name} • {list._count?.listWishes || 0} wishes
                   </div>
                   {list.description && (
                     <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">

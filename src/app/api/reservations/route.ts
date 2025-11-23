@@ -98,11 +98,11 @@ export async function POST(request: NextRequest) {
       id: string;
       title: string;
       url: string | null;
-      owner: { name: string | null; email: string | null };
+      user: { name: string | null; email: string | null };
     } | null = await db.wish.findUnique({
       where: { id: wishId },
       include: {
-        owner: {
+        user: {
           select: { name: true, email: true },
         },
       },
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
         to: session.user.email || '',
         userName: session.user.name || 'there',
         wishTitle: wish.title,
-        ownerName: wish.owner.name || wish.owner.email || 'List Owner',
+        ownerName: wish.user.name || wish.user.email || 'List Owner',
         productUrl: wish.url ?? undefined,
       });
     }

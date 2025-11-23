@@ -20,19 +20,19 @@ export const ListSchema = z.object({
   updatedAt: flexibleDateSchema(),
 });
 
-// List with owner details
+// List with user details
 export const ListWithOwnerSchema = ListSchema.extend({
-  owner: z.object({
+  user: z.object({
     id: z.string(),
     name: z.string().nullable(),
     email: z.string(),
     avatarUrl: z.string().nullable(),
   }),
   _count: z.object({
-    wishes: z.number(),
-    admins: z.number(),
+    listWishes: z.number(),
+    listAdmins: z.number(),
   }),
-  admins: z
+  listAdmins: z
     .array(
       z.object({
         user: z.object({
@@ -52,7 +52,7 @@ export const ListWithOwnerSchema = ListSchema.extend({
 
 // List with full details including wishes
 export const ListWithDetailsSchema = ListWithOwnerSchema.extend({
-  wishes: z
+  listWishes: z
     .array(
       z
         .object({

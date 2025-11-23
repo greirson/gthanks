@@ -97,15 +97,15 @@ export function ListListView({
                   {/* Items count */}
                   <span className="flex items-center gap-1">
                     <FileText className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                    <span>{list._count?.wishes || 0}</span>
+                    <span>{list._count?.listWishes || 0}</span>
                   </span>
 
                   {/* Owner - only show if not owner */}
-                  {!isOwner && list.owner && (
+                  {!isOwner && list.user && (
                     <span className="flex items-center gap-1">
                       <User className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       <span className="truncate">
-                        {list.owner.name || list.owner.email?.split('@')[0] || 'Unknown'}
+                        {list.user.name || list.user.email?.split('@')[0] || 'Unknown'}
                       </span>
                     </span>
                   )}

@@ -106,7 +106,7 @@ export const ListResponseSchema = z.object({
   itemCount: z.number(),
   createdAt: z.string().or(z.date()),
   updatedAt: z.string().or(z.date()),
-  owner: z
+  user: z
     .object({
       id: z.string(),
       name: z.string().nullable(),

@@ -28,7 +28,7 @@ interface RouteParams {
  * @example
  * // Get all lists containing a wish
  * GET /api/wishes/abc123/lists
- * // Returns: [{ id: "list1", name: "Birthday", _count: { wishes: 5 }, ... }, ...]
+ * // Returns: [{ id: "list1", name: "Birthday", _count: { listWishes: 5 }, ... }, ...]
  *
  * @security Only returns user's own lists (ownerId = session.user.id)
  * @see {@link getCurrentUser} for authentication details

@@ -188,19 +188,19 @@ function UserInvitationsComponent() {
           key={invitation.id}
           className="flex items-center justify-between rounded-lg border bg-card p-4 shadow-sm transition-shadow hover:shadow-md"
           role="listitem"
-          aria-label={`Invitation from ${invitation.inviter.name || invitation.inviter.email} to join ${invitation.group.name}`}
+          aria-label={`Invitation from ${invitation.user.name || invitation.user.email} to join ${invitation.group.name}`}
         >
           <div className="flex min-w-0 flex-1 items-center gap-3">
             {/* Inviter Avatar */}
             <UserAvatar
               user={{
-                ...invitation.inviter,
-                email: invitation.inviter.email as string | null,
-                avatarUrl: invitation.inviter.avatarUrl ?? null,
+                ...invitation.user,
+                email: invitation.user.email as string | null,
+                avatarUrl: invitation.user.avatarUrl ?? null,
               }}
               size="sm"
               className="shrink-0"
-              aria-label={`${invitation.inviter.name || invitation.inviter.email}'s avatar`}
+              aria-label={`${invitation.user.name || invitation.user.email}'s avatar`}
             />
 
             {/* Group info */}
@@ -219,7 +219,7 @@ function UserInvitationsComponent() {
                 </Badge>
               </div>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Invited by {invitation.inviter.name || invitation.inviter.email}
+                Invited by {invitation.user.name || invitation.user.email}
                 <span className="hidden md:inline">
                   {' '}
                   •{' '}
@@ -239,7 +239,7 @@ function UserInvitationsComponent() {
               onClick={() => handleDeclineInvitation(invitation)}
               disabled={respondToInvitationMutation.isPending}
               className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
-              aria-label={`Decline invitation from ${invitation.inviter.name || invitation.inviter.email} to join ${invitation.group.name}`}
+              aria-label={`Decline invitation from ${invitation.user.name || invitation.user.email} to join ${invitation.group.name}`}
             >
               <X className="h-4 w-4" aria-hidden="true" />
             </Button>
@@ -249,7 +249,7 @@ function UserInvitationsComponent() {
               onClick={() => handleAcceptInvitation(invitation)}
               disabled={respondToInvitationMutation.isPending}
               className="h-8 bg-success px-3 text-xs font-medium text-success-foreground hover:bg-success/90 dark:bg-success dark:text-success-foreground dark:hover:bg-success/80"
-              aria-label={`Accept invitation from ${invitation.inviter.name || invitation.inviter.email} to join ${invitation.group.name}`}
+              aria-label={`Accept invitation from ${invitation.user.name || invitation.user.email} to join ${invitation.group.name}`}
             >
               <Check className="mr-1 h-4 w-4" aria-hidden="true" />
               Accept

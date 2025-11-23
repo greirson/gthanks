@@ -263,7 +263,7 @@ describe('PermissionService Admin Override Tests', () => {
         ownerId: 'other-user',
         visibility: 'private',
         password: null,
-        admins: [],
+        listAdmins: [],
       } as any);
 
       const result = await permissionService.can(regularUserId, 'view', {

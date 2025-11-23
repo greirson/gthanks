@@ -250,7 +250,7 @@ export function SearchableListSelector({
                       </p>
                     )}
                     <p className="text-xs text-muted-foreground">
-                      by {list.owner.name} • {list._count?.wishes || 0} wishes
+                      by {list.user.name} • {list._count?.listWishes || 0} wishes
                     </p>
                   </div>
                   <Button

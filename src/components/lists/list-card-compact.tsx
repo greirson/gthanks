@@ -33,8 +33,8 @@ export function ListCardCompact({
   const router = useRouter();
   const isOwner = currentUserId ? list.ownerId === currentUserId : false;
   const isSharedWithUser =
-    !isOwner && list.admins?.some((admin) => admin.user.id === currentUserId);
-  const adminCount = list._count?.admins || 0;
+    !isOwner && list.listAdmins?.some((admin) => admin.user.id === currentUserId);
+  const adminCount = list._count?.listAdmins || 0;
 
   const handleClick = () => {
     router.push(`/lists/${list.id}`);
@@ -92,7 +92,7 @@ export function ListCardCompact({
             {/* Items count */}
             <span className="flex items-center gap-1">
               <FileText className="h-3 w-3" />
-              {list._count?.wishes || 0}
+              {list._count?.listWishes || 0}
             </span>
 
             {/* Share status */}
@@ -104,11 +104,11 @@ export function ListCardCompact({
             )}
 
             {/* Owner - only show if not owner */}
-            {!isOwner && list.owner && (
+            {!isOwner && list.user && (
               <span className="flex max-w-[120px] items-center gap-1 truncate">
                 <User className="h-3 w-3" />
                 <span className="truncate">
-                  {list.owner.name || list.owner.email?.split('@')[0]}
+                  {list.user.name || list.user.email?.split('@')[0]}
                 </span>
               </span>
             )}

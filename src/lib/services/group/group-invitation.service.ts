@@ -193,7 +193,7 @@ export class GroupInvitationService {
         acceptedAt: null,
       },
       include: {
-        inviter: true,
+        user: true,
         group: {
           select: {
             id: true,
@@ -307,7 +307,7 @@ export class GroupInvitationService {
       where: { id: invitationId },
       include: {
         group: true,
-        inviter: {
+        user: {
           select: {
             id: true,
             name: true,
@@ -332,7 +332,7 @@ export class GroupInvitationService {
         to: invitation.email,
         subject: `Reminder: Invitation to join ${invitation.group.name}`,
         html: `
-          <p>You've been invited to join ${invitation.group.name} by ${invitation.inviter.name || invitation.inviter.email}.</p>
+          <p>You've been invited to join ${invitation.group.name} by ${invitation.user.name || invitation.user.email}.</p>
           <p><a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/invitations/accept/${invitation.token}">Accept Invitation</a></p>
           <p><a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/invitations/decline/${invitation.token}">Decline Invitation</a></p>
         `,

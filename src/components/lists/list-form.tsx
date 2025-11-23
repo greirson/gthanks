@@ -131,7 +131,7 @@ export function ListForm({
         ownerId: '', // Will be filled by server response
         createdAt: new Date(),
         updatedAt: new Date(),
-        owner: {
+        user: {
           id: '',
           name: '', // Will be filled by next query
           email: '',
@@ -170,7 +170,7 @@ export function ListForm({
 
         const newListWithDetails = {
           ...newList,
-          owner: {
+          user: {
             id: newList.ownerId,
             name: '', // Will be filled by next query
             email: '',

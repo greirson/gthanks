@@ -9,7 +9,7 @@ interface PublicGiftCardSectionProps {
   list: {
     id: string;
     giftCardPreferences?: string | null;
-    owner: {
+    user: {
       name: string | null;
     };
   };

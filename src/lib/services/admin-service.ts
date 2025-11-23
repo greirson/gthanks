@@ -160,7 +160,7 @@ export class AdminService {
             select: {
               wishes: true,
               lists: true,
-              groupsJoined: true,
+              userGroups: true,
             },
           },
         },
@@ -201,7 +201,7 @@ export class AdminService {
             createdAt: true,
             _count: {
               select: {
-                wishes: true,
+                listWishes: true,
               },
             },
           },
@@ -237,7 +237,7 @@ export class AdminService {
           select: {
             wishes: true,
             lists: true,
-            groupsJoined: true,
+            userGroups: true,
           },
         },
       },

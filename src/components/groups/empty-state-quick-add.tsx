@@ -125,7 +125,7 @@ export function EmptyStateQuickAdd({ groupId }: EmptyStateQuickAddProps) {
                 {list.name}
               </h4>
               <p className="text-xs text-muted-foreground">
-                {list._count?.wishes || 0} {list._count?.wishes === 1 ? 'wish' : 'wishes'}
+                {list._count?.listWishes || 0} {list._count?.listWishes === 1 ? 'wish' : 'wishes'}
               </p>
             </div>
 

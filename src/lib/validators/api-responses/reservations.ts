@@ -70,7 +70,7 @@ export const ReservationWithWishSchema = ReservationSchema.extend({
   wish: z.object({
     id: z.string(),
     title: z.string(),
-    owner: z.object({
+    user: z.object({
       id: z.string(),
       name: z.string().nullable(),
       email: z.string(),

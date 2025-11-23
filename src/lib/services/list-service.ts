@@ -20,18 +20,18 @@ import { logger } from './logger';
 import { permissionService } from './permission-service';
 
 export interface ListWithDetails extends Omit<List, 'password'> {
-  owner: Pick<User, 'id' | 'name' | 'email' | 'avatarUrl'>;
+  user: Pick<User, 'id' | 'name' | 'email' | 'avatarUrl'>;
   password?: string | null | undefined;
   _count: {
-    wishes: number;
-    admins: number;
+    listWishes: number;
+    listAdmins: number;
   };
-  wishes?: Array<{
+  listWishes?: Array<{
     wish: Wish;
     addedAt: Date;
     wishLevel: number | null;
   }>;
-  admins?: Array<{
+  listAdmins?: Array<{
     user: Pick<User, 'id' | 'name' | 'email' | 'avatarUrl'>;
     addedAt: Date;
   }>;
@@ -93,7 +93,7 @@ export class ListService {
         ownerId: userId,
       },
       include: {
-        owner: {
+        user: {
           select: {
             id: true,
             name: true,
@@ -103,8 +103,8 @@ export class ListService {
         },
         _count: {
           select: {
-            wishes: true,
-            admins: true,
+            listWishes: true,
+            listAdmins: true,
           },
         },
       },
@@ -241,7 +241,7 @@ export class ListService {
           where: { id: listId },
           data: updateData,
           include: {
-            owner: {
+            user: {
               select: {
                 id: true,
                 name: true,
@@ -251,8 +251,8 @@ export class ListService {
             },
             _count: {
               select: {
-                wishes: true,
-                admins: true,
+                listWishes: true,
+                listAdmins: true,
               },
             },
           },
@@ -296,7 +296,7 @@ export class ListService {
       await tx.reservation.deleteMany({
         where: {
           wish: {
-            lists: {
+            listWishes: {
               some: { listId },
             },
           },
@@ -332,7 +332,7 @@ export class ListService {
     const list = await db.list.findUnique({
       where: { id: listId },
       include: {
-        owner: {
+        user: {
           select: {
             id: true,
             name: true,
@@ -342,11 +342,11 @@ export class ListService {
         },
         _count: {
           select: {
-            wishes: true,
-            admins: true,
+            listWishes: true,
+            listAdmins: true,
           },
         },
-        wishes: {
+        listWishes: {
           include: {
             wish: true,
           },
@@ -395,7 +395,7 @@ export class ListService {
           where: {
             userId,
             group: {
-              lists: {
+              listGroups: {
                 some: {
                   listId,
                 },
@@ -443,7 +443,7 @@ export class ListService {
       OR: [
         { ownerId: userId },
         {
-          admins: {
+          listAdmins: {
             some: {
               userId: userId,
             },
@@ -468,7 +468,7 @@ export class ListService {
     const lists = await db.list.findMany({
       where: whereClause,
       include: {
-        owner: {
+        user: {
           select: {
             id: true,
             name: true,
@@ -476,7 +476,7 @@ export class ListService {
             avatarUrl: true,
           },
         },
-        admins: {
+        listAdmins: {
           include: {
             user: {
               select: {
@@ -493,8 +493,8 @@ export class ListService {
         },
         _count: {
           select: {
-            wishes: true,
-            admins: true,
+            listWishes: true,
+            listAdmins: true,
           },
         },
         // Remove wishes include to prevent performance issues
@@ -516,15 +516,15 @@ export class ListService {
     return {
       lists: lists.map((list) => {
         const isOwner = list.ownerId === userId;
-        const isAdmin = list.admins.some((admin) => admin.userId === userId);
+        const isAdmin = list.listAdmins.some((admin) => admin.userId === userId);
 
         return {
           ...list,
-          owner: {
-            ...list.owner,
-            avatarUrl: resolveAvatarUrlSync(list.owner),
+          user: {
+            ...list.user,
+            avatarUrl: resolveAvatarUrlSync(list.user),
           },
-          admins: list.admins.map((admin) => ({
+          listAdmins: list.listAdmins.map((admin) => ({
             user: {
               ...admin.user,
               avatarUrl: resolveAvatarUrlSync(admin.user),
@@ -703,7 +703,7 @@ export class ListService {
     const list = await db.list.findUnique({
       where: { shareToken: token },
       include: {
-        owner: {
+        user: {
           select: {
             id: true,
             name: true,
@@ -713,11 +713,11 @@ export class ListService {
         },
         _count: {
           select: {
-            wishes: true,
-            admins: true,
+            listWishes: true,
+            listAdmins: true,
           },
         },
-        wishes: {
+        listWishes: {
           include: {
             wish: true, // Include all wish fields for editing
           },
@@ -861,7 +861,7 @@ export class ListService {
         where: { id: listId },
         data: { slug: slug.toLowerCase() },
         include: {
-          owner: {
+          user: {
             select: {
               id: true,
               name: true,
@@ -871,8 +871,8 @@ export class ListService {
           },
           _count: {
             select: {
-              wishes: true,
-              admins: true,
+              listWishes: true,
+              listAdmins: true,
             },
           },
         },
@@ -901,12 +901,12 @@ export class ListService {
     const list = await db.list.findFirst({
       where: {
         slug: slug.toLowerCase(),
-        owner: {
+        user: {
           username: username.toLowerCase(),
         },
       },
       include: {
-        owner: {
+        user: {
           select: {
             id: true,
             name: true,
@@ -916,11 +916,11 @@ export class ListService {
         },
         _count: {
           select: {
-            wishes: true,
-            admins: true,
+            listWishes: true,
+            listAdmins: true,
           },
         },
-        wishes: {
+        listWishes: {
           include: {
             wish: true,
           },
@@ -957,14 +957,14 @@ export class ListService {
   async getPublicListsByUsername(username: string): Promise<ListWithDetails[]> {
     const lists = await db.list.findMany({
       where: {
-        owner: {
+        user: {
           username: username.toLowerCase(),
         },
         hideFromProfile: false,
         OR: [{ visibility: 'public' }, { visibility: 'password' }],
       },
       include: {
-        owner: {
+        user: {
           select: {
             id: true,
             name: true,
@@ -974,8 +974,8 @@ export class ListService {
         },
         _count: {
           select: {
-            wishes: true,
-            admins: true,
+            listWishes: true,
+            listAdmins: true,
           },
         },
       },

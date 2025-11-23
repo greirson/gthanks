@@ -83,7 +83,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: ownerUserId,
         visibility: 'private',
         password: null,
-        admins: [{ userId: coManagerUserId }],
+        listAdmins: [{ userId: coManagerUserId }],
       } as any);
 
       const result = await permissionService.can(coManagerUserId, 'view', {
@@ -100,7 +100,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: ownerUserId,
         visibility: 'private',
         password: null,
-        admins: [{ userId: coManagerUserId }],
+        listAdmins: [{ userId: coManagerUserId }],
       } as any);
 
       const result = await permissionService.can(coManagerUserId, 'edit', {
@@ -117,7 +117,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: ownerUserId,
         visibility: 'private',
         password: null,
-        admins: [{ userId: coManagerUserId }],
+        listAdmins: [{ userId: coManagerUserId }],
       } as any);
 
       const result = await permissionService.can(coManagerUserId, 'share', {
@@ -134,7 +134,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: ownerUserId,
         visibility: 'private',
         password: null,
-        admins: [{ userId: coManagerUserId }],
+        listAdmins: [{ userId: coManagerUserId }],
       } as any);
 
       const result = await permissionService.can(coManagerUserId, 'delete', {
@@ -152,7 +152,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: ownerUserId,
         visibility: 'private',
         password: null,
-        admins: [{ userId: coManagerUserId }],
+        listAdmins: [{ userId: coManagerUserId }],
       } as any);
 
       const result = await permissionService.can(coManagerUserId, 'admin', {
@@ -170,7 +170,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: ownerUserId,
         visibility: 'private',
         password: null,
-        admins: [{ userId: coManagerUserId }],
+        listAdmins: [{ userId: coManagerUserId }],
       } as any);
 
       const result = await permissionService.can(coManagerUserId, 'invite', {
@@ -191,7 +191,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: ownerUserId,
         visibility: 'private',
         password: null,
-        admins: [{ userId: ownerUserId }], // Owner is also in admins
+        listAdmins: [{ userId: ownerUserId }], // Owner is also in admins
       } as any);
 
       // Owner should still be able to delete (owner permissions win)
@@ -210,7 +210,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: ownerUserId,
         visibility: 'private',
         password: null,
-        admins: [], // No admins, user was removed
+        listAdmins: [], // No admins, user was removed
       } as any);
 
       mockUserGroupFindFirst.mockResolvedValueOnce(null); // Not a group member either
@@ -230,7 +230,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: null, // Edge case: orphaned list
         visibility: 'private',
         password: null,
-        admins: [{ userId: coManagerUserId }],
+        listAdmins: [{ userId: coManagerUserId }],
       } as any);
 
       // Co-manager should still have permissions even with no owner
@@ -251,7 +251,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: ownerUserId,
         visibility: 'private',
         password: null,
-        admins: [{ userId: coManagerUserId }],
+        listAdmins: [{ userId: coManagerUserId }],
       } as any);
 
       const result1 = await permissionService.can(coManagerUserId, 'edit', {
@@ -265,7 +265,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: ownerUserId,
         visibility: 'private',
         password: null,
-        admins: [], // Not a co-manager of this list
+        listAdmins: [], // Not a co-manager of this list
       } as any);
 
       mockUserGroupFindFirst.mockResolvedValueOnce(null); // Not a group member
@@ -287,7 +287,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: ownerUserId,
         visibility: 'private',
         password: null,
-        admins: [
+        listAdmins: [
           { userId: coManagerUserId },
           { userId: coManager2UserId },
           { userId: coManager3UserId },
@@ -307,7 +307,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: ownerUserId,
         visibility: 'private',
         password: null,
-        admins: [
+        listAdmins: [
           { userId: coManagerUserId },
           { userId: coManager2UserId },
           { userId: coManager3UserId },
@@ -328,7 +328,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: 'deleted-owner-id',
         visibility: 'private',
         password: null,
-        admins: [{ userId: coManagerUserId }],
+        listAdmins: [{ userId: coManagerUserId }],
       } as any);
 
       // Co-manager should still have their limited permissions
@@ -347,7 +347,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: ownerUserId,
         visibility: 'private',
         password: null,
-        admins: [{ userId: ownerUserId }], // Owner is also listed as admin
+        listAdmins: [{ userId: ownerUserId }], // Owner is also listed as admin
       } as any);
 
       const result = await permissionService.can(ownerUserId, 'delete', {
@@ -388,7 +388,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: ownerUserId,
         visibility: 'private',
         password: null,
-        admins: [{ userId: coManagerUserId }], // User is co-manager
+        listAdmins: [{ userId: coManagerUserId }], // User is co-manager
       } as any);
 
       const result = await permissionService.can(coManagerUserId, 'view', {
@@ -435,7 +435,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: ownerUserId,
         visibility: 'private',
         password: null,
-        admins: [{ userId: coManagerUserId }],
+        listAdmins: [{ userId: coManagerUserId }],
       } as any);
 
       // Co-manager can edit the list, which includes adding wishes
@@ -463,7 +463,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: ownerUserId,
         visibility: 'private',
         password: null,
-        admins: [{ userId: coManagerUserId }], // User is co-manager
+        listAdmins: [{ userId: coManagerUserId }], // User is co-manager
       } as any);
 
       const result = await permissionService.can(coManagerUserId, 'view', {
@@ -484,7 +484,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: ownerUserId,
         visibility: 'private',
         password: null,
-        admins: manyCoManagers,
+        listAdmins: manyCoManagers,
       } as any);
 
       const startTime = Date.now();
@@ -503,7 +503,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: ownerUserId,
         visibility: 'private',
         password: null,
-        admins: [{ userId: coManagerUserId }],
+        listAdmins: [{ userId: coManagerUserId }],
       } as any);
 
       const promises = Array.from({ length: 10 }, () =>
@@ -540,7 +540,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: ownerUserId,
         visibility: 'private',
         password: null,
-        admins: [{ userId: coManagerUserId }],
+        listAdmins: [{ userId: coManagerUserId }],
       } as any);
 
       await expect(
@@ -558,7 +558,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: ownerUserId,
         visibility: 'private',
         password: null,
-        admins: [
+        listAdmins: [
           { userId: coManagerUserId },
           null, // Malformed entry
           { userId: null }, // Another malformed entry
@@ -582,7 +582,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: ownerUserId,
         visibility: 'private',
         password: null,
-        admins: [{ userId: 'different-user-123' }], // Different user is admin
+        listAdmins: [{ userId: 'different-user-123' }], // Different user is admin
       } as any);
 
       mockUserGroupFindFirst.mockResolvedValueOnce(null); // Not a group member
@@ -603,7 +603,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: ownerUserId,
         visibility: 'private',
         password: null,
-        admins: [
+        listAdmins: [
           { userId: 'admin-1' },
           { userId: coManagerUserId }, // Exact match
           { userId: 'admin-3' },
@@ -624,7 +624,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: ownerUserId,
         visibility: 'private',
         password: null,
-        admins: [], // No admins
+        listAdmins: [], // No admins
       } as any);
 
       mockUserGroupFindFirst.mockResolvedValueOnce(null); // Not a group member
@@ -646,7 +646,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: ownerUserId,
         visibility: 'private',
         password: null,
-        admins: [], // Not a co-manager
+        listAdmins: [], // Not a co-manager
       } as any);
 
       // But is a group member with access to the list
@@ -669,7 +669,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: ownerUserId,
         visibility: 'private',
         password: null,
-        admins: [{ userId: coManagerUserId }], // Is co-manager
+        listAdmins: [{ userId: coManagerUserId }], // Is co-manager
       } as any);
 
       // Co-manager can edit
@@ -690,7 +690,7 @@ describe('PermissionService Co-Manager Tests', () => {
         ownerId: ownerUserId,
         visibility: 'public', // Public list
         password: null,
-        admins: [{ userId: coManagerUserId }], // Also co-manager
+        listAdmins: [{ userId: coManagerUserId }], // Also co-manager
       } as any);
 
       // Co-manager should get co-manager permissions, not just public view

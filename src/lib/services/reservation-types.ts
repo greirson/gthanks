@@ -5,7 +5,7 @@ export interface ReservationWithWish extends Reservation {
   wish: {
     id: string;
     title: string;
-    owner: {
+    user: {
       id: string;
       name: string | null;
       email: string;

@@ -156,7 +156,7 @@ export default function MyReservationsPage() {
                                   <User className="h-4 w-4 flex-shrink-0" />
                                   <span className="break-all">
                                     For:{' '}
-                                    {reservation.wish.owner.name || reservation.wish.owner.email}
+                                    {reservation.wish.user.name || reservation.wish.user.email}
                                   </span>
                                 </div>
                                 <div className="flex items-center gap-2">

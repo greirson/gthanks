@@ -622,7 +622,7 @@ export function WishForm({
                       htmlFor={`list-${list.id}`}
                       className="flex-1 cursor-pointer text-sm font-normal"
                     >
-                      {list.name} ({list._count.wishes} wishes)
+                      {list.name} ({list._count.listWishes} wishes)
                     </Label>
                   </div>
                 ))}

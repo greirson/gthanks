@@ -41,16 +41,16 @@ export interface GroupMemberDetailsResponse extends Omit<UserGroup, 'joinedAt'> 
   };
 }
 
-// List with owner info - using string dates for API responses
+// List with user info - using string dates for API responses
 export interface ListWithOwnerResponse extends Omit<List, 'createdAt' | 'updatedAt'> {
   createdAt: string;
   updatedAt: string;
-  owner: {
+  user: {
     id: string;
     name: string | null;
   };
   _count?: {
-    wishes: number;
+    listWishes: number;
   };
 }
 

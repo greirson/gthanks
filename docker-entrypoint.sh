@@ -64,10 +64,36 @@ fi
 # Generate Prisma Client for runtime platform, then apply migrations
 # Use direct binary path to ensure version consistency (avoid npx downloading latest)
 node_modules/.bin/prisma generate
-node_modules/.bin/prisma migrate deploy || {
-  echo "ERROR: Database migration failed"
-  exit 1
-}
+
+# Try to apply migrations, and if it fails due to P3005, baseline the database
+if ! node_modules/.bin/prisma migrate deploy 2>&1 | tee /tmp/migrate-output.log; then
+  # Check if the error is P3005 (database not empty)
+  if grep -q "P3005" /tmp/migrate-output.log; then
+    echo ""
+    echo "Detected existing database without migration history (P3005)"
+    echo "Baselining database by marking existing migrations as applied..."
+    echo ""
+
+    # Mark the baseline migration as applied (existing schema matches baseline)
+    node_modules/.bin/prisma migrate resolve --applied 0_baseline || {
+      echo "ERROR: Failed to baseline existing database"
+      exit 1
+    }
+
+    echo "Database baselined successfully, retrying migration deployment..."
+
+    # Retry migration deployment
+    node_modules/.bin/prisma migrate deploy || {
+      echo "ERROR: Database migration failed after baselining"
+      exit 1
+    }
+  else
+    # Different error, fail
+    echo "ERROR: Database migration failed (not a P3005 error)"
+    cat /tmp/migrate-output.log
+    exit 1
+  fi
+fi
 
 echo "Database initialized successfully"
 

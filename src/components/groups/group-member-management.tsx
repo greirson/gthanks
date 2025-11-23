@@ -551,7 +551,7 @@ export function GroupMemberManagement({ groupId, currentUserRole }: GroupMemberM
                     <div className="font-medium">{invitation.email}</div>
                     <div className="text-sm text-muted-foreground">
                       Invited by{' '}
-                      {invitation.inviter?.name || invitation.inviter?.email || 'Unknown'}
+                      {invitation.user?.name || invitation.user?.email || 'Unknown'}
                     </div>
                   </div>
                 </div>

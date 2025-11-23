@@ -19,7 +19,7 @@ export default async function MyReservationsPage() {
     include: {
       wish: {
         include: {
-          owner: {
+          user: {
             select: { name: true, email: true },
           },
         },
@@ -31,7 +31,7 @@ export default async function MyReservationsPage() {
   // Group by list owner
   const groupedByOwner = reservations.reduce(
     (acc, res) => {
-      const ownerName = res.wish.owner.name || res.wish.owner.email;
+      const ownerName = res.wish.user.name || res.wish.user.email;
       if (!acc[ownerName]) {
         acc[ownerName] = [];
       }

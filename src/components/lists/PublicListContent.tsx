@@ -23,17 +23,17 @@ export interface PublicListData {
   hideFromProfile: boolean;
   shareToken: string | null;
   giftCardPreferences?: string | null;
-  owner: {
+  user: {
     id: string;
     name: string | null;
     email: string;
     avatarUrl: string | null;
   };
   _count: {
-    wishes: number;
-    admins: number;
+    listWishes: number;
+    listAdmins: number;
   };
-  wishes?: Array<{
+  listWishes?: Array<{
     wish: PrismaWish;
     addedAt: Date;
     wishLevel: number | null;
@@ -59,9 +59,9 @@ export function PublicListContent({
 
   // Convert list wishes to API wish format
   const wishes: ApiWish[] =
-    list.wishes?.map((listWish) => ({
+    list.listWishes?.map((listWish) => ({
       id: listWish.wish.id,
-      ownerId: list.owner.id,
+      ownerId: list.user.id,
       createdAt: new Date(listWish.wish.createdAt).toISOString(),
       updatedAt: new Date(listWish.wish.updatedAt || listWish.wish.createdAt).toISOString(),
       title: listWish.wish.title,
@@ -77,7 +77,7 @@ export function PublicListContent({
       currency: listWish.wish.currency,
       quantity: listWish.wish.quantity,
       wishLevel: listWish.wish.wishLevel,
-      isOwner: currentUserId === list.owner.id,
+      isOwner: currentUserId === list.user.id,
     })) || [];
 
   // Use filter hook
@@ -150,8 +150,8 @@ export function PublicListContent({
               <h1 className="mb-2 text-2xl font-bold">{list.name}</h1>
               {list.description && <p className="mb-2 text-muted-foreground">{list.description}</p>}
               <p className="text-sm text-muted-foreground">
-                {list._count.wishes} {list._count.wishes === 1 ? 'wish' : 'wishes'} • by{' '}
-                {list.owner.name}
+                {list._count.listWishes} {list._count.listWishes === 1 ? 'wish' : 'wishes'} • by{' '}
+                {list.user.name}
               </p>
             </div>
 
@@ -175,22 +175,22 @@ export function PublicListContent({
                     </div>
                     <div>
                       <h3 className="mb-1 text-sm font-medium text-foreground md:text-base">
-                        {currentUserId === list.owner.id
+                        {currentUserId === list.user.id
                           ? 'Viewing Your Wishlist'
                           : 'How to Reserve Gifts'}
                       </h3>
                       <p className="text-xs text-muted-foreground md:hidden">
-                        {currentUserId === list.owner.id ? (
+                        {currentUserId === list.user.id ? (
                           <>This is how others see your wishlist.</>
                         ) : (
                           <>
                             Tap &quot;Reserve&quot; to claim a gift. Your name stays hidden from{' '}
-                            {list.owner.name}.
+                            {list.user.name}.
                           </>
                         )}
                       </p>
                       <p className="hidden text-sm text-muted-foreground md:block">
-                        {currentUserId === list.owner.id ? (
+                        {currentUserId === list.user.id ? (
                           <>
                             This is how others see your wishlist. They can reserve items, but you
                             can&apos;t reserve your own wishes.
@@ -198,7 +198,7 @@ export function PublicListContent({
                         ) : (
                           <>
                             Click the &quot;Reserve&quot; button on any item you plan to buy. Your
-                            name stays hidden from {list.owner.name} until after the gift is given.
+                            name stays hidden from {list.user.name} until after the gift is given.
                             This prevents duplicate gifts!
                           </>
                         )}

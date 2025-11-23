@@ -97,7 +97,7 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
     include: {
       _count: {
         select: {
-          wishes: true,
+          listWishes: true,
         },
       },
     },
@@ -163,7 +163,7 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
                   </CardHeader>
                   <CardContent>
                     <Badge variant="secondary">
-                      {list._count.wishes} {list._count.wishes === 1 ? 'wish' : 'wishes'}
+                      {list._count.listWishes} {list._count.listWishes === 1 ? 'wish' : 'wishes'}
                     </Badge>
                   </CardContent>
                 </Card>

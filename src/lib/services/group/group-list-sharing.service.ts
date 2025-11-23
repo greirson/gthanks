@@ -131,11 +131,11 @@ export class GroupListSharingService {
       include: {
         list: {
           include: {
-            owner: true,
+            user: true,
             _count: {
               select: {
-                wishes: true,
-                admins: true,
+                listWishes: true,
+                listAdmins: true,
               },
             },
           },
@@ -237,10 +237,10 @@ export class GroupListSharingService {
             { ownerId: userId },
             { visibility: 'public' },
             {
-              groups: {
+              listGroups: {
                 some: {
                   group: {
-                    members: {
+                    userGroups: {
                       some: { userId },
                     },
                   },
@@ -266,7 +266,7 @@ export class GroupListSharingService {
     const lists = await this.db.list.findMany({
       where: whereClause,
       include: {
-        owner: {
+        user: {
           select: {
             id: true,
             name: true,
@@ -276,8 +276,8 @@ export class GroupListSharingService {
         },
         _count: {
           select: {
-            wishes: true,
-            admins: true,
+            listWishes: true,
+            listAdmins: true,
           },
         },
       },
@@ -325,7 +325,7 @@ export class GroupListSharingService {
         include: {
           list: {
             include: {
-              owner: {
+              user: {
                 select: {
                   id: true,
                   name: true,
@@ -335,8 +335,8 @@ export class GroupListSharingService {
               },
               _count: {
                 select: {
-                  wishes: true,
-                  admins: true,
+                  listWishes: true,
+                  listAdmins: true,
                 },
               },
             },

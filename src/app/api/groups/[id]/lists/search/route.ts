@@ -148,8 +148,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           createdAt: serializedList.createdAt,
           updatedAt: serializedList.updatedAt,
           owner: {
-            id: serializedList.owner.id,
-            name: serializedList.owner.name,
+            id: serializedList.user.id,
+            name: serializedList.user.name,
           },
           _count: serializedList._count,
         };

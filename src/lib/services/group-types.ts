@@ -3,8 +3,8 @@ import { Group, GroupInvitation, List, UserGroup } from '@prisma/client';
 // Group with member count - using Date objects (serialized at API layer)
 export interface GroupWithCounts extends Group {
   _count: {
-    members: number;
-    lists: number;
+    userGroups: number;
+    listGroups: number;
   };
   currentUserRole?: 'admin' | 'member' | null;
 }
@@ -16,8 +16,8 @@ export interface GroupWithDetails extends Group {
   invitations: GroupInvitationDetails[];
   currentUserRole?: 'admin' | 'member' | null;
   _count: {
-    members: number;
-    lists: number;
+    userGroups: number;
+    listGroups: number;
   };
 }
 
@@ -31,20 +31,20 @@ export interface GroupMemberDetails extends UserGroup {
   };
 }
 
-// List with owner info - using Date objects (serialized at API layer)
+// List with user info - using Date objects (serialized at API layer)
 export interface ListWithOwner extends List {
-  owner: {
+  user: {
     id: string;
     name: string | null;
   };
   _count?: {
-    wishes: number;
+    listWishes: number;
   };
 }
 
 // Invitation with inviter details
 export interface GroupInvitationDetails extends GroupInvitation {
-  inviter: {
+  user: {
     id: string;
     name: string | null;
     email: string;

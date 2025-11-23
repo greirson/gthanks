@@ -50,8 +50,8 @@ export class GroupManagementService {
         include: {
           _count: {
             select: {
-              members: true,
-              lists: true,
+              userGroups: true,
+              listGroups: true,
             },
           },
         },
@@ -93,8 +93,8 @@ export class GroupManagementService {
       include: {
         _count: {
           select: {
-            members: true,
-            lists: true,
+            userGroups: true,
+            listGroups: true,
           },
         },
       },
@@ -148,23 +148,23 @@ export class GroupManagementService {
     const group = await this.db.group.findUnique({
       where: { id: groupId },
       include: {
-        members: {
+        userGroups: {
           include: {
             user: true,
           },
         },
-        lists: {
+        listGroups: {
           include: {
             list: {
               include: {
-                owner: true,
+                user: true,
               },
             },
           },
         },
-        invitations: {
+        groupInvitations: {
           include: {
-            inviter: true,
+            user: true,
             group: {
               select: {
                 id: true,
@@ -176,8 +176,8 @@ export class GroupManagementService {
         },
         _count: {
           select: {
-            members: true,
-            lists: true,
+            userGroups: true,
+            listGroups: true,
           },
         },
       },
@@ -188,24 +188,24 @@ export class GroupManagementService {
     }
 
     // Get current user's role
-    const currentUserMembership = group.members.find((m) => m.userId === userId);
+    const currentUserMembership = group.userGroups.find((m) => m.userId === userId);
     const currentUserRole = currentUserMembership?.role as 'admin' | 'member' | undefined;
 
     return {
       ...group,
       avatarUrl: resolveGroupAvatarUrlSync(group),
-      members: group.members.map((member) => ({
+      members: group.userGroups.map((member) => ({
         ...member,
         user: {
           ...member.user,
           avatarUrl: member.user.avatarUrl || null,
         },
       })),
-      lists: group.lists.map((lg) => ({
+      lists: group.listGroups.map((lg) => ({
         ...lg.list,
-        owner: lg.list.owner,
+        user: lg.list.user,
       })),
-      invitations: group.invitations.map((inv) => ({
+      invitations: group.groupInvitations.map((inv) => ({
         ...inv,
         status: 'pending' as const,
       })),
@@ -228,8 +228,8 @@ export class GroupManagementService {
       include: {
         _count: {
           select: {
-            members: true,
-            lists: true,
+            userGroups: true,
+            listGroups: true,
           },
         },
       },

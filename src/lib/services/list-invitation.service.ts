@@ -16,7 +16,7 @@ export interface ListInvitationDetails {
   createdAt: Date;
   expiresAt: Date;
   acceptedAt: Date | null;
-  inviter: {
+  user: {
     id: string;
     name: string | null;
     email: string;
@@ -184,7 +184,7 @@ export class ListInvitationService {
     const invitation = await this.db.listInvitation.findUnique({
       where: { token },
       include: {
-        inviter: {
+        user: {
           select: {
             id: true,
             name: true,
@@ -317,7 +317,7 @@ export class ListInvitationService {
         acceptedAt: null,
       },
       include: {
-        inviter: {
+        user: {
           select: {
             id: true,
             name: true,
@@ -403,7 +403,7 @@ export class ListInvitationService {
         },
       },
       include: {
-        inviter: {
+        user: {
           select: {
             id: true,
             name: true,

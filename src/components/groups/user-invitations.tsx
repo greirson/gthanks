@@ -260,9 +260,9 @@ function UserInvitationsComponent() {
                   {/* Inviter Avatar */}
                   <UserAvatar
                     user={{
-                      ...invitation.inviter,
-                      email: invitation.inviter.email as string | null,
-                      avatarUrl: invitation.inviter.avatarUrl ?? null,
+                      ...invitation.user,
+                      email: invitation.user.email as string | null,
+                      avatarUrl: invitation.user.avatarUrl ?? null,
                     }}
                     size="sm"
                     className="shrink-0"
@@ -284,7 +284,7 @@ function UserInvitationsComponent() {
 
                   {/* Inviter info - compressed */}
                   <span className="hidden text-xs text-muted-foreground sm:inline">
-                    from {invitation.inviter.name || invitation.inviter.email}
+                    from {invitation.user.name || invitation.user.email}
                   </span>
 
                   {/* Date - only on larger screens */}

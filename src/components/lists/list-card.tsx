@@ -34,8 +34,8 @@ export function ListCard({ list, onEdit, onDelete, onShare }: ListCardProps) {
   const currentUserId = session?.user?.id;
   const isOwner = currentUserId === list.ownerId;
   const isSharedWithUser =
-    !isOwner && list.admins?.some((admin) => admin.user.id === currentUserId);
-  const adminCount = list._count?.admins || 0;
+    !isOwner && list.listAdmins?.some((admin) => admin.user.id === currentUserId);
+  const adminCount = list._count?.listAdmins || 0;
 
   const getSharingBadge = () => {
     if (isSharedWithUser) {
@@ -164,7 +164,7 @@ export function ListCard({ list, onEdit, onDelete, onShare }: ListCardProps) {
             {getSharingBadge()}
 
             <div className="text-sm text-muted-foreground">
-              {list._count.wishes} {list._count.wishes === 1 ? 'wish' : 'wishes'}
+              {list._count.listWishes} {list._count.listWishes === 1 ? 'wish' : 'wishes'}
             </div>
           </div>
 
@@ -179,7 +179,7 @@ export function ListCard({ list, onEdit, onDelete, onShare }: ListCardProps) {
       <CardFooter className="pt-3 text-xs text-muted-foreground">
         <div className="flex w-full flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
           <span>Created {new Date(list.createdAt).toLocaleDateString()}</span>
-          <span>by {list.owner.name}</span>
+          <span>by {list.user.name}</span>
         </div>
       </CardFooter>
     </Card>

@@ -275,6 +275,131 @@ Build fails if service layer violations are detected (configured as errors, not 
 **Rate Limiting:**
 @docs/RATE_LIMITING.md
 
+## Prisma Schema Naming Conventions (MANDATORY)
+
+**CRITICAL**: All Prisma models MUST follow these naming conventions to ensure predictable Prisma Client generation.
+
+### Model Names
+
+- **ALWAYS use PascalCase** for model names (e.g., `SiteSettings`, `UserEmail`, `ListWish`)
+- **NEVER use snake_case** for model names (e.g., ~~`site_settings`~~, ~~`user_email`~~)
+
+### Database Table Mapping
+
+When the database table uses snake_case (common in PostgreSQL/SQLite):
+
+```prisma
+// ✅ Correct - PascalCase model with table mapping
+model SiteSettings {
+  id           String @id
+  loginMessage String?
+
+  @@map("site_settings")
+}
+
+// ❌ Wrong - snake_case model name
+model site_settings {
+  id           String @id
+  loginMessage String?
+}
+```
+
+### Relation Field Names
+
+- **MUST use camelCase** (lowercase first letter, matching the target model name)
+- Prisma Client will use these exact field names in TypeScript accessors
+
+```prisma
+// ✅ Correct - Relation field uses camelCase
+model UserEmail {
+  id     String @id
+  userId String
+  user   User   @relation(fields: [userId], references: [id])  // lowercase u
+
+  @@map("user_emails")
+}
+
+// ❌ Wrong - PascalCase relation field
+model UserEmail {
+  id     String @id
+  userId String
+  User   User   @relation(fields: [userId], references: [id])  // Capital U (breaks TypeScript)
+}
+```
+
+### Generated Prisma Client Behavior
+
+Following these conventions ensures predictable client generation:
+
+```typescript
+// With camelCase relation field "user"
+const email = await db.userEmail.findFirst({
+  include: { user: true }  // ✅ Works - lowercase matches relation field
+})
+
+// With PascalCase relation field "User"
+const email = await db.userEmail.findFirst({
+  include: { user: true }  // ❌ Breaks - expects "User" not "user"
+  include: { User: true }  // ✅ Works but doesn't match actual field name
+})
+```
+
+### Real Examples from Schema
+
+```prisma
+// Single relations (foreign key) - camelCase
+model Wish {
+  id      String @id
+  ownerId String
+  user    User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)  // lowercase
+}
+
+// Array relations (inverse) - camelCase
+model List {
+  id         String @id
+  listAdmins ListAdmin[]    // camelCase
+  listWishes ListWish[]     // camelCase
+  user       User           // camelCase (relation from owner)
+}
+```
+
+**TypeScript usage:**
+
+```typescript
+// ✅ Correct - matches camelCase field names
+const list = await db.list.findUnique({
+  where: { id: listId },
+  include: {
+    listAdmins: true,      // array relation
+    listWishes: true,      // array relation
+    user: true,            // single relation
+  }
+});
+```
+
+### Why This Matters
+
+1. **Consistency**: All relation fields follow camelCase convention
+2. **Type Safety**: TypeScript expects field names exactly as declared in schema
+3. **Developer Experience**: Lowercase first letter is JavaScript/TypeScript standard
+4. **No Generated Accessors**: We use relation fields directly, no automatic transformation
+
+### Validation
+
+Before committing schema changes:
+
+```bash
+# Check all models use PascalCase
+grep "^model [a-z]" prisma/schema.prisma
+# Should return nothing (all models start with capital letter)
+
+# Regenerate client after changes
+pnpm prisma generate
+
+# Verify no TypeScript errors
+pnpm typecheck
+```
+
 ## Success Criteria
 
 - [ ] User can sign up in < 30 seconds

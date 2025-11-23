@@ -115,7 +115,7 @@ export interface ContentDetails {
     id: string;
     title: string;
     imageUrl: string | null;
-    owner: {
+    user: {
       id: string;
       email: string;
       name: string | null;
@@ -126,7 +126,7 @@ export interface ContentDetails {
     name: string;
     description: string | null;
     visibility: string;
-    owner: {
+    user: {
       id: string;
       email: string;
       name: string | null;
