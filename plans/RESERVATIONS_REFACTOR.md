@@ -20,9 +20,9 @@
 ### PHASE 1: Core Infrastructure
 - [x] 1.1 Database schema migration (purchasedAt, purchasedDate, unique constraint) ✅ 4771221
 - [x] 1.2 Update type definitions (ReservationWithWishSchema + bulk schemas) ✅ d117037
-- [ ] 1.3 Create mark as purchased API endpoint
-- [ ] 1.4 Create bulk operations API endpoint
-- [ ] 1.5 Update API client (3 new methods)
+- [x] 1.3 Create mark as purchased API endpoint ✅ f6c3e1d
+- [x] 1.4 Create bulk operations API endpoint ✅ 067591a
+- [x] 1.5 Update API client (3 new methods) ✅ 01692e9
 
 ### PHASE 2: Filter System
 - [ ] 2.1 Update useReservationFilters hook (purchaseStatus, expanded search, localStorage only)
