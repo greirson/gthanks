@@ -25,9 +25,9 @@
 - [x] 1.5 Update API client (3 new methods) ✅ 01692e9
 
 ### PHASE 2: Filter System
-- [ ] 2.1 Update useReservationFilters hook (purchaseStatus, expanded search, localStorage only)
-- [ ] 2.2 Create desktop filter panel component
-- [ ] 2.3 Create mobile filter sheet component
+- [x] 2.1 Update useReservationFilters hook (purchaseStatus, expanded search, localStorage only) ✅ 917a1e7
+- [x] 2.2 Create desktop filter panel component ✅ 5d4deb4
+- [x] 2.3 Create mobile filter sheet component ✅ 1a65202
 
 ### PHASE 3: Display Components
 - [ ] 3.1 Update reservation card (grid/list variants, breadcrumbs, conditional checkbox)
