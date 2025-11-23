@@ -70,10 +70,12 @@ export const ReservationWithWishSchema = ReservationSchema.extend({
   wish: z.object({
     id: z.string(),
     title: z.string(),
+    url: z.string().nullable().optional(),
     user: z.object({
       id: z.string(),
       name: z.string().nullable(),
       email: z.string(),
+      username: z.string().nullable().optional(),
     }),
   }),
 });

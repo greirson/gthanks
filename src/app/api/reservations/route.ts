@@ -161,3 +161,59 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to create reservation' }, { status: 500 });
   }
 }
+
+/**
+ * Handles GET requests for fetching user's reservations
+ *
+ * @description Fetches all reservations for the authenticated user with related wish and owner data
+ * @param {NextRequest} _request - The incoming HTTP request object (unused)
+ * @returns {Promise<NextResponse>} JSON response with array of reservation data or error
+ *
+ * @throws {401} Unauthorized - User must be logged in to view reservations
+ * @throws {500} Internal Server Error - Database errors
+ *
+ * @example
+ * // Fetch user's reservations (authenticated user only)
+ * GET /api/reservations
+ *
+ * @protected Requires authentication - user must be logged in
+ * @see {@link getServerSession} for authentication details
+ */
+export async function GET(_request: NextRequest) {
+  try {
+    // REQUIRE AUTHENTICATION
+    const session = await getServerSession();
+
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: 'You must be logged in to view reservations' },
+        { status: 401 }
+      );
+    }
+
+    // Fetch user's reservations with related wish and owner data
+    const reservations = await db.reservation.findMany({
+      where: { userId: session.user.id },
+      include: {
+        wish: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                username: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { reservedAt: 'desc' },
+    });
+
+    return NextResponse.json(reservations, { status: 200 });
+  } catch (error) {
+    logger.error({ error: error }, 'GET /api/reservations error');
+    return NextResponse.json({ error: 'Failed to fetch reservations' }, { status: 500 });
+  }
+}
