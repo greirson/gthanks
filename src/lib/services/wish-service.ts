@@ -215,7 +215,7 @@ export class WishService {
     const wish = await db.wish.findUnique({
       where: { id: wishId },
       include: {
-        lists: true,
+        listWishes: true,
         reservations: true,
       },
     });
@@ -227,7 +227,7 @@ export class WishService {
     // Use transaction to ensure all related data is cleaned up
     await db.$transaction(async (tx) => {
       // Remove from all lists first
-      if (wish.lists.length > 0) {
+      if (wish.listWishes.length > 0) {
         await tx.listWish.deleteMany({
           where: { wishId },
         });
@@ -397,7 +397,7 @@ export class WishService {
       include: {
         list: {
           include: {
-            owner: {
+            user: {
               select: {
                 id: true,
                 name: true,
@@ -407,11 +407,11 @@ export class WishService {
             },
             _count: {
               select: {
-                wishes: true,
-                admins: true,
+                listWishes: true,
+                listAdmins: true,
               },
             },
-            admins: {
+            listAdmins: {
               include: {
                 user: {
                   select: {
@@ -530,7 +530,7 @@ export class WishService {
     const wish = await db.wish.findUnique({
       where: { id: wishId },
       include: {
-        owner: {
+        user: {
           select: {
             id: true,
             name: true,

@@ -70,12 +70,12 @@ export async function GET(req: NextRequest) {
               avatarUrl: true,
               _count: {
                 select: {
-                  members: true,
+                  userGroups: true,
                 },
               },
             },
           },
-          inviter: {
+          user: {
             select: {
               id: true,
               name: true,
@@ -97,7 +97,7 @@ export async function GET(req: NextRequest) {
 
       return {
         ...inv,
-        invitedBy: inv.inviter, // Map inviter to invitedBy for backward compatibility
+        invitedBy: inv.user, // Map user to invitedBy for backward compatibility
         status: inv.acceptedAt ? 'accepted' : 'pending',
         isPending,
         canRespond: isPending,

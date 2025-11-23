@@ -42,12 +42,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Get all groups that contain this list, where the current user is also a member
     const groups = await db.group.findMany({
       where: {
-        lists: {
+        listGroups: {
           some: {
             listId: params.listId,
           },
         },
-        members: {
+        userGroups: {
           some: {
             userId: user.id,
           },
@@ -56,11 +56,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       include: {
         _count: {
           select: {
-            members: true,
-            lists: true,
+            userGroups: true,
+            listGroups: true,
           },
         },
-        members: {
+        userGroups: {
           where: {
             userId: user.id,
           },
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       createdAt: group.createdAt.toISOString(),
       updatedAt: group.updatedAt.toISOString(),
       _count: group._count,
-      currentUserRole: group.members[0]?.role || null,
+      currentUserRole: group.userGroups[0]?.role || null,
     }));
 
     return NextResponse.json(transformedGroups);
