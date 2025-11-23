@@ -30,10 +30,10 @@
 - [x] 2.3 Create mobile filter sheet component ✅ 1a65202
 
 ### PHASE 3: Display Components
-- [ ] 3.1 Update reservation card (grid/list variants, breadcrumbs, conditional checkbox)
-- [ ] 3.2 Create reservations display component (grouping, virtual scrolling)
-- [ ] 3.3 Create empty state component
-- [ ] 3.4 Create loading skeleton component
+- [x] 3.1 Update reservation card (grid/list variants, breadcrumbs, conditional checkbox) ✅ 0d8749a
+- [x] 3.2 Create reservations display component (grouping, virtual scrolling) ✅ 1573b9b
+- [x] 3.3 Create empty state component ✅ c733781
+- [x] 3.4 Create loading skeleton component ✅ 0a0288c
 
 ### PHASE 4: Bulk Actions
 - [ ] 4.1 Create bulk actions bar component
