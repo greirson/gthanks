@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, ShoppingBag, ArrowRight } from 'lucide-react';
+import { X, ShoppingBag, ArrowRight, RotateCcw } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
@@ -39,6 +39,7 @@ interface WishDetailsModalProps {
   onOpenChange: (open: boolean) => void;
   onCancel: () => void;
   onMarkPurchased: () => void;
+  onUnmark: () => void;
 }
 
 export function WishDetailsModal({
@@ -47,6 +48,7 @@ export function WishDetailsModal({
   onOpenChange,
   onCancel,
   onMarkPurchased,
+  onUnmark,
 }: WishDetailsModalProps) {
   const [isActionLoading, setIsActionLoading] = useState(false);
 
@@ -81,6 +83,16 @@ export function WishDetailsModal({
     setIsActionLoading(true);
     try {
       onMarkPurchased();
+    } finally {
+      setIsActionLoading(false);
+      onOpenChange(false);
+    }
+  };
+
+  const handleUnmark = async () => {
+    setIsActionLoading(true);
+    try {
+      onUnmark();
     } finally {
       setIsActionLoading(false);
       onOpenChange(false);
@@ -212,7 +224,17 @@ export function WishDetailsModal({
             <X className="mr-2 h-4 w-4" />
             Cancel Reservation
           </Button>
-          {!isPurchased && (
+          {isPurchased ? (
+            <Button
+              variant="outline"
+              onClick={handleUnmark}
+              disabled={isActionLoading}
+              className="w-full sm:w-auto sm:flex-1"
+            >
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Un-mark as Purchased
+            </Button>
+          ) : (
             <Button
               onClick={handleMarkPurchased}
               disabled={isActionLoading}

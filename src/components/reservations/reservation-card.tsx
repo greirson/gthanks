@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { ArrowRight, X, ShoppingBag, Clock } from 'lucide-react';
+import { ArrowRight, X, ShoppingBag, Clock, RotateCcw } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
@@ -32,6 +32,7 @@ interface ReservationCardProps {
   onToggleSelect: (id: string) => void;
   onCancel: (reservation: ReservationCardProps['reservation']) => void;
   onMarkPurchased: (reservation: ReservationCardProps['reservation']) => void;
+  onUnmarkPurchased: (reservation: ReservationCardProps['reservation']) => void;
   onCardClick: (reservationId: string) => void;
 }
 
@@ -44,6 +45,7 @@ export function ReservationCard({
   onToggleSelect,
   onCancel,
   onMarkPurchased,
+  onUnmarkPurchased,
   onCardClick,
 }: ReservationCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -178,7 +180,21 @@ export function ReservationCard({
               <X className="mr-1 h-4 w-4" />
               Cancel
             </Button>
-            {!isPurchased && (
+            {isPurchased ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUnmarkPurchased(reservation);
+                }}
+                aria-label="Un-mark as purchased"
+                className="w-full text-muted-foreground hover:text-foreground"
+              >
+                <RotateCcw className="mr-1 h-4 w-4" />
+                Un-mark
+              </Button>
+            ) : (
               <Button
                 variant="ghost"
                 size="sm"
@@ -322,7 +338,21 @@ export function ReservationCard({
             <X className="mr-1 h-4 w-4" />
             Cancel
           </Button>
-          {!isPurchased && (
+          {isPurchased ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onUnmarkPurchased(reservation);
+              }}
+              aria-label="Un-mark as purchased"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <RotateCcw className="mr-1 h-4 w-4" />
+              Un-mark
+            </Button>
+          ) : (
             <Button
               variant="ghost"
               size="sm"

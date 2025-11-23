@@ -81,6 +81,14 @@ export const reservationsApi = {
     );
   },
 
+  // Un-mark as purchased
+  unmarkAsPurchased: async (reservationId: string): Promise<ReservationWithWish> => {
+    return apiDelete(
+      `/api/reservations/${reservationId}/purchased`,
+      ReservationWithWishSchema
+    ) as Promise<ReservationWithWish>;
+  },
+
   // Bulk cancel
   bulkCancel: async (reservationIds: string[]): Promise<BulkReservationResponse> => {
     return apiPost(
@@ -98,6 +106,15 @@ export const reservationsApi = {
     return apiPost(
       '/api/reservations/bulk',
       { action: 'markPurchased', reservationIds, purchasedDate },
+      BulkReservationResponseSchema
+    );
+  },
+
+  // Bulk un-mark purchased
+  bulkUnmarkPurchased: async (reservationIds: string[]): Promise<BulkReservationResponse> => {
+    return apiPost(
+      '/api/reservations/bulk',
+      { action: 'unmarkPurchased', reservationIds },
       BulkReservationResponseSchema
     );
   },

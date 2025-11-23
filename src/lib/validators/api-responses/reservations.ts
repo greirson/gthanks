@@ -146,6 +146,11 @@ export const BulkMarkPurchasedSchema = z.object({
   purchasedDate: z.string().or(z.date()).optional(),
 });
 
+// Bulk un-mark purchased request
+export const BulkUnmarkPurchasedSchema = z.object({
+  reservationIds: z.array(z.string()).min(1),
+});
+
 // Bulk operation response
 export const BulkReservationResponseSchema = z.object({
   success: z.boolean(),
@@ -157,4 +162,5 @@ export const BulkReservationResponseSchema = z.object({
 // Export bulk operation types
 export type BulkCancelReservations = z.infer<typeof BulkCancelReservationsSchema>;
 export type BulkMarkPurchased = z.infer<typeof BulkMarkPurchasedSchema>;
+export type BulkUnmarkPurchased = z.infer<typeof BulkUnmarkPurchasedSchema>;
 export type BulkReservationResponse = z.infer<typeof BulkReservationResponseSchema>;

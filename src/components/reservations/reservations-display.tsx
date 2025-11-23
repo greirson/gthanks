@@ -13,6 +13,7 @@ interface ReservationsDisplayProps {
   onToggleSelect: (id: string) => void;
   onCancel: (reservation: ReservationWithWish) => void;
   onMarkPurchased: (reservation: ReservationWithWish) => void;
+  onUnmarkPurchased: (reservation: ReservationWithWish) => void;
   isSelectionMode: boolean;
   onCardClick: (reservationId: string) => void;
 }
@@ -98,6 +99,7 @@ export function ReservationsDisplay({
   onToggleSelect,
   onCancel,
   onMarkPurchased,
+  onUnmarkPurchased,
   isSelectionMode,
   onCardClick,
 }: ReservationsDisplayProps) {
@@ -142,6 +144,7 @@ export function ReservationsDisplay({
               onToggleSelect={onToggleSelect}
               onCancel={onCancel}
               onMarkPurchased={onMarkPurchased}
+              onUnmarkPurchased={onUnmarkPurchased}
               isSelectionMode={isSelectionMode}
               onCardClick={onCardClick}
             />
@@ -197,6 +200,7 @@ export function ReservationsDisplay({
                   onToggleSelect={onToggleSelect}
                   onCancel={onCancel}
                   onMarkPurchased={onMarkPurchased}
+                  onUnmarkPurchased={onUnmarkPurchased}
                   isSelectionMode={isSelectionMode}
                   onCardClick={onCardClick}
                 />

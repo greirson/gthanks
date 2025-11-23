@@ -35,6 +35,8 @@ export function ReservationsView() {
   const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
   const [showBulkCancelDialog, setShowBulkCancelDialog] = useState(false);
   const [showBulkPurchaseDialog, setShowBulkPurchaseDialog] = useState(false);
+  const [showUnmarkDialog, setShowUnmarkDialog] = useState(false);
+  const [showBulkUnmarkDialog, setShowBulkUnmarkDialog] = useState(false);
   const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
   const [isWishModalOpen, setIsWishModalOpen] = useState(false);
 
@@ -138,6 +140,29 @@ export function ReservationsView() {
       });
   }, [actioningReservation, queryClient]);
 
+  const handleUnmarkPurchasedClick = useCallback((reservation: ReservationWithWish) => {
+    setActioningReservation(reservation);
+    setShowUnmarkDialog(true);
+  }, []);
+
+  const confirmUnmark = useCallback(() => {
+    if (!actioningReservation) {
+      return;
+    }
+
+    reservationsApi
+      .unmarkAsPurchased(actioningReservation.id)
+      .then(() => {
+        toast.success('Unmarked as purchased');
+        void queryClient.invalidateQueries({ queryKey: ['reservations'] });
+        setShowUnmarkDialog(false);
+        setActioningReservation(null);
+      })
+      .catch(() => {
+        toast.error('Failed to un-mark');
+      });
+  }, [actioningReservation, queryClient]);
+
   // Bulk action handlers
   const handleBulkCancel = useCallback(() => {
     const selectedIds = Array.from(selectedReservationIds);
@@ -179,6 +204,26 @@ export function ReservationsView() {
       });
   }, [selectedReservationIds, queryClient]);
 
+  const handleBulkUnmark = useCallback(() => {
+    const selectedIds = Array.from(selectedReservationIds);
+
+    reservationsApi
+      .bulkUnmarkPurchased(selectedIds)
+      .then((result) => {
+        if (result.success) {
+          toast.success(`Unmarked ${selectedIds.length} reservation(s)`);
+        } else {
+          toast.warning(result.message);
+        }
+        void queryClient.invalidateQueries({ queryKey: ['reservations'] });
+        setShowBulkUnmarkDialog(false);
+        setSelectedReservationIds(new Set());
+      })
+      .catch(() => {
+        toast.error('Failed to un-mark reservations');
+      });
+  }, [selectedReservationIds, queryClient]);
+
   // Modal handlers
   const handleCardClick = useCallback((reservationId: string) => {
     if (!isSelectionMode) {
@@ -217,6 +262,23 @@ export function ReservationsView() {
       setSelectedReservationId(null);
     } catch (error) {
       toast.error('Failed to mark as purchased');
+      throw error;
+    }
+  }, [selectedReservationId, queryClient]);
+
+  const handleUnmarkFromModal = useCallback(async () => {
+    if (!selectedReservationId) {
+      return;
+    }
+
+    try {
+      await reservationsApi.unmarkAsPurchased(selectedReservationId);
+      toast.success('Unmarked as purchased');
+      void queryClient.invalidateQueries({ queryKey: ['reservations'] });
+      setIsWishModalOpen(false);
+      setSelectedReservationId(null);
+    } catch (error) {
+      toast.error('Failed to un-mark');
       throw error;
     }
   }, [selectedReservationId, queryClient]);
@@ -357,6 +419,7 @@ export function ReservationsView() {
                 onToggleSelect={toggleReservationSelection}
                 onCancel={handleCancelClick}
                 onMarkPurchased={handleMarkPurchasedClick}
+                onUnmarkPurchased={handleUnmarkPurchasedClick}
                 onCardClick={handleCardClick}
               />
             )}
@@ -424,6 +487,24 @@ export function ReservationsView() {
           />
         )}
 
+        {/* Single reservation un-mark dialog */}
+        {actioningReservation && (
+          <ConfirmDialog
+            open={showUnmarkDialog}
+            onOpenChange={(open) => {
+              setShowUnmarkDialog(open);
+              if (!open) {
+                setActioningReservation(null);
+              }
+            }}
+            title="Un-mark as purchased?"
+            description={`Un-mark "${actioningReservation.wish.title}" as purchased? This will move it back to your active reservations.`}
+            confirmText="Un-mark"
+            onConfirm={confirmUnmark}
+            variant="default"
+          />
+        )}
+
         {/* Bulk action dialogs */}
         <BulkActionDialogs
           cancelDialogOpen={showBulkCancelDialog}
@@ -448,6 +529,7 @@ export function ReservationsView() {
           onOpenChange={setIsWishModalOpen}
           onCancel={handleCancelFromModal}
           onMarkPurchased={handleMarkPurchasedFromModal}
+          onUnmark={handleUnmarkFromModal}
         />
       </div>
     </>

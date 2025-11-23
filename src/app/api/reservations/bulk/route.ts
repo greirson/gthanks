@@ -6,6 +6,7 @@ import { reservationService } from '@/lib/services/reservation-service';
 import {
   BulkCancelReservationsSchema,
   BulkMarkPurchasedSchema,
+  BulkUnmarkPurchasedSchema,
 } from '@/lib/validators/api-responses/reservations';
 import { ForbiddenError } from '@/lib/errors';
 import { rateLimiter } from '@/lib/rate-limiter';
@@ -121,6 +122,34 @@ export async function POST(req: NextRequest) {
         failed: result.failed,
         purchasedCount: result.succeeded.length,
         message: `${result.succeeded.length} of ${result.totalProcessed} reservation(s) marked as purchased`,
+      });
+    }
+
+    // Handle unmarkPurchased action
+    if (action === 'unmarkPurchased') {
+      const validationResult = BulkUnmarkPurchasedSchema.safeParse(body);
+
+      if (!validationResult.success) {
+        return NextResponse.json(
+          { error: 'Invalid request body', details: validationResult.error.issues },
+          { status: 400 }
+        );
+      }
+
+      const { reservationIds } = validationResult.data;
+
+      // Use service layer (handles ownership verification + transaction)
+      const result = await reservationService.bulkUnmarkPurchased(
+        reservationIds,
+        session.user.id
+      );
+
+      return NextResponse.json({
+        success: result.failed.length === 0,
+        succeeded: result.succeeded,
+        failed: result.failed,
+        unmarkedCount: result.succeeded.length,
+        message: `${result.succeeded.length} of ${result.totalProcessed} reservation(s) un-marked`,
       });
     }
 

@@ -681,6 +681,110 @@ export class ReservationService {
       totalProcessed: reservationIds.length,
     };
   }
+
+  /**
+   * Un-mark a purchased reservation (undo mistake)
+   *
+   * @throws NotFoundError if reservation doesn't exist
+   * @throws ForbiddenError if user doesn't own the reservation
+   * @throws ValidationError if reservation is not purchased
+   * @returns Updated reservation with null purchased fields
+   */
+  async unmarkAsPurchased(reservationId: string, userId: string): Promise<Reservation> {
+    if (!userId) {
+      throw new ForbiddenError('Authentication required to un-mark reservation');
+    }
+
+    // Verify reservation exists and belongs to user
+    const reservation = await db.reservation.findUnique({
+      where: { id: reservationId },
+    });
+
+    if (!reservation) {
+      throw new NotFoundError('Reservation not found');
+    }
+
+    if (reservation.userId !== userId) {
+      throw new ForbiddenError('Cannot un-mark reservation (not yours)');
+    }
+
+    if (!reservation.purchasedAt) {
+      throw new ValidationError('Reservation is not marked as purchased');
+    }
+
+    // Clear purchased fields
+    const updated = await db.reservation.update({
+      where: { id: reservationId },
+      data: {
+        purchasedAt: null,
+        purchasedDate: null,
+      },
+    });
+
+    return updated;
+  }
+
+  /**
+   * Bulk un-mark purchased reservations with transaction safety
+   *
+   * @throws ForbiddenError if user doesn't own all reservations
+   * @returns Result with succeeded/failed lists for partial success handling
+   */
+  async bulkUnmarkPurchased(
+    reservationIds: string[],
+    userId: string
+  ): Promise<{
+    succeeded: string[];
+    failed: Array<{ id: string; reason: string }>;
+    totalProcessed: number;
+  }> {
+    if (!userId) {
+      throw new ForbiddenError('Authentication required to un-mark reservations');
+    }
+
+    // Verify ownership
+    const reservations = await db.reservation.findMany({
+      where: { id: { in: reservationIds } },
+      select: { id: true, userId: true },
+    });
+
+    const unauthorized = reservations.filter((r) => r.userId !== userId);
+    if (unauthorized.length > 0) {
+      throw new ForbiddenError(
+        `Cannot un-mark ${unauthorized.length} reservation(s) (not yours)`
+      );
+    }
+
+    const succeeded: string[] = [];
+    const failed: Array<{ id: string; reason: string }> = [];
+
+    // Use transaction for atomic operation
+    await db.$transaction(async (tx) => {
+      for (const id of reservationIds) {
+        try {
+          await tx.reservation.update({
+            where: { id, userId },
+            data: {
+              purchasedAt: null,
+              purchasedDate: null,
+            },
+          });
+          succeeded.push(id);
+        } catch (error) {
+          failed.push({
+            id,
+            reason: error instanceof Error ? error.message : 'Unknown error',
+          });
+        }
+      }
+    });
+
+    return {
+      succeeded,
+      failed,
+      totalProcessed: reservationIds.length,
+    };
+  }
 }
 
 // Export singleton instance
