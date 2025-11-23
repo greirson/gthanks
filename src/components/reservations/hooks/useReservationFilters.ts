@@ -7,6 +7,7 @@ import { reservationsApi } from '@/lib/api/reservations';
 import { useFilterPersistence } from '@/hooks/filters/shared/useFilterPersistence';
 import { applySearchFilter } from '@/hooks/filters/shared/searchUtils';
 import { countActiveFilters } from '@/hooks/filters/shared/activeFilterCount';
+import { useDebounce } from '@/hooks/use-debounce';
 
 // Types for filter/sort functionality
 export type DateFilterOption = 'all' | 'thisWeek' | 'thisMonth' | 'older';
@@ -16,6 +17,7 @@ export type SortOption = 'recent' | 'oldest' | 'title-asc' | 'title-desc' | 'own
 export interface FilterState {
   dateFilter: DateFilterOption;
   ownerIds: string[]; // Array of owner IDs to filter by
+  purchaseStatus: 'all' | 'active' | 'purchased'; // Filter by purchase status
   sort: SortOption;
   search: string;
   [key: string]: unknown;
@@ -28,6 +30,7 @@ const FILTER_STORAGE_KEY = 'reservation-filters';
 const DEFAULT_FILTER_STATE: FilterState = {
   dateFilter: 'all',
   ownerIds: [], // Empty array = show all owners
+  purchaseStatus: 'all', // Show all reservations by default
   sort: 'recent',
   search: '',
 };
@@ -54,65 +57,14 @@ export function useReservationFilters(reservations: ReservationWithWish[]) {
     return Array.from(ownerMap.values());
   }, [safeReservations]);
 
-  // Memoize urlSerializer to prevent infinite re-render loop
-  const urlSerializer = useMemo(
-    () => ({
-      toURL: (state: FilterState) => {
-        const params = new URLSearchParams();
-
-        if (state.dateFilter !== 'all') {
-          params.set('dateFilter', state.dateFilter);
-        }
-
-        if (state.ownerIds.length > 0) {
-          params.set('owners', state.ownerIds.join(','));
-        }
-
-        if (state.sort !== 'recent') {
-          params.set('sort', state.sort);
-        }
-
-        if (state.search) {
-          params.set('search', state.search);
-        }
-
-        return params;
-      },
-      fromURL: (params: URLSearchParams) => {
-        const dateFilterParam = params.get('dateFilter');
-        const ownersParam = params.get('owners');
-        const sortParam = params.get('sort');
-        const searchParam = params.get('search');
-
-        const partial: Partial<FilterState> = {};
-
-        if (dateFilterParam) {
-          partial.dateFilter = dateFilterParam as DateFilterOption;
-        }
-
-        if (ownersParam) {
-          partial.ownerIds = ownersParam.split(',');
-        }
-
-        if (sortParam) {
-          partial.sort = sortParam as SortOption;
-        }
-
-        if (searchParam) {
-          partial.search = searchParam;
-        }
-
-        return partial;
-      },
-    }),
-    []
-  );
-
-  // Use shared filter persistence hook
+  // Use shared filter persistence hook (localStorage only, no URL serialization)
   const [filterState, setFilterState] = useFilterPersistence<FilterState>({
     storageKey: FILTER_STORAGE_KEY,
     defaultState: DEFAULT_FILTER_STATE,
-    urlSerializer,
+    fallback: 'memory', // In-memory fallback if localStorage unavailable
+    onError: (error) => {
+      console.warn('Filter persistence failed, using in-memory state:', error);
+    },
   });
 
   // Setter functions
@@ -137,6 +89,13 @@ export function useReservationFilters(reservations: ReservationWithWish[]) {
     [setFilterState]
   );
 
+  const setPurchaseStatus = useCallback(
+    (purchaseStatus: 'all' | 'active' | 'purchased') => {
+      setFilterState((prev) => ({ ...prev, purchaseStatus }));
+    },
+    [setFilterState]
+  );
+
   const setSearchQuery = useCallback(
     (search: string) => {
       setFilterState((prev) => ({ ...prev, search }));
@@ -148,16 +107,25 @@ export function useReservationFilters(reservations: ReservationWithWish[]) {
     setFilterState(DEFAULT_FILTER_STATE);
   }, [setFilterState]);
 
+  // Debounce search query to prevent excessive re-renders
+  const debouncedSearch = useDebounce(filterState.search, 300);
+
   // Apply filters
   const filteredReservations = useMemo(() => {
     let filtered = [...safeReservations];
 
-    // Apply search filter
-    if (filterState.search) {
+    // Apply search filter (includes title, owner, list name, and URL)
+    if (debouncedSearch) {
       filtered = applySearchFilter(
         filtered,
-        filterState.search,
-        (res) => [res.wish.title, res.wish.user.name || '', res.wish.user.email],
+        debouncedSearch,
+        (res) => [
+          res.wish.title,
+          res.wish.user.name || '',
+          res.wish.user.email,
+          res.wish.list?.name || '', // Search by list name
+          res.wish.url || '', // Search by product URL
+        ],
         'reservation'
       );
     }
@@ -189,6 +157,14 @@ export function useReservationFilters(reservations: ReservationWithWish[]) {
       filtered = filtered.filter((res) =>
         filterState.ownerIds.includes(res.wish.user.id)
       );
+    }
+
+    // Apply purchase status filter
+    if (filterState.purchaseStatus !== 'all') {
+      filtered = filtered.filter((res) => {
+        const isPurchased = !!res.purchasedAt;
+        return filterState.purchaseStatus === 'purchased' ? isPurchased : !isPurchased;
+      });
     }
 
     // Apply sorting
@@ -226,7 +202,7 @@ export function useReservationFilters(reservations: ReservationWithWish[]) {
     }
 
     return filtered;
-  }, [safeReservations, filterState]);
+  }, [safeReservations, filterState, debouncedSearch]);
 
   // Count active filters (exclude search and sort)
   const activeFilterCount = useMemo(() => {
@@ -237,6 +213,7 @@ export function useReservationFilters(reservations: ReservationWithWish[]) {
     filterState,
     setDateFilter,
     setOwnerFilter,
+    setPurchaseStatus,
     setSortOption,
     setSearchQuery,
     resetFilters,
