@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 
+import { authOptions } from '@/lib/auth';
 import { reservationService } from '@/lib/services/reservation-service';
 import {
   BulkCancelReservationsSchema,
@@ -47,7 +48,7 @@ import { logger } from '@/lib/services/logger';
 export async function POST(req: NextRequest) {
   try {
     // REQUIRE AUTHENTICATION
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

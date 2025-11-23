@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 
+import { authOptions } from '@/lib/auth';
 import { AppError, NotFoundError, ForbiddenError, ValidationError } from '@/lib/errors';
 import { logger } from '@/lib/services/logger';
 import { rateLimiter } from '@/lib/rate-limiter';
@@ -51,7 +52,7 @@ async function getListIdFromWish(wishId: string): Promise<string | null> {
 export async function POST(request: NextRequest) {
   try {
     // REQUIRE AUTHENTICATION
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
 
     if (!session?.user) {
       return NextResponse.json(
@@ -182,7 +183,7 @@ export async function POST(request: NextRequest) {
 export async function GET(_request: NextRequest) {
   try {
     // REQUIRE AUTHENTICATION
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
 
     if (!session?.user) {
       return NextResponse.json(
