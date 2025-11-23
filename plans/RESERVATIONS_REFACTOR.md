@@ -40,9 +40,9 @@
 - [x] 4.2 Create bulk action dialogs (cancel + mark purchased) ✅ fb1dfe5
 
 ### PHASE 5: Main View Component
-- [ ] 5.1 Create reservations view component (main orchestration)
-- [ ] 5.2 Move page to (auth) route group
-- [ ] 5.3 Delete old page component
+- [x] 5.1 Create reservations view component (main orchestration) ✅ d2cd580
+- [x] 5.2 Move page to (auth) route group ✅ cf0347a
+- [x] 5.3 Delete old page component ✅ cf0347a
 
 ### PHASE 6: Dialogs & Confirmations
 - [ ] 6.1 Create action dialog (RemoveOptionsDialog pattern)
