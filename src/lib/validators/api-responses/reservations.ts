@@ -8,6 +8,8 @@ export const ReservationSchema = z.object({
   wishId: z.string(),
   userId: z.string(),
   reservedAt: z.string().or(z.date()),
+  purchasedAt: z.string().or(z.date()).nullable().optional(),
+  purchasedDate: z.string().or(z.date()).nullable().optional(),
 });
 
 // Reservation with wish details
@@ -118,3 +120,27 @@ export type ReservationCreateResponse = z.infer<typeof ReservationCreateResponse
 export type ReservationCancelResponse = z.infer<typeof ReservationCancelResponseSchema>;
 export type ReservationAvailability = z.infer<typeof ReservationAvailabilitySchema>;
 export type BulkReservationOperationResult = z.infer<typeof BulkReservationOperationResultSchema>;
+
+// Bulk cancel request
+export const BulkCancelReservationsSchema = z.object({
+  reservationIds: z.array(z.string()).min(1),
+});
+
+// Bulk mark as purchased request
+export const BulkMarkPurchasedSchema = z.object({
+  reservationIds: z.array(z.string()).min(1),
+  purchasedDate: z.string().or(z.date()).optional(),
+});
+
+// Bulk operation response
+export const BulkReservationResponseSchema = z.object({
+  success: z.boolean(),
+  cancelledCount: z.number().optional(),
+  purchasedCount: z.number().optional(),
+  message: z.string(),
+});
+
+// Export bulk operation types
+export type BulkCancelReservations = z.infer<typeof BulkCancelReservationsSchema>;
+export type BulkMarkPurchased = z.infer<typeof BulkMarkPurchasedSchema>;
+export type BulkReservationResponse = z.infer<typeof BulkReservationResponseSchema>;
