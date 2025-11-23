@@ -66,8 +66,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const body = await req.json();
-    const { action } = body;
+    const body: unknown = await req.json();
+    const action = (body as { action?: string }).action;
 
     // Handle cancel action
     if (action === 'cancel') {

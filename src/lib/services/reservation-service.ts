@@ -521,6 +521,47 @@ export class ReservationService {
   }
 
   /**
+   * Mark a single reservation as purchased
+   *
+   * @throws NotFoundError if reservation doesn't exist
+   * @throws ForbiddenError if user doesn't own the reservation
+   * @returns Updated reservation
+   */
+  async markAsPurchased(
+    reservationId: string,
+    userId: string,
+    purchasedDate?: Date
+  ): Promise<Reservation> {
+    if (!userId) {
+      throw new ForbiddenError('Authentication required to mark reservation as purchased');
+    }
+
+    // Verify reservation exists and belongs to user
+    const reservation = await db.reservation.findUnique({
+      where: { id: reservationId },
+    });
+
+    if (!reservation) {
+      throw new NotFoundError('Reservation not found');
+    }
+
+    if (reservation.userId !== userId) {
+      throw new ForbiddenError('Cannot mark reservation as purchased (not yours)');
+    }
+
+    // Update reservation
+    const updated = await db.reservation.update({
+      where: { id: reservationId },
+      data: {
+        purchasedAt: new Date(),
+        purchasedDate: purchasedDate || new Date(),
+      },
+    });
+
+    return updated;
+  }
+
+  /**
    * Bulk cancel reservations with transaction safety
    *
    * @throws ForbiddenError if user doesn't own all reservations

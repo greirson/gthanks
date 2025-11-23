@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { db } from '@/lib/db';
 import { z } from 'zod';
+
+import { reservationService } from '@/lib/services/reservation-service';
+import { ForbiddenError, NotFoundError } from '@/lib/errors';
 
 const markPurchasedSchema = z.object({
   purchasedDate: z.string().or(z.date()).optional(),
 });
+
+type MarkPurchasedBody = z.infer<typeof markPurchasedSchema>;
 
 export async function PATCH(
   req: NextRequest,
@@ -17,34 +21,32 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { purchasedDate } = markPurchasedSchema.parse(body);
+    const body: unknown = await req.json();
+    const parsed: MarkPurchasedBody = markPurchasedSchema.parse(body);
 
-    // Verify reservation belongs to user
-    const reservation = await db.reservation.findUnique({
-      where: { id: params.id },
-    });
+    const purchasedDate = parsed.purchasedDate
+      ? new Date(parsed.purchasedDate)
+      : undefined;
 
-    if (!reservation) {
-      return NextResponse.json({ error: 'Reservation not found' }, { status: 404 });
-    }
-
-    if (reservation.userId !== session.user.id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    // Update reservation
-    const updated = await db.reservation.update({
-      where: { id: params.id },
-      data: {
-        purchasedAt: new Date(),
-        purchasedDate: purchasedDate ? new Date(purchasedDate) : new Date(),
-      },
-    });
+    // Use service layer for authorization and update
+    const updated = await reservationService.markAsPurchased(
+      params.id,
+      session.user.id,
+      purchasedDate
+    );
 
     return NextResponse.json(updated);
   } catch (error) {
     console.error('Mark as purchased error:', error);
+
+    if (error instanceof NotFoundError) {
+      return NextResponse.json({ error: error.message }, { status: 404 });
+    }
+
+    if (error instanceof ForbiddenError) {
+      return NextResponse.json({ error: error.message }, { status: 403 });
+    }
+
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
