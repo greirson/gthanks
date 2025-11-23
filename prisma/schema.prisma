@@ -168,13 +168,16 @@ model MagicLink {
 }
 
 model Reservation {
-  id         String   @id
-  wishId     String
-  userId     String
-  reservedAt DateTime @default(now())
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  wish       Wish     @relation(fields: [wishId], references: [id], onDelete: Cascade)
+  id            String    @id
+  wishId        String
+  userId        String
+  reservedAt    DateTime  @default(now())
+  purchasedAt   DateTime?
+  purchasedDate DateTime?
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wish          Wish      @relation(fields: [wishId], references: [id], onDelete: Cascade)
 
+  @@unique([wishId, userId])
   @@index([userId])
   @@index([wishId])
 }
