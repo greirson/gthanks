@@ -31,7 +31,7 @@ export async function getMagicLink(email: string): Promise<string> {
 
   // Construct the callback URL (same format as NextAuth sends in emails)
   const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-  const callbackUrl = encodeURIComponent('/my-reservations');
+  const callbackUrl = encodeURIComponent('/reservations');
   return `${baseUrl}/api/auth/callback/email?token=${token.token}&email=${encodeURIComponent(email)}&callbackUrl=${callbackUrl}`;
 }
 

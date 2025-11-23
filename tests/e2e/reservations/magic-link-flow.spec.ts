@@ -16,6 +16,7 @@ import {
   getMagicLink,
 } from '../helpers/reservation.helper';
 import { logout } from '../helpers/auth.helper';
+import { generateUniqueEmail } from '../helpers/email.helper';
 
 test.describe('Magic Link Reservation Flow', () => {
   // Cleanup after each test
@@ -25,7 +26,10 @@ test.describe('Magic Link Reservation Flow', () => {
 
   test('new user: reserve → magic link → dashboard', async ({ page }) => {
     // Setup: Create a public list with wishes
-    const { list, wishes } = await createPublicListWithWishes('owner@test.com', ['Red Bike']);
+    const { list, wishes } = await createPublicListWithWishes(
+      generateUniqueEmail('owner'),
+      ['Red Bike']
+    );
     const targetWish = wishes[0];
 
     // 1. Visit public list (not logged in)
@@ -58,8 +62,9 @@ test.describe('Magic Link Reservation Flow', () => {
     await expect(authDialog.getByText(/sign in|log in|email/i).first()).toBeVisible();
 
     // 4. Enter email for magic link
+    const testEmail = generateUniqueEmail('test');
     const emailInput = page.locator('[type="email"]').first();
-    await emailInput.fill('test@example.com');
+    await emailInput.fill(testEmail);
 
     // Click the send/submit button
     const sendButton = page
@@ -76,12 +81,12 @@ test.describe('Magic Link Reservation Flow', () => {
     });
 
     // 6. Simulate magic link click
-    const magicLink = await getMagicLink('test@example.com');
+    const magicLink = await getMagicLink(testEmail);
     await page.goto(magicLink);
     await page.waitForLoadState('networkidle');
 
-    // 7. Should be logged in and redirected to /my-reservations
-    await expect(page).toHaveURL(/\/my-reservations/, {
+    // 7. Should be logged in and redirected to /reservations
+    await expect(page).toHaveURL(/\/reservations/, {
       timeout: 10000,
     });
 
@@ -93,11 +98,14 @@ test.describe('Magic Link Reservation Flow', () => {
 
   test('logged in user: instant reservation', async ({ page }) => {
     // Setup: Create a public list with wishes
-    const { list, wishes } = await createPublicListWithWishes('owner2@test.com', ['Red Bike']);
+    const { list, wishes } = await createPublicListWithWishes(
+      generateUniqueEmail('owner2'),
+      ['Red Bike']
+    );
     const targetWish = wishes[0];
 
     // Login first
-    await loginWithMagicLink(page, 'user@example.com');
+    await loginWithMagicLink(page, generateUniqueEmail('user'));
 
     // Visit list
     await page.goto(`/lists/${list.id}`);
@@ -129,7 +137,7 @@ test.describe('Magic Link Reservation Flow', () => {
     // Try multiple possible navigation methods
     const myReservationsLink = page
       .locator(
-        'a:has-text("My Reservations"), a[href="/my-reservations"], a:has-text("Reservations")'
+        'a:has-text("My Reservations"), a[href="/reservations"], a:has-text("Reservations")'
       )
       .first();
 
@@ -137,7 +145,7 @@ test.describe('Magic Link Reservation Flow', () => {
       await myReservationsLink.click();
     } else {
       // Fallback: navigate directly
-      await page.goto('/my-reservations');
+      await page.goto('/reservations');
     }
 
     await page.waitForLoadState('networkidle');
@@ -150,7 +158,7 @@ test.describe('Magic Link Reservation Flow', () => {
 
   test('cancel reservation with undo', async ({ page }) => {
     // Setup: Seed a reservation for a user
-    const userEmail = 'reserver@example.com';
+    const userEmail = generateUniqueEmail('reserver');
     const wishTitle = 'Red Bike';
     const { wishId } = await seedReservation(userEmail, wishTitle);
 
@@ -158,7 +166,7 @@ test.describe('Magic Link Reservation Flow', () => {
     await loginWithMagicLink(page, userEmail);
 
     // Go to My Reservations page
-    await page.goto('/my-reservations');
+    await page.goto('/reservations');
     await page.waitForLoadState('networkidle');
 
     // Verify reservation is visible
@@ -205,9 +213,10 @@ test.describe('Magic Link Reservation Flow', () => {
 
   test('unauthenticated user sees auth prompt on reserve', async ({ page }) => {
     // Setup: Create a public list with wishes
-    const { list, wishes } = await createPublicListWithWishes('owner3@test.com', [
-      'Blue Headphones',
-    ]);
+    const { list, wishes } = await createPublicListWithWishes(
+      generateUniqueEmail('owner3'),
+      ['Blue Headphones']
+    );
     const targetWish = wishes[0];
 
     // Ensure we're logged out
@@ -238,9 +247,12 @@ test.describe('Magic Link Reservation Flow', () => {
 
   test('reservation persists across sessions', async ({ page, context }) => {
     // Setup: Create a public list with wishes
-    const { list, wishes } = await createPublicListWithWishes('owner4@test.com', ['Gaming Mouse']);
+    const { list, wishes } = await createPublicListWithWishes(
+      generateUniqueEmail('owner4'),
+      ['Gaming Mouse']
+    );
     const targetWish = wishes[0];
-    const userEmail = 'persistent@example.com';
+    const userEmail = generateUniqueEmail('persistent');
 
     // Login and make reservation
     await loginWithMagicLink(page, userEmail);
@@ -262,7 +274,7 @@ test.describe('Magic Link Reservation Flow', () => {
     await loginWithMagicLink(page, userEmail);
 
     // Navigate to reservations
-    await page.goto('/my-reservations');
+    await page.goto('/reservations');
     await page.waitForLoadState('networkidle');
 
     // Reservation should still be there

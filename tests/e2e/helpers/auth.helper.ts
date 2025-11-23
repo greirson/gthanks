@@ -58,16 +58,25 @@ export async function loginAsUser(page: Page, email: string): Promise<TestUser> 
   const encryptionKey = new Uint8Array(derivedKey);
 
   const sessionToken = await new EncryptJWT({
+    // Core fields
     id: user.id,
     email: user.email,
     name: user.name,
-    isAdmin: user.isAdmin,
-    role: user.role,
     sub: user.id,
+
+    // CRITICAL: Fields that NextAuth's JWT/session callbacks expect
+    role: user.role || 'user',
+    isAdmin: user.isAdmin || false,
+    isOnboardingComplete: true,  // CRITICAL: Must be true to avoid redirects
+    themePreference: 'system',
+    username: null,
+    canUseVanityUrls: false,
+    showPublicProfile: false,
   })
     .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
     .setIssuedAt()
     .setExpirationTime('30d')
+    .setJti(createId())  // Add unique token ID
     .encrypt(encryptionKey);
 
   // Set the session cookie in the browser
@@ -76,7 +85,7 @@ export async function loginAsUser(page: Page, email: string): Promise<TestUser> 
     {
       name: 'next-auth.session-token',
       value: sessionToken,
-      domain: process.env.E2E_TEST_DOMAIN || 'localhost',
+      domain: 'localhost',  // Always use localhost for E2E tests
       path: '/',
       expires: Math.floor(expiresAt.getTime() / 1000),
       httpOnly: true,

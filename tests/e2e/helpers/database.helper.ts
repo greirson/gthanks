@@ -705,7 +705,7 @@ export async function getGroup(groupId: string) {
         include: {
           list: {
             include: {
-              wishes: {
+              listWishes: {
                 include: {
                   wish: true,
                 },
@@ -728,7 +728,7 @@ export async function getList(listId: string) {
   return await db.list.findUnique({
     where: { id: listId },
     include: {
-      wishes: {
+      listWishes: {
         include: {
           wish: {
             include: {
@@ -737,7 +737,7 @@ export async function getList(listId: string) {
           },
         },
       },
-      owner: {
+      user: {
         select: {
           id: true,
           name: true,

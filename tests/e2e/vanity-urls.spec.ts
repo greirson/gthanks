@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { db } from '@/lib/db';
+import { generateUniqueEmail } from './helpers/email.helper';
 
 test.describe('Vanity URLs E2E Tests', () => {
   let testUser: any;
@@ -9,7 +10,7 @@ test.describe('Vanity URLs E2E Tests', () => {
     // Create test user with vanity URL access
     testUser = await db.user.create({
       data: {
-        email: 'vanity-test@example.com',
+        email: generateUniqueEmail('vanity-test'),
         name: 'Vanity Test User',
         canUseVanityUrls: true,
       },

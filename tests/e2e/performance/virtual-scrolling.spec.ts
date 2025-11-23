@@ -220,7 +220,7 @@ test.describe('Virtual Scrolling Performance - 500 Reservations', () => {
       });
 
       // Navigate to reservations page
-      await page.goto('/reservation');
+      await page.goto('/reservations');
       await page.waitForLoadState('networkidle');
 
       // Wait for reservations to load
@@ -310,7 +310,7 @@ test.describe('Virtual Scrolling Performance - 500 Reservations', () => {
       });
 
       // Navigate to reservations page
-      await page.goto('/reservation');
+      await page.goto('/reservations');
       await page.waitForLoadState('networkidle');
 
       // Ensure grid view is active
@@ -394,7 +394,7 @@ test.describe('Virtual Scrolling Performance - 500 Reservations', () => {
       });
 
       // Navigate to reservations page
-      await page.goto('/reservation');
+      await page.goto('/reservations');
       await page.waitForLoadState('networkidle');
 
       // Switch to list view
@@ -459,7 +459,7 @@ test.describe('Virtual Scrolling Performance - 500 Reservations', () => {
         name: reserver.name || 'Test Reserver',
       });
 
-      await page.goto('/reservation');
+      await page.goto('/reservations');
       await page.waitForLoadState('networkidle');
 
       // Initially: 60 items, virtual scrolling SHOULD be active
@@ -521,7 +521,7 @@ test.describe('Virtual Scrolling Performance - 500 Reservations', () => {
         name: reserver.name || 'Test Reserver',
       });
 
-      await page.goto('/reservation');
+      await page.goto('/reservations');
       await page.waitForLoadState('networkidle');
 
       // Verify virtual scrolling active
@@ -585,7 +585,7 @@ test.describe('Virtual Scrolling Performance - 500 Reservations', () => {
         name: reserver.name || 'Test Reserver',
       });
 
-      await page.goto('/reservation');
+      await page.goto('/reservations');
       await page.waitForLoadState('networkidle');
 
       // Verify no horizontal scroll
@@ -635,7 +635,7 @@ test.describe('Virtual Scrolling Edge Cases', () => {
         name: reserver.name || 'Test Reserver',
       });
 
-      await page.goto('/reservation');
+      await page.goto('/reservations');
       await page.waitForLoadState('networkidle');
 
       const isActive = await isVirtualScrollingActive(page);
@@ -664,7 +664,7 @@ test.describe('Virtual Scrolling Edge Cases', () => {
         name: reserver.name || 'Test Reserver',
       });
 
-      await page.goto('/reservation');
+      await page.goto('/reservations');
       await page.waitForLoadState('networkidle');
 
       const isActive = await isVirtualScrollingActive(page);

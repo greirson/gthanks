@@ -67,12 +67,12 @@ test.describe('Test 1: End-to-End Happy Path', () => {
         name: 'Wish Owner',
       });
 
-      await page.goto('/');
+      await page.goto('/wishes');
       await waitForPageLoad(page);
 
-      // Verify user is logged in by checking for navigation elements
-      const isLoggedIn = (await page.locator('nav, header').count()) > 0;
-      expect(isLoggedIn, 'User should be logged in').toBeTruthy();
+      // Verify user is logged in by checking for navigation elements (only present on authenticated routes)
+      const nav = page.locator('nav[role="navigation"]');
+      await expect(nav).toBeVisible();
 
       // Step 2: User creates wish with title, price (using API)
       const wish = await createWish(wishOwner.id, {
@@ -160,7 +160,7 @@ test.describe('Test 1: End-to-End Happy Path', () => {
         where: { wishId: wish.id },
       });
       expect(reservation, 'Reservation should exist in database').toBeDefined();
-      expect(reservation?.reserverEmail).toBe(giftGiver.email);
+      expect(reservation?.userId).toBe(giftGiver.id);
 
       console.log('✅ STEP 7: Gift giver reserved the wish');
 
@@ -174,8 +174,7 @@ test.describe('Test 1: End-to-End Happy Path', () => {
       });
 
       expect(finalReservation, 'Reservation should exist').toBeDefined();
-      expect(finalReservation?.reserverEmail).toBe(giftGiver.email);
-      expect(finalReservation?.reserverName).toBe(giftGiver.name);
+      expect(finalReservation?.userId).toBe(giftGiver.id);
 
       // CRITICAL: In production, the API should NOT expose reserver details to the owner
       // This is enforced by the API layer, not the database

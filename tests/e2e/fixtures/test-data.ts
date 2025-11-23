@@ -4,20 +4,34 @@
  * These fixtures provide consistent test data across test suites.
  */
 
-export const testUsers = {
-  user1: {
-    email: 'test-user1@example.com',
-    name: 'Test User 1',
-  },
-  user2: {
-    email: 'test-user2@example.com',
-    name: 'Test User 2',
-  },
-  user3: {
-    email: 'test-user3@example.com',
-    name: 'Test User 3',
-  },
-} as const;
+import { generateUniqueEmail } from '../helpers/email.helper';
+
+/**
+ * Generate unique test users with unique emails to prevent collisions
+ * @returns Object with user1, user2, user3 test user data
+ */
+export function getTestUsers() {
+  return {
+    user1: {
+      email: generateUniqueEmail('test-user1'),
+      name: 'Test User 1',
+    },
+    user2: {
+      email: generateUniqueEmail('test-user2'),
+      name: 'Test User 2',
+    },
+    user3: {
+      email: generateUniqueEmail('test-user3'),
+      name: 'Test User 3',
+    },
+  };
+}
+
+/**
+ * Legacy export for backward compatibility
+ * @deprecated Use getTestUsers() instead to ensure unique emails
+ */
+export const testUsers = getTestUsers();
 
 export const testWishes = {
   wish1: {

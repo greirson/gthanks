@@ -19,6 +19,7 @@ import { createId } from '@paralleldrive/cuid2';
 import { db } from '@/lib/db';
 import { loginWithMagicLink, seedReservation } from './helpers/reservation.helper';
 import { cleanupTestData } from './helpers/database.helper';
+import { generateUniqueEmail } from './helpers/email.helper';
 
 test.describe('My Reservations Page', () => {
   // Cleanup after each test
@@ -28,7 +29,7 @@ test.describe('My Reservations Page', () => {
 
   test.describe('Grouping and Organization', () => {
     test('groups reservations by owner', async ({ page }) => {
-      const userEmail = 'reserver@example.com';
+      const userEmail = generateUniqueEmail('reserver');
 
       // Create reservations from two different owners
       const owner1Email = `owner1-${Date.now()}@test.com`;
@@ -138,7 +139,7 @@ test.describe('My Reservations Page', () => {
 
       // Login and navigate
       await loginWithMagicLink(page, userEmail);
-      await page.goto('/my-reservations');
+      await page.goto('/reservations');
       await page.waitForLoadState('networkidle');
 
       // Verify both owners' items are visible
@@ -151,7 +152,7 @@ test.describe('My Reservations Page', () => {
     });
 
     test('purchased items move to bottom of owner group', async ({ page }) => {
-      const userEmail = 'reserver@example.com';
+      const userEmail = generateUniqueEmail('reserver');
       const ownerId = createId();
       const reserverId = createId();
 
@@ -253,7 +254,7 @@ test.describe('My Reservations Page', () => {
 
       // Login and navigate
       await loginWithMagicLink(page, userEmail);
-      await page.goto('/my-reservations');
+      await page.goto('/reservations');
       await page.waitForLoadState('networkidle');
 
       // Get all item titles in order
@@ -279,7 +280,7 @@ test.describe('My Reservations Page', () => {
 
   test.describe('Bulk Actions', () => {
     test('bulk cancel removes multiple reservations', async ({ page }) => {
-      const userEmail = 'reserver@example.com';
+      const userEmail = generateUniqueEmail('reserver');
 
       // Seed multiple reservations
       await seedReservation(userEmail, 'Item 1');
@@ -288,7 +289,7 @@ test.describe('My Reservations Page', () => {
 
       // Login and navigate
       await loginWithMagicLink(page, userEmail);
-      await page.goto('/my-reservations');
+      await page.goto('/reservations');
       await page.waitForLoadState('networkidle');
 
       // Enter selection mode (mobile or desktop)
@@ -322,7 +323,7 @@ test.describe('My Reservations Page', () => {
     });
 
     test('bulk mark as purchased moves items to purchased section', async ({ page }) => {
-      const userEmail = 'reserver@example.com';
+      const userEmail = generateUniqueEmail('reserver');
 
       // Seed multiple reservations
       await seedReservation(userEmail, 'Gift 1');
@@ -330,7 +331,7 @@ test.describe('My Reservations Page', () => {
 
       // Login and navigate
       await loginWithMagicLink(page, userEmail);
-      await page.goto('/my-reservations');
+      await page.goto('/reservations');
       await page.waitForLoadState('networkidle');
 
       // Enter selection mode
@@ -366,7 +367,7 @@ test.describe('My Reservations Page', () => {
 
   test.describe('Filtering', () => {
     test('filter by owner shows only that owner\'s items', async ({ page }) => {
-      const userEmail = 'reserver@example.com';
+      const userEmail = generateUniqueEmail('reserver');
       const reserverId = createId();
 
       // Create reserver
@@ -472,7 +473,7 @@ test.describe('My Reservations Page', () => {
 
       // Login and navigate
       await loginWithMagicLink(page, userEmail);
-      await page.goto('/my-reservations');
+      await page.goto('/reservations');
       await page.waitForLoadState('networkidle');
 
       // Open filters (mobile or desktop)
@@ -499,7 +500,7 @@ test.describe('My Reservations Page', () => {
     });
 
     test('search filters by wish title', async ({ page }) => {
-      const userEmail = 'reserver@example.com';
+      const userEmail = generateUniqueEmail('reserver');
 
       // Seed reservations with different titles
       await seedReservation(userEmail, 'Red Bicycle');
@@ -507,7 +508,7 @@ test.describe('My Reservations Page', () => {
 
       // Login and navigate
       await loginWithMagicLink(page, userEmail);
-      await page.goto('/my-reservations');
+      await page.goto('/reservations');
       await page.waitForLoadState('networkidle');
 
       // Open filters
@@ -534,7 +535,7 @@ test.describe('My Reservations Page', () => {
     });
 
     test('filter by purchase status shows only purchased items', async ({ page }) => {
-      const userEmail = 'reserver@example.com';
+      const userEmail = generateUniqueEmail('reserver');
       const reserverId = createId();
 
       // Create reserver
@@ -609,7 +610,7 @@ test.describe('My Reservations Page', () => {
 
       // Login and navigate
       await loginWithMagicLink(page, userEmail);
-      await page.goto('/my-reservations');
+      await page.goto('/reservations');
       await page.waitForLoadState('networkidle');
 
       // Open filters
@@ -636,14 +637,14 @@ test.describe('My Reservations Page', () => {
 
   test.describe('View Modes', () => {
     test('toggle between grid and list view', async ({ page }) => {
-      const userEmail = 'reserver@example.com';
+      const userEmail = generateUniqueEmail('reserver');
 
       // Seed a reservation
       await seedReservation(userEmail, 'Test Item');
 
       // Login and navigate
       await loginWithMagicLink(page, userEmail);
-      await page.goto('/my-reservations');
+      await page.goto('/reservations');
       await page.waitForLoadState('networkidle');
 
       // Find view toggle buttons
@@ -671,14 +672,14 @@ test.describe('My Reservations Page', () => {
     });
 
     test('view preference persists across sessions', async ({ page, context }) => {
-      const userEmail = 'reserver@example.com';
+      const userEmail = generateUniqueEmail('reserver');
 
       // Seed a reservation
       await seedReservation(userEmail, 'Test Item');
 
       // Login and navigate
       await loginWithMagicLink(page, userEmail);
-      await page.goto('/my-reservations');
+      await page.goto('/reservations');
       await page.waitForLoadState('networkidle');
 
       // Switch to list view
@@ -698,7 +699,7 @@ test.describe('My Reservations Page', () => {
 
   test.describe('Virtual Scrolling', () => {
     test('virtual scrolling activates with 100+ items', async ({ page }) => {
-      const userEmail = 'reserver@example.com';
+      const userEmail = generateUniqueEmail('reserver');
       const reserverId = createId();
 
       // Create reserver
@@ -761,7 +762,7 @@ test.describe('My Reservations Page', () => {
 
       // Login and navigate
       await loginWithMagicLink(page, userEmail);
-      await page.goto('/my-reservations');
+      await page.goto('/reservations');
       await page.waitForLoadState('networkidle');
 
       // Wait for items to load
@@ -794,7 +795,7 @@ test.describe('My Reservations Page', () => {
 
   test.describe('Empty States', () => {
     test('shows educational empty state when no reservations', async ({ page }) => {
-      const userEmail = 'newuser@example.com';
+      const userEmail = generateUniqueEmail('newuser');
 
       // Create user with no reservations
       const userId = createId();
@@ -820,7 +821,7 @@ test.describe('My Reservations Page', () => {
 
       // Login and navigate
       await loginWithMagicLink(page, userEmail);
-      await page.goto('/my-reservations');
+      await page.goto('/reservations');
       await page.waitForLoadState('networkidle');
 
       // Verify empty state message
@@ -831,7 +832,7 @@ test.describe('My Reservations Page', () => {
 
   test.describe('Purchased Items UI', () => {
     test('purchased items don\'t show checkbox', async ({ page }) => {
-      const userEmail = 'reserver@example.com';
+      const userEmail = generateUniqueEmail('reserver');
       const reserverId = createId();
 
       // Create reserver
@@ -906,7 +907,7 @@ test.describe('My Reservations Page', () => {
 
       // Login and navigate
       await loginWithMagicLink(page, userEmail);
-      await page.goto('/my-reservations');
+      await page.goto('/reservations');
       await page.waitForLoadState('networkidle');
 
       // Enter selection mode
@@ -930,7 +931,7 @@ test.describe('My Reservations Page', () => {
     });
 
     test('purchased items show mark-purchased button is hidden', async ({ page }) => {
-      const userEmail = 'reserver@example.com';
+      const userEmail = generateUniqueEmail('reserver');
       const reserverId = createId();
 
       // Create reserver
@@ -988,7 +989,7 @@ test.describe('My Reservations Page', () => {
 
       // Login and navigate
       await loginWithMagicLink(page, userEmail);
-      await page.goto('/my-reservations');
+      await page.goto('/reservations');
       await page.waitForLoadState('networkidle');
 
       // Find the purchased item card
@@ -1009,7 +1010,7 @@ test.describe('My Reservations Page', () => {
 
   test.describe('LocalStorage Fallback', () => {
     test('view preference works when localStorage is disabled', async ({ page, context }) => {
-      const userEmail = 'reserver@example.com';
+      const userEmail = generateUniqueEmail('reserver');
 
       // Seed a reservation
       await seedReservation(userEmail, 'Test Item');
@@ -1037,7 +1038,7 @@ test.describe('My Reservations Page', () => {
 
       // Login and navigate
       await loginWithMagicLink(page, userEmail);
-      await page.goto('/my-reservations');
+      await page.goto('/reservations');
       await page.waitForLoadState('networkidle');
 
       // Should still render with default view (grid)
