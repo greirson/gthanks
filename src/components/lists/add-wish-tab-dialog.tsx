@@ -5,7 +5,14 @@ import { CheckCircle2, Search } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogBody, DialogContent, DialogHeader } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
@@ -178,10 +185,10 @@ export function AddWishTabDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <h2 className="text-lg font-semibold">Add Wish to List</h2>
-          <p className="text-sm text-muted-foreground">
+          <DialogTitle>Add Wish to List</DialogTitle>
+          <DialogDescription>
             Create a new wish or add existing wishes from your collection.
-          </p>
+          </DialogDescription>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
