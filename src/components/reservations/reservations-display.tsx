@@ -13,6 +13,8 @@ interface ReservationsDisplayProps {
   onToggleSelect: (id: string) => void;
   onCancel: (reservation: ReservationWithWish) => void;
   onMarkPurchased: (reservation: ReservationWithWish) => void;
+  isSelectionMode: boolean;
+  onCardClick: (reservationId: string) => void;
 }
 
 interface OwnerGroup {
@@ -96,6 +98,8 @@ export function ReservationsDisplay({
   onToggleSelect,
   onCancel,
   onMarkPurchased,
+  isSelectionMode,
+  onCardClick,
 }: ReservationsDisplayProps) {
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -138,6 +142,8 @@ export function ReservationsDisplay({
               onToggleSelect={onToggleSelect}
               onCancel={onCancel}
               onMarkPurchased={onMarkPurchased}
+              isSelectionMode={isSelectionMode}
+              onCardClick={onCardClick}
             />
           </div>
         ))}
@@ -191,6 +197,8 @@ export function ReservationsDisplay({
                   onToggleSelect={onToggleSelect}
                   onCancel={onCancel}
                   onMarkPurchased={onMarkPurchased}
+                  isSelectionMode={isSelectionMode}
+                  onCardClick={onCardClick}
                 />
               </div>
             </div>

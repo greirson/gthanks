@@ -19,6 +19,7 @@ import type { ReservationWithWish } from '@/lib/validators/api-responses/reserva
 import { reservationsApi } from '@/lib/api/reservations';
 import { useQueryClient } from '@tanstack/react-query';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { WishDetailsModal } from './wish-details-modal';
 
 export function ReservationsView() {
   const queryClient = useQueryClient();
@@ -34,6 +35,8 @@ export function ReservationsView() {
   const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
   const [showBulkCancelDialog, setShowBulkCancelDialog] = useState(false);
   const [showBulkPurchaseDialog, setShowBulkPurchaseDialog] = useState(false);
+  const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
+  const [isWishModalOpen, setIsWishModalOpen] = useState(false);
 
   // Data fetching
   const { data: reservations, isLoading } = useReservationsQuery();
@@ -82,6 +85,11 @@ export function ReservationsView() {
   const clearSelection = useCallback(() => {
     setSelectedReservationIds(new Set());
   }, []);
+
+  const selectAll = useCallback(() => {
+    const allIds = new Set(filteredReservations.map((r) => r.id));
+    setSelectedReservationIds(allIds);
+  }, [filteredReservations]);
 
   // Action handlers
   const handleCancelClick = useCallback((reservation: ReservationWithWish) => {
@@ -171,6 +179,48 @@ export function ReservationsView() {
       });
   }, [selectedReservationIds, queryClient]);
 
+  // Modal handlers
+  const handleCardClick = useCallback((reservationId: string) => {
+    if (!isSelectionMode) {
+      setSelectedReservationId(reservationId);
+      setIsWishModalOpen(true);
+    }
+  }, [isSelectionMode]);
+
+  const handleCancelFromModal = useCallback(async () => {
+    if (!selectedReservationId) {
+      return;
+    }
+
+    try {
+      await reservationsApi.removeReservation(selectedReservationId);
+      toast.success('Reservation cancelled');
+      void queryClient.invalidateQueries({ queryKey: ['reservations'] });
+      setIsWishModalOpen(false);
+      setSelectedReservationId(null);
+    } catch (error) {
+      toast.error('Failed to cancel reservation');
+      throw error;
+    }
+  }, [selectedReservationId, queryClient]);
+
+  const handleMarkPurchasedFromModal = useCallback(async () => {
+    if (!selectedReservationId) {
+      return;
+    }
+
+    try {
+      await reservationsApi.markAsPurchased(selectedReservationId, new Date());
+      toast.success('Marked as purchased');
+      void queryClient.invalidateQueries({ queryKey: ['reservations'] });
+      setIsWishModalOpen(false);
+      setSelectedReservationId(null);
+    } catch (error) {
+      toast.error('Failed to mark as purchased');
+      throw error;
+    }
+  }, [selectedReservationId, queryClient]);
+
   return (
     <>
       <div className="relative min-h-screen">
@@ -259,19 +309,29 @@ export function ReservationsView() {
 
             {/* Desktop controls bar */}
             <div className="mb-6 hidden items-center justify-between md:flex">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsDesktopFilterOpen(!isDesktopFilterOpen)}
-              >
-                <Filter className="mr-2 h-4 w-4" />
-                Filters
-                {activeFilterCount > 0 && (
-                  <span className="ml-2 rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsDesktopFilterOpen(!isDesktopFilterOpen)}
+                >
+                  <Filter className="mr-2 h-4 w-4" />
+                  Filters
+                  {activeFilterCount > 0 && (
+                    <span className="ml-2 rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </Button>
+                <Button
+                  variant={isSelectionMode ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={toggleSelectionMode}
+                >
+                  <CheckSquare className="mr-2 h-4 w-4" />
+                  Select
+                </Button>
+              </div>
               <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
             </div>
 
@@ -293,9 +353,11 @@ export function ReservationsView() {
                 reservations={memoizedFilteredReservations}
                 viewMode={viewMode}
                 selectedIds={selectedReservationIds}
+                isSelectionMode={isSelectionMode}
                 onToggleSelect={toggleReservationSelection}
                 onCancel={handleCancelClick}
                 onMarkPurchased={handleMarkPurchasedClick}
+                onCardClick={handleCardClick}
               />
             )}
           </div>
@@ -322,6 +384,7 @@ export function ReservationsView() {
             selectedCount={selectedReservationIds.size}
             onBulkCancel={() => setShowBulkCancelDialog(true)}
             onBulkMarkPurchased={() => setShowBulkPurchaseDialog(true)}
+            onSelectAll={selectAll}
             onClearSelection={clearSelection}
             onClose={toggleSelectionMode}
           />
@@ -372,6 +435,19 @@ export function ReservationsView() {
             setShowBulkCancelDialog(false);
             setShowBulkPurchaseDialog(false);
           }}
+        />
+
+        {/* Wish details modal */}
+        <WishDetailsModal
+          reservation={
+            selectedReservationId
+              ? currentReservations.find((r) => r.id === selectedReservationId) ?? null
+              : null
+          }
+          open={isWishModalOpen}
+          onOpenChange={setIsWishModalOpen}
+          onCancel={handleCancelFromModal}
+          onMarkPurchased={handleMarkPurchasedFromModal}
         />
       </div>
     </>

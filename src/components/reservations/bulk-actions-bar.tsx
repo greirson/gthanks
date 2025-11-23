@@ -10,7 +10,7 @@ interface BulkActionsBarProps {
   selectedCount: number;
   onBulkCancel: () => void;
   onBulkMarkPurchased: () => void;
-  onSelectAll?: () => void;
+  onSelectAll: () => void;
   onClearSelection: () => void;
   onClose: () => void;
 }
@@ -93,20 +93,18 @@ export function BulkActionsBar({
 
           {/* Compact Action Buttons - Icon only on mobile, with text on desktop */}
           <div className="flex flex-1 items-center justify-center gap-1">
-            {/* Select All (optional) */}
-            {onSelectAll && (
-              <ThemeButton
-                size="sm"
-                variant="ghost"
-                onClick={onSelectAll}
-                disabled={isProcessing}
-                className="h-11 w-11 p-0 md:w-auto md:px-3"
-                title="Select All"
-              >
-                <Check className="h-5 w-5" />
-                <span className="ml-2 hidden md:inline">Select All</span>
-              </ThemeButton>
-            )}
+            {/* Select All */}
+            <ThemeButton
+              size="sm"
+              variant="ghost"
+              onClick={onSelectAll}
+              disabled={isProcessing}
+              className="h-11 w-11 p-0 md:w-auto md:px-3"
+              title="Select All"
+            >
+              <Check className="h-5 w-5" />
+              <span className="ml-2 hidden md:inline">Select All</span>
+            </ThemeButton>
 
             {/* Clear Selection */}
             <ThemeButton
