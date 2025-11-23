@@ -18,7 +18,7 @@
 - [x] 0.5 Verify no duplicates remain ✅ (0 duplicates found)
 
 ### PHASE 1: Core Infrastructure
-- [ ] 1.1 Database schema migration (purchasedAt, purchasedDate, unique constraint)
+- [x] 1.1 Database schema migration (purchasedAt, purchasedDate, unique constraint) ✅ 4771221
 - [x] 1.2 Update type definitions (ReservationWithWishSchema + bulk schemas) ✅ d117037
 - [ ] 1.3 Create mark as purchased API endpoint
 - [ ] 1.4 Create bulk operations API endpoint
