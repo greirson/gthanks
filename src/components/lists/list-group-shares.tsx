@@ -123,7 +123,7 @@ export function ListGroupShares({ listId, onRemove }: ListGroupSharesProps) {
                   <div>
                     <div className="font-medium">{group.name}</div>
                     <div className="text-sm text-muted-foreground">
-                      {group._count.members} members
+                      {group._count.userGroups} members
                     </div>
                   </div>
                 </div>

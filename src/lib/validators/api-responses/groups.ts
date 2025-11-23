@@ -32,8 +32,8 @@ export const GroupWithCountsSchema = z.object({
   createdAt: flexibleDateSchema(),
   updatedAt: flexibleDateSchema(),
   _count: z.object({
-    members: z.number(),
-    lists: z.number(),
+    userGroups: z.number(), // Matches Prisma relation field name
+    listGroups: z.number(), // Matches Prisma relation field name
   }),
   currentUserRole: z.enum(['admin', 'member']).nullable().optional(),
 });
@@ -76,13 +76,13 @@ export const GroupWithDetailsSchema = z.object({
   visibility: z.enum(['public', 'private']),
   createdAt: flexibleDateSchema(),
   updatedAt: flexibleDateSchema(),
-  members: z.array(GroupMemberDetailsSchema),
-  lists: z.array(ListWithOwnerSchema),
+  members: z.array(GroupMemberDetailsSchema), // Display field (transformed array)
+  lists: z.array(ListWithOwnerSchema), // Display field (transformed array)
   invitations: z.array(GroupInvitationDetailsSchema),
   currentUserRole: z.enum(['admin', 'member']).nullable().optional(),
   _count: z.object({
-    members: z.number(),
-    lists: z.number(),
+    userGroups: z.number(), // Matches Prisma relation field name
+    listGroups: z.number(), // Matches Prisma relation field name
   }),
 });
 

@@ -160,18 +160,18 @@ export const GroupCard = React.memo(function GroupCard({
             ) : (
               <div
                 className="flex items-center gap-1 text-sm text-muted-foreground"
-                aria-label={`${group._count.members} ${group._count.members === 1 ? 'member' : 'members'}`}
+                aria-label={`${group._count.userGroups} ${group._count.userGroups === 1 ? 'member' : 'members'}`}
               >
                 <Users className="h-4 w-4" aria-hidden="true" />
-                {group._count.members} {group._count.members === 1 ? 'member' : 'members'}
+                {group._count.userGroups} {group._count.userGroups === 1 ? 'member' : 'members'}
               </div>
             )}
 
             <div
               className="text-sm text-muted-foreground"
-              aria-label={`${group._count.lists} ${group._count.lists === 1 ? 'list' : 'lists'}`}
+              aria-label={`${group._count.listGroups} ${group._count.listGroups === 1 ? 'list' : 'lists'}`}
             >
-              {group._count.lists} {group._count.lists === 1 ? 'list' : 'lists'}
+              {group._count.listGroups} {group._count.listGroups === 1 ? 'list' : 'lists'}
             </div>
           </div>
 

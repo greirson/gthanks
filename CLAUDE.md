@@ -370,10 +370,10 @@ model List {
 const list = await db.list.findUnique({
   where: { id: listId },
   include: {
-    listAdmins: true,      // array relation
-    listWishes: true,      // array relation
-    user: true,            // single relation
-  }
+    listAdmins: true, // array relation
+    listWishes: true, // array relation
+    user: true, // single relation
+  },
 });
 ```
 

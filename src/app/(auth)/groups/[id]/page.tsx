@@ -126,11 +126,11 @@ export default function GroupDetailPage({ params }: PageProps) {
 
         <div className="mt-4 flex flex-wrap items-center gap-2 sm:gap-4">
           <span className="text-xs text-muted-foreground sm:text-sm">
-            {group._count.members} {group._count.members === 1 ? 'member' : 'members'}
+            {group._count.userGroups} {group._count.userGroups === 1 ? 'member' : 'members'}
           </span>
 
           <span className="text-xs text-muted-foreground sm:text-sm">
-            {group._count.lists} {group._count.lists === 1 ? 'list' : 'lists'}
+            {group._count.listGroups} {group._count.listGroups === 1 ? 'list' : 'lists'}
           </span>
 
           {group.currentUserRole && (

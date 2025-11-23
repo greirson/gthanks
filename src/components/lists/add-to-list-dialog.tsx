@@ -79,7 +79,9 @@ export function AddToListDialog({ wishId, open, onOpenChange }: AddToListDialogP
   };
 
   const isWishInList = (list: ListWithOwner & { listWishes?: Array<{ wish: { id: string } }> }) => {
-    return list.listWishes?.some((listWish) => listWish.wish.id === wishId) || addedLists.has(list.id);
+    return (
+      list.listWishes?.some((listWish) => listWish.wish.id === wishId) || addedLists.has(list.id)
+    );
   };
 
   return (

@@ -43,13 +43,13 @@ export function GroupCardCompact({ group, onEdit, onDelete, onManage }: GroupCar
               {/* Members */}
               <span className="flex items-center gap-1">
                 <Users className="h-3 w-3" />
-                {group._count.members}
+                {group._count.userGroups}
               </span>
 
               {/* Lists */}
               <span className="flex items-center gap-1">
                 <FileText className="h-3 w-3" />
-                {group._count.lists}
+                {group._count.listGroups}
               </span>
             </div>
           </div>

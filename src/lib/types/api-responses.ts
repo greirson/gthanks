@@ -10,8 +10,8 @@ export interface GroupWithCountsResponse extends Omit<Group, 'createdAt' | 'upda
   createdAt: string;
   updatedAt: string;
   _count: {
-    members: number;
-    lists: number;
+    userGroups: number; // Matches Prisma relation field name
+    listGroups: number; // Matches Prisma relation field name
   };
   currentUserRole?: 'admin' | 'member' | null;
 }
@@ -25,8 +25,8 @@ export interface GroupWithDetailsResponse extends Omit<Group, 'createdAt' | 'upd
   invitations: GroupInvitationDetailsResponse[];
   currentUserRole?: 'admin' | 'member' | null;
   _count: {
-    members: number;
-    lists: number;
+    userGroups: number; // Matches Prisma relation field name
+    listGroups: number; // Matches Prisma relation field name
   };
 }
 

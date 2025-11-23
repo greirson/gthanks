@@ -69,13 +69,13 @@ export function GroupListView({ groups, onEdit, onDelete, onManage }: GroupListV
               <div className="flex items-center gap-1.5">
                 <Users className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 <span>
-                  {group._count.members} {group._count.members === 1 ? 'member' : 'members'}
+                  {group._count.userGroups} {group._count.userGroups === 1 ? 'member' : 'members'}
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
                 <FileText className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 <span>
-                  {group._count.lists} {group._count.lists === 1 ? 'list' : 'lists'}
+                  {group._count.listGroups} {group._count.listGroups === 1 ? 'list' : 'lists'}
                 </span>
               </div>
             </div>

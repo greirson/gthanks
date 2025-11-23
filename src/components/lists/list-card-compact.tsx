@@ -107,9 +107,7 @@ export function ListCardCompact({
             {!isOwner && list.user && (
               <span className="flex max-w-[120px] items-center gap-1 truncate">
                 <User className="h-3 w-3" />
-                <span className="truncate">
-                  {list.user.name || list.user.email?.split('@')[0]}
-                </span>
+                <span className="truncate">{list.user.name || list.user.email?.split('@')[0]}</span>
               </span>
             )}
           </div>

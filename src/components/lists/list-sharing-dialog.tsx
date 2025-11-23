@@ -170,7 +170,7 @@ export function ListSharingDialog({ list, open, onOpenChange }: ListSharingDialo
         type: 'group',
         id: group.id,
         name: group.name,
-        memberCount: group._count?.members || 0,
+        memberCount: group._count?.userGroups || 0,
         role: 'Shared',
         isYou: false,
         canRemove: Boolean(list.isOwner && group.currentUserRole === 'admin'),
@@ -862,7 +862,7 @@ export function ListSharingDialog({ list, open, onOpenChange }: ListSharingDialo
                                     <div className="min-w-0 flex-1">
                                       <div className="truncate font-medium">{group.name}</div>
                                       <div className="text-xs text-muted-foreground">
-                                        {group._count.members} members
+                                        {group._count.userGroups} members
                                       </div>
                                     </div>
                                   </div>
