@@ -1,7 +1,9 @@
 import { z } from 'zod';
 
-import { apiDelete, apiGet, apiPost } from '@/lib/api-client';
+import { apiDelete, apiGet, apiPatch, apiPost } from '@/lib/api-client';
 import {
+  BulkReservationResponse,
+  BulkReservationResponseSchema,
   PublicReservation,
   PublicReservationSchema,
   ReservationCreateResponse,
@@ -65,5 +67,38 @@ export const reservationsApi = {
   // Mark wish as received
   markWishReceived: async (wishId: string, action: 'delete' | 'unreserve'): Promise<void> => {
     return apiPost(`/api/wishes/${wishId}/received`, { action }, z.void());
+  },
+
+  // Mark as purchased
+  markAsPurchased: async (
+    reservationId: string,
+    purchasedDate?: Date | string
+  ): Promise<ReservationWithWish> => {
+    return apiPatch(
+      `/api/reservations/${reservationId}/purchased`,
+      { purchasedDate },
+      ReservationWithWishSchema
+    );
+  },
+
+  // Bulk cancel
+  bulkCancel: async (reservationIds: string[]): Promise<BulkReservationResponse> => {
+    return apiPost(
+      '/api/reservations/bulk',
+      { action: 'cancel', reservationIds },
+      BulkReservationResponseSchema
+    );
+  },
+
+  // Bulk mark as purchased
+  bulkMarkAsPurchased: async (
+    reservationIds: string[],
+    purchasedDate?: Date | string
+  ): Promise<BulkReservationResponse> => {
+    return apiPost(
+      '/api/reservations/bulk',
+      { action: 'markPurchased', reservationIds, purchasedDate },
+      BulkReservationResponseSchema
+    );
   },
 };
