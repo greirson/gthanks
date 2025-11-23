@@ -36,8 +36,8 @@
 - [x] 3.4 Create loading skeleton component ✅ 0a0288c
 
 ### PHASE 4: Bulk Actions
-- [ ] 4.1 Create bulk actions bar component
-- [ ] 4.2 Create bulk action dialogs (cancel + mark purchased)
+- [x] 4.1 Create bulk actions bar component ✅ 30e3dbd
+- [x] 4.2 Create bulk action dialogs (cancel + mark purchased) ✅ fb1dfe5
 
 ### PHASE 5: Main View Component
 - [ ] 5.1 Create reservations view component (main orchestration)
