@@ -519,6 +519,127 @@ export class ReservationService {
       });
     }
   }
+
+  /**
+   * Bulk cancel reservations with transaction safety
+   *
+   * @throws ForbiddenError if user doesn't own all reservations
+   * @returns Result with succeeded/failed lists for partial success handling
+   */
+  async bulkCancel(
+    reservationIds: string[],
+    userId: string
+  ): Promise<{
+    succeeded: string[];
+    failed: Array<{ id: string; reason: string }>;
+    totalProcessed: number;
+  }> {
+    if (!userId) {
+      throw new ForbiddenError('Authentication required to cancel reservations');
+    }
+
+    // Verify all reservations belong to user
+    const reservations = await db.reservation.findMany({
+      where: { id: { in: reservationIds } },
+      select: { id: true, userId: true },
+    });
+
+    const unauthorized = reservations.filter((r) => r.userId !== userId);
+    if (unauthorized.length > 0) {
+      throw new ForbiddenError(
+        `Cannot cancel ${unauthorized.length} reservation(s) belonging to other users`
+      );
+    }
+
+    const succeeded: string[] = [];
+    const failed: Array<{ id: string; reason: string }> = [];
+
+    // Use transaction for atomic operation
+    await db.$transaction(async (tx) => {
+      for (const id of reservationIds) {
+        try {
+          await tx.reservation.delete({
+            where: { id, userId }, // Double-check ownership
+          });
+          succeeded.push(id);
+        } catch (error) {
+          failed.push({
+            id,
+            reason: error instanceof Error ? error.message : 'Unknown error',
+          });
+        }
+      }
+    });
+
+    return {
+      succeeded,
+      failed,
+      totalProcessed: reservationIds.length,
+    };
+  }
+
+  /**
+   * Bulk mark reservations as purchased with transaction safety
+   *
+   * @throws ForbiddenError if user doesn't own all reservations
+   * @returns Result with succeeded/failed lists for partial success handling
+   */
+  async bulkMarkPurchased(
+    reservationIds: string[],
+    userId: string,
+    purchasedDate?: Date
+  ): Promise<{
+    succeeded: string[];
+    failed: Array<{ id: string; reason: string }>;
+    totalProcessed: number;
+  }> {
+    if (!userId) {
+      throw new ForbiddenError('Authentication required to mark reservations as purchased');
+    }
+
+    // Verify ownership
+    const reservations = await db.reservation.findMany({
+      where: { id: { in: reservationIds } },
+      select: { id: true, userId: true },
+    });
+
+    const unauthorized = reservations.filter((r) => r.userId !== userId);
+    if (unauthorized.length > 0) {
+      throw new ForbiddenError(
+        `Cannot mark ${unauthorized.length} reservation(s) as purchased (not yours)`
+      );
+    }
+
+    const succeeded: string[] = [];
+    const failed: Array<{ id: string; reason: string }> = [];
+
+    // Use transaction for atomic operation
+    await db.$transaction(async (tx) => {
+      for (const id of reservationIds) {
+        try {
+          await tx.reservation.update({
+            where: { id, userId },
+            data: {
+              purchasedAt: new Date(),
+              purchasedDate: purchasedDate || new Date(),
+            },
+          });
+          succeeded.push(id);
+        } catch (error) {
+          failed.push({
+            id,
+            reason: error instanceof Error ? error.message : 'Unknown error',
+          });
+        }
+      }
+    });
+
+    return {
+      succeeded,
+      failed,
+      totalProcessed: reservationIds.length,
+    };
+  }
 }
 
 // Export singleton instance
