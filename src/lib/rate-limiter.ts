@@ -312,6 +312,12 @@ rateLimiter.configure('image-upload', {
   maxRequests: 10, // 10 uploads per hour per user (image processing is CPU-intensive)
 });
 
+// Bulk operation rate limits
+rateLimiter.configure('bulk-operation', {
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 10, // 10 bulk operations per hour per user
+});
+
 export function getRateLimitHeaders(result: Awaited<ReturnType<typeof rateLimiter.check>>) {
   return {
     'X-RateLimit-Limit': result.limit.toString(),
