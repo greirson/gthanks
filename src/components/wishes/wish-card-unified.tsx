@@ -67,7 +67,7 @@ interface UnifiedWishCardProps {
 const variantConfig = {
   comfortable: {
     layout: 'vertical' as const,
-    cardClassName: 'relative overflow-hidden transition-all duration-150 hover:shadow-lg',
+    cardClassName: 'relative overflow-hidden transition-shadow duration-150 hover:shadow-lg',
     imageAspect: 'aspect-square sm:aspect-video',
     imageSizes:
       '(max-width: 767px) 100vw, (max-width: 1023px) 50vw, (max-width: 1279px) 33vw, 25vw',
@@ -95,7 +95,7 @@ const variantConfig = {
   },
   compact: {
     layout: 'vertical' as const,
-    cardClassName: 'relative overflow-hidden transition-all duration-150 hover:shadow-md',
+    cardClassName: 'relative overflow-hidden transition-shadow duration-150 hover:shadow-md',
     imageAspect: 'aspect-square',
     imageSizes: '(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw',
     contentPadding: 'p-3',
