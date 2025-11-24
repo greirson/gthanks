@@ -476,14 +476,7 @@ export class ReservationService {
       },
     });
 
-    return reservations.map((r) => ({
-      ...r,
-      wish: {
-        id: r.wish.id,
-        title: r.wish.title,
-        user: r.wish.user,
-      },
-    }));
+    return reservations;
   }
 
   /**
@@ -571,14 +564,7 @@ export class ReservationService {
       },
     });
 
-    return {
-      ...updated,
-      wish: {
-        id: updated.wish.id,
-        title: updated.wish.title,
-        user: updated.wish.user,
-      },
-    };
+    return updated;
   }
 
   /**
@@ -754,14 +740,7 @@ export class ReservationService {
       },
     });
 
-    return {
-      ...updated,
-      wish: {
-        id: updated.wish.id,
-        title: updated.wish.title,
-        user: updated.wish.user,
-      },
-    };
+    return updated;
   }
 
   /**
