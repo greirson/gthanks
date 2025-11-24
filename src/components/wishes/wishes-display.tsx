@@ -3,6 +3,17 @@
 import { Wish } from '@/lib/validators/api-responses/wishes';
 import { WishGrid } from '@/components/wishes/wish-grid';
 import { WishList } from '@/components/wishes/wish-list';
+import { SortableWishGrid } from './SortableWishGrid';
+import { SortableWishList } from './SortableWishList';
+
+export type SortOption =
+  | 'custom'
+  | 'createdAt-desc'
+  | 'createdAt-asc'
+  | 'wishLevel-desc'
+  | 'wishLevel-asc'
+  | 'price-desc'
+  | 'price-asc';
 
 interface WishesDisplayProps {
   wishes: (Wish & { isOwner?: boolean })[];
@@ -23,6 +34,10 @@ interface WishesDisplayProps {
     wishId: string,
     event?: React.MouseEvent | React.ChangeEvent | React.KeyboardEvent
   ) => void;
+  // Sortable props
+  sortMode?: SortOption;
+  canEdit?: boolean;
+  onReorder?: (wishId: string, newSortOrder: number) => Promise<void>;
 }
 
 export function WishesDisplay({
@@ -39,6 +54,9 @@ export function WishesDisplay({
   isSelectionMode = false,
   selectedWishIds = new Set(),
   onToggleSelection,
+  sortMode,
+  canEdit = false,
+  onReorder,
 }: WishesDisplayProps) {
   const commonProps = {
     wishes,
@@ -54,9 +72,22 @@ export function WishesDisplay({
     onToggleSelection,
   };
 
+  // Use sortable components only when in custom sort mode with edit permissions
+  const useSortable = canEdit && sortMode === 'custom' && onReorder;
+
   return (
     <div className={className}>
-      {viewMode === 'list' ? <WishList {...commonProps} /> : <WishGrid {...commonProps} />}
+      {viewMode === 'list' ? (
+        useSortable ? (
+          <SortableWishList {...commonProps} onReorder={onReorder} canEdit={canEdit} />
+        ) : (
+          <WishList {...commonProps} />
+        )
+      ) : useSortable ? (
+        <SortableWishGrid {...commonProps} onReorder={onReorder} canEdit={canEdit} />
+      ) : (
+        <WishGrid {...commonProps} />
+      )}
     </div>
   );
 }
