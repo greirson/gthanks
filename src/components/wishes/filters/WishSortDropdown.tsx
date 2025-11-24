@@ -41,26 +41,16 @@ export function WishSortDropdown({
     return wishes.some((w) => w.sortOrder !== null && w.sortOrder !== undefined);
   }, [wishes]);
 
-  // Build sort options array, conditionally including "Custom Order"
+  // Build sort options array - Custom Order is always available to all users
   const sortOptions: { value: SortOption; label: string }[] = useMemo(() => {
-    const options: { value: SortOption; label: string }[] = [];
-
-    // Add "Custom Order" as first option if user can edit (list owner)
-    // This allows users to initialize custom sort even when no wishes have sortOrder yet
-    if (canEdit) {
-      options.push({ value: 'custom', label: 'Custom Order' });
-    }
-
-    options.push(
-      { value: 'featured', label: 'Featured' },
+    return [
+      { value: 'custom', label: 'Custom Order' },
       { value: 'wishLevel-high', label: 'Wish Level: High to Low (★★★ → ★)' },
       { value: 'wishLevel-low', label: 'Wish Level: Low to High (★ → ★★★)' },
       { value: 'price-low', label: 'Price: Low to High ($5 → $50)' },
-      { value: 'price-high', label: 'Price: High to Low ($50 → $5)' }
-    );
-
-    return options;
-  }, [hasCustomSort]);
+      { value: 'price-high', label: 'Price: High to Low ($50 → $5)' },
+    ];
+  }, []);
 
   const handleSortChange = async (newSort: SortOption) => {
     // If user selects "custom" for first time, initialize custom sort

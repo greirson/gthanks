@@ -8,6 +8,12 @@ import { useFilterPersistence } from '@/hooks/filters/shared/useFilterPersistenc
 import { applySearchFilter } from '@/hooks/filters/shared/searchUtils';
 import { countActiveFilters } from '@/hooks/filters/shared/activeFilterCount';
 
+// Extended Wish type with optional ListWish fields for sorting
+export type WishWithListContext = Wish & {
+  sortOrder?: number | null;
+  addedAt?: string;
+};
+
 // Types for filter/sort functionality
 // Changed from range to array for multi-select checkbox support
 export type WishLevelSelection = number[]; // Array of selected wish levels (1, 2, 3)
@@ -19,7 +25,6 @@ export interface PriceRange {
 
 export type SortOption =
   | 'custom'
-  | 'featured'
   | 'wishLevel-high'
   | 'wishLevel-low'
   | 'price-high'
@@ -45,11 +50,11 @@ const FILTER_STORAGE_KEY = 'wish-filters';
 const DEFAULT_FILTER_STATE = {
   wishLevel: [1, 2, 3] as WishLevelSelection, // All levels selected
   cost: { min: 0, max: 0 } as PriceRange, // Will be updated with dynamic maxPrice
-  sort: 'wishLevel-high' as SortOption,
+  sort: 'custom' as SortOption,
   search: '',
 };
 
-export function useWishFilters(wishes: Wish[], pageSize = 24) {
+export function useWishFilters(wishes: WishWithListContext[], pageSize = 24) {
   // Ensure wishes is always an array - wrap in useMemo to fix React hook dependencies
   const safeWishes = useMemo(() => wishes || [], [wishes]);
 
@@ -80,7 +85,7 @@ export function useWishFilters(wishes: Wish[], pageSize = 24) {
           params.set('cost', `${state.cost.min}-${state.cost.max}`);
         }
 
-        if (state.sort !== 'wishLevel-high') {
+        if (state.sort !== 'custom') {
           params.set('sort', state.sort);
         }
 
@@ -227,7 +232,7 @@ export function useWishFilters(wishes: Wish[], pageSize = 24) {
       });
     }
 
-    // Sort wishes - PRESERVE FEATURED ALGORITHM EXACTLY
+    // Sort wishes
     result.sort((a, b) => {
       switch (filterState.sort) {
         case 'custom': {
@@ -239,33 +244,10 @@ export function useWishFilters(wishes: Wish[], pageSize = 24) {
             return aOrder - bOrder;
           }
 
-          // Fallback to addedAt for wishes without sortOrder
-          return new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime();
-        }
-
-        case 'featured': {
-          // Featured algorithm: wishLevel weight (40%) + recency (30%) + price consideration (30%)
-          const now = Date.now();
-          const dayInMs = 24 * 60 * 60 * 1000;
-
-          // Wish Level score (higher wishLevel = higher score), treat null as 1
-          const wishLevelScoreA = (a.wishLevel ?? 1) * 0.4;
-          const wishLevelScoreB = (b.wishLevel ?? 1) * 0.4;
-
-          // Recency score (newer = higher score)
-          const ageA = (now - new Date(a.createdAt).getTime()) / dayInMs;
-          const ageB = (now - new Date(b.createdAt).getTime()) / dayInMs;
-          const recencyScoreA = Math.max(0, (30 - ageA) / 30) * 0.3;
-          const recencyScoreB = Math.max(0, (30 - ageB) / 30) * 0.3;
-
-          // Price score (items with price get slight boost)
-          const priceScoreA = a.price !== null ? 0.3 : 0;
-          const priceScoreB = b.price !== null ? 0.3 : 0;
-
-          const totalScoreA = wishLevelScoreA + recencyScoreA + priceScoreA;
-          const totalScoreB = wishLevelScoreB + recencyScoreB + priceScoreB;
-
-          return totalScoreB - totalScoreA;
+          // Fallback to addedAt for wishes without sortOrder (or createdAt if addedAt not available)
+          const aTime = new Date(a.addedAt || a.createdAt).getTime();
+          const bTime = new Date(b.addedAt || b.createdAt).getTime();
+          return bTime - aTime;
         }
 
         case 'wishLevel-high':

@@ -37,6 +37,7 @@ export interface PublicListData {
     wish: PrismaWish;
     addedAt: Date;
     wishLevel: number | null;
+    sortOrder?: number | null;
   }>;
 }
 
@@ -78,6 +79,8 @@ export function PublicListContent({
       quantity: listWish.wish.quantity,
       wishLevel: listWish.wish.wishLevel,
       isOwner: currentUserId === list.user.id,
+      sortOrder: listWish.sortOrder ?? null,
+      addedAt: new Date(listWish.addedAt).toISOString(),
     })) || [];
 
   // Use filter hook

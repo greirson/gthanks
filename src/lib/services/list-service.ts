@@ -722,9 +722,10 @@ export class ListService {
           include: {
             wish: true, // Include all wish fields for editing
           },
-          orderBy: {
-            addedAt: 'desc',
-          },
+          orderBy: [
+            { sortOrder: 'asc' },
+            { addedAt: 'desc' },
+          ],
         },
       },
     });
@@ -925,9 +926,10 @@ export class ListService {
           include: {
             wish: true,
           },
-          orderBy: {
-            addedAt: 'desc',
-          },
+          orderBy: [
+            { sortOrder: 'asc' },
+            { addedAt: 'desc' },
+          ],
         },
       },
     });

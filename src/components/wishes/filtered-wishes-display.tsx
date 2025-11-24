@@ -177,7 +177,7 @@ export function FilteredWishesDisplay({
         wishLevelSelection={filterState?.wishLevel || [1, 2, 3]}
         priceRange={filterState?.cost || { min: 0, max: maxPrice }}
         maxPrice={maxPrice}
-        sortOption={filterState?.sort || 'wishLevel-high'}
+        sortOption={filterState?.sort || 'custom'}
         onWishLevelChange={onWishLevelChange || (() => {})}
         onPriceChange={onPriceChange || (() => {})}
         onSortChange={onSortChange || (() => {})}
