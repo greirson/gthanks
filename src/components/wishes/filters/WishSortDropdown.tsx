@@ -45,8 +45,9 @@ export function WishSortDropdown({
   const sortOptions: { value: SortOption; label: string }[] = useMemo(() => {
     const options: { value: SortOption; label: string }[] = [];
 
-    // Add "Custom Order" as first option if custom sort exists
-    if (hasCustomSort) {
+    // Add "Custom Order" as first option if user can edit (list owner)
+    // This allows users to initialize custom sort even when no wishes have sortOrder yet
+    if (canEdit) {
       options.push({ value: 'custom', label: 'Custom Order' });
     }
 
