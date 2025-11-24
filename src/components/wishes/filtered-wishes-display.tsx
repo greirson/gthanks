@@ -43,6 +43,8 @@ interface FilteredWishesDisplayProps {
   // Custom sort props
   listId?: string;
   canEdit?: boolean;
+  // Hide menu on public pages
+  hideMenu?: boolean;
 }
 
 export function FilteredWishesDisplay({
@@ -66,6 +68,7 @@ export function FilteredWishesDisplay({
   showFilters = true,
   listId,
   canEdit = false,
+  hideMenu = false,
 }: FilteredWishesDisplayProps) {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [viewMode, setViewMode] = useViewPreference('viewMode.publicList', 'grid');
@@ -92,6 +95,7 @@ export function FilteredWishesDisplay({
         isLoading={isLoading}
         showAddToList={showAddToList}
         viewMode={viewMode}
+        hideMenu={hideMenu}
       />
     );
   }
@@ -166,6 +170,7 @@ export function FilteredWishesDisplay({
             isLoading={isLoading}
             showAddToList={showAddToList}
             viewMode={viewMode}
+            hideMenu={hideMenu}
           />
         )}
       </div>

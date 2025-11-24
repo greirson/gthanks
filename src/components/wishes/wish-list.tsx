@@ -22,6 +22,8 @@ interface WishListProps {
     wishId: string,
     event?: React.MouseEvent | React.ChangeEvent | React.KeyboardEvent
   ) => void;
+  // Hide menu on public pages
+  hideMenu?: boolean;
 }
 
 export function WishList({
@@ -36,6 +38,7 @@ export function WishList({
   isSelectionMode = false,
   selectedWishIds = new Set(),
   onToggleSelection,
+  hideMenu = false,
 }: WishListProps) {
   if (isLoading) {
     return (
@@ -83,6 +86,7 @@ export function WishList({
           isSelectionMode={isSelectionMode}
           isSelected={selectedWishIds.has(wish.id)}
           onToggleSelection={onToggleSelection}
+          hideMenu={hideMenu}
         />
       ))}
     </div>

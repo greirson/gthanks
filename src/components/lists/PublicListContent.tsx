@@ -237,6 +237,7 @@ export function PublicListContent({
               }
               isLoading={reservationsLoading}
               showFilters={true}
+              hideMenu={true}
             />
           </div>
         </div>

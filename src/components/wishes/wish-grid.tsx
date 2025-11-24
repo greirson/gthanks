@@ -22,6 +22,8 @@ export interface WishGridProps {
     wishId: string,
     event?: React.MouseEvent | React.ChangeEvent | React.KeyboardEvent
   ) => void;
+  // Hide menu on public pages
+  hideMenu?: boolean;
 }
 
 export function WishGrid({
@@ -35,6 +37,7 @@ export function WishGrid({
   isSelectionMode = false,
   selectedWishIds = new Set(),
   onToggleSelection,
+  hideMenu = false,
 }: WishGridProps) {
   if (isLoading) {
     return (
@@ -81,6 +84,7 @@ export function WishGrid({
           isSelectionMode={isSelectionMode}
           isSelected={selectedWishIds.has(wish.id)}
           onToggleSelection={onToggleSelection}
+          hideMenu={hideMenu}
         />
       ))}
     </div>

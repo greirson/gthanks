@@ -38,6 +38,8 @@ interface WishesDisplayProps {
   sortMode?: SortOption;
   canEdit?: boolean;
   onReorder?: (wishId: string, newSortOrder: number) => Promise<void>;
+  // Hide menu on public pages
+  hideMenu?: boolean;
 }
 
 export function WishesDisplay({
@@ -57,6 +59,7 @@ export function WishesDisplay({
   sortMode,
   canEdit = false,
   onReorder,
+  hideMenu = false,
 }: WishesDisplayProps) {
   const commonProps = {
     wishes,
@@ -70,6 +73,7 @@ export function WishesDisplay({
     isSelectionMode,
     selectedWishIds,
     onToggleSelection,
+    hideMenu,
   };
 
   // Use sortable components only when in custom sort mode with edit permissions

@@ -61,6 +61,9 @@ interface UnifiedWishCardProps {
     wishId: string,
     event?: React.MouseEvent | React.ChangeEvent | React.KeyboardEvent
   ) => void;
+
+  // Hide menu on public pages where clicking card opens the link
+  hideMenu?: boolean;
 }
 
 // Variant configuration for different layouts
@@ -157,6 +160,7 @@ export function UnifiedWishCard({
   isSelectionMode = false,
   isSelected = false,
   onToggleSelection,
+  hideMenu = false,
 }: UnifiedWishCardProps) {
   const config = variantConfig[variant];
   const [imageError, setImageError] = useState(false);
@@ -373,7 +377,7 @@ export function UnifiedWishCard({
                 aria-label={`Select ${wish.title}`}
               />
             </label>
-          ) : (
+          ) : !hideMenu ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -419,7 +423,7 @@ export function UnifiedWishCard({
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
-          )}
+          ) : null}
         </Card>
 
         {/* Add to List Dialog */}
@@ -654,7 +658,7 @@ export function UnifiedWishCard({
               aria-label={`Select ${wish.title}`}
             />
           </label>
-        ) : (
+        ) : !hideMenu ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -726,7 +730,7 @@ export function UnifiedWishCard({
               )}
             </DropdownMenuContent>
           </DropdownMenu>
-        )}
+        ) : null}
       </Card>
 
       {/* Add to List Dialog */}
