@@ -350,9 +350,10 @@ export class ListService {
           include: {
             wish: true,
           },
-          orderBy: {
-            addedAt: 'desc',
-          },
+          orderBy: [
+            { sortOrder: 'asc' },   // Primary: custom order (nulls last)
+            { addedAt: 'desc' },    // Fallback: for wishes without custom sort
+          ],
         },
       },
     });
