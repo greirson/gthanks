@@ -40,6 +40,9 @@ interface FilteredWishesDisplayProps {
   showAddToList?: boolean;
   className?: string;
   showFilters?: boolean;
+  // Custom sort props
+  listId?: string;
+  canEdit?: boolean;
 }
 
 export function FilteredWishesDisplay({

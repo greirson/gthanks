@@ -137,6 +137,9 @@ export function PublicListContent({
                 onSortChange={setSortOption}
                 onClearAll={resetFilters}
                 activeFilterCount={activeFilterCount}
+                wishes={wishes}
+                listId={list.id}
+                canEdit={currentUserId === list.user.id}
               />
             </div>
           </div>

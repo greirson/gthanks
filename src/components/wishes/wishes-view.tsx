@@ -189,6 +189,7 @@ export function WishesView() {
                   onSortChange={setSortOption}
                   onClearAll={clearFilters}
                   activeFilterCount={activeFilterCount}
+                  canEdit={false}
                 />
               </div>
             </div>
@@ -312,6 +313,7 @@ export function WishesView() {
         onSortChange={setSortOption}
         onClearAll={clearFilters}
         activeFilterCount={activeFilterCount}
+        canEdit={false}
       />
 
       {/* Add Wish Dialog */}

@@ -19,6 +19,9 @@ interface MobileFilterSheetProps {
   onSortChange: (sort: SortOption) => void;
   onClearAll: () => void; // Used within WishFilterPanel
   activeFilterCount: number;
+  wishes?: Array<{ sortOrder?: number | null }>;
+  listId?: string;
+  canEdit?: boolean;
 }
 
 export function MobileFilterSheet({
@@ -33,6 +36,9 @@ export function MobileFilterSheet({
   onSortChange,
   onClearAll: _onClearAll,
   activeFilterCount: _activeFilterCount,
+  wishes,
+  listId,
+  canEdit = false,
 }: MobileFilterSheetProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -154,6 +160,9 @@ export function MobileFilterSheet({
                 (tempPriceRange.min !== 0 || tempPriceRange.max !== maxPrice ? 1 : 0)
               }
               isMobile={true}
+              wishes={wishes}
+              listId={listId}
+              canEdit={canEdit}
             />
           </div>
         </>

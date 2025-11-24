@@ -1,7 +1,7 @@
 'use client';
 
 import { Wish } from '@/lib/validators/api-responses/wishes';
-import { WishesDisplay } from '@/components/wishes/wishes-display';
+import { WishesDisplay, type SortOption as DisplaySortOption } from '@/components/wishes/wishes-display';
 import { WishViewMode } from '@/components/wishes/wish-controls-bar';
 
 interface ListDetailWishesSectionProps {
@@ -11,12 +11,14 @@ interface ListDetailWishesSectionProps {
   isSelectionMode: boolean;
   selectedWishIds: Set<string>;
   reservedWishIds?: string[];
+  sortMode?: string;
   onEdit?: (wish: Wish) => void;
   onDelete?: (wish: Wish) => void;
   onToggleSelection: (
     wishId: string,
     event?: React.MouseEvent | React.ChangeEvent | React.KeyboardEvent
   ) => void;
+  onReorder?: (wishId: string, newSortOrder: number) => Promise<void>;
 }
 
 export function ListDetailWishesSection({
@@ -26,9 +28,11 @@ export function ListDetailWishesSection({
   isSelectionMode,
   selectedWishIds,
   reservedWishIds,
+  sortMode,
   onEdit,
   onDelete,
   onToggleSelection,
+  onReorder,
 }: ListDetailWishesSectionProps) {
   return (
     <WishesDisplay
@@ -36,8 +40,11 @@ export function ListDetailWishesSection({
       isLoading={false}
       viewMode={viewMode}
       reservedWishIds={reservedWishIds}
+      sortMode={sortMode as DisplaySortOption}
+      canEdit={isOwner}
       onEdit={isOwner ? onEdit : undefined}
       onDelete={isOwner ? onDelete : undefined}
+      onReorder={isOwner ? onReorder : undefined}
       isSelectionMode={isSelectionMode}
       selectedWishIds={selectedWishIds}
       onToggleSelection={onToggleSelection}

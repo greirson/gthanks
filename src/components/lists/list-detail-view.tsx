@@ -110,6 +110,9 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
       } as ApiListWithDetails)
     : undefined;
 
+  // Track when list was fetched for optimistic concurrency control
+  const [listLastFetchedAt] = useState(new Date());
+
   // Use React Query with initial data from server
   const { data: list } = useQuery({
     queryKey: ['lists', listId],
@@ -290,6 +293,61 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
     }
   }, [allSelected, clearSelection, selectAllWishes]);
 
+  // Handle drag-and-drop reorder
+  const handleReorder = useCallback(
+    async (wishId: string, newSortOrder: number) => {
+      // 1. Optimistic update
+      const previousData = queryClient.getQueryData(['lists', listId]);
+
+      queryClient.setQueryData(['lists', listId], (oldData: any) => {
+        if (!oldData) {return oldData;}
+
+        return {
+          ...oldData,
+          listWishes: oldData.listWishes.map((lw: any) =>
+            lw.wishId === wishId
+              ? { ...lw, wish: { ...lw.wish, sortOrder: newSortOrder } }
+              : lw
+          ),
+        };
+      });
+
+      // 2. Auto-switch to "Custom" sort
+      if (filterState.sort !== 'custom') {
+        setSortOption('custom');
+      }
+
+      // 3. Call API
+      try {
+        await listsApi.updateWishSortOrder(listId, wishId, newSortOrder, listLastFetchedAt);
+
+        toast({
+          title: 'Order updated',
+          description: 'Your custom list order has been saved.',
+        });
+      } catch (error: any) {
+        // 4. Rollback on error
+        queryClient.setQueryData(['lists', listId], previousData);
+
+        if (error.status === 409) {
+          toast({
+            title: 'Conflict detected',
+            description: 'Another user modified this list. Refreshing...',
+            variant: 'destructive',
+          });
+          void queryClient.invalidateQueries({ queryKey: ['lists', listId] });
+        } else {
+          toast({
+            title: 'Failed to update order',
+            description: 'Please try again.',
+            variant: 'destructive',
+          });
+        }
+      }
+    },
+    [listId, filterState.sort, setSortOption, queryClient, toast, listLastFetchedAt]
+  );
+
   if (!list) {
     return (
       <div className="text-center">
@@ -318,6 +376,9 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
           onSortChange={setSortOption}
           onClearAll={clearFilters}
           activeFilterCount={activeFilterCount}
+          wishes={wishes}
+          listId={listId}
+          canEdit={list?.isOwner ?? false}
         />
       </div>
 
@@ -351,6 +412,9 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
                 onSortChange={setSortOption}
                 onClearAll={clearFilters}
                 activeFilterCount={activeFilterCount}
+                wishes={wishes}
+                listId={listId}
+                canEdit={list?.isOwner ?? false}
               />
             </div>
           </div>
@@ -440,9 +504,11 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
               isSelectionMode={!!(isSelectionMode && list.isOwner)}
               selectedWishIds={selectedWishIds}
               reservedWishIds={reservedWishIds}
+              sortMode={filterState.sort}
               onEdit={editWishDialog.open}
               onDelete={removeWishDialog.open}
               onToggleSelection={toggleWishSelection}
+              onReorder={handleReorder}
             />
           </div>
         </div>
@@ -539,9 +605,11 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
               isSelectionMode={!!(isSelectionMode && list.isOwner)}
               selectedWishIds={selectedWishIds}
               reservedWishIds={reservedWishIds}
+              sortMode={filterState.sort}
               onEdit={editWishDialog.open}
               onDelete={removeWishDialog.open}
               onToggleSelection={toggleWishSelection}
+              onReorder={handleReorder}
             />
           </div>
         </div>

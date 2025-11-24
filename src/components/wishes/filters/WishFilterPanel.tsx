@@ -21,6 +21,9 @@ interface WishFilterPanelProps {
   activeFilterCount: number;
   isMobile?: boolean;
   className?: string;
+  wishes?: Array<{ sortOrder?: number | null }>;
+  listId?: string;
+  canEdit?: boolean;
 }
 
 export function WishFilterPanel({
@@ -36,6 +39,9 @@ export function WishFilterPanel({
   activeFilterCount,
   isMobile = false,
   className,
+  wishes,
+  listId,
+  canEdit = false,
 }: WishFilterPanelProps) {
   const handlePriceChange = (value: [number, number]) => {
     onPriceChange({ min: value[0], max: value[1] });
@@ -46,7 +52,14 @@ export function WishFilterPanel({
       {/* Sort Dropdown - Now at the top */}
       <div className="space-y-2">
         <span className="text-sm font-medium">Sort By</span>
-        <WishSortDropdown value={sortOption} onValueChange={onSortChange} className="w-full" />
+        <WishSortDropdown
+          value={sortOption}
+          onValueChange={onSortChange}
+          className="w-full"
+          wishes={wishes}
+          listId={listId}
+          canEdit={canEdit}
+        />
       </div>
 
       <div className="border-t pt-4" />

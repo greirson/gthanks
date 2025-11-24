@@ -35,12 +35,12 @@
 - [x] Create `shouldRenumberList()` utility (precision check)
 
 ### Phase 6: Frontend - Sortable Components
-- [ ] Create `SortableWishGrid.tsx` (wraps WishGrid with DndContext)
-- [ ] Create `SortableWishList.tsx` (wraps WishList with DndContext)
-- [ ] Create `SortableWishCard.tsx` (individual draggable card)
-- [ ] Add drag handle UI (GripVertical icon)
-- [ ] Implement optimistic UI updates
-- [ ] Add error handling with rollback
+- [x] Create `SortableWishGrid.tsx` (wraps WishGrid with DndContext)
+- [x] Create `SortableWishList.tsx` (wraps WishList with DndContext)
+- [x] Create `SortableWishCard.tsx` (individual draggable card)
+- [x] Add drag handle UI (GripVertical icon)
+- [x] Implement optimistic UI updates
+- [x] Add error handling with rollback
 
 ### Phase 7: Frontend - UI Integration
 - [ ] Modify `WishesDisplay.tsx` to conditionally use sortable components
