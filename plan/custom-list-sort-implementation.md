@@ -43,12 +43,12 @@
 - [x] Add error handling with rollback
 
 ### Phase 7: Frontend - UI Integration
-- [ ] Modify `WishesDisplay.tsx` to conditionally use sortable components
-- [ ] Add "Custom Order" option to WishFilterPanel.tsx
-- [ ] Add "Custom Order" option to MobileFilterSheet.tsx
-- [ ] Add `onReorder` handler in list-detail-view.tsx
-- [ ] Auto-switch to "Custom" sort after drag
-- [ ] Show/hide "Custom Order" based on whether custom sort exists
+- [x] Modify `WishesDisplay.tsx` to conditionally use sortable components
+- [x] Add "Custom Order" option to WishFilterPanel.tsx
+- [x] Add "Custom Order" option to MobileFilterSheet.tsx
+- [x] Add `onReorder` handler in list-detail-view.tsx
+- [x] Auto-switch to "Custom" sort after drag
+- [x] Show/hide "Custom Order" based on whether custom sort exists
 
 ### Phase 8: Testing
 - [ ] Write unit tests for fractional indexing utilities
