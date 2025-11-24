@@ -199,6 +199,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
   const wishes =
     list?.listWishes?.map((lw) => ({
       ...lw.wish,
+      sortOrder: lw.sortOrder, // Include sortOrder from ListWish for custom sorting
       isOwner: list.isOwner,
     })) || [];
 
@@ -306,7 +307,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
           ...oldData,
           listWishes: oldData.listWishes.map((lw: any) =>
             lw.wishId === wishId
-              ? { ...lw, wish: { ...lw.wish, sortOrder: newSortOrder } }
+              ? { ...lw, sortOrder: newSortOrder }
               : lw
           ),
         };
