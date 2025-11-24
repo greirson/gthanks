@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 import { UnifiedWishCard } from './wish-card-unified';
 
-interface WishGridProps {
+export interface WishGridProps {
   wishes: (Wish & { isOwner?: boolean })[];
   onEdit?: (wish: Wish) => void;
   onDelete?: (wish: Wish) => void;

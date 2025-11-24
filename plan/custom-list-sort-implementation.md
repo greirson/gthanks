@@ -24,15 +24,15 @@
 - [ ] Write integration tests for API route
 
 ### Phase 4: Frontend - API Client
-- [ ] Add `updateWishSortOrder()` method to src/lib/api/lists.ts
-- [ ] Add Zod schema for response validation
+- [x] Add `updateWishSortOrder()` method to src/lib/api/lists.ts
+- [x] Add Zod schema for response validation
 - [ ] Test API client method
 
 ### Phase 5: Frontend - Hooks & Utilities
-- [ ] Add `'custom'` to SortOption type in useWishFilters.ts
-- [ ] Add `case 'custom'` to sorting logic
-- [ ] Create `calculateNewSortOrder()` utility (fractional indexing)
-- [ ] Create `shouldRenumberList()` utility (precision check)
+- [x] Add `'custom'` to SortOption type in useWishFilters.ts
+- [x] Add `case 'custom'` to sorting logic
+- [x] Create `calculateNewSortOrder()` utility (fractional indexing)
+- [x] Create `shouldRenumberList()` utility (precision check)
 
 ### Phase 6: Frontend - Sortable Components
 - [ ] Create `SortableWishGrid.tsx` (wraps WishGrid with DndContext)
