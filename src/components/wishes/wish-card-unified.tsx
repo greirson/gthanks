@@ -7,6 +7,7 @@ import {
   Edit,
   ExternalLink,
   ListPlus,
+  Menu,
   MoreVertical,
   ShoppingCart,
   Trash,
@@ -226,23 +227,6 @@ export function UnifiedWishCard({
         >
           <CardContent className={config.contentPadding}>
             <div className="flex gap-4">
-              {/* Selection Checkbox with larger touch target */}
-              {isSelectionMode && (
-                <label
-                  htmlFor={`select-wish-${wish.id}`}
-                  className="-m-3 flex cursor-pointer items-center justify-center p-3"
-                >
-                  <input
-                    id={`select-wish-${wish.id}`}
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={(e) => onToggleSelection?.(wish.id, e)}
-                    className="h-4 w-4 rounded border"
-                    aria-label={`Select ${wish.title}`}
-                  />
-                </label>
-              )}
-
               {/* Image - Fixed size on left */}
               <div className="flex-shrink-0">
                 {(hasImage || wish.imageStatus === 'FAILED') && (
@@ -301,53 +285,6 @@ export function UnifiedWishCard({
                         Reserved
                       </span>
                     )}
-                  </div>
-                  <div className="flex flex-shrink-0 items-center">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="min-h-[44px] min-w-[44px] opacity-0 transition-opacity group-hover:opacity-100"
-                          aria-label="More options"
-                        >
-                          <MoreVertical className={config.menuIconSize} />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {onEdit && (
-                          <DropdownMenuItem onClick={() => onEdit(wish)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                        )}
-                        {wish.url && (
-                          <DropdownMenuItem asChild>
-                            <a
-                              href={wish.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center"
-                            >
-                              <ExternalLink className="mr-2 h-4 w-4" />
-                              View Product
-                            </a>
-                          </DropdownMenuItem>
-                        )}
-                        {showAddToList && (
-                          <DropdownMenuItem onClick={() => setShowAddToListDialog(true)}>
-                            <ListPlus className="mr-2 h-4 w-4" />
-                            Add to List
-                          </DropdownMenuItem>
-                        )}
-                        {onDelete && (
-                          <DropdownMenuItem onClick={handleDeleteClick} className="text-red-600">
-                            <Trash className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                   </div>
                 </div>
 
@@ -420,6 +357,69 @@ export function UnifiedWishCard({
               </div>
             </div>
           </CardContent>
+
+          {/* Selection checkbox or menu button - bottom right */}
+          {isSelectionMode ? (
+            <label
+              htmlFor={`select-wish-${wish.id}`}
+              className="absolute bottom-2 right-2 z-10 flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-md border border-border/40 bg-background/95 shadow-sm transition-colors hover:bg-accent"
+            >
+              <input
+                id={`select-wish-${wish.id}`}
+                type="checkbox"
+                checked={isSelected}
+                onChange={(e) => onToggleSelection?.(wish.id, e)}
+                className="h-5 w-5 rounded border"
+                aria-label={`Select ${wish.title}`}
+              />
+            </label>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute bottom-2 right-2 z-10 min-h-[44px] min-w-[44px] border border-border/40 bg-background/95 shadow-sm"
+                  aria-label="More options"
+                >
+                  <Menu className={config.menuIconSize} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {onEdit && (
+                  <DropdownMenuItem onClick={() => onEdit(wish)}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit
+                  </DropdownMenuItem>
+                )}
+                {wish.url && (
+                  <DropdownMenuItem asChild>
+                    <a
+                      href={wish.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center"
+                    >
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                      View Product
+                    </a>
+                  </DropdownMenuItem>
+                )}
+                {showAddToList && (
+                  <DropdownMenuItem onClick={() => setShowAddToListDialog(true)}>
+                    <ListPlus className="mr-2 h-4 w-4" />
+                    Add to List
+                  </DropdownMenuItem>
+                )}
+                {onDelete && (
+                  <DropdownMenuItem onClick={handleDeleteClick} className="text-red-600">
+                    <Trash className="mr-2 h-4 w-4" />
+                    Delete
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </Card>
 
         {/* Add to List Dialog */}
@@ -475,14 +475,6 @@ export function UnifiedWishCard({
         data-wish-level={config.includeDataAttributes ? wish.wishLevel || 0 : undefined}
         data-cost={config.includeDataAttributes ? wish.price || 0 : undefined}
       >
-        {/* Selection checkbox */}
-        {isSelectionMode && onToggleSelection && config.useSelectionCheckbox && (
-          <SelectionCheckbox
-            checked={isSelected}
-            onCheckedChange={(checked, event) => onToggleSelection(wish.id, event)}
-          />
-        )}
-
         {/* Image */}
         {(hasImage || wish.imageStatus === 'FAILED') && (
           <div className={`relative bg-muted ${config.imageAspect}`}>
@@ -553,79 +545,6 @@ export function UnifiedWishCard({
                   Reserved
                 </span>
               )}
-            </div>
-            <div className={variant === 'compact' ? 'flex flex-shrink-0 items-start' : ''}>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Wish options"
-                    className="min-h-[44px] min-w-[44px]"
-                  >
-                    <MoreVertical className={config.menuIconSize} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {/* Compact variant has different menu order */}
-                  {variant === 'compact' ? (
-                    <>
-                      {onEdit && (
-                        <DropdownMenuItem onClick={() => onEdit(wish)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                      )}
-                      {wish.url && (
-                        <DropdownMenuItem asChild>
-                          <a
-                            href={wish.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center"
-                          >
-                            <ExternalLink className="mr-2 h-4 w-4" />
-                            View Product
-                          </a>
-                        </DropdownMenuItem>
-                      )}
-                      {showAddToList && (
-                        <DropdownMenuItem onClick={() => setShowAddToListDialog(true)}>
-                          <ListPlus className="mr-2 h-4 w-4" />
-                          Add to List
-                        </DropdownMenuItem>
-                      )}
-                      {onDelete && (
-                        <DropdownMenuItem onClick={handleDeleteClick} className="text-red-600">
-                          <Trash className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      {showAddToList && (
-                        <DropdownMenuItem onClick={() => setShowAddToListDialog(true)}>
-                          <ListPlus className="mr-2 h-4 w-4" />
-                          Add to List
-                        </DropdownMenuItem>
-                      )}
-                      {onEdit && (
-                        <DropdownMenuItem onClick={() => onEdit(wish)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                      )}
-                      {onDelete && (
-                        <DropdownMenuItem onClick={handleDeleteClick} className="text-red-600">
-                          <Trash className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      )}
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
           </div>
 
@@ -718,6 +637,95 @@ export function UnifiedWishCard({
               </Button>
             )}
           </CardFooter>
+        )}
+
+        {/* Selection checkbox or menu button - bottom right */}
+        {isSelectionMode ? (
+          <label
+            htmlFor={`select-wish-${wish.id}`}
+            className="absolute bottom-2 right-2 z-10 flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-md border border-border/40 bg-background/95 shadow-sm transition-colors hover:bg-accent"
+          >
+            <input
+              id={`select-wish-${wish.id}`}
+              type="checkbox"
+              checked={isSelected}
+              onChange={(e) => onToggleSelection?.(wish.id, e)}
+              className="h-5 w-5 rounded border"
+              aria-label={`Select ${wish.title}`}
+            />
+          </label>
+        ) : (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute bottom-2 right-2 z-10 min-h-[44px] min-w-[44px] border border-border/40 bg-background/95 shadow-sm"
+                aria-label="Wish options"
+              >
+                <Menu className={config.menuIconSize} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {/* Compact variant has different menu order */}
+              {variant === 'compact' ? (
+                <>
+                  {onEdit && (
+                    <DropdownMenuItem onClick={() => onEdit(wish)}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit
+                    </DropdownMenuItem>
+                  )}
+                  {wish.url && (
+                    <DropdownMenuItem asChild>
+                      <a
+                        href={wish.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center"
+                      >
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        View Product
+                      </a>
+                    </DropdownMenuItem>
+                  )}
+                  {showAddToList && (
+                    <DropdownMenuItem onClick={() => setShowAddToListDialog(true)}>
+                      <ListPlus className="mr-2 h-4 w-4" />
+                      Add to List
+                    </DropdownMenuItem>
+                  )}
+                  {onDelete && (
+                    <DropdownMenuItem onClick={handleDeleteClick} className="text-red-600">
+                      <Trash className="mr-2 h-4 w-4" />
+                      Delete
+                    </DropdownMenuItem>
+                  )}
+                </>
+              ) : (
+                <>
+                  {showAddToList && (
+                    <DropdownMenuItem onClick={() => setShowAddToListDialog(true)}>
+                      <ListPlus className="mr-2 h-4 w-4" />
+                      Add to List
+                    </DropdownMenuItem>
+                  )}
+                  {onEdit && (
+                    <DropdownMenuItem onClick={() => onEdit(wish)}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit
+                    </DropdownMenuItem>
+                  )}
+                  {onDelete && (
+                    <DropdownMenuItem onClick={handleDeleteClick} className="text-red-600">
+                      <Trash className="mr-2 h-4 w-4" />
+                      Delete
+                    </DropdownMenuItem>
+                  )}
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </Card>
 
