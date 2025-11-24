@@ -362,6 +362,58 @@ When you see: `Expected object, received undefined` at path `["wish"]`
 **E2E Test Execution:**
 @.claude/commands/testing/run-e2e.md
 
+## Working Directory Convention (IMPORTANT)
+
+**CRITICAL**: All commands must be run from the project root directory, not from subdirectories.
+
+### Why This Matters
+
+The codebase uses `process.cwd()` for path resolution, which assumes the project root as the working directory. Running commands from subdirectories (especially `prisma/`) will cause:
+
+- Database files created in wrong locations
+- Relative paths resolving incorrectly
+- Seeds writing to `prisma/data/` instead of `data/`
+- Configuration files not being found
+
+### Correct Usage ✅
+
+```bash
+# Always run from project root
+cd /path/to/gthanks
+pnpm dev
+pnpm db:push
+pnpm seed
+npx prisma studio
+```
+
+### Incorrect Usage ❌
+
+```bash
+# NEVER run commands from subdirectories
+cd /path/to/gthanks/prisma
+npx prisma db push     # Creates database in wrong location!
+npx prisma studio      # May use wrong database file!
+```
+
+### Safety Measures
+
+The project includes safety guards in package.json scripts that will error if run from wrong directory:
+
+- `pnpm db:push` - Checks you're not in prisma/ subdirectory
+- `pnpm db:studio` - Checks you're not in prisma/ subdirectory
+- `pnpm db:generate` - Checks you're not in prisma/ subdirectory
+
+Error message if run from wrong directory:
+```
+ERROR: Run from project root, not prisma/ subdirectory
+```
+
+### Database Path Resolution
+
+- **Correct path**: `./data/gthanks.db` (relative to project root)
+- **Wrong path**: `./prisma/data/gthanks.db` (if run from wrong directory)
+- The seed scripts use `$(pwd)` to ensure absolute paths
+
 ## Component Guidelines
 
 @.claude/guides/components.md
