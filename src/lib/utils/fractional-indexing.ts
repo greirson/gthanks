@@ -119,7 +119,12 @@ export async function renumberListWishes(
   await db.$transaction(
     listWishes.map((listWish, index) =>
       db.listWish.update({
-        where: { id: listWish.id },
+        where: {
+          listId_wishId: {
+            listId: listWish.listId,
+            wishId: listWish.wishId,
+          },
+        },
         data: { sortOrder: index * 10 },
       })
     )

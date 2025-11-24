@@ -992,6 +992,169 @@ export class ListService {
       hasAccess: list.visibility === 'public',
     }));
   }
+
+  /**
+   * Update the sortOrder of a single wish in a list.
+   *
+   * Uses fractional indexing to avoid renumbering all wishes. This method:
+   * - Checks user has edit permission on the list
+   * - Verifies the list exists and checks for conflicts (if clientLastFetchedAt provided)
+   * - Verifies the wish exists in the list
+   * - Updates only the moved wish's sortOrder
+   *
+   * @param listId - ID of the list containing the wish
+   * @param wishId - ID of the wish to reorder
+   * @param newSortOrder - New sortOrder value (calculated via fractional indexing)
+   * @param userId - ID of the user performing the action
+   * @param clientLastFetchedAt - Optional: when the client loaded the list (for conflict detection)
+   * @returns Updated ListWish with wish relation included
+   * @throws {ForbiddenError} If user lacks edit permission on the list
+   * @throws {NotFoundError} If list or wish not found in list
+   * @throws {ConflictError} If list was modified since clientLastFetchedAt
+   *
+   * @example
+   * // Update wish position with conflict detection
+   * const updated = await listService.updateWishSortOrder(
+   *   'list-123',
+   *   'wish-456',
+   *   1.5,
+   *   'user-789',
+   *   new Date('2025-11-23T10:00:00Z')
+   * );
+   */
+  async updateWishSortOrder(
+    listId: string,
+    wishId: string,
+    newSortOrder: number,
+    userId: string,
+    clientLastFetchedAt?: Date
+  ) {
+    // 1. Permission check (MANDATORY)
+    await permissionService.require(userId, 'edit', {
+      type: 'list',
+      id: listId,
+    });
+
+    // 2. Verify list exists and check for conflicts
+    const list = await db.list.findUnique({
+      where: { id: listId },
+      select: { id: true, updatedAt: true },
+    });
+
+    if (!list) {
+      throw new NotFoundError('List not found');
+    }
+
+    // Conflict detection: list was modified since client loaded it
+    if (clientLastFetchedAt && list.updatedAt > clientLastFetchedAt) {
+      throw new ConflictError(
+        'List was modified by another user. Please refresh and try again.'
+      );
+    }
+
+    // 3. Verify wish belongs to this list
+    const existingListWish = await db.listWish.findUnique({
+      where: {
+        listId_wishId: {
+          listId,
+          wishId,
+        },
+      },
+    });
+
+    if (!existingListWish) {
+      throw new NotFoundError('Wish not found in this list');
+    }
+
+    // 4. Update sortOrder
+    const updated = await db.listWish.update({
+      where: {
+        listId_wishId: {
+          listId,
+          wishId,
+        },
+      },
+      data: {
+        sortOrder: newSortOrder,
+      },
+      include: {
+        wish: true,
+      },
+    });
+
+    return updated;
+  }
+
+  /**
+   * Initialize custom sort for a list by assigning sortOrder values
+   * to all wishes based on their current display order (addedAt DESC).
+   *
+   * This is called when a user first activates "Custom Order" sort.
+   * - Checks if custom sort is already initialized (any sortOrder !== null)
+   * - If already initialized, returns { initialized: 0 }
+   * - Otherwise, assigns sortOrder with gaps: 0, 10, 20, 30...
+   *
+   * @param listId - ID of the list to initialize
+   * @param userId - ID of the user performing the action
+   * @returns Object with count of wishes initialized
+   * @throws {ForbiddenError} If user lacks edit permission on the list
+   * @throws {NotFoundError} If list not found
+   *
+   * @example
+   * // Initialize custom sort for a list
+   * const result = await listService.initializeCustomSort('list-123', 'user-789');
+   * console.log(`Initialized ${result.initialized} wishes`);
+   */
+  async initializeCustomSort(listId: string, userId: string): Promise<{ initialized: number }> {
+    // 1. Permission check (MANDATORY)
+    await permissionService.require(userId, 'edit', {
+      type: 'list',
+      id: listId,
+    });
+
+    // 2. Check if already initialized
+    const hasCustomSort = await db.listWish.count({
+      where: {
+        listId,
+        sortOrder: { not: null },
+      },
+    });
+
+    if (hasCustomSort > 0) {
+      // Already initialized, no action needed
+      return { initialized: 0 };
+    }
+
+    // 3. Fetch wishes in current default order (addedAt DESC)
+    const wishes = await db.listWish.findMany({
+      where: { listId },
+      orderBy: { addedAt: 'desc' },
+    });
+
+    if (wishes.length === 0) {
+      return { initialized: 0 };
+    }
+
+    // 4. Assign sortOrder with gaps: 0, 10, 20, 30...
+    // Using transaction to ensure atomicity
+    await db.$transaction(
+      wishes.map((lw, index) =>
+        db.listWish.update({
+          where: {
+            listId_wishId: {
+              listId: lw.listId,
+              wishId: lw.wishId,
+            },
+          },
+          data: {
+            sortOrder: index * 10.0,
+          },
+        })
+      )
+    );
+
+    return { initialized: wishes.length };
+  }
 }
 
 // Export singleton instance
