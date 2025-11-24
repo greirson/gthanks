@@ -64,6 +64,8 @@ export function FilteredWishesDisplay({
   showAddToList = false,
   className,
   showFilters = true,
+  listId,
+  canEdit = false,
 }: FilteredWishesDisplayProps) {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [viewMode, setViewMode] = useViewPreference('viewMode.publicList', 'grid');
@@ -181,6 +183,9 @@ export function FilteredWishesDisplay({
         onSortChange={onSortChange || (() => {})}
         onClearAll={handleClearFilters}
         activeFilterCount={activeFilterCount}
+        wishes={wishes}
+        listId={listId}
+        canEdit={canEdit}
       />
     </div>
   );
