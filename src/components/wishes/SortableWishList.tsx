@@ -9,6 +9,8 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragOverlay,
+  defaultDropAnimationSideEffects,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -35,6 +37,17 @@ interface SortableWishListProps extends Omit<WishListProps, 'wishes'> {
   onReorder: (wishId: string, newSortOrder: number) => Promise<void>;
   canEdit: boolean;
 }
+
+// Custom drop animation for smooth transitions
+const dropAnimationConfig = {
+  sideEffects: defaultDropAnimationSideEffects({
+    styles: {
+      active: {
+        opacity: '0.5',
+      },
+    },
+  }),
+};
 
 // Sortable wrapper for individual wish items
 interface SortableWishItemProps {
@@ -196,6 +209,9 @@ export function SortableWishList({
     setActiveId(null);
   };
 
+  // Find the currently dragged wish for overlay
+  const activeWish = activeId ? localWishes.find((w) => w.id === activeId) : null;
+
   // Loading state
   if (isLoading) {
     return (
@@ -256,6 +272,28 @@ export function SortableWishList({
           ))}
         </div>
       </SortableContext>
+
+      {/* Drag overlay for smooth drag preview */}
+      <DragOverlay dropAnimation={dropAnimationConfig}>
+        {activeWish ? (
+          <div className="opacity-80 shadow-2xl">
+            <UnifiedWishCard
+              variant="list"
+              wish={activeWish}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onReserve={onReserve}
+              onAddToList={onAddToList}
+              isReserved={reservedWishIds.includes(activeWish.id)}
+              showAddToList={showAddToList}
+              priority={false}
+              isSelectionMode={false}
+              isSelected={false}
+              onToggleSelection={undefined}
+            />
+          </div>
+        ) : null}
+      </DragOverlay>
     </DndContext>
   );
 }

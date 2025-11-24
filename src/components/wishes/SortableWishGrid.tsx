@@ -10,6 +10,8 @@ import {
   useSensors,
   DragEndEvent,
   DragStartEvent,
+  DragOverlay,
+  defaultDropAnimationSideEffects,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -28,6 +30,17 @@ interface SortableWishGridProps extends Omit<WishGridProps, 'wishes'> {
   onReorder: (wishId: string, newSortOrder: number) => Promise<void>;
   canEdit: boolean;
 }
+
+// Custom drop animation for smooth transitions
+const dropAnimationConfig = {
+  sideEffects: defaultDropAnimationSideEffects({
+    styles: {
+      active: {
+        opacity: '0.5',
+      },
+    },
+  }),
+};
 
 export function SortableWishGrid({
   wishes,
@@ -134,6 +147,9 @@ export function SortableWishGrid({
     setActiveId(null);
   };
 
+  // Find the currently dragged wish for overlay
+  const activeWish = activeId ? wishes.find((w) => w.id === activeId) : null;
+
   // Loading state
   if (isLoading) {
     return (
@@ -183,6 +199,7 @@ export function SortableWishGrid({
             <SortableWishCard
               key={wish.id}
               wish={wish}
+              variant="comfortable"
               onEdit={onEdit}
               onDelete={onDelete}
               onReserve={onReserve}
@@ -192,11 +209,35 @@ export function SortableWishGrid({
               isSelectionMode={isSelectionMode}
               isSelected={selectedWishIds.has(wish.id)}
               onToggleSelection={onToggleSelection}
+              sortable={true}
               isDragging={activeId === wish.id}
             />
           ))}
         </div>
       </SortableContext>
+
+      {/* Drag overlay for smooth drag preview */}
+      <DragOverlay dropAnimation={dropAnimationConfig}>
+        {activeWish ? (
+          <div className="opacity-80 shadow-2xl">
+            <SortableWishCard
+              key={activeWish.id}
+              wish={activeWish}
+              variant="comfortable"
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onReserve={onReserve}
+              isReserved={reservedWishIds.includes(activeWish.id)}
+              showAddToList={showAddToList}
+              priority={false}
+              isSelectionMode={false}
+              isSelected={false}
+              sortable={false}  // Disable drag handle on overlay
+              isDragging={false}
+            />
+          </div>
+        ) : null}
+      </DragOverlay>
     </DndContext>
   );
 }
