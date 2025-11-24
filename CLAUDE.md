@@ -236,6 +236,124 @@ Build fails if service layer violations are detected (configured as errors, not 
 **Full Service Layer Details:**
 @.claude/guides/architecture.md
 
+## API Response Schema Validation (MANDATORY)
+
+**CRITICAL**: All API endpoints MUST return data that matches the Zod schema expected by the frontend.
+
+### The Problem
+
+This is a **recurring issue** that causes runtime Zod validation errors:
+
+1. Frontend defines strict schema (e.g., `ReservationWithWish` with nested `wish` object)
+2. Service layer returns incomplete data (e.g., bare `Reservation` without relations)
+3. API route passes service result directly to frontend
+4. Zod validation fails: `Expected object, received undefined`
+
+### Prevention Checklist
+
+Before implementing ANY API endpoint:
+
+- [ ] **Check frontend schema** - What does the API client expect?
+  ```typescript
+  // src/lib/api/reservations.ts
+  markAsPurchased: async (reservationId: string): Promise<ReservationWithWish> => {
+    return apiPost(`/api/reservations/${reservationId}/purchased`, {}, ReservationWithWishSchema);
+  }
+  ```
+
+- [ ] **Match service layer return type** - Does the service method return the full schema?
+  ```typescript
+  // ✅ Correct
+  async markAsPurchased(...): Promise<ReservationWithWish> {
+    return db.reservation.update({
+      where: { id },
+      data: { ... },
+      include: { wish: { include: { user: true } } }  // ← Include relations!
+    });
+  }
+
+  // ❌ Wrong - Returns bare Reservation
+  async markAsPurchased(...): Promise<Reservation> {
+    return db.reservation.update({
+      where: { id },
+      data: { ... }
+      // Missing: include clause
+    });
+  }
+  ```
+
+- [ ] **Verify Prisma includes** - Are all nested relations included?
+  - Check existing methods (e.g., `getUserReservations`) for the correct pattern
+  - Prisma `update`, `create`, `findUnique` default to NO relations
+  - You must explicitly `include` or `select` nested data
+
+- [ ] **Test with actual data** - Don't rely on TypeScript alone
+  - Zod validation catches what TypeScript misses
+  - Run the endpoint in the browser and check console for Zod errors
+  - Look for: `"API response validation failed: ZodError"`
+
+### Common Patterns
+
+**Lists with Wishes:**
+```typescript
+include: {
+  listWishes: {
+    include: {
+      wish: {
+        include: { user: true }
+      }
+    }
+  }
+}
+```
+
+**Reservations with Wishes:**
+```typescript
+include: {
+  wish: {
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        }
+      }
+    }
+  }
+}
+```
+
+**Users with Lists:**
+```typescript
+include: {
+  lists: {
+    include: {
+      listWishes: true
+    }
+  }
+}
+```
+
+### How to Fix Validation Errors
+
+When you see: `Expected object, received undefined` at path `["wish"]`
+
+1. **Find the frontend schema** - Check the API client method's return type
+2. **Find the service method** - Check what it returns
+3. **Add missing `include`** - Replicate the pattern from similar methods (e.g., `getUserReservations`)
+4. **Update return type** - Change `Promise<Reservation>` → `Promise<ReservationWithWish>`
+5. **Test in browser** - Verify the Zod error is gone
+
+### Why This Matters
+
+- **Type Safety**: TypeScript doesn't catch missing Prisma relations
+- **Runtime Errors**: Zod validation fails in production → user sees error
+- **Data Integrity**: Incomplete responses break UI assumptions
+- **Developer Experience**: Debugging Zod errors wastes time
+
+**Remember:** TypeScript structural typing allows `Reservation` to satisfy `ReservationWithWish` even when `wish` is missing. Only Zod catches this at runtime.
+
 ## Development Workflow
 
 **Testing Strategy:**

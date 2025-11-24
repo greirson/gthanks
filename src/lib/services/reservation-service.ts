@@ -525,13 +525,13 @@ export class ReservationService {
    *
    * @throws NotFoundError if reservation doesn't exist
    * @throws ForbiddenError if user doesn't own the reservation
-   * @returns Updated reservation
+   * @returns Updated reservation with wish details
    */
   async markAsPurchased(
     reservationId: string,
     userId: string,
     purchasedDate?: Date
-  ): Promise<Reservation> {
+  ): Promise<ReservationWithWish> {
     if (!userId) {
       throw new ForbiddenError('Authentication required to mark reservation as purchased');
     }
@@ -549,16 +549,36 @@ export class ReservationService {
       throw new ForbiddenError('Cannot mark reservation as purchased (not yours)');
     }
 
-    // Update reservation
+    // Update reservation with wish details
     const updated = await db.reservation.update({
       where: { id: reservationId },
       data: {
         purchasedAt: new Date(),
         purchasedDate: purchasedDate || new Date(),
       },
+      include: {
+        wish: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
     });
 
-    return updated;
+    return {
+      ...updated,
+      wish: {
+        id: updated.wish.id,
+        title: updated.wish.title,
+        user: updated.wish.user,
+      },
+    };
   }
 
   /**
@@ -688,9 +708,9 @@ export class ReservationService {
    * @throws NotFoundError if reservation doesn't exist
    * @throws ForbiddenError if user doesn't own the reservation
    * @throws ValidationError if reservation is not purchased
-   * @returns Updated reservation with null purchased fields
+   * @returns Updated reservation with wish details and null purchased fields
    */
-  async unmarkAsPurchased(reservationId: string, userId: string): Promise<Reservation> {
+  async unmarkAsPurchased(reservationId: string, userId: string): Promise<ReservationWithWish> {
     if (!userId) {
       throw new ForbiddenError('Authentication required to un-mark reservation');
     }
@@ -712,16 +732,36 @@ export class ReservationService {
       throw new ValidationError('Reservation is not marked as purchased');
     }
 
-    // Clear purchased fields
+    // Clear purchased fields with wish details
     const updated = await db.reservation.update({
       where: { id: reservationId },
       data: {
         purchasedAt: null,
         purchasedDate: null,
       },
+      include: {
+        wish: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
     });
 
-    return updated;
+    return {
+      ...updated,
+      wish: {
+        id: updated.wish.id,
+        title: updated.wish.title,
+        user: updated.wish.user,
+      },
+    };
   }
 
   /**
