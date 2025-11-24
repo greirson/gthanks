@@ -62,7 +62,7 @@ export function SortableWishCard({
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition: transition || (isDragging ? undefined : 'transform 200ms cubic-bezier(0.2, 0, 0, 1)'),
     opacity: isDragging ? 0.5 : 1,
   };
 
@@ -72,7 +72,7 @@ export function SortableWishCard({
       {sortable && (
         <button
           type="button"
-          className="absolute left-2 top-2 z-10 flex min-h-[56px] min-w-[56px] cursor-grab items-center justify-center rounded-lg border-2 border-primary/30 bg-primary/10 text-primary transition-all hover:bg-primary/20 hover:scale-105 hover:text-accent-foreground active:cursor-grabbing active:scale-95 md:min-h-[48px] md:min-w-[48px]"
+          className="absolute left-2 top-2 z-10 flex min-h-[56px] min-w-[56px] cursor-grab items-center justify-center rounded-lg border-2 border-primary/30 bg-primary/10 text-primary transition-[background-color,transform] duration-150 hover:bg-primary/20 hover:scale-105 hover:text-accent-foreground active:cursor-grabbing active:scale-95 md:min-h-[48px] md:min-w-[48px]"
           aria-label="Drag to reorder wish"
           {...attributes}
           {...listeners}
