@@ -106,6 +106,34 @@ export const WishListOperationResultSchema = z.object({
   listId: z.string().optional(),
 });
 
+// Single ListWish with wish relation (for custom sort updates)
+export const ListWishSchema = z.object({
+  listId: z.string(),
+  wishId: z.string(),
+  wishLevel: z.number().nullable(),
+  addedAt: flexibleDateSchema(),
+  sortOrder: z.number().nullable().optional(),
+  wish: z.object({
+    id: z.string(),
+    title: z.string(),
+    notes: z.string().nullable(),
+    url: z.string().nullable(),
+    imageUrl: z.string().nullable(),
+    sourceImageUrl: z.string().nullable(),
+    localImagePath: z.string().nullable(),
+    imageStatus: z.string(),
+    price: z.number().nullable(),
+    currency: z.string().nullable(),
+    quantity: z.number(),
+    size: z.string().nullable(),
+    color: z.string().nullable(),
+    wishLevel: z.number().nullable(),
+    ownerId: z.string(),
+    createdAt: flexibleDateSchema(),
+    updatedAt: flexibleDateSchema(),
+  }),
+});
+
 // Export types
 export type List = z.infer<typeof ListSchema>;
 export type ListWithOwner = z.infer<typeof ListWithOwnerSchema>;
@@ -114,3 +142,4 @@ export type PaginatedListsResponse = z.infer<typeof PaginatedListsResponseSchema
 export type ListAccessResponse = z.infer<typeof ListAccessResponseSchema>;
 export type ListShareTokenResponse = z.infer<typeof ListShareTokenResponseSchema>;
 export type WishListOperationResult = z.infer<typeof WishListOperationResultSchema>;
+export type ListWish = z.infer<typeof ListWishSchema>;
