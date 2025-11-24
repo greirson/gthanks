@@ -72,12 +72,12 @@ export function SortableWishCard({
       {sortable && (
         <button
           type="button"
-          className="absolute left-2 top-2 z-10 flex min-h-[44px] min-w-[44px] cursor-grab items-center justify-center rounded-md border border-border/40 bg-background/80 text-muted-foreground backdrop-blur-sm transition-colors hover:bg-accent hover:text-accent-foreground active:cursor-grabbing md:min-h-0 md:min-w-0 md:h-8 md:w-8"
+          className="absolute left-2 top-2 z-10 flex min-h-[56px] min-w-[56px] cursor-grab items-center justify-center rounded-lg border-2 border-primary/30 bg-primary/10 text-primary transition-all hover:bg-primary/20 hover:scale-105 hover:text-accent-foreground active:cursor-grabbing active:scale-95 md:min-h-[48px] md:min-w-[48px]"
           aria-label="Drag to reorder wish"
           {...attributes}
           {...listeners}
         >
-          <GripVertical className="h-5 w-5 md:h-4 md:w-4" />
+          <GripVertical className="h-6 w-6 md:h-5 md:w-5" />
         </button>
       )}
 
