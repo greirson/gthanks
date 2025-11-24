@@ -23,31 +23,66 @@ Simple family wishlist coordination to prevent duplicate gifts.
 - Automatic product URL scraping
 - Mobile-responsive design (iPhone SE 375px minimum)
 
-## Quick Start (Local Development)
+## 🚀 Quick Start (First Time Setup)
 
-### Prerequisites
-
-- Node.js 20+
-- pnpm 8+
-
-### Installation
+Get started in under 60 seconds:
 
 ```bash
-# Install dependencies
+# 1. Clone and install dependencies
+git clone <repo-url>
+cd gthanks
 pnpm install
 
-# Setup environment
-cp .env.example .env.local
-# Edit .env.local with your values (minimum: NEXTAUTH_SECRET)
-
-# Initialize database
-pnpm db:push
-
-# Start development server
+# 2. Start development (will prompt for setup on first run)
 pnpm dev
 ```
 
-Visit http://localhost:3000
+**That's it!** 🎉
+
+The first time you run `pnpm dev`, it will:
+- ✅ Detect you need setup
+- ✅ Offer automatic or manual configuration
+- ✅ Generate `.env.local` with secure secrets
+- ✅ Create SQLite database
+- ✅ Start the dev server at http://localhost:3000
+
+### What You Get Out of the Box
+
+- 🔐 **Authentication**: Secure session encryption
+- 📧 **Email**: Magic links logged to console (no SMTP needed)
+- 💾 **Database**: SQLite at `data/gthanks.db`
+- 🌐 **Local Server**: http://localhost:3000
+
+### Testing Authentication
+
+1. Navigate to http://localhost:3000
+2. Enter any email (e.g., `dev@example.com`)
+3. Check terminal for magic link:
+   ```
+   === EMAIL SENT ===
+   To: dev@example.com
+   Sign-in URL: http://localhost:3000/api/auth/verify?token=...
+   =================
+   ```
+4. Click the URL to sign in
+
+### Manual Setup (Optional)
+
+If you prefer manual configuration:
+
+```bash
+# Copy template
+cp .env.local.example .env.local
+
+# Generate secret
+node scripts/generate-secret.js
+
+# Edit .env.local and add:
+# NEXTAUTH_SECRET=<paste-generated-secret>
+
+# Start dev
+pnpm dev
+```
 
 ### Development Commands
 

@@ -20,7 +20,7 @@ try {
 const DATABASE_URL = resolveDatabaseUrl(process.env.DATABASE_URL || 'file:./data/gthanks.db');
 
 async function ensureDatabase() {
-  console.log('[DB] Checking database initialization...');
+  console.log('🔍 Checking database...');
   console.log('[DB] Using database:', DATABASE_URL);
 
   // For SQLite, ensure the directory exists
@@ -53,12 +53,12 @@ async function ensureDatabase() {
       stdio: 'pipe',
       env: { ...process.env, DATABASE_URL },
     });
-    console.log('[DB] Database ready!');
+    console.log('✓ Database ready');
   } catch (error) {
     // Check if it's just because schema is already in sync (which is fine)
     const errorStr = error.toString();
     if (errorStr.includes('already in sync') || errorStr.includes('No changes')) {
-      console.log('[DB] Database already in sync!');
+      console.log('✓ Database ready (already in sync)');
     } else {
       console.warn('[DB] Warning during sync:', error.message || 'Unknown error');
       console.log('[DB] The application will attempt to initialize on first request.');
