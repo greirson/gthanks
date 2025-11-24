@@ -62,7 +62,7 @@ export function SortableWishCard({
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition: transition || (isDragging ? undefined : 'transform 200ms cubic-bezier(0.2, 0, 0, 1)'),
+    transition,
     opacity: isDragging ? 0.5 : 1,
   };
 
