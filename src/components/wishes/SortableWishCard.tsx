@@ -47,7 +47,8 @@ export function SortableWishCard({
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    // Remove transition after drop to prevent jarring slide-in effect
+    transition: isSortableDragging ? transition : undefined,
     opacity: isSortableDragging ? 0.5 : 1,
     cursor: isDragging ? 'grabbing' : 'grab',
   };

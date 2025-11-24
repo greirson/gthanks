@@ -33,13 +33,14 @@ export function GiftCardMobileCard({
   onDelete,
   onBlur,
 }: GiftCardMobileCardProps) {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: `card-${index}`,
   });
 
   const dragStyle = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    // Remove transition after drop to prevent jarring slide-in effect
+    transition: isDragging ? transition : undefined,
   };
 
   return (

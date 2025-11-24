@@ -10,7 +10,6 @@ import {
   useSensors,
   DragEndEvent,
   DragOverlay,
-  defaultDropAnimationSideEffects,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -38,16 +37,9 @@ interface SortableWishListProps extends Omit<WishListProps, 'wishes'> {
   canEdit: boolean;
 }
 
-// Custom drop animation for smooth transitions
-const dropAnimationConfig = {
-  sideEffects: defaultDropAnimationSideEffects({
-    styles: {
-      active: {
-        opacity: '0.5',
-      },
-    },
-  }),
-};
+// Disable drop animation to prevent overlay from snapping back to original position
+// Setting to null makes the overlay disappear immediately at drop location
+const dropAnimationConfig = null;
 
 // Sortable wrapper for individual wish items
 interface SortableWishItemProps {
@@ -86,7 +78,8 @@ function SortableWishItem({
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    // Remove transition after drop to prevent jarring slide-in effect
+    transition: isDragging ? transition : undefined,
     opacity: isDragging ? 0.5 : 1,
   };
 

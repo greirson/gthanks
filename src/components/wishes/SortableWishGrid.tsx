@@ -11,7 +11,6 @@ import {
   DragEndEvent,
   DragStartEvent,
   DragOverlay,
-  defaultDropAnimationSideEffects,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -21,6 +20,7 @@ import {
 
 import { Wish } from '@/lib/validators/api-responses/wishes';
 import { calculateNewSortOrder } from '@/lib/utils/fractional-indexing-client';
+import { dragDebug } from '@/lib/utils/drag-debug';
 
 import { WishGrid, WishGridProps } from './wish-grid';
 import { SortableWishCard } from './SortableWishCard';
@@ -31,16 +31,9 @@ interface SortableWishGridProps extends Omit<WishGridProps, 'wishes'> {
   canEdit: boolean;
 }
 
-// Custom drop animation for smooth transitions
-const dropAnimationConfig = {
-  sideEffects: defaultDropAnimationSideEffects({
-    styles: {
-      active: {
-        opacity: '0.5',
-      },
-    },
-  }),
-};
+// Disable drop animation to prevent overlay from snapping back to original position
+// Setting to null makes the overlay disappear immediately at drop location
+const dropAnimationConfig = null;
 
 export function SortableWishGrid({
   wishes,
@@ -91,7 +84,9 @@ export function SortableWishGrid({
   }
 
   const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
+    const itemId = event.active.id as string;
+    setActiveId(itemId);
+    dragDebug.logDragStart(itemId);
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -101,6 +96,7 @@ export function SortableWishGrid({
 
     // No drop target or dropped on itself
     if (!over || active.id === over.id) {
+      dragDebug.log('DRAG_CANCELLED', { reason: !over ? 'no target' : 'same position' });
       return;
     }
 
@@ -135,10 +131,14 @@ export function SortableWishGrid({
     }
 
     // Call the reorder callback
+    dragDebug.logReorder(activeId, activeIndex, overIndex, newSortOrder);
+
     try {
       await onReorder(activeId, newSortOrder);
+      dragDebug.logDragEnd(activeId, overId, newSortOrder);
     } catch (error) {
       console.error('Failed to reorder wish:', error);
+      dragDebug.log('REORDER_FAILED', { error: error instanceof Error ? error.message : error });
       // Parent component should handle error display
     }
   };
