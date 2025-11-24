@@ -18,6 +18,7 @@ export interface PriceRange {
 }
 
 export type SortOption =
+  | 'custom'
   | 'featured'
   | 'wishLevel-high'
   | 'wishLevel-low'
@@ -229,6 +230,19 @@ export function useWishFilters(wishes: Wish[], pageSize = 24) {
     // Sort wishes - PRESERVE FEATURED ALGORITHM EXACTLY
     result.sort((a, b) => {
       switch (filterState.sort) {
+        case 'custom': {
+          // Sort by sortOrder (ascending), fallback to addedAt (descending) for nulls
+          const aOrder = a.sortOrder ?? Number.MAX_SAFE_INTEGER;
+          const bOrder = b.sortOrder ?? Number.MAX_SAFE_INTEGER;
+
+          if (aOrder !== bOrder) {
+            return aOrder - bOrder;
+          }
+
+          // Fallback to addedAt for wishes without sortOrder
+          return new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime();
+        }
+
         case 'featured': {
           // Featured algorithm: wishLevel weight (40%) + recency (30%) + price consideration (30%)
           const now = Date.now();
