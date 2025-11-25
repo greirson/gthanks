@@ -449,7 +449,6 @@ export function ListForm({
 
       {isEditing && (
         <div className="space-y-2 rounded-lg border bg-muted/50 p-4">
-          <Label>Visibility</Label>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium">
