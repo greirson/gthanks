@@ -49,7 +49,7 @@ export function ControlsBar({
           className="relative"
         >
           <Filter className="mr-2 h-4 w-4" />
-          <span className="hidden sm:inline">Filters</span>
+          <span>Filter</span>
           {filterCount > 0 && (
             <Badge
               variant="secondary"
