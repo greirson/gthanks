@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { Plus, CreditCard } from 'lucide-react';
+import { Plus, CreditCard, ArrowUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { GiftCardItem } from './GiftCardItem';
@@ -98,10 +98,33 @@ export function GiftCardSection({
   if (!giftCards || giftCards.length === 0) {
     // Only show Add button for owners when there are no cards
     if (canEdit) {
+      // Show helpful text with arrow when used inside CollapsibleGiftCardSection
+      if (externalManageDialog) {
+        return (
+          <>
+            <div className="flex items-center gap-2 rounded-lg border border-dashed bg-muted/30 p-4">
+              <p className="flex-1 text-sm text-muted-foreground">
+                Add your favorite gift cards by clicking the <strong>Manage</strong> button.
+              </p>
+              <div className="flex items-center text-muted-foreground">
+                <ArrowUp className="h-5 w-5 animate-pulse" />
+              </div>
+            </div>
+            {/* Manage Dialog */}
+            <ManageGiftCardsDialog
+              isOpen={manageDialog.isOpen}
+              cards={giftCards}
+              onClose={manageDialog.handleClose}
+              onSave={(cards) => void handleManageCards(cards)}
+              dialogProps={manageDialog.dialogProps}
+            />
+          </>
+        );
+      }
+
+      // Standalone mode: show button as before
       return (
         <div className="mb-6 sm:mb-8 md:mb-12">
-          {' '}
-          {/* Fix #3: Increased spacing */}
           <Button variant="outline" size="sm" onClick={() => manageDialog.open()} className="gap-2">
             <CreditCard className="h-4 w-4" />
             Manage Gift Cards

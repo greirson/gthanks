@@ -482,14 +482,14 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
             <CollapsibleGiftCardSection
               listId={list.id}
               giftCards={giftCards}
-              canEdit={list.canEdit ?? false}
+              canEdit={list.isOwner ?? false}
               onUpdate={() => {
                 void queryClient.invalidateQueries({ queryKey: ['lists', listId] });
               }}
-              onManage={list.canEdit ? () => manageGiftCardsDialog.open() : undefined}
+              onManage={list.isOwner ? () => manageGiftCardsDialog.open() : undefined}
               externalManageDialog={manageGiftCardsDialog}
               infoTooltip={
-                list.canEdit
+                list.isOwner
                   ? "Gift cards you'd appreciate. Manage them to keep your preferences up to date."
                   : 'Gift cards the list owner would appreciate.'
               }
@@ -571,14 +571,14 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
             <CollapsibleGiftCardSection
               listId={list.id}
               giftCards={giftCards}
-              canEdit={list.canEdit ?? false}
+              canEdit={list.isOwner ?? false}
               onUpdate={() => {
                 void queryClient.invalidateQueries({ queryKey: ['lists', listId] });
               }}
-              onManage={list.canEdit ? () => manageGiftCardsDialog.open() : undefined}
+              onManage={list.isOwner ? () => manageGiftCardsDialog.open() : undefined}
               externalManageDialog={manageGiftCardsDialog}
               infoTooltip={
-                list.canEdit
+                list.isOwner
                   ? "Gift cards you'd appreciate. Manage them to keep your preferences up to date."
                   : 'Gift cards the list owner would appreciate.'
               }

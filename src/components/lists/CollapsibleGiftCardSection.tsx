@@ -64,10 +64,10 @@ export function CollapsibleGiftCardSection({
               variant="ghost"
               size="sm"
               onClick={onManage}
-              className="h-11 gap-1.5 border-l border-border px-2 text-xs sm:h-14 sm:px-3 sm:text-sm"
+              className="h-11 gap-1.5 border-l border-border px-3 text-xs sm:h-14 sm:text-sm"
             >
               <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Manage</span>
+              <span>Manage</span>
             </Button>
           )}
 

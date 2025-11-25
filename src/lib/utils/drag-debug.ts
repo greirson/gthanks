@@ -3,12 +3,12 @@
 
 export const dragDebug = {
   isEnabled: (): boolean => {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === 'undefined') {return false;}
     return localStorage.getItem('debug:drag') === 'true';
   },
 
   log: (event: string, data?: any): void => {
-    if (!dragDebug.isEnabled()) return;
+    if (!dragDebug.isEnabled()) {return;}
 
     const timestamp = new Date().toISOString().split('T')[1].slice(0, -1);
     console.log(
@@ -48,13 +48,13 @@ export const dragDebug = {
   },
 
   enable: (): void => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') {return;}
     localStorage.setItem('debug:drag', 'true');
     console.log('%c[DRAG DEBUG] Enabled', 'color: #10b981; font-weight: bold');
   },
 
   disable: (): void => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') {return;}
     localStorage.removeItem('debug:drag');
     console.log('%c[DRAG DEBUG] Disabled', 'color: #ef4444; font-weight: bold');
   }

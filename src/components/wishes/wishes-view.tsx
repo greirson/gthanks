@@ -244,7 +244,7 @@ export function WishesView() {
             </div>
 
             {/* Content with bottom padding for mobile */}
-            <div className="pb-24 md:pb-0">
+            <div className="pt-2 pb-24 md:pb-0">
               {/* Loading Skeleton */}
               {isLoading && <WishesLoadingSkeleton variant={viewMode} count={8} />}
 
