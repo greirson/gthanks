@@ -59,7 +59,7 @@ export function PublicListContent({
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
   // Convert list wishes to API wish format
-  const wishes: ApiWish[] =
+  const wishes: (ApiWish & { sortOrder?: number | null })[] =
     list.listWishes?.map((listWish) => ({
       id: listWish.wish.id,
       ownerId: list.user.id,
@@ -80,7 +80,6 @@ export function PublicListContent({
       wishLevel: listWish.wish.wishLevel,
       isOwner: currentUserId === list.user.id,
       sortOrder: listWish.sortOrder ?? null,
-      addedAt: new Date(listWish.addedAt).toISOString(),
     })) || [];
 
   // Use filter hook

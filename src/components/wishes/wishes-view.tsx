@@ -1,13 +1,12 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import { PlusIcon, X, Filter, CheckSquare, Plus } from 'lucide-react';
+import { PlusIcon, X, CheckSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useViewPreference } from '@/lib/utils/view-preferences';
 import { Button as ThemeButton } from '@/components/ui/button';
 import { Button } from '@/components/ui/button';
-import { ViewToggle } from '@/components/ui/view-toggle';
 import { MobileFilterSheet } from './filters/MobileFilterSheet';
 import { WishFilterPanel } from './filters/WishFilterPanel';
 import { WishControlsBar } from './wish-controls-bar';

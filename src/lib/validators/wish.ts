@@ -297,7 +297,7 @@ export const PaginationSchema = z.object({
 // Enhanced query parameters schema for wishes API
 export const WishQuerySchema = z.object({
   cursor: z.string().optional(),
-  limit: z.number().int().positive().max(100).default(20),
+  limit: z.number().int().positive().max(10000).default(20),
   sortBy: z.enum(['createdAt', 'price', 'wishLevel', 'title']).default('wishLevel'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
   priceMin: z.number().min(0).max(999999.99).optional(),

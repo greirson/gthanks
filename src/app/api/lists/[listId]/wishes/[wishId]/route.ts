@@ -65,7 +65,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     // Parse and validate request body
-    const body = await request.json();
+    const body: unknown = await request.json();
     const result = updateWishSchema.safeParse(body);
 
     if (!result.success) {

@@ -155,8 +155,8 @@ export default function GroupsPage() {
         createdAt: now,
         updatedAt: now,
         _count: {
-          members: 1, // Creator is a member
-          lists: 0,
+          userGroups: 1, // Creator is a member
+          listGroups: 0,
         },
       };
 

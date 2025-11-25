@@ -139,6 +139,7 @@ const authOptions: NextAuthOptions = {
           select: {
             name: true,
             email: true,
+            avatarUrl: true,
             role: true,
             isAdmin: true,
             isOnboardingComplete: true,
@@ -158,6 +159,7 @@ const authOptions: NextAuthOptions = {
           token.name = dbUser.name;
           // Use primary email from UserEmail table if available, fallback to User.email
           token.email = dbUser.emails[0]?.email || dbUser.email;
+          token.avatarUrl = dbUser.avatarUrl;
           token.role = dbUser.role || 'user';
           token.isAdmin = dbUser.isAdmin || false;
           token.isOnboardingComplete = dbUser.isOnboardingComplete || false;
@@ -176,6 +178,7 @@ const authOptions: NextAuthOptions = {
         session.user.id = token.id || '';
         session.user.email = token.email || '';
         session.user.name = token.name as string | null;
+        session.user.avatarUrl = token.avatarUrl as string | null;
         session.user.role = token.role || 'user';
         session.user.isAdmin = token.isAdmin || false;
         session.user.isOnboardingComplete = token.isOnboardingComplete || false;

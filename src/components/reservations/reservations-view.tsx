@@ -36,7 +36,7 @@ export function ReservationsView() {
   const [showBulkCancelDialog, setShowBulkCancelDialog] = useState(false);
   const [showBulkPurchaseDialog, setShowBulkPurchaseDialog] = useState(false);
   const [showUnmarkDialog, setShowUnmarkDialog] = useState(false);
-  const [showBulkUnmarkDialog, setShowBulkUnmarkDialog] = useState(false);
+  const [_showBulkUnmarkDialog, setShowBulkUnmarkDialog] = useState(false);
   const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
   const [isWishModalOpen, setIsWishModalOpen] = useState(false);
 
@@ -204,7 +204,7 @@ export function ReservationsView() {
       });
   }, [selectedReservationIds, queryClient]);
 
-  const handleBulkUnmark = useCallback(() => {
+  const _handleBulkUnmark = useCallback(() => {
     const selectedIds = Array.from(selectedReservationIds);
 
     reservationsApi

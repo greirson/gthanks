@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
-import { X, ArrowLeft, Filter, CheckSquare, Share2, Pencil, Plus } from 'lucide-react';
+import { X, Filter, CheckSquare, Share2, Pencil, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { ViewToggle } from '@/components/ui/view-toggle';
@@ -18,7 +18,6 @@ import { ListDetailWishesSection } from '@/components/lists/list-detail-wishes-s
 import { ListForm } from '@/components/lists/list-form';
 import { ListSharingDialog } from '@/components/lists/list-sharing-dialog';
 import { Button } from '@/components/ui/button';
-import { Button as ThemeButtonAlias } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { BulkActionsBar } from '@/components/wishes/bulk-actions-bar';
 import {
@@ -199,7 +198,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
   const wishes =
     list?.listWishes?.map((lw) => ({
       ...lw.wish,
-      sortOrder: lw.sortOrder, // Include sortOrder from ListWish for custom sorting
+      sortOrder: lw.sortOrder as number | null | undefined, // Include sortOrder from ListWish for custom sorting
       isOwner: list.isOwner,
     })) || [];
 
@@ -278,21 +277,12 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
   }, []);
 
   // Calculate if all visible wishes are selected
-  const allSelected = useMemo(() => {
+  const _allSelected = useMemo(() => {
     if (filteredWishes.length === 0) {
       return false;
     }
     return filteredWishes.every((wish) => selectedWishIds.has(wish.id));
   }, [filteredWishes, selectedWishIds]);
-
-  // Handle select all toggle
-  const handleSelectAllToggle = useCallback(() => {
-    if (allSelected) {
-      clearSelection();
-    } else {
-      selectAllWishes();
-    }
-  }, [allSelected, clearSelection, selectAllWishes]);
 
   // Handle drag-and-drop reorder
   const handleReorder = useCallback(

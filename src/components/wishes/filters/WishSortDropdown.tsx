@@ -63,7 +63,7 @@ export function WishSortDropdown({
           title: 'Custom sort enabled',
           description: 'You can now drag and drop wishes to reorder them.',
         });
-      } catch (error) {
+      } catch {
         toast({
           title: 'Failed to enable custom sort',
           description: 'Please try again.',

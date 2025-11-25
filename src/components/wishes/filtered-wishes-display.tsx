@@ -19,10 +19,10 @@ import type {
 } from '@/components/wishes/hooks/useWishFilters';
 
 interface FilteredWishesDisplayProps {
-  wishes: (Wish & { isOwner?: boolean })[];
+  wishes: (Wish & { isOwner?: boolean; sortOrder?: number | null })[];
   // Filter state from parent
   filterState?: FilterState;
-  filteredWishes?: Wish[];
+  filteredWishes?: (Wish & { sortOrder?: number | null })[];
   maxPrice?: number;
   activeFilterCount?: number;
   // Filter handlers from parent

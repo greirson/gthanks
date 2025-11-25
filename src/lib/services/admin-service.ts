@@ -208,7 +208,7 @@ export class AdminService {
           orderBy: { createdAt: 'desc' },
           take: 5,
         },
-        groupsJoined: {
+        userGroups: {
           include: {
             group: {
               select: {

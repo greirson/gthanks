@@ -8,7 +8,6 @@ import {
   ExternalLink,
   ListPlus,
   Menu,
-  MoreVertical,
   ShoppingCart,
   Trash,
 } from 'lucide-react';
@@ -31,7 +30,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { SelectionCheckbox } from '@/components/ui/selection-checkbox';
 import { StarRating } from '@/components/ui/star-rating';
 import { AddToListDialog } from '@/components/lists/add-to-list-dialog';
 import { ReserveDialog } from '@/components/reservations/reserve-dialog';
