@@ -58,10 +58,10 @@ export function WishGrid({
 
   if (wishes.length === 0) {
     return (
-      <div className="rounded-lg border-2 border-dashed border-gray-200 p-12 text-center">
+      <div className="rounded-lg border-2 border-dashed border-gray-200 p-12 text-center dark:border-gray-700">
         <div className="mx-auto mb-4 text-4xl">✨</div>
-        <h3 className="mb-2 text-lg font-medium text-gray-900">No wishes yet</h3>
-        <p className="text-sm text-gray-500">
+        <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-gray-100">No wishes yet</h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           Create your first wish to start building your wishlist.
         </p>
       </div>
