@@ -323,7 +323,9 @@ export function useWishesQuery() {
         return { items: [] };
       }
 
-      const response = await fetch('/api/wishes');
+      // Fetch all wishes - users expect to see their full wishlist
+      // Default pagination (20) causes items to "disappear" for users with 20+ wishes
+      const response = await fetch('/api/wishes?limit=10000');
       if (!response.ok) {
         throw new Error('Failed to fetch wishes');
       }
