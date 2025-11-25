@@ -3,16 +3,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, X, Filter } from 'lucide-react';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { ListForm } from '@/components/lists/list-form';
 import { ListGrid } from '@/components/lists/list-grid';
 import { ListSharingDialog } from '@/components/lists/list-sharing-dialog';
 import { useViewPreference } from '@/lib/utils/view-preferences';
+import { useSortPreference } from '@/lib/utils/sort-preferences';
 import { ListFilterPanel } from '@/components/lists/filters/ListFilterPanel';
 import { MobileListFilterSheet } from '@/components/lists/filters/MobileListFilterSheet';
 import { useListFilters } from '@/components/lists/hooks/useListFilters';
 import { Button } from '@/components/ui/button';
+import { ListSortToggle } from '@/components/ui/list-sort-toggle';
 import { ViewToggle } from '@/components/ui/view-toggle';
 import {
   Dialog,
@@ -46,6 +48,12 @@ export default function ListsPage() {
 
   // View mode state - default to grid for better space efficiency
   const [viewMode, setViewMode] = useViewPreference('viewMode.lists', 'grid');
+
+  // List sort preference
+  const [sortPreference, setSortPreference, isSortHydrated] = useSortPreference(
+    'sortMode.lists',
+    'name'
+  );
 
   // Unsaved close prevention for create dialog
   const createCloseHandler = usePreventUnsavedClose(isCreateFormDirty, () => {
@@ -81,6 +89,32 @@ export default function ListsPage() {
     clearAllFilters,
     activeFilterCount,
   } = useListFilters(data?.items || [], session?.user?.id);
+
+  // Sort lists based on user preference
+  const sortedAndFilteredLists = useMemo(() => {
+    if (!filteredLists) {
+      return [];
+    }
+
+    const lists = [...filteredLists];
+    const multiplier = sortPreference.direction === 'asc' ? 1 : -1;
+
+    switch (sortPreference.mode) {
+      case 'name':
+        return lists.sort((a, b) => multiplier * a.name.localeCompare(b.name));
+      case 'wishes':
+        return lists.sort(
+          (a, b) => multiplier * ((a._count?.listWishes || 0) - (b._count?.listWishes || 0))
+        );
+      case 'newest':
+        return lists.sort(
+          (a, b) =>
+            multiplier * (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+        );
+      default:
+        return lists;
+    }
+  }, [filteredLists, sortPreference]);
 
   // Delete mutation with optimistic updates
   const deleteMutation = useMutation({
@@ -203,8 +237,15 @@ export default function ListsPage() {
             </Button>
           </div>
 
-          {/* Right side - View Toggle */}
-          <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+          {/* Right side - Sort & View Toggle */}
+          <div className="flex items-center gap-2">
+            <ListSortToggle
+              preference={sortPreference}
+              onPreferenceChange={setSortPreference}
+              isHydrated={isSortHydrated}
+            />
+            <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+          </div>
         </div>
 
         <div className="container mx-auto px-4 py-8">
@@ -222,8 +263,8 @@ export default function ListsPage() {
             </ThemeButton>
           </div>
 
-          {/* Desktop Filter Button - Hidden on mobile since mobile has filter in top menu */}
-          <div className="mb-4 hidden border-b pb-4 md:block">
+          {/* Desktop Filter Button & Controls - Hidden on mobile since mobile has filter in top menu */}
+          <div className="mb-4 hidden items-center justify-between border-b pb-4 md:flex">
             <Button
               variant={isDesktopFilterOpen ? 'default' : 'outline'}
               size="sm"
@@ -238,12 +279,20 @@ export default function ListsPage() {
                 </span>
               )}
             </Button>
+            <div className="flex items-center gap-2">
+              <ListSortToggle
+                preference={sortPreference}
+                onPreferenceChange={setSortPreference}
+                isHydrated={isSortHydrated}
+              />
+              <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+            </div>
           </div>
 
           {/* Lists Grid */}
           <div className="pb-24 md:pb-0">
             <ListGrid
-              lists={filteredLists}
+              lists={sortedAndFilteredLists}
               onEdit={handleEdit}
               onDelete={handleDelete}
               onShare={handleShare}

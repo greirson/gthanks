@@ -12,11 +12,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ImageInput } from '@/components/ui/image-input';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ListSortToggle } from '@/components/ui/list-sort-toggle';
 import { ThemeButton } from '@/components/ui/theme-button';
 import { useToast } from '@/components/ui/use-toast';
 import { useFormDirtyState } from '@/hooks/use-form-dirty-state';
 import { listsApi } from '@/lib/api/lists';
 import { wishesApi } from '@/lib/api/wishes';
+import { useSortPreference } from '@/lib/utils/sort-preferences';
 import { WishCreateInput, WishUpdateInput } from '@/lib/validators/wish';
 import { StarRating } from '@/components/ui/star-rating';
 
@@ -94,6 +96,12 @@ export function WishForm({
     onDirtyStateChange?.(isDirty);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDirty]); // onDirtyStateChange is stable (setState function) - no need in deps
+
+  // List sort preference
+  const [sortPreference, setSortPreference, isSortHydrated] = useSortPreference(
+    'sortMode.addToLists',
+    'name' // Default to alphabetical
+  );
 
   // Load user's lists for list selection
   const { data: listsData, isLoading: isLoadingLists } = useQuery({
@@ -409,6 +417,32 @@ export function WishForm({
 
   const isPending = createMutation.isPending || updateMutation.isPending;
 
+  // Sort lists based on user preference
+  const sortedLists = useMemo(() => {
+    if (!listsData || !('items' in listsData) || !Array.isArray(listsData.items)) {
+      return [];
+    }
+
+    const lists = [...listsData.items];
+    const multiplier = sortPreference.direction === 'asc' ? 1 : -1;
+
+    switch (sortPreference.mode) {
+      case 'name':
+        return lists.sort((a, b) => multiplier * a.name.localeCompare(b.name));
+      case 'wishes':
+        return lists.sort(
+          (a, b) => multiplier * ((a._count?.listWishes || 0) - (b._count?.listWishes || 0))
+        );
+      case 'newest':
+        return lists.sort(
+          (a, b) =>
+            multiplier * (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+        );
+      default:
+        return lists;
+    }
+  }, [listsData, sortPreference]);
+
   return (
     <form
       onSubmit={(e) => {
@@ -598,36 +632,39 @@ export function WishForm({
       {/* List Selection - Multi-select with checkboxes */}
       {showListSelection && (
         <div className="space-y-2">
-          <Label>Add to Lists</Label>
+          <div className="flex items-center justify-between">
+            <Label>Add to Lists</Label>
+            <ListSortToggle
+              preference={sortPreference}
+              onPreferenceChange={setSortPreference}
+              isHydrated={isSortHydrated}
+            />
+          </div>
           {(isLoadingLists || wishListsQuery.isLoading) && (
             <p className="text-sm text-muted-foreground">Loading lists...</p>
           )}
-          {listsData &&
-            'items' in listsData &&
-            Array.isArray(listsData.items) &&
-            listsData.items.length > 0 &&
-            (!wish?.id || !wishListsQuery.isLoading) && (
-              <fieldset
-                disabled={createMutation.isPending || updateMutation.isPending}
-                className="max-h-48 space-y-2 overflow-y-auto rounded-md border p-3"
-              >
-                {listsData.items.map((list) => (
-                  <div key={list.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`list-${list.id}`}
-                      checked={selectedListIds.includes(list.id)}
-                      onCheckedChange={(checked) => handleListToggle(list.id, checked as boolean)}
-                    />
-                    <Label
-                      htmlFor={`list-${list.id}`}
-                      className="flex-1 cursor-pointer text-sm font-normal"
-                    >
-                      {list.name} ({list._count.listWishes} wishes)
-                    </Label>
-                  </div>
-                ))}
-              </fieldset>
-            )}
+          {sortedLists.length > 0 && (!wish?.id || !wishListsQuery.isLoading) && (
+            <fieldset
+              disabled={createMutation.isPending || updateMutation.isPending}
+              className="max-h-48 space-y-2 overflow-y-auto rounded-md border p-3"
+            >
+              {sortedLists.map((list) => (
+                <div key={list.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`list-${list.id}`}
+                    checked={selectedListIds.includes(list.id)}
+                    onCheckedChange={(checked) => handleListToggle(list.id, checked as boolean)}
+                  />
+                  <Label
+                    htmlFor={`list-${list.id}`}
+                    className="flex-1 cursor-pointer text-sm font-normal"
+                  >
+                    {list.name} ({list._count.listWishes} wishes)
+                  </Label>
+                </div>
+              ))}
+            </fieldset>
+          )}
           {listsData &&
             'items' in listsData &&
             Array.isArray(listsData.items) &&
