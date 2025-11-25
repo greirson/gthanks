@@ -125,7 +125,7 @@ const variantConfig = {
   },
   list: {
     layout: 'horizontal' as const,
-    cardClassName: 'overflow-hidden transition-colors hover:bg-muted/50',
+    cardClassName: 'relative overflow-hidden transition-colors hover:bg-muted/50',
     imageSize: 'h-16 w-16 sm:h-20 sm:w-20',
     imageSizes: '80px',
     contentPadding: 'p-4',
