@@ -120,7 +120,10 @@ export function ManageGiftCardsDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={dialog.handleClose} {...dialogProps}>
-      <DialogContent className="flex max-h-[90vh] max-w-[800px] flex-col p-4 sm:max-w-[90vw] sm:p-6 md:max-w-[800px]" hideCloseButton>
+      <DialogContent
+        className="flex max-h-[90vh] max-w-[800px] flex-col p-4 sm:max-w-[90vw] sm:p-6 md:max-w-[800px]"
+        hideCloseButton
+      >
         {/* Header */}
         <DialogHeader className="pb-4">
           <DialogTitle className="text-lg sm:text-xl">Manage Gift Cards</DialogTitle>

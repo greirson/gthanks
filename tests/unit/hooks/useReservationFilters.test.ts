@@ -184,9 +184,7 @@ describe('useReservationFilters', () => {
         return [state, setState];
       });
 
-      const { result } = renderHook(() =>
-        useReservationFilters(mockReservations)
-      );
+      const { result } = renderHook(() => useReservationFilters(mockReservations));
 
       // Should still work with default state
       expect(result.current.filterState).toEqual({
@@ -233,9 +231,7 @@ describe('useReservationFilters', () => {
         return [state, setState];
       });
 
-      const { result } = renderHook(() =>
-        useReservationFilters(mockReservations)
-      );
+      const { result } = renderHook(() => useReservationFilters(mockReservations));
 
       // Should still work with in-memory state
       expect(result.current.filterState).toBeDefined();
@@ -280,9 +276,7 @@ describe('useReservationFilters', () => {
         return [mockState, setState];
       });
 
-      const { result, rerender } = renderHook(() =>
-        useReservationFilters(mockReservations)
-      );
+      const { result, rerender } = renderHook(() => useReservationFilters(mockReservations));
 
       // Initially called with empty string
       expect(mockUseDebounce).toHaveBeenCalledWith('', 300);
@@ -302,9 +296,7 @@ describe('useReservationFilters', () => {
 
       mockUseDebounce.mockImplementation((value) => debouncedValue);
 
-      const { result, rerender } = renderHook(() =>
-        useReservationFilters(mockReservations)
-      );
+      const { result, rerender } = renderHook(() => useReservationFilters(mockReservations));
 
       // Initially no search
       expect(result.current.filteredReservations).toHaveLength(3);
@@ -334,9 +326,7 @@ describe('useReservationFilters', () => {
 
   describe('Purchase Status Filtering', () => {
     it('shows all reservations when purchaseStatus is "all"', () => {
-      const { result } = renderHook(() =>
-        useReservationFilters(mockReservations)
-      );
+      const { result } = renderHook(() => useReservationFilters(mockReservations));
 
       expect(result.current.filteredReservations).toHaveLength(3);
     });
@@ -353,14 +343,10 @@ describe('useReservationFilters', () => {
         return [state, jest.fn()];
       });
 
-      const { result } = renderHook(() =>
-        useReservationFilters(mockReservations)
-      );
+      const { result } = renderHook(() => useReservationFilters(mockReservations));
 
       expect(result.current.filteredReservations).toHaveLength(2);
-      expect(
-        result.current.filteredReservations.every((r) => !r.purchasedAt)
-      ).toBe(true);
+      expect(result.current.filteredReservations.every((r) => !r.purchasedAt)).toBe(true);
     });
 
     it('shows only purchased reservations when purchaseStatus is "purchased"', () => {
@@ -375,9 +361,7 @@ describe('useReservationFilters', () => {
         return [state, jest.fn()];
       });
 
-      const { result } = renderHook(() =>
-        useReservationFilters(mockReservations)
-      );
+      const { result } = renderHook(() => useReservationFilters(mockReservations));
 
       expect(result.current.filteredReservations).toHaveLength(1);
       expect(result.current.filteredReservations[0].purchasedAt).toBeTruthy();
@@ -403,9 +387,7 @@ describe('useReservationFilters', () => {
         return [mockState, setState];
       });
 
-      const { result, rerender } = renderHook(() =>
-        useReservationFilters(mockReservations)
-      );
+      const { result, rerender } = renderHook(() => useReservationFilters(mockReservations));
 
       // Initially all
       expect(result.current.filteredReservations).toHaveLength(3);
@@ -436,9 +418,7 @@ describe('useReservationFilters', () => {
 
       mockUseFilterPersistence.mockImplementation(() => [mockState, jest.fn()]);
 
-      const { result } = renderHook(() =>
-        useReservationFilters(mockReservations)
-      );
+      const { result } = renderHook(() => useReservationFilters(mockReservations));
 
       expect(result.current.filteredReservations).toHaveLength(1);
       expect(result.current.filteredReservations[0].wish.title).toBe('Red Bike');
@@ -455,15 +435,11 @@ describe('useReservationFilters', () => {
 
       mockUseFilterPersistence.mockImplementation(() => [mockState, jest.fn()]);
 
-      const { result } = renderHook(() =>
-        useReservationFilters(mockReservations)
-      );
+      const { result } = renderHook(() => useReservationFilters(mockReservations));
 
       expect(result.current.filteredReservations).toHaveLength(2);
       expect(
-        result.current.filteredReservations.every(
-          (r) => r.wish.user.name === 'Alice Smith'
-        )
+        result.current.filteredReservations.every((r) => r.wish.user.name === 'Alice Smith')
       ).toBe(true);
     });
 
@@ -478,14 +454,10 @@ describe('useReservationFilters', () => {
 
       mockUseFilterPersistence.mockImplementation(() => [mockState, jest.fn()]);
 
-      const { result } = renderHook(() =>
-        useReservationFilters(mockReservations)
-      );
+      const { result } = renderHook(() => useReservationFilters(mockReservations));
 
       expect(result.current.filteredReservations).toHaveLength(1);
-      expect(result.current.filteredReservations[0].wish.user.email).toBe(
-        'bob@example.com'
-      );
+      expect(result.current.filteredReservations[0].wish.user.email).toBe('bob@example.com');
     });
 
     it('searches by owner username', () => {
@@ -499,15 +471,11 @@ describe('useReservationFilters', () => {
 
       mockUseFilterPersistence.mockImplementation(() => [mockState, jest.fn()]);
 
-      const { result } = renderHook(() =>
-        useReservationFilters(mockReservations)
-      );
+      const { result } = renderHook(() => useReservationFilters(mockReservations));
 
       expect(result.current.filteredReservations).toHaveLength(2);
       expect(
-        result.current.filteredReservations.every(
-          (r) => r.wish.user.username === 'alice'
-        )
+        result.current.filteredReservations.every((r) => r.wish.user.username === 'alice')
       ).toBe(true);
     });
 
@@ -522,14 +490,10 @@ describe('useReservationFilters', () => {
 
       mockUseFilterPersistence.mockImplementation(() => [mockState, jest.fn()]);
 
-      const { result } = renderHook(() =>
-        useReservationFilters(mockReservations)
-      );
+      const { result } = renderHook(() => useReservationFilters(mockReservations));
 
       expect(result.current.filteredReservations).toHaveLength(1);
-      expect(result.current.filteredReservations[0].wish.url).toContain(
-        'amazon.com'
-      );
+      expect(result.current.filteredReservations[0].wish.url).toContain('amazon.com');
     });
 
     it('handles case-insensitive search', () => {
@@ -543,9 +507,7 @@ describe('useReservationFilters', () => {
 
       mockUseFilterPersistence.mockImplementation(() => [mockState, jest.fn()]);
 
-      const { result } = renderHook(() =>
-        useReservationFilters(mockReservations)
-      );
+      const { result } = renderHook(() => useReservationFilters(mockReservations));
 
       expect(result.current.filteredReservations).toHaveLength(1);
       expect(result.current.filteredReservations[0].wish.title).toBe('Red Bike');
@@ -562,9 +524,7 @@ describe('useReservationFilters', () => {
 
       mockUseFilterPersistence.mockImplementation(() => [mockState, jest.fn()]);
 
-      const { result } = renderHook(() =>
-        useReservationFilters(mockReservations)
-      );
+      const { result } = renderHook(() => useReservationFilters(mockReservations));
 
       expect(result.current.filteredReservations).toHaveLength(3);
     });
@@ -582,9 +542,7 @@ describe('useReservationFilters', () => {
 
       mockUseFilterPersistence.mockImplementation(() => [mockState, jest.fn()]);
 
-      const { result } = renderHook(() =>
-        useReservationFilters(mockReservations)
-      );
+      const { result } = renderHook(() => useReservationFilters(mockReservations));
 
       // Should count: dateFilter, ownerIds, purchaseStatus = 3
       // Should NOT count: search, sort
@@ -602,9 +560,7 @@ describe('useReservationFilters', () => {
 
       mockUseFilterPersistence.mockImplementation(() => [mockState, jest.fn()]);
 
-      const { result } = renderHook(() =>
-        useReservationFilters(mockReservations)
-      );
+      const { result } = renderHook(() => useReservationFilters(mockReservations));
 
       expect(result.current.activeFilterCount).toBe(0);
     });
@@ -620,9 +576,7 @@ describe('useReservationFilters', () => {
 
       mockUseFilterPersistence.mockImplementation(() => [mockState, jest.fn()]);
 
-      const { result } = renderHook(() =>
-        useReservationFilters(mockReservations)
-      );
+      const { result } = renderHook(() => useReservationFilters(mockReservations));
 
       // Only ownerIds is active (non-empty array)
       expect(result.current.activeFilterCount).toBe(1);
@@ -639,9 +593,7 @@ describe('useReservationFilters', () => {
 
       mockUseFilterPersistence.mockImplementation(() => [mockState, jest.fn()]);
 
-      const { result } = renderHook(() =>
-        useReservationFilters(mockReservations)
-      );
+      const { result } = renderHook(() => useReservationFilters(mockReservations));
 
       expect(result.current.activeFilterCount).toBe(0);
     });
@@ -657,9 +609,7 @@ describe('useReservationFilters', () => {
 
       mockUseFilterPersistence.mockImplementation(() => [mockState, jest.fn()]);
 
-      const { result } = renderHook(() =>
-        useReservationFilters(mockReservations)
-      );
+      const { result } = renderHook(() => useReservationFilters(mockReservations));
 
       expect(result.current.activeFilterCount).toBe(0);
     });
@@ -674,18 +624,14 @@ describe('useReservationFilters', () => {
     });
 
     it('handles null reservations gracefully', () => {
-      const { result } = renderHook(() =>
-        useReservationFilters(null as any)
-      );
+      const { result } = renderHook(() => useReservationFilters(null as any));
 
       expect(result.current.filteredReservations).toEqual([]);
       expect(result.current.uniqueOwners).toEqual([]);
     });
 
     it('extracts unique owners correctly', () => {
-      const { result } = renderHook(() =>
-        useReservationFilters(mockReservations)
-      );
+      const { result } = renderHook(() => useReservationFilters(mockReservations));
 
       expect(result.current.uniqueOwners).toHaveLength(2);
       expect(result.current.uniqueOwners).toEqual(
@@ -718,9 +664,7 @@ describe('useReservationFilters', () => {
         },
       ];
 
-      const { result } = renderHook(() =>
-        useReservationFilters(reservationsWithoutNames)
-      );
+      const { result } = renderHook(() => useReservationFilters(reservationsWithoutNames));
 
       expect(result.current.uniqueOwners[0].name).toBe('alice@example.com');
     });
@@ -744,14 +688,9 @@ describe('useReservationFilters', () => {
         }
       });
 
-      mockUseFilterPersistence.mockImplementation(() => [
-        mockState,
-        mockSetState,
-      ]);
+      mockUseFilterPersistence.mockImplementation(() => [mockState, mockSetState]);
 
-      const { result } = renderHook(() =>
-        useReservationFilters(mockReservations)
-      );
+      const { result } = renderHook(() => useReservationFilters(mockReservations));
 
       act(() => {
         result.current.resetFilters();

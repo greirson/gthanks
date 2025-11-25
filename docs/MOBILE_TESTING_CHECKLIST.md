@@ -5,6 +5,7 @@
 This checklist ensures the reservations feature works flawlessly on mobile devices, meeting the mobile-first requirements for gthanks. All items must pass before merging to main.
 
 **Critical Viewports:**
+
 - **375px** - iPhone SE (minimum supported)
 - **768px** - iPad / Tablet
 - **1024px** - Desktop
@@ -382,24 +383,24 @@ pnpm dev
 
 ### Required Tests (Before Merge)
 
-| Device/Browser       | Viewport | Pass/Fail | Notes |
-| -------------------- | -------- | --------- | ----- |
-| Chrome DevTools      | 375px    | ⬜        |       |
-| Chrome DevTools      | 768px    | ⬜        |       |
-| Chrome DevTools      | 1024px   | ⬜        |       |
-| iPhone SE (real)     | 375px    | ⬜        |       |
-| iPad (real)          | 768px    | ⬜        |       |
-| Safari iOS (iPhone)  | 375px    | ⬜        |       |
-| Chrome Android       | 375px    | ⬜        |       |
+| Device/Browser      | Viewport | Pass/Fail | Notes |
+| ------------------- | -------- | --------- | ----- |
+| Chrome DevTools     | 375px    | ⬜        |       |
+| Chrome DevTools     | 768px    | ⬜        |       |
+| Chrome DevTools     | 1024px   | ⬜        |       |
+| iPhone SE (real)    | 375px    | ⬜        |       |
+| iPad (real)         | 768px    | ⬜        |       |
+| Safari iOS (iPhone) | 375px    | ⬜        |       |
+| Chrome Android      | 375px    | ⬜        |       |
 
 ### Optional Tests (Nice to Have)
 
-| Device/Browser    | Viewport | Pass/Fail | Notes |
-| ----------------- | -------- | --------- | ----- |
-| Firefox DevTools  | 375px    | ⬜        |       |
-| Safari macOS      | 1024px   | ⬜        |       |
-| Edge              | 1024px   | ⬜        |       |
-| Samsung Internet  | 375px    | ⬜        |       |
+| Device/Browser   | Viewport | Pass/Fail | Notes |
+| ---------------- | -------- | --------- | ----- |
+| Firefox DevTools | 375px    | ⬜        |       |
+| Safari macOS     | 1024px   | ⬜        |       |
+| Edge             | 1024px   | ⬜        |       |
+| Samsung Internet | 375px    | ⬜        |       |
 
 ---
 
@@ -408,17 +409,20 @@ pnpm dev
 ### Issue: Horizontal Scroll Appears
 
 **Symptoms:**
+
 - Content overflows viewport width
 - Horizontal scrollbar visible
 - Cards or text cut off
 
 **Check:**
+
 1. Inspect element with horizontal overflow using DevTools
 2. Look for fixed widths (e.g., `width: 400px` on mobile)
 3. Check for large images without `max-width: 100%`
 4. Verify padding/margin doesn't exceed viewport
 
 **Fix:**
+
 ```css
 /* Ensure container doesn't exceed viewport */
 .container {
@@ -436,16 +440,19 @@ img {
 ### Issue: Touch Targets Too Small
 
 **Symptoms:**
+
 - Hard to tap buttons on mobile
 - Mis-taps common
 - Users complain about UI being "fiddly"
 
 **Check:**
+
 1. Measure button/link dimensions in DevTools
 2. Check if clickable area includes padding
 3. Verify minimum 44x44px per Apple HIG
 
 **Fix:**
+
 ```css
 /* Ensure minimum touch target */
 .button {
@@ -458,16 +465,19 @@ img {
 ### Issue: Virtual Scrolling Jank
 
 **Symptoms:**
+
 - Stuttering when scrolling
 - Frame drops visible
 - Blank areas during fast scroll
 
 **Check:**
+
 1. DevTools Performance tab → Record scrolling
 2. Check for layout thrashing
 3. Verify overscan settings in virtual scroller
 
 **Fix:**
+
 ```typescript
 // Increase overscan to render more items off-screen
 <VirtualScroller
@@ -478,16 +488,19 @@ img {
 ### Issue: Filter Panel Doesn't Slide Smoothly
 
 **Symptoms:**
+
 - Panel appears instantly (no animation)
 - Jerky motion when opening/closing
 - Overlay doesn't dim smoothly
 
 **Check:**
+
 1. Verify CSS transitions are applied
 2. Check for `will-change` property
 3. Test on real device (not just emulator)
 
 **Fix:**
+
 ```css
 /* Smooth slide-in transition */
 .filter-panel {
@@ -504,16 +517,19 @@ img {
 ### Issue: Keyboard Covers Input on Mobile
 
 **Symptoms:**
+
 - Input field hidden behind keyboard
 - Can't see what you're typing
 - Form submit button not visible
 
 **Check:**
+
 1. Test on real device (not DevTools)
 2. Verify viewport meta tag includes `viewport-fit=cover`
 3. Check if page scrolls when input focused
 
 **Fix:**
+
 ```typescript
 // Scroll input into view when focused
 inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -552,20 +568,20 @@ Take screenshots at each viewport for documentation:
 
 ### Load Time Targets
 
-| Metric               | Target | Actual | Pass/Fail |
-| -------------------- | ------ | ------ | --------- |
-| First Contentful Paint (FCP) | < 1.5s | | ⬜ |
-| Largest Contentful Paint (LCP) | < 2.5s | | ⬜ |
-| Time to Interactive (TTI) | < 3s | | ⬜ |
-| Cumulative Layout Shift (CLS) | < 0.1 | | ⬜ |
+| Metric                         | Target | Actual | Pass/Fail |
+| ------------------------------ | ------ | ------ | --------- |
+| First Contentful Paint (FCP)   | < 1.5s |        | ⬜        |
+| Largest Contentful Paint (LCP) | < 2.5s |        | ⬜        |
+| Time to Interactive (TTI)      | < 3s   |        | ⬜        |
+| Cumulative Layout Shift (CLS)  | < 0.1  |        | ⬜        |
 
 ### Scrolling Performance
 
-| Metric | Target | Actual | Pass/Fail |
-| ------ | ------ | ------ | --------- |
-| Frame rate during scroll | 60fps | | ⬜ |
-| Scroll responsiveness | < 100ms | | ⬜ |
-| Memory usage (after 2min scroll) | < 100MB increase | | ⬜ |
+| Metric                           | Target           | Actual | Pass/Fail |
+| -------------------------------- | ---------------- | ------ | --------- |
+| Frame rate during scroll         | 60fps            |        | ⬜        |
+| Scroll responsiveness            | < 100ms          |        | ⬜        |
+| Memory usage (after 2min scroll) | < 100MB increase |        | ⬜        |
 
 ---
 
@@ -618,9 +634,9 @@ Before merging to main:
 - [ ] Code review completed
 - [ ] E2E tests pass for reservations feature
 
-**Tested by:** _______________
-**Date:** _______________
-**Approved by:** _______________
+**Tested by:** **\*\***\_\_\_**\*\***
+**Date:** **\*\***\_\_\_**\*\***
+**Approved by:** **\*\***\_\_\_**\*\***
 
 ---
 

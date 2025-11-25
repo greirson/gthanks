@@ -12,10 +12,7 @@ const markPurchasedSchema = z.object({
 
 type MarkPurchasedBody = z.infer<typeof markPurchasedSchema>;
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { reservationId: string } }
-) {
+export async function PATCH(req: NextRequest, { params }: { params: { reservationId: string } }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -25,9 +22,7 @@ export async function PATCH(
     const body: unknown = await req.json();
     const parsed: MarkPurchasedBody = markPurchasedSchema.parse(body);
 
-    const purchasedDate = parsed.purchasedDate
-      ? new Date(parsed.purchasedDate)
-      : undefined;
+    const purchasedDate = parsed.purchasedDate ? new Date(parsed.purchasedDate) : undefined;
 
     // Use service layer for authorization and update
     const updated = await reservationService.markAsPurchased(
@@ -57,10 +52,7 @@ export async function PATCH(
  *
  * Un-mark a reservation as purchased (undo mistake)
  */
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { reservationId: string } }
-) {
+export async function DELETE(req: NextRequest, { params }: { params: { reservationId: string } }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {

@@ -48,14 +48,7 @@ export function SortableWishCard({
   onToggleSelection,
   sortable = false,
 }: SortableWishCardProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: wish.id,
     disabled: !sortable,
   });
@@ -73,7 +66,7 @@ export function SortableWishCard({
       {sortable && (
         <button
           type="button"
-          className="absolute left-2 top-2 z-10 flex min-h-[56px] min-w-[56px] touch-none cursor-grab items-center justify-center rounded-lg border-2 border-primary/30 bg-primary/10 text-primary transition-[background-color,transform] duration-150 hover:bg-primary/20 hover:scale-105 hover:text-accent-foreground active:cursor-grabbing active:scale-95 md:min-h-[48px] md:min-w-[48px]"
+          className="absolute left-2 top-2 z-10 flex min-h-[56px] min-w-[56px] cursor-grab touch-none items-center justify-center rounded-lg border-2 border-primary/30 bg-primary/10 text-primary transition-[background-color,transform] duration-150 hover:scale-105 hover:bg-primary/20 hover:text-accent-foreground active:scale-95 active:cursor-grabbing md:min-h-[48px] md:min-w-[48px]"
           aria-label="Drag to reorder wish"
           {...attributes}
           {...listeners}

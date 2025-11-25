@@ -113,17 +113,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     if (error instanceof ConflictError) {
-      return NextResponse.json(
-        { error: error.message, code: 'CONFLICT' },
-        { status: 409 }
-      );
+      return NextResponse.json({ error: error.message, code: 'CONFLICT' }, { status: 409 });
     }
 
     if (error instanceof ValidationError) {
-      return NextResponse.json(
-        { error: error.message, code: 'VALIDATION_ERROR' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: error.message, code: 'VALIDATION_ERROR' }, { status: 400 });
     }
 
     if (error instanceof AppError) {

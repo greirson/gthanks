@@ -769,9 +769,7 @@ export class ReservationService {
 
     const unauthorized = reservations.filter((r) => r.userId !== userId);
     if (unauthorized.length > 0) {
-      throw new ForbiddenError(
-        `Cannot un-mark ${unauthorized.length} reservation(s) (not yours)`
-      );
+      throw new ForbiddenError(`Cannot un-mark ${unauthorized.length} reservation(s) (not yours)`);
     }
 
     const succeeded: string[] = [];

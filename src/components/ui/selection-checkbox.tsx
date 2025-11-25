@@ -9,7 +9,12 @@ interface SelectionCheckboxProps {
   position?: 'bottom-right' | 'top-right';
 }
 
-export function SelectionCheckbox({ checked, onCheckedChange, className, position = 'bottom-right' }: SelectionCheckboxProps) {
+export function SelectionCheckbox({
+  checked,
+  onCheckedChange,
+  className,
+  position = 'bottom-right',
+}: SelectionCheckboxProps) {
   const positionClasses = position === 'top-right' ? 'top-2 right-2' : 'bottom-2 right-2';
 
   return (

@@ -32,7 +32,10 @@ export function ListHeader({
 }: ListHeaderProps) {
   return (
     <div
-      className={cn('relative flex flex-col items-center gap-2 border-b pb-4 pt-2 text-center', className)}
+      className={cn(
+        'relative flex flex-col items-center gap-2 border-b pb-4 pt-2 text-center',
+        className
+      )}
     >
       {/* Back button - Mobile only, positioned absolutely on left */}
       {showBackButton && onBack && (

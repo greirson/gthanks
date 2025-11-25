@@ -254,14 +254,16 @@ This is a **recurring issue** that causes runtime Zod validation errors:
 Before implementing ANY API endpoint:
 
 - [ ] **Check frontend schema** - What does the API client expect?
+
   ```typescript
   // src/lib/api/reservations.ts
   markAsPurchased: async (reservationId: string): Promise<ReservationWithWish> => {
     return apiPost(`/api/reservations/${reservationId}/purchased`, {}, ReservationWithWishSchema);
-  }
+  };
   ```
 
 - [ ] **Match service layer return type** - Does the service method return the full schema?
+
   ```typescript
   // ✅ Correct
   async markAsPurchased(...): Promise<ReservationWithWish> {
@@ -295,12 +297,15 @@ Before implementing ANY API endpoint:
 ### Common Patterns
 
 **Lists with Wishes:**
+
 ```typescript
 include: {
   listWishes: {
     include: {
       wish: {
-        include: { user: true }
+        include: {
+          user: true;
+        }
       }
     }
   }
@@ -308,6 +313,7 @@ include: {
 ```
 
 **Reservations with Wishes:**
+
 ```typescript
 include: {
   wish: {
@@ -325,11 +331,12 @@ include: {
 ```
 
 **Users with Lists:**
+
 ```typescript
 include: {
   lists: {
     include: {
-      listWishes: true
+      listWishes: true;
     }
   }
 }
@@ -404,6 +411,7 @@ The project includes safety guards in package.json scripts that will error if ru
 - `pnpm db:generate` - Checks you're not in prisma/ subdirectory
 
 Error message if run from wrong directory:
+
 ```
 ERROR: Run from project root, not prisma/ subdirectory
 ```

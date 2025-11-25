@@ -23,12 +23,7 @@ export interface PriceRange {
   max: number;
 }
 
-export type SortOption =
-  | 'custom'
-  | 'wishLevel-high'
-  | 'wishLevel-low'
-  | 'price-high'
-  | 'price-low';
+export type SortOption = 'custom' | 'wishLevel-high' | 'wishLevel-low' | 'price-high' | 'price-low';
 
 export interface LocalStorageFilters {
   wishLevel?: WishLevelSelection; // Updated to use array for multi-select

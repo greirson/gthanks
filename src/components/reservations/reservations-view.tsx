@@ -30,7 +30,9 @@ export function ReservationsView() {
   const [isDesktopFilterOpen, setIsDesktopFilterOpen] = useState(false);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [viewMode, setViewMode, _isHydrated] = useViewPreference('viewMode.reservations', 'grid');
-  const [actioningReservation, setActioningReservation] = useState<ReservationWithWish | null>(null);
+  const [actioningReservation, setActioningReservation] = useState<ReservationWithWish | null>(
+    null
+  );
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
   const [showBulkCancelDialog, setShowBulkCancelDialog] = useState(false);
@@ -59,10 +61,7 @@ export function ReservationsView() {
   } = useReservationFilters(currentReservations);
 
   // Memoize filtered reservations to avoid unnecessary re-renders
-  const memoizedFilteredReservations = useMemo(
-    () => filteredReservations,
-    [filteredReservations]
-  );
+  const memoizedFilteredReservations = useMemo(() => filteredReservations, [filteredReservations]);
 
   // Selection handlers
   const toggleSelectionMode = useCallback(() => {
@@ -225,12 +224,15 @@ export function ReservationsView() {
   }, [selectedReservationIds, queryClient]);
 
   // Modal handlers
-  const handleCardClick = useCallback((reservationId: string) => {
-    if (!isSelectionMode) {
-      setSelectedReservationId(reservationId);
-      setIsWishModalOpen(true);
-    }
-  }, [isSelectionMode]);
+  const handleCardClick = useCallback(
+    (reservationId: string) => {
+      if (!isSelectionMode) {
+        setSelectedReservationId(reservationId);
+        setIsWishModalOpen(true);
+      }
+    },
+    [isSelectionMode]
+  );
 
   const handleCancelFromModal = useCallback(async () => {
     if (!selectedReservationId) {
@@ -399,11 +401,13 @@ export function ReservationsView() {
 
             {/* Content */}
             {isLoading ? (
-              <div className={cn(
-                viewMode === 'grid'
-                  ? 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-                  : 'flex flex-col gap-2'
-              )}>
+              <div
+                className={cn(
+                  viewMode === 'grid'
+                    ? 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                    : 'flex flex-col gap-2'
+                )}
+              >
                 {Array.from({ length: 8 }).map((_, i) => (
                   <ReservationSkeleton key={i} variant={viewMode} />
                 ))}
@@ -459,7 +463,9 @@ export function ReservationsView() {
             open={showCancelDialog}
             onOpenChange={(open) => {
               setShowCancelDialog(open);
-              if (!open) {setActioningReservation(null);}
+              if (!open) {
+                setActioningReservation(null);
+              }
             }}
             title="Cancel reservation?"
             description={`Are you sure you want to cancel your reservation for "${actioningReservation.wish.title}"? This item will become available for others to reserve.`}
@@ -522,7 +528,7 @@ export function ReservationsView() {
         <WishDetailsModal
           reservation={
             selectedReservationId
-              ? currentReservations.find((r) => r.id === selectedReservationId) ?? null
+              ? (currentReservations.find((r) => r.id === selectedReservationId) ?? null)
               : null
           }
           open={isWishModalOpen}

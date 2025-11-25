@@ -5,11 +5,13 @@
 This guide provides a comprehensive accessibility audit framework for the gthanks reservations feature. All components must pass both **WCAG 2.1 AA compliance** and the **"Grandma Test"** (non-technical user clarity).
 
 **Audit Frequency:**
+
 - Before each release (manual testing)
 - On every commit (automated axe-core)
 - Monthly comprehensive audit (full screen reader testing)
 
 **Pass Criteria:**
+
 - Zero critical WCAG violations
 - All features keyboard accessible
 - Clear, non-technical language
@@ -39,6 +41,7 @@ pnpm test:e2e tests/e2e/reservations/accessibility.spec.ts
 ### 2. Manual Testing
 
 **Keyboard Navigation:**
+
 1. Disconnect mouse/trackpad
 2. Navigate using only keyboard:
    - `Tab` to move forward
@@ -50,6 +53,7 @@ pnpm test:e2e tests/e2e/reservations/accessibility.spec.ts
 4. Verify focus indicators are visible
 
 **Screen Reader Testing:**
+
 1. **macOS**: Enable VoiceOver (`Cmd+F5`)
 2. **Windows**: Install NVDA (free)
 3. **Mobile**: Enable TalkBack (Android) or VoiceOver (iOS)
@@ -57,6 +61,7 @@ pnpm test:e2e tests/e2e/reservations/accessibility.spec.ts
 5. Verify announcements are clear and helpful
 
 **Visual Testing:**
+
 1. Zoom to 200% (minimum)
 2. Test with Windows High Contrast Mode
 3. Test with Dark Mode enabled
@@ -65,6 +70,7 @@ pnpm test:e2e tests/e2e/reservations/accessibility.spec.ts
 ### 3. Mobile Testing
 
 Test on real devices:
+
 - **Minimum viewport**: iPhone SE (375px width)
 - Touch target size: 44x44px minimum
 - Swipe gestures work
@@ -76,21 +82,22 @@ Test on real devices:
 
 ### Required Tools
 
-| Tool                  | Purpose                        | Download                                  |
-| --------------------- | ------------------------------ | ----------------------------------------- |
-| **axe DevTools**      | Automated WCAG scanning        | Browser extension (Chrome/Firefox/Edge)   |
-| **NVDA**              | Windows screen reader          | https://www.nvaccess.org/download/        |
-| **VoiceOver**         | macOS screen reader            | Built-in (Cmd+F5)                         |
-| **TalkBack**          | Android screen reader          | Built-in (Settings > Accessibility)       |
-| **Lighthouse**        | Accessibility score            | Built-in Chrome DevTools                  |
-| **Color Contrast**    | Contrast ratio checker         | https://colorcontra.st                    |
-| **HeadingsMap**       | Heading structure verification | Browser extension                         |
-| **WAVE**              | Visual accessibility inspector | https://wave.webaim.org/extension/        |
-| **Accessibility Insights** | Guided manual testing    | https://accessibilityinsights.io/         |
+| Tool                       | Purpose                        | Download                                |
+| -------------------------- | ------------------------------ | --------------------------------------- |
+| **axe DevTools**           | Automated WCAG scanning        | Browser extension (Chrome/Firefox/Edge) |
+| **NVDA**                   | Windows screen reader          | https://www.nvaccess.org/download/      |
+| **VoiceOver**              | macOS screen reader            | Built-in (Cmd+F5)                       |
+| **TalkBack**               | Android screen reader          | Built-in (Settings > Accessibility)     |
+| **Lighthouse**             | Accessibility score            | Built-in Chrome DevTools                |
+| **Color Contrast**         | Contrast ratio checker         | https://colorcontra.st                  |
+| **HeadingsMap**            | Heading structure verification | Browser extension                       |
+| **WAVE**                   | Visual accessibility inspector | https://wave.webaim.org/extension/      |
+| **Accessibility Insights** | Guided manual testing          | https://accessibilityinsights.io/       |
 
 ### Browser Setup
 
 **Chrome DevTools:**
+
 ```
 1. Open DevTools (F12)
 2. Go to Lighthouse tab
@@ -99,6 +106,7 @@ Test on real devices:
 ```
 
 **Firefox Accessibility Inspector:**
+
 ```
 1. Open DevTools (F12)
 2. Go to Accessibility tab
@@ -113,17 +121,20 @@ Test on real devices:
 ### Perceivable
 
 #### 1.1 Text Alternatives
+
 - [ ] All images have `alt` text
 - [ ] Decorative images use `alt=""` or `aria-hidden="true"`
 - [ ] Icons have accessible names (`aria-label` or text)
 
 #### 1.3 Adaptable
+
 - [ ] Semantic HTML structure (`<nav>`, `<main>`, `<section>`)
 - [ ] Proper heading hierarchy (h1 > h2 > h3)
 - [ ] Tables use `<th>` and `scope` attributes
 - [ ] Lists use `<ul>`, `<ol>`, `<li>`
 
 #### 1.4 Distinguishable
+
 - [ ] **Color contrast**: 4.5:1 for normal text, 3:1 for large text
 - [ ] **Focus indicators**: Visible on all interactive elements
 - [ ] **No information by color alone**: Use icons + text
@@ -133,16 +144,19 @@ Test on real devices:
 ### Operable
 
 #### 2.1 Keyboard Accessible
+
 - [ ] All functionality available via keyboard
 - [ ] No keyboard traps (can Tab out of all elements)
 - [ ] Logical tab order
 - [ ] Skip links for main content
 
 #### 2.2 Enough Time
+
 - [ ] No time limits on actions
 - [ ] Dismissible notifications
 
 #### 2.4 Navigable
+
 - [ ] Descriptive page titles (`<title>`)
 - [ ] Breadcrumbs for navigation
 - [ ] Clear focus order
@@ -151,16 +165,19 @@ Test on real devices:
 ### Understandable
 
 #### 3.1 Readable
+
 - [ ] Language declared (`<html lang="en">`)
 - [ ] Plain English (no jargon)
 - [ ] Clear instructions
 
 #### 3.2 Predictable
+
 - [ ] Consistent navigation
 - [ ] No unexpected context changes
 - [ ] Consistent labeling
 
 #### 3.3 Input Assistance
+
 - [ ] Labels for all form fields
 - [ ] Error identification (what went wrong)
 - [ ] Error suggestions (how to fix it)
@@ -169,6 +186,7 @@ Test on real devices:
 ### Robust
 
 #### 4.1 Compatible
+
 - [ ] Valid HTML (no duplicate IDs)
 - [ ] Proper ARIA usage
 - [ ] Name, Role, Value for custom controls
@@ -180,12 +198,14 @@ Test on real devices:
 ### Language Guidelines
 
 **DO:**
+
 - Use conversational language: "You've reserved 3 gifts"
 - Action-oriented copy: "Mark as purchased"
 - Clear instructions: "Click the date to change when you bought it"
 - Friendly errors: "We couldn't save that. Try again?"
 
 **DON'T:**
+
 - Technical jargon: ~~"Reservation entity updated"~~
 - Passive voice: ~~"Purchase recorded"~~
 - Cryptic labels: ~~"Tx date"~~
@@ -194,12 +214,14 @@ Test on real devices:
 ### Visual Clarity
 
 **DO:**
+
 - Use icons + text labels
 - Show examples in placeholders
 - Progress indicators for loading
 - Success confirmations (green checkmark)
 
 **DON'T:**
+
 - Icon-only buttons (without accessible text)
 - Abbreviations without expansion
 - Ambiguous states ("Pending" vs "Processing")
@@ -207,6 +229,7 @@ Test on real devices:
 ### Error Messages
 
 **Good Example:**
+
 ```
 Title: "Oops! Couldn't save that"
 Message: "Make sure the purchase date isn't in the future."
@@ -214,6 +237,7 @@ Action: [Try Again] [Cancel]
 ```
 
 **Bad Example:**
+
 ```
 Title: "Error"
 Message: "Invalid date format"
@@ -229,6 +253,7 @@ Action: [OK]
 **Location:** `src/components/reservations/Breadcrumbs.tsx`
 
 **Visual Structure:**
+
 ```
 Lists > Birthday List > Reserved Gifts
        ➜             ➜
@@ -247,11 +272,13 @@ Lists > Birthday List > Reserved Gifts
 #### Test Script
 
 **Screen Reader Test:**
+
 ```
 Expected announcement: "Breadcrumb navigation, Lists link, Birthday List link, Reserved Gifts current page"
 ```
 
 **Keyboard Test:**
+
 ```
 1. Tab to first breadcrumb
 2. Press Enter → navigates to Lists
@@ -261,13 +288,13 @@ Expected announcement: "Breadcrumb navigation, Lists link, Birthday List link, R
 
 #### Common Issues
 
-| Issue                       | Fix                                            |
-| --------------------------- | ---------------------------------------------- |
-| Icon read as "image"        | Add `aria-hidden="true"` to ArrowRight         |
-| Links not focusable         | Ensure `href` attribute exists                 |
-| Current page is a link      | Remove link, add `aria-current="page"`         |
-| No breadcrumb landmark      | Wrap in `<nav aria-label="Breadcrumb">`        |
-| Poor contrast on separators | Use CSS to increase color contrast             |
+| Issue                       | Fix                                     |
+| --------------------------- | --------------------------------------- |
+| Icon read as "image"        | Add `aria-hidden="true"` to ArrowRight  |
+| Links not focusable         | Ensure `href` attribute exists          |
+| Current page is a link      | Remove link, add `aria-current="page"`  |
+| No breadcrumb landmark      | Wrap in `<nav aria-label="Breadcrumb">` |
+| Poor contrast on separators | Use CSS to increase color contrast      |
 
 #### Example Fix
 
@@ -291,7 +318,7 @@ Expected announcement: "Breadcrumb navigation, Lists link, Birthday List link, R
     <li aria-hidden="true" className="text-gray-400">
       <ArrowRight className="h-4 w-4" />
     </li>
-    <li aria-current="page" className="text-gray-900 font-medium">
+    <li aria-current="page" className="font-medium text-gray-900">
       Reserved Gifts
     </li>
   </ol>
@@ -305,6 +332,7 @@ Expected announcement: "Breadcrumb navigation, Lists link, Birthday List link, R
 **Location:** `src/components/reservations/ReservationCheckbox.tsx`
 
 **Conditional Rendering:**
+
 - Read-only mode: Hidden (no checkbox)
 - Bulk actions enabled: Visible checkbox
 
@@ -321,12 +349,14 @@ Expected announcement: "Breadcrumb navigation, Lists link, Birthday List link, R
 #### Test Script
 
 **Screen Reader Test:**
+
 ```
 Expected: "Select Red Bike, checkbox, not checked"
 After toggle: "Select Red Bike, checkbox, checked"
 ```
 
 **Keyboard Test:**
+
 ```
 1. Tab to checkbox
 2. Press Space → toggles checked state
@@ -335,33 +365,35 @@ After toggle: "Select Red Bike, checkbox, checked"
 
 #### Common Issues
 
-| Issue                        | Fix                                     |
-| ---------------------------- | --------------------------------------- |
-| Checkbox announced as "undefined" | Add `aria-label` or visible `<label>` |
-| Space key doesn't toggle     | Use native `<input type="checkbox">`    |
-| Focus indicator missing      | Add CSS: `focus:ring-2 focus:ring-blue-500` |
-| Touch target too small       | Increase padding, use `p-2` or larger   |
-| Disabled instead of hidden   | Use conditional rendering, not `disabled` |
+| Issue                             | Fix                                         |
+| --------------------------------- | ------------------------------------------- |
+| Checkbox announced as "undefined" | Add `aria-label` or visible `<label>`       |
+| Space key doesn't toggle          | Use native `<input type="checkbox">`        |
+| Focus indicator missing           | Add CSS: `focus:ring-2 focus:ring-blue-500` |
+| Touch target too small            | Increase padding, use `p-2` or larger       |
+| Disabled instead of hidden        | Use conditional rendering, not `disabled`   |
 
 #### Example Fix
 
 ```tsx
 // ✅ Accessible checkbox
-{canSelect && (
-  <div className="flex items-center p-2">
-    <input
-      type="checkbox"
-      id={`reservation-${reservation.id}`}
-      checked={isSelected}
-      onChange={(e) => onToggle(reservation.id, e.target.checked)}
-      className="h-5 w-5 rounded border-gray-300 focus:ring-2 focus:ring-blue-500"
-      aria-label={`Select ${reservation.wish.title}`}
-    />
-    <label htmlFor={`reservation-${reservation.id}`} className="sr-only">
-      Select {reservation.wish.title}
-    </label>
-  </div>
-)}
+{
+  canSelect && (
+    <div className="flex items-center p-2">
+      <input
+        type="checkbox"
+        id={`reservation-${reservation.id}`}
+        checked={isSelected}
+        onChange={(e) => onToggle(reservation.id, e.target.checked)}
+        className="h-5 w-5 rounded border-gray-300 focus:ring-2 focus:ring-blue-500"
+        aria-label={`Select ${reservation.wish.title}`}
+      />
+      <label htmlFor={`reservation-${reservation.id}`} className="sr-only">
+        Select {reservation.wish.title}
+      </label>
+    </div>
+  );
+}
 ```
 
 ---
@@ -371,6 +403,7 @@ After toggle: "Select Red Bike, checkbox, checked"
 **Location:** `src/components/reservations/BulkActionsBar.tsx`
 
 **Features:**
+
 - Selected count display
 - "Mark as Purchased" button
 - "Remove Reservations" button
@@ -389,6 +422,7 @@ After toggle: "Select Red Bike, checkbox, checked"
 #### Test Script
 
 **Screen Reader Test:**
+
 ```
 Select 1 item: "1 gift selected"
 Select 2 items: "2 gifts selected"
@@ -396,6 +430,7 @@ Click "Mark as Purchased": "Marked 2 gifts as purchased"
 ```
 
 **Keyboard Test:**
+
 ```
 1. Tab to "Mark as Purchased" button
 2. Press Enter → Opens purchase date dialog
@@ -405,13 +440,13 @@ Click "Mark as Purchased": "Marked 2 gifts as purchased"
 
 #### Common Issues
 
-| Issue                          | Fix                                        |
-| ------------------------------ | ------------------------------------------ |
-| Count updates not announced    | Use `aria-live="polite"` on count element  |
-| Buttons active when no selection | Disable buttons, add `aria-disabled="true"` |
-| Icon-only buttons              | Add `aria-label` or visible text           |
-| Focus lost after action        | Manually set focus to toast or table       |
-| Disabled buttons too faint     | Ensure 3:1 contrast ratio for disabled state |
+| Issue                            | Fix                                          |
+| -------------------------------- | -------------------------------------------- |
+| Count updates not announced      | Use `aria-live="polite"` on count element    |
+| Buttons active when no selection | Disable buttons, add `aria-disabled="true"`  |
+| Icon-only buttons                | Add `aria-label` or visible text             |
+| Focus lost after action          | Manually set focus to toast or table         |
+| Disabled buttons too faint       | Ensure 3:1 contrast ratio for disabled state |
 
 #### Example Fix
 
@@ -456,6 +491,7 @@ Click "Mark as Purchased": "Marked 2 gifts as purchased"
 **Location:** `src/components/reservations/FilterPanel.tsx`
 
 **Responsive Behavior:**
+
 - Desktop (≥768px): Sidebar panel
 - Mobile (<768px): Bottom sheet
 
@@ -473,12 +509,14 @@ Click "Mark as Purchased": "Marked 2 gifts as purchased"
 #### Test Script
 
 **Desktop - Screen Reader Test:**
+
 ```
 Expected: "Filter panel, complementary landmark"
 Navigate: "Purchase Status heading level 3, All Gifts checkbox not checked"
 ```
 
 **Mobile - Keyboard Test:**
+
 ```
 1. Open filter sheet
 2. Tab → Focus moves to close button
@@ -491,13 +529,13 @@ Navigate: "Purchase Status heading level 3, All Gifts checkbox not checked"
 
 #### Common Issues
 
-| Issue                         | Fix                                          |
-| ----------------------------- | -------------------------------------------- |
-| Sheet focus not trapped       | Use Radix UI Sheet with `trapFocus` prop     |
-| No heading for filter section | Add `<h3>` for each section                  |
-| Checkbox group unclear        | Wrap in `<fieldset><legend>Status</legend>`  |
-| Close button missing label    | Add `aria-label="Close filters"`             |
-| Mobile sheet behind content   | Ensure `z-index` and `inert` attribute       |
+| Issue                         | Fix                                         |
+| ----------------------------- | ------------------------------------------- |
+| Sheet focus not trapped       | Use Radix UI Sheet with `trapFocus` prop    |
+| No heading for filter section | Add `<h3>` for each section                 |
+| Checkbox group unclear        | Wrap in `<fieldset><legend>Status</legend>` |
+| Close button missing label    | Add `aria-label="Close filters"`            |
+| Mobile sheet behind content   | Ensure `z-index` and `inert` attribute      |
 
 #### Example Fix
 
@@ -521,9 +559,11 @@ Navigate: "Purchase Status heading level 3, All Gifts checkbox not checked"
       </div>
     </fieldset>
   </div>
-</aside>
+</aside>;
 
-{/* Mobile sheet */}
+{
+  /* Mobile sheet */
+}
 <Sheet open={isOpen} onOpenChange={setIsOpen}>
   <SheetContent side="bottom">
     <SheetHeader>
@@ -532,7 +572,7 @@ Navigate: "Purchase Status heading level 3, All Gifts checkbox not checked"
     </SheetHeader>
     {/* Same filter content */}
   </SheetContent>
-</Sheet>
+</Sheet>;
 ```
 
 ---
@@ -556,12 +596,14 @@ Navigate: "Purchase Status heading level 3, All Gifts checkbox not checked"
 #### Test Script
 
 **Screen Reader Test:**
+
 ```
 Expected: "No Reserved Gifts Yet, heading level 2. When you reserve a gift..."
 Navigate: "Browse Wishlists, button"
 ```
 
 **Grandma Test:**
+
 ```
 Question: "What should I do next?"
 Answer from UI: "Browse wishlists to reserve gifts for your family"
@@ -570,13 +612,13 @@ Pass: ✅ Clear next action
 
 #### Common Issues
 
-| Issue                       | Fix                                         |
-| --------------------------- | ------------------------------------------- |
-| Technical jargon            | Use plain English ("reserved" not "allocated") |
-| Error tone (red text)       | Use neutral gray, not warning colors        |
-| No next action              | Add CTA button or link                      |
-| Image read as "graphic"     | Add `aria-hidden="true"` to decorative SVG  |
-| Poor visual hierarchy       | Use proper heading levels (h2)              |
+| Issue                   | Fix                                            |
+| ----------------------- | ---------------------------------------------- |
+| Technical jargon        | Use plain English ("reserved" not "allocated") |
+| Error tone (red text)   | Use neutral gray, not warning colors           |
+| No next action          | Add CTA button or link                         |
+| Image read as "graphic" | Add `aria-hidden="true"` to decorative SVG     |
+| Poor visual hierarchy   | Use proper heading levels (h2)                 |
 
 #### Example Fix
 
@@ -586,17 +628,13 @@ Pass: ✅ Clear next action
   <div className="mb-4">
     <Gift className="h-16 w-16 text-gray-400" aria-hidden="true" />
   </div>
-  <h2 className="mb-2 text-xl font-semibold text-gray-900">
-    No Reserved Gifts Yet
-  </h2>
+  <h2 className="mb-2 text-xl font-semibold text-gray-900">No Reserved Gifts Yet</h2>
   <p className="mb-6 max-w-md text-gray-600">
-    When you reserve a gift for someone in your family, it will show up here.
-    They won't see that you've reserved it – it's your secret!
+    When you reserve a gift for someone in your family, it will show up here. They won't see that
+    you've reserved it – it's your secret!
   </p>
   <Button asChild>
-    <Link href="/lists">
-      Browse Wishlists
-    </Link>
+    <Link href="/lists">Browse Wishlists</Link>
   </Button>
 </section>
 ```
@@ -608,6 +646,7 @@ Pass: ✅ Clear next action
 **Location:** Component using Radix UI Dialog + Calendar
 
 **Workflow:**
+
 1. User clicks "Mark as Purchased"
 2. Dialog opens with date picker
 3. User selects date
@@ -628,6 +667,7 @@ Pass: ✅ Clear next action
 #### Test Script
 
 **Keyboard Test:**
+
 ```
 1. Tab to "Mark as Purchased" button
 2. Press Enter → Dialog opens
@@ -640,6 +680,7 @@ Pass: ✅ Clear next action
 ```
 
 **Screen Reader Test:**
+
 ```
 Expected: "Mark as Purchased dialog. Select purchase date. Calendar, January 2025..."
 Navigate dates: "Monday, January 15, 2025, button"
@@ -648,13 +689,13 @@ Confirm: "Confirm purchase, button"
 
 #### Common Issues
 
-| Issue                        | Fix                                           |
-| ---------------------------- | --------------------------------------------- |
-| Focus not trapped in dialog  | Use Radix UI Dialog (handles automatically)   |
-| Calendar not keyboard accessible | Use react-day-picker with keyboard support |
-| No date format hint          | Add placeholder: "MM/DD/YYYY"                 |
-| Calendar dates too small     | Increase size with CSS: `min-w-[44px] min-h-[44px]` |
-| Esc key doesn't close        | Ensure `onEscapeKeyDown` handler              |
+| Issue                            | Fix                                                 |
+| -------------------------------- | --------------------------------------------------- |
+| Focus not trapped in dialog      | Use Radix UI Dialog (handles automatically)         |
+| Calendar not keyboard accessible | Use react-day-picker with keyboard support          |
+| No date format hint              | Add placeholder: "MM/DD/YYYY"                       |
+| Calendar dates too small         | Increase size with CSS: `min-w-[44px] min-h-[44px]` |
+| Esc key doesn't close            | Ensure `onEscapeKeyDown` handler                    |
 
 #### Example Fix
 
@@ -663,9 +704,7 @@ Confirm: "Confirm purchase, button"
 <Dialog open={isOpen} onOpenChange={setIsOpen}>
   <DialogContent aria-labelledby="purchase-dialog-title">
     <DialogHeader>
-      <DialogTitle id="purchase-dialog-title">
-        Mark as Purchased
-      </DialogTitle>
+      <DialogTitle id="purchase-dialog-title">Mark as Purchased</DialogTitle>
       <DialogDescription>
         Select the date you bought this gift. This helps you track your purchases.
       </DialogDescription>
@@ -708,6 +747,7 @@ Confirm: "Confirm purchase, button"
 **Location:** `src/components/reservations/RemoveOptionsDialog.tsx`
 
 **Workflow:**
+
 1. User selects reservations
 2. Clicks "Remove"
 3. Dialog asks: Keep wish on list or remove both?
@@ -728,6 +768,7 @@ Confirm: "Confirm purchase, button"
 #### Test Script
 
 **Screen Reader Test:**
+
 ```
 Expected: "Remove Reservations? Alert dialog. You're about to remove 2 reservations..."
 Navigate: "Remove reservation only, radio button, checked"
@@ -737,6 +778,7 @@ Tab: "Remove Reservations button"
 ```
 
 **Keyboard Test:**
+
 ```
 1. Dialog opens → Focus on first radio button
 2. Arrow Down → Selects "Remove both"
@@ -747,6 +789,7 @@ Tab: "Remove Reservations button"
 ```
 
 **Grandma Test:**
+
 ```
 Question: "What's the difference between the two options?"
 Answer from UI: Clear labels and descriptions for each
@@ -755,13 +798,13 @@ Pass: ✅ if non-technical user understands consequences
 
 #### Common Issues
 
-| Issue                           | Fix                                            |
-| ------------------------------- | ---------------------------------------------- |
-| Options not in radio group      | Wrap in `<RadioGroup>` from Radix UI           |
-| No description of consequences  | Add clear explanation for each option          |
-| Focus on dangerous button       | Default focus to "Cancel" for safety           |
-| Technical jargon                | Use plain English ("remove" not "delete entity") |
-| Radio labels unclear            | Use descriptive labels with context            |
+| Issue                          | Fix                                              |
+| ------------------------------ | ------------------------------------------------ |
+| Options not in radio group     | Wrap in `<RadioGroup>` from Radix UI             |
+| No description of consequences | Add clear explanation for each option            |
+| Focus on dangerous button      | Default focus to "Cancel" for safety             |
+| Technical jargon               | Use plain English ("remove" not "delete entity") |
+| Radio labels unclear           | Use descriptive labels with context              |
 
 #### Example Fix
 
@@ -772,8 +815,8 @@ Pass: ✅ if non-technical user understands consequences
     <AlertDialogHeader>
       <AlertDialogTitle>Remove Reservations?</AlertDialogTitle>
       <AlertDialogDescription id="remove-dialog-description">
-        You're about to remove {selectedCount} {selectedCount === 1 ? 'reservation' : 'reservations'}.
-        What would you like to do?
+        You're about to remove {selectedCount}{' '}
+        {selectedCount === 1 ? 'reservation' : 'reservations'}. What would you like to do?
       </AlertDialogDescription>
     </AlertDialogHeader>
 
@@ -781,7 +824,7 @@ Pass: ✅ if non-technical user understands consequences
       <fieldset>
         <legend className="sr-only">Remove options</legend>
         <div className="space-y-3">
-          <label className="flex items-start gap-3 p-3 border rounded cursor-pointer hover:bg-gray-50">
+          <label className="flex cursor-pointer items-start gap-3 rounded border p-3 hover:bg-gray-50">
             <RadioGroupItem value="reservation-only" id="option-reservation" />
             <div className="flex-1">
               <div className="font-medium">Remove reservation only</div>
@@ -791,7 +834,7 @@ Pass: ✅ if non-technical user understands consequences
             </div>
           </label>
 
-          <label className="flex items-start gap-3 p-3 border rounded cursor-pointer hover:bg-gray-50">
+          <label className="flex cursor-pointer items-start gap-3 rounded border p-3 hover:bg-gray-50">
             <RadioGroupItem value="both" id="option-both" />
             <div className="flex-1">
               <div className="font-medium">Remove both reservation and wish</div>
@@ -806,10 +849,7 @@ Pass: ✅ if non-technical user understands consequences
 
     <AlertDialogFooter>
       <AlertDialogCancel>Cancel</AlertDialogCancel>
-      <AlertDialogAction
-        onClick={handleConfirm}
-        className="bg-red-600 hover:bg-red-700"
-      >
+      <AlertDialogAction onClick={handleConfirm} className="bg-red-600 hover:bg-red-700">
         Remove {selectedCount === 1 ? 'Reservation' : 'Reservations'}
       </AlertDialogAction>
     </AlertDialogFooter>
@@ -839,6 +879,7 @@ Pass: ✅ if non-technical user understands consequences
 #### Test Script
 
 **Screen Reader Test:**
+
 ```
 Expected: "Table with 42 rows and 5 columns"
 Navigate: "Gift column header, sorted ascending"
@@ -847,6 +888,7 @@ Scroll: "Loading more items..." (if applicable)
 ```
 
 **Keyboard Test:**
+
 ```
 1. Tab into table
 2. Arrow Down → Moves to next row
@@ -859,24 +901,19 @@ Scroll: "Loading more items..." (if applicable)
 
 #### Common Issues
 
-| Issue                           | Fix                                           |
-| ------------------------------- | --------------------------------------------- |
-| Screen reader lost in virtual rows | Add `aria-rowcount` and `aria-rowindex`    |
-| Empty spacer rows announced     | Use `aria-hidden="true"` on empty rows        |
-| Focus lost on scroll            | Manually restore focus after virtual update   |
-| No column headers               | Ensure `<thead>` with `<th scope="col">`      |
-| Keyboard navigation broken      | Use `onKeyDown` to handle arrow keys          |
+| Issue                              | Fix                                         |
+| ---------------------------------- | ------------------------------------------- |
+| Screen reader lost in virtual rows | Add `aria-rowcount` and `aria-rowindex`     |
+| Empty spacer rows announced        | Use `aria-hidden="true"` on empty rows      |
+| Focus lost on scroll               | Manually restore focus after virtual update |
+| No column headers                  | Ensure `<thead>` with `<th scope="col">`    |
+| Keyboard navigation broken         | Use `onKeyDown` to handle arrow keys        |
 
 #### Example Fix
 
 ```tsx
 // ✅ Accessible virtual scrolling table
-<table
-  className="min-w-full"
-  role="table"
-  aria-rowcount={totalRows}
-  aria-colcount={5}
->
+<table className="min-w-full" role="table" aria-rowcount={totalRows} aria-colcount={5}>
   <thead>
     <tr>
       <th scope="col" className="px-4 py-2 text-left">
@@ -923,15 +960,10 @@ Scroll: "Loading more items..." (if applicable)
           <td className="px-4 py-2">{reservation.wish.title}</td>
           <td className="px-4 py-2">{reservation.listOwnerName}</td>
           <td className="px-4 py-2">
-            <span className={statusColor(reservation.status)}>
-              {reservation.status}
-            </span>
+            <span className={statusColor(reservation.status)}>{reservation.status}</span>
           </td>
           <td className="px-4 py-2">
-            <Button
-              size="sm"
-              aria-label={`Actions for ${reservation.wish.title}`}
-            >
+            <Button size="sm" aria-label={`Actions for ${reservation.wish.title}`}>
               Actions
             </Button>
           </td>
@@ -958,6 +990,7 @@ Scroll: "Loading more items..." (if applicable)
 **Symptom:** Text difficult to read, especially for low vision users
 
 **Test:**
+
 ```bash
 # Use axe DevTools or manual contrast checker
 https://colorcontra.st
@@ -969,6 +1002,7 @@ Ratio: 2.85:1 ❌ FAIL (need 4.5:1)
 ```
 
 **Fix:**
+
 ```tsx
 // ❌ Bad - Insufficient contrast
 <p className="text-gray-400">Reserved on Jan 15</p>
@@ -982,11 +1016,13 @@ Ratio: 2.85:1 ❌ FAIL (need 4.5:1)
 **Symptom:** User can Tab into element but can't Tab out
 
 **Test:**
+
 1. Tab into modal/dialog
 2. Try to Tab back out
 3. If stuck → keyboard trap
 
 **Fix:**
+
 ```tsx
 // ❌ Bad - Manual focus management without trap
 <div onKeyDown={(e) => { /* focus logic */ }}>
@@ -1004,10 +1040,12 @@ Ratio: 2.85:1 ❌ FAIL (need 4.5:1)
 **Symptom:** No visual feedback when element is focused via keyboard
 
 **Test:**
+
 1. Tab through page
 2. Check if focused element has visible outline/ring
 
 **Fix:**
+
 ```tsx
 // ❌ Bad - Removes focus indicator
 <button className="focus:outline-none">Click me</button>
@@ -1023,11 +1061,13 @@ Ratio: 2.85:1 ❌ FAIL (need 4.5:1)
 **Symptom:** Screen reader announces "button" with no context
 
 **Test:**
+
 1. Use screen reader
 2. Navigate to icon button
 3. Listen to announcement
 
 **Fix:**
+
 ```tsx
 // ❌ Bad - No accessible text
 <button>
@@ -1051,6 +1091,7 @@ Ratio: 2.85:1 ❌ FAIL (need 4.5:1)
 **Symptom:** User doesn't know what went wrong or how to fix it
 
 **Grandma Test Fail:**
+
 ```
 ❌ "Validation error"
 ❌ "Invalid input"
@@ -1058,6 +1099,7 @@ Ratio: 2.85:1 ❌ FAIL (need 4.5:1)
 ```
 
 **Fix:**
+
 ```tsx
 // ❌ Bad - Technical error
 <p className="text-red-600">Invalid date format</p>
@@ -1078,11 +1120,13 @@ Ratio: 2.85:1 ❌ FAIL (need 4.5:1)
 **Symptom:** Dynamic content updates not announced to screen readers
 
 **Test:**
+
 1. Use screen reader
 2. Trigger dynamic content change (e.g., selected count)
 3. Check if announced
 
 **Fix:**
+
 ```tsx
 // ❌ Bad - Updates silently
 <span>{selectedCount} selected</span>
@@ -1134,25 +1178,25 @@ Ratio: 2.85:1 ❌ FAIL (need 4.5:1)
 
 ### Must Pass (Zero Tolerance)
 
-| Criterion                    | Test Method           | Pass Criteria               |
-| ---------------------------- | --------------------- | --------------------------- |
-| **Keyboard navigation**      | Manual keyboard test  | All features accessible     |
-| **Color contrast**           | axe DevTools          | 4.5:1 for text, 3:1 for UI  |
-| **Screen reader**            | NVDA/VoiceOver        | All content announced       |
-| **Form labels**              | axe DevTools          | All inputs have labels      |
-| **Touch targets**            | Manual mobile test    | Minimum 44x44px             |
-| **Focus indicators**         | Manual keyboard test  | Visible on all elements     |
-| **Error messages**           | Grandma Test          | Non-technical language      |
+| Criterion               | Test Method          | Pass Criteria              |
+| ----------------------- | -------------------- | -------------------------- |
+| **Keyboard navigation** | Manual keyboard test | All features accessible    |
+| **Color contrast**      | axe DevTools         | 4.5:1 for text, 3:1 for UI |
+| **Screen reader**       | NVDA/VoiceOver       | All content announced      |
+| **Form labels**         | axe DevTools         | All inputs have labels     |
+| **Touch targets**       | Manual mobile test   | Minimum 44x44px            |
+| **Focus indicators**    | Manual keyboard test | Visible on all elements    |
+| **Error messages**      | Grandma Test         | Non-technical language     |
 
 ### Should Pass (Fix Before Release)
 
-| Criterion                 | Test Method      | Pass Criteria                 |
-| ------------------------- | ---------------- | ----------------------------- |
-| **Heading hierarchy**     | HeadingsMap      | No skipped levels (h1→h2→h3)  |
-| **Landmarks**             | axe DevTools     | Main, nav, aside present      |
-| **Live regions**          | Screen reader    | Updates announced             |
-| **ARIA usage**            | axe DevTools     | Valid ARIA attributes         |
-| **Language clarity**      | Grandma Test     | Plain English, no jargon      |
+| Criterion             | Test Method   | Pass Criteria                |
+| --------------------- | ------------- | ---------------------------- |
+| **Heading hierarchy** | HeadingsMap   | No skipped levels (h1→h2→h3) |
+| **Landmarks**         | axe DevTools  | Main, nav, aside present     |
+| **Live regions**      | Screen reader | Updates announced            |
+| **ARIA usage**        | axe DevTools  | Valid ARIA attributes        |
+| **Language clarity**  | Grandma Test  | Plain English, no jargon     |
 
 ---
 
@@ -1234,6 +1278,7 @@ Add to `.github/workflows/test.yml`:
 ### Accessibility Champion
 
 Assign one team member per sprint to:
+
 - Review PRs for accessibility
 - Run axe DevTools on new features
 - Update this guide with new patterns
@@ -1244,17 +1289,20 @@ Assign one team member per sprint to:
 ## Resources
 
 **Tools:**
+
 - [axe DevTools](https://www.deque.com/axe/devtools/)
 - [NVDA Screen Reader](https://www.nvaccess.org/)
 - [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/)
 - [WAVE Browser Extension](https://wave.webaim.org/extension/)
 
 **Guidelines:**
+
 - [WCAG 2.1 Quick Reference](https://www.w3.org/WAI/WCAG21/quickref/)
 - [Inclusive Components](https://inclusive-components.design/)
 - [A11y Project Checklist](https://www.a11yproject.com/checklist/)
 
 **Testing:**
+
 - [Accessibility Insights](https://accessibilityinsights.io/)
 - [Lighthouse](https://developer.chrome.com/docs/lighthouse/)
 - [Pa11y](https://pa11y.org/)

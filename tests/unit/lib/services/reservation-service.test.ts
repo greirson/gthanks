@@ -66,13 +66,13 @@ describe('reservationService', () => {
 
         (db.reservation.findMany as jest.Mock).mockResolvedValue(mockReservations);
 
-        await expect(
-          reservationService.bulkCancel(mockReservationIds, mockUserId)
-        ).rejects.toThrow(ForbiddenError);
+        await expect(reservationService.bulkCancel(mockReservationIds, mockUserId)).rejects.toThrow(
+          ForbiddenError
+        );
 
-        await expect(
-          reservationService.bulkCancel(mockReservationIds, mockUserId)
-        ).rejects.toThrow('Cannot cancel 1 reservation(s) belonging to other users');
+        await expect(reservationService.bulkCancel(mockReservationIds, mockUserId)).rejects.toThrow(
+          'Cannot cancel 1 reservation(s) belonging to other users'
+        );
 
         expect(db.$transaction).not.toHaveBeenCalled();
       });
@@ -86,9 +86,9 @@ describe('reservationService', () => {
 
         (db.reservation.findMany as jest.Mock).mockResolvedValue(mockReservations);
 
-        await expect(
-          reservationService.bulkCancel(mockReservationIds, mockUserId)
-        ).rejects.toThrow('Cannot cancel 2 reservation(s) belonging to other users');
+        await expect(reservationService.bulkCancel(mockReservationIds, mockUserId)).rejects.toThrow(
+          'Cannot cancel 2 reservation(s) belonging to other users'
+        );
       });
 
       it('verifies ownership by querying reservations with correct filter', async () => {
@@ -316,13 +316,13 @@ describe('reservationService', () => {
 
     describe('authentication validation', () => {
       it('throws ForbiddenError when userId is empty string', async () => {
-        await expect(
-          reservationService.bulkMarkPurchased(mockReservationIds, '')
-        ).rejects.toThrow(ForbiddenError);
+        await expect(reservationService.bulkMarkPurchased(mockReservationIds, '')).rejects.toThrow(
+          ForbiddenError
+        );
 
-        await expect(
-          reservationService.bulkMarkPurchased(mockReservationIds, '')
-        ).rejects.toThrow('Authentication required to mark reservations as purchased');
+        await expect(reservationService.bulkMarkPurchased(mockReservationIds, '')).rejects.toThrow(
+          'Authentication required to mark reservations as purchased'
+        );
 
         expect(db.reservation.findMany).not.toHaveBeenCalled();
       });

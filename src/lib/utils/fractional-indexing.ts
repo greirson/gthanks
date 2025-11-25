@@ -27,10 +27,7 @@ import { PrismaClient } from '@prisma/client';
  * // Moving to beginning (no wishes yet)
  * calculateNewSortOrder(null, null) // Returns 1.0
  */
-export function calculateNewSortOrder(
-  prevOrder: number | null,
-  nextOrder: number | null
-): number {
+export function calculateNewSortOrder(prevOrder: number | null, nextOrder: number | null): number {
   // First item in empty list
   if (prevOrder === null && nextOrder === null) {
     return 1.0;
@@ -100,10 +97,7 @@ export function shouldRenumberList(prevOrder: number, nextOrder: number): boolea
  *
  * @throws {Error} If database transaction fails
  */
-export async function renumberListWishes(
-  listId: string,
-  db: PrismaClient
-): Promise<number> {
+export async function renumberListWishes(listId: string, db: PrismaClient): Promise<number> {
   // Fetch all wishes in the list, ordered by current sortOrder
   const listWishes = await db.listWish.findMany({
     where: { listId },

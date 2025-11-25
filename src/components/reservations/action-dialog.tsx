@@ -26,7 +26,9 @@ export function ActionDialog({
   onCancelConfirm,
   onMarkPurchasedClick,
 }: ActionDialogProps) {
-  if (!reservation) {return null;}
+  if (!reservation) {
+    return null;
+  }
 
   const wishTitle = reservation.wish.title;
   const ownerName = reservation.wish.user.name || reservation.wish.user.email;
@@ -37,9 +39,8 @@ export function ActionDialog({
         <DialogHeader>
           <DialogTitle>What would you like to do?</DialogTitle>
           <DialogDescription>
-            Choose an action for{' '}
-            <span className="font-medium text-foreground">{wishTitle}</span> (reserved for{' '}
-            {ownerName})
+            Choose an action for <span className="font-medium text-foreground">{wishTitle}</span>{' '}
+            (reserved for {ownerName})
           </DialogDescription>
         </DialogHeader>
 

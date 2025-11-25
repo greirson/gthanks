@@ -2,13 +2,13 @@
 
 5 verified changes - 35-45 minutes total - Low risk
 
-| Change | Impact | Time |
-|--------|--------|------|
-| React Query staleTime | 70-80% fewer API calls | 5 min |
-| Database composite index | 2-3x faster list queries | 10 min |
-| Connection pooling | Prevents connection exhaustion | 5 min |
-| Mobile toast positioning | Toasts visible on all devices | 5 min |
-| Server Component conversion | 50-70% faster homepage load | 10 min |
+| Change                      | Impact                         | Time   |
+| --------------------------- | ------------------------------ | ------ |
+| React Query staleTime       | 70-80% fewer API calls         | 5 min  |
+| Database composite index    | 2-3x faster list queries       | 10 min |
+| Connection pooling          | Prevents connection exhaustion | 5 min  |
+| Mobile toast positioning    | Toasts visible on all devices  | 5 min  |
+| Server Component conversion | 50-70% faster homepage load    | 10 min |
 
 ---
 
@@ -17,11 +17,13 @@
 **File:** `src/lib/query-client.ts:7`
 
 **Current:**
+
 ```typescript
 staleTime: 1000 * 30, // 30 seconds instead of 5 minutes for more responsive UI
 ```
 
 **Change to:**
+
 ```typescript
 staleTime: 1000 * 60 * 5, // 5 minutes - reduce API calls
 ```
@@ -37,11 +39,13 @@ staleTime: 1000 * 60 * 5, // 5 minutes - reduce API calls
 **File:** `prisma/schema.prisma`
 
 **Add after line 93 (inside `List` model):**
+
 ```prisma
 @@index([ownerId, createdAt])  // Optimizes list fetching by user
 ```
 
 **Current indexes (lines 87-93):**
+
 ```prisma
 @@unique([ownerId, slug])
 @@index([ownerId, hideFromProfile])
@@ -53,6 +57,7 @@ staleTime: 1000 * 60 * 5, // 5 minutes - reduce API calls
 ```
 
 **Run migration:**
+
 ```bash
 pnpm prisma db push
 ```
@@ -72,11 +77,13 @@ pnpm prisma db push
 **PostgreSQL (production):**
 
 Current:
+
 ```env
 DATABASE_URL=postgresql://user:password@host:5432/gthanks
 ```
 
 Change to:
+
 ```env
 DATABASE_URL=postgresql://user:password@host:5432/gthanks?connection_limit=10&pool_timeout=20
 ```
@@ -84,6 +91,7 @@ DATABASE_URL=postgresql://user:password@host:5432/gthanks?connection_limit=10&po
 **SQLite (development):** No change needed
 
 **Serverless (Neon/Supabase):**
+
 - Neon: Use pooler endpoint (`ep-xxx-pooler.us-east-1.aws.neon.tech`)
 - Supabase: Use port 6543 (`db.xxx.supabase.co:6543`)
 
@@ -98,16 +106,19 @@ DATABASE_URL=postgresql://user:password@host:5432/gthanks?connection_limit=10&po
 **File:** `src/components/ui/toast.tsx:18`
 
 **Current:**
+
 ```typescript
-'fixed bottom-16 left-0 right-0 z-[100] flex max-h-screen flex-col gap-2 p-4 md:bottom-4 md:left-auto md:right-4 md:max-w-[420px]'
+'fixed bottom-16 left-0 right-0 z-[100] flex max-h-screen flex-col gap-2 p-4 md:bottom-4 md:left-auto md:right-4 md:max-w-[420px]';
 ```
 
 **Change to:**
+
 ```typescript
-'fixed bottom-20 left-0 right-0 z-[100] flex max-h-screen flex-col gap-2 p-4 md:bottom-4 md:left-auto md:right-4 md:max-w-[420px]'
+'fixed bottom-20 left-0 right-0 z-[100] flex max-h-screen flex-col gap-2 p-4 md:bottom-4 md:left-auto md:right-4 md:max-w-[420px]';
 ```
 
 **Test:**
+
 1. DevTools → Device toolbar (Cmd+Shift+M)
 2. Set viewport: iPhone SE (375px)
 3. Trigger toast (create wish/delete list)
@@ -122,6 +133,7 @@ DATABASE_URL=postgresql://user:password@host:5432/gthanks?connection_limit=10&po
 **File:** `src/app/page.tsx:1`
 
 **Current:**
+
 ```typescript
 'use client';
 
@@ -129,11 +141,13 @@ import Link from 'next/link';
 ```
 
 **Change to:**
+
 ```typescript
 import Link from 'next/link';
 ```
 
 **Test:**
+
 1. Clear cache (Cmd+Shift+R)
 2. Navigate to `/`
 3. View Page Source - verify fully rendered HTML (not empty `<div id="root">`)
@@ -147,6 +161,7 @@ import Link from 'next/link';
 ## Implementation
 
 ### Pre-flight
+
 ```bash
 git status  # Verify clean working directory
 git checkout -b quick-wins
@@ -154,6 +169,7 @@ pnpm dev  # Ensure server running
 ```
 
 ### Execute (in order)
+
 1. #1: React Query staleTime (5 min)
 2. #2: Database composite index (10 min)
 3. #3: Connection pooling (5 min)
@@ -161,6 +177,7 @@ pnpm dev  # Ensure server running
 5. #5: Server Component conversion (10 min)
 
 ### Verify
+
 ```bash
 # Verify changes
 grep "staleTime" src/lib/query-client.ts  # Should show 1000 * 60 * 5
@@ -178,6 +195,7 @@ pnpm test
 ```
 
 ### Commit
+
 ```bash
 git add -A
 git commit -m "perf: implement quick wins for performance and UX
@@ -198,6 +216,7 @@ Testing: Unit tests passing, manual testing complete"
 ## Troubleshooting
 
 **Tests fail:**
+
 ```bash
 pnpm prisma generate
 rm -rf .next
@@ -205,6 +224,7 @@ pnpm dev
 ```
 
 **Database migration fails:**
+
 ```bash
 # Development (SQLite)
 pnpm prisma db push --force-reset
@@ -214,14 +234,17 @@ pnpm prisma db push --force-reset
 ```
 
 **Theme toggle broken:**
+
 - Verify `'use client';` in `src/components/theme/theme-toggle.tsx:1`
 - Clear cache (Cmd+Shift+R)
 
 **Toast still cut off:**
+
 - Verify `bottom-20` (not `bottom-16`)
 - Test on real device
 
 **Connection errors:**
+
 - Verify connection string format
 - Check firewall/network access
 - For cloud providers, verify pooled endpoint
@@ -230,10 +253,10 @@ pnpm prisma db push --force-reset
 
 ## Expected Results
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| API calls (3-min session) | 15 | 4 | 73% fewer |
-| List query time (100 lists) | 100ms | 35ms | 65% faster |
-| Homepage FCP | 800ms | 400ms | 50% faster |
-| Mobile toast visibility | 60% | 100% | Fixed |
-| Connection stability | 3/5 | 5/5 | Improved |
+| Metric                      | Before | After | Improvement |
+| --------------------------- | ------ | ----- | ----------- |
+| API calls (3-min session)   | 15     | 4     | 73% fewer   |
+| List query time (100 lists) | 100ms  | 35ms  | 65% faster  |
+| Homepage FCP                | 800ms  | 400ms | 50% faster  |
+| Mobile toast visibility     | 60%    | 100%  | Fixed       |
+| Connection stability        | 3/5    | 5/5   | Improved    |

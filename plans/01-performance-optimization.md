@@ -1,6 +1,7 @@
 # Performance Optimization Implementation Plan
 
 **Expected Impact:**
+
 - API calls: -70%
 - Page load time: -40%
 - Database queries: -60%
@@ -16,30 +17,32 @@
 **File:** `src/lib/query-client.ts`
 
 **Current:**
+
 ```typescript
-staleTime: 1000 * 30  // 30 seconds
+staleTime: 1000 * 30; // 30 seconds
 ```
 
 **Change to:**
+
 ```typescript
 export const QUERY_STALE_TIMES = {
-  userProfile: 1000 * 60 * 5,    // 5 minutes
-  listMetadata: 1000 * 60 * 5,   // 5 minutes
-  wishes: 1000 * 60 * 2,         // 2 minutes
-  lists: 1000 * 60 * 2,          // 2 minutes
-  invitations: 1000 * 30,        // 30 seconds
-  currentUser: 1000 * 60 * 5,    // 5 minutes
+  userProfile: 1000 * 60 * 5, // 5 minutes
+  listMetadata: 1000 * 60 * 5, // 5 minutes
+  wishes: 1000 * 60 * 2, // 2 minutes
+  lists: 1000 * 60 * 2, // 2 minutes
+  invitations: 1000 * 30, // 30 seconds
+  currentUser: 1000 * 60 * 5, // 5 minutes
 } as const;
 
 function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 1000 * 60 * 2,        // Default: 2 minutes
-        gcTime: 1000 * 60 * 10,          // Garbage collect after 10 minutes
+        staleTime: 1000 * 60 * 2, // Default: 2 minutes
+        gcTime: 1000 * 60 * 10, // Garbage collect after 10 minutes
         retry: 1,
         refetchOnWindowFocus: false,
-        refetchOnMount: false,           // Only refetch if stale
+        refetchOnMount: false, // Only refetch if stale
       },
     },
   });
@@ -75,19 +78,21 @@ export const queryKeys = {
 **File:** `src/components/wishes/hooks/useWishFilters.ts`
 
 **Current:**
+
 ```typescript
-queryKey: ['wishes']
-staleTime: 0
-refetchOnMount: true
-refetchOnWindowFocus: true
+queryKey: ['wishes'];
+staleTime: 0;
+refetchOnMount: true;
+refetchOnWindowFocus: true;
 ```
 
 **Change to:**
+
 ```typescript
 import { queryKeys, QUERY_STALE_TIMES } from '@/lib/query-client';
 
-queryKey: queryKeys.wishes.byOwner(userId)
-staleTime: QUERY_STALE_TIMES.wishes
+queryKey: queryKeys.wishes.byOwner(userId);
+staleTime: QUERY_STALE_TIMES.wishes;
 // Remove refetchOnMount and refetchOnWindowFocus overrides
 ```
 
@@ -96,17 +101,19 @@ staleTime: QUERY_STALE_TIMES.wishes
 **File:** `src/hooks/use-system-config.ts`
 
 **Current:**
+
 ```typescript
-queryKey: ['system-config', 'public']
-staleTime: 5 * 60 * 1000
+queryKey: ['system-config', 'public'];
+staleTime: 5 * 60 * 1000;
 ```
 
 **Change to:**
+
 ```typescript
 import { QUERY_STALE_TIMES } from '@/lib/query-client';
 
-queryKey: ['system-config', 'public']
-staleTime: QUERY_STALE_TIMES.listMetadata  // 5 minutes (already good)
+queryKey: ['system-config', 'public'];
+staleTime: QUERY_STALE_TIMES.listMetadata; // 5 minutes (already good)
 ```
 
 ---
@@ -139,7 +146,7 @@ class PermissionCache {
   constructor() {
     this.cache = new LRUCache<string, PermissionCacheValue>({
       max: 10000,
-      ttl: 1000 * 60,  // 60 seconds
+      ttl: 1000 * 60, // 60 seconds
       updateAgeOnGet: true,
       allowStale: false,
     });
@@ -185,6 +192,7 @@ export const permissionCache = new PermissionCache();
 ```
 
 **Install dependency:**
+
 ```bash
 pnpm add lru-cache
 ```
@@ -237,6 +245,7 @@ private async checkPermissionUncached(userId: string | undefined, action: Action
 **File:** `src/lib/services/list-service.ts`
 
 **Add to share methods:**
+
 ```typescript
 import { permissionCache } from '@/lib/cache/permission-cache';
 
@@ -253,6 +262,7 @@ async shareListWithGroup(listId: string, groupId: string, userId: string) {
 **File:** `src/lib/services/group/group-membership.service.ts`
 
 **Add to role change methods:**
+
 ```typescript
 import { permissionCache } from '@/lib/cache/permission-cache';
 
@@ -271,6 +281,7 @@ async updateMemberRole(groupId: string, targetUserId: string, newRole: string) {
 **File:** `prisma/schema.prisma`
 
 **Add to List model (line ~143):**
+
 ```prisma
 model List {
   // ... existing fields ...
@@ -291,6 +302,7 @@ model List {
 ```
 
 **Add to Wish model (line ~202):**
+
 ```prisma
 model Wish {
   // ... existing fields ...
@@ -309,6 +321,7 @@ model Wish {
 ```
 
 **Add to UserGroup model (line ~255):**
+
 ```prisma
 model UserGroup {
   // ... existing fields ...
@@ -325,6 +338,7 @@ model UserGroup {
 ```
 
 **Add to ListAdmin model (line ~171):**
+
 ```prisma
 model ListAdmin {
   // ... existing fields ...
@@ -339,6 +353,7 @@ model ListAdmin {
 ```
 
 **Apply migration:**
+
 ```bash
 pnpm prisma db push
 ```
@@ -352,6 +367,7 @@ pnpm prisma db push
 **File:** `next.config.js`
 
 **Add to images config:**
+
 ```javascript
 images: {
   remotePatterns: ALLOWED_IMAGE_REMOTE_PATTERNS,
@@ -397,6 +413,7 @@ images: {
 ```
 
 **Add priority prop to WishCard:**
+
 ```typescript
 interface WishCardProps {
   wish: Wish;
@@ -424,6 +441,7 @@ export const BLUR_DATA_URL =
 ```
 
 **Update WishCard to use blur:**
+
 ```typescript
 import { BLUR_DATA_URL } from '@/lib/utils/image-blur';
 
@@ -446,6 +464,7 @@ import { BLUR_DATA_URL } from '@/lib/utils/image-blur';
 **File:** `src/app/(app)/wishes/page.tsx` or similar wish list view
 
 **Mark first 3-6 wishes as priority:**
+
 ```typescript
 <WishGrid>
   {wishes.map((wish, index) => (
@@ -466,6 +485,7 @@ import { BLUR_DATA_URL } from '@/lib/utils/image-blur';
 ### 4.1 Add Bundle Analyzer
 
 **Install:**
+
 ```bash
 pnpm add -D @next/bundle-analyzer
 ```
@@ -483,6 +503,7 @@ module.exports = withBundleAnalyzer({
 ```
 
 **Run analysis:**
+
 ```bash
 ANALYZE=true pnpm build
 ```
@@ -492,11 +513,13 @@ ANALYZE=true pnpm build
 **File:** `src/components/wishes/wish-list.tsx` or pages using modals
 
 **Before:**
+
 ```typescript
 import { WishFormDialog } from '@/components/wishes/wish-form-dialog';
 ```
 
 **After:**
+
 ```typescript
 import dynamic from 'next/dynamic';
 
@@ -514,6 +537,7 @@ const WishFormDialog = dynamic(
 ```
 
 **Apply to:**
+
 - `WishFormDialog`
 - `ListFormDialog`
 - `ListSharingDialog`
@@ -528,6 +552,7 @@ const WishFormDialog = dynamic(
 **No changes needed** - Tree-shaking already works with named imports from `lucide-react`
 
 **Monitor bundle:** If icon bundle exceeds 50KB after analysis, consider:
+
 ```typescript
 // Create icon proxy file
 // src/lib/icons.ts
@@ -542,6 +567,7 @@ import { Gift } from '@/lib/icons';
 **File:** `src/components/wishes/wish-card-unified.tsx`
 
 **Wrap with memo:**
+
 ```typescript
 import { memo } from 'react';
 
@@ -559,6 +585,7 @@ export const WishCard = memo(function WishCard({ wish, variant, priority, ... }:
 ```
 
 **Apply memo to:**
+
 - `ListCard` (`src/components/lists/list-card.tsx`)
 - `GiftCardDesktopRow` (`src/components/lists/GiftCardDesktopRow.tsx`)
 - `GiftCardMobileCard` (`src/components/lists/GiftCardMobileCard.tsx`)

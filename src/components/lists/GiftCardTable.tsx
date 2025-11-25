@@ -69,7 +69,12 @@ export function GiftCardTable({
   };
 
   return (
-    <DndContext id={dndId} sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+    <DndContext
+      id={dndId}
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
       {/* Mobile Card List (< md breakpoint) */}
       <div className="md:hidden">
         {cards.length === 0 ? (

@@ -39,6 +39,7 @@ docker images greirson/gthanks
 ```
 
 **Example output:**
+
 ```
 REPOSITORY          TAG       IMAGE ID       CREATED        SIZE
 greirson/gthanks    latest    abc123def456   2 hours ago    500MB
@@ -133,6 +134,7 @@ docker compose logs -f app
 ```
 
 **Watch for:**
+
 - `✓ Prisma Client generated successfully`
 - `✓ Database migrations completed`
 - `Server listening on http://0.0.0.0:3000`
@@ -156,6 +158,7 @@ open http://localhost:3000
 ```
 
 **Test critical functionality:**
+
 - [ ] Login works
 - [ ] View wishes
 - [ ] Create new wish
@@ -168,11 +171,13 @@ open http://localhost:3000
 ### When Database Rollback is Needed
 
 Rollback the database schema ONLY if:
+
 - New version added/removed database tables
 - New version added/removed required columns
 - You get schema errors after rolling back application
 
 **Symptoms:**
+
 ```
 Error: Invalid `prisma.wish.findMany()` invocation:
 Column 'newField' does not exist
@@ -280,11 +285,13 @@ After rollback, verify:
 ### Issue: Container Won't Start After Rollback
 
 **Symptom:**
+
 ```
 Error: Cannot find module '@prisma/client'
 ```
 
 **Solution:**
+
 ```bash
 # Regenerate Prisma Client for old version
 docker compose exec app npx prisma generate
@@ -296,11 +303,13 @@ docker compose restart app
 ### Issue: Database Schema Mismatch
 
 **Symptom:**
+
 ```
 Error: Column does not exist in current schema
 ```
 
 **Solution:**
+
 ```bash
 # Option 1: Restore database from backup (see Database Rollback section)
 
@@ -316,6 +325,7 @@ docker compose exec app npx prisma db push --force-reset
 **Symptom:** Images not displaying
 
 **Check:**
+
 ```bash
 # Verify uploads volume is mounted
 docker compose exec app ls -lh /app/uploads
@@ -325,6 +335,7 @@ ls -lh uploads/
 ```
 
 **Solution:**
+
 ```bash
 # If uploads were deleted, restore from backup
 tar -xzf uploads-backup-YYYYMMDD-HHMMSS.tar.gz
@@ -339,11 +350,13 @@ chown -R $(id -u):$(id -g) uploads/
 ### Issue: Old Version Not Available
 
 **Symptom:**
+
 ```
 Error: manifest for greirson/gthanks:v0.0.1 not found
 ```
 
 **Solution:**
+
 ```bash
 # Check available versions on Docker Hub
 curl -s https://hub.docker.com/v2/repositories/greirson/gthanks/tags | jq -r '.results[].name'
@@ -361,12 +374,14 @@ docker compose up -d
 **Symptom:** OAuth/email/features not working after rollback
 
 **Check:**
+
 ```bash
 # Compare environment variables
 docker compose config | grep -A 20 environment
 ```
 
 **Solution:**
+
 ```bash
 # Restore old .env file from backup
 cp .env.backup-YYYYMMDD .env

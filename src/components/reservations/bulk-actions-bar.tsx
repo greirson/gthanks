@@ -105,7 +105,6 @@ export function BulkActionsBar({
               <Check className="h-5 w-5" />
               <span className="ml-2 hidden md:inline">Select All</span>
             </ThemeButton>
-
             {/* Clear Selection */}
             <ThemeButton
               size="sm"
@@ -118,9 +117,7 @@ export function BulkActionsBar({
               <X className="h-5 w-5" />
               <span className="ml-2 hidden md:inline">Clear</span>
             </ThemeButton>
-
             <div className="mx-1 h-6 w-px bg-border" /> {/* Separator */}
-
             {/* Mark as Purchased */}
             <ThemeButton
               size="sm"
@@ -133,7 +130,6 @@ export function BulkActionsBar({
               <ShoppingBag className="h-5 w-5" />
               <span className="ml-2 hidden md:inline">Mark as Purchased</span>
             </ThemeButton>
-
             {/* Cancel Selected */}
             <ThemeButton
               size="sm"

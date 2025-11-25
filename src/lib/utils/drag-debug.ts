@@ -3,19 +3,19 @@
 
 export const dragDebug = {
   isEnabled: (): boolean => {
-    if (typeof window === 'undefined') {return false;}
+    if (typeof window === 'undefined') {
+      return false;
+    }
     return localStorage.getItem('debug:drag') === 'true';
   },
 
   log: (event: string, data?: any): void => {
-    if (!dragDebug.isEnabled()) {return;}
+    if (!dragDebug.isEnabled()) {
+      return;
+    }
 
     const timestamp = new Date().toISOString().split('T')[1].slice(0, -1);
-    console.log(
-      `%c[DRAG ${timestamp}] ${event}`,
-      'color: #10b981; font-weight: bold',
-      data || ''
-    );
+    console.log(`%c[DRAG ${timestamp}] ${event}`, 'color: #10b981; font-weight: bold', data || '');
   },
 
   logDragStart: (itemId: string, position?: number): void => {
@@ -26,7 +26,7 @@ export const dragDebug = {
     dragDebug.log('DRAG_END', {
       from: activeId,
       to: overId,
-      newSortOrder: newOrder
+      newSortOrder: newOrder,
     });
   },
 
@@ -35,7 +35,7 @@ export const dragDebug = {
       itemId,
       oldIndex,
       newIndex,
-      sortOrder
+      sortOrder,
     });
   },
 
@@ -43,21 +43,25 @@ export const dragDebug = {
     dragDebug.log('TRANSITION', {
       itemId,
       hasTransition,
-      status: hasTransition ? 'animating' : 'immediate'
+      status: hasTransition ? 'animating' : 'immediate',
     });
   },
 
   enable: (): void => {
-    if (typeof window === 'undefined') {return;}
+    if (typeof window === 'undefined') {
+      return;
+    }
     localStorage.setItem('debug:drag', 'true');
     console.log('%c[DRAG DEBUG] Enabled', 'color: #10b981; font-weight: bold');
   },
 
   disable: (): void => {
-    if (typeof window === 'undefined') {return;}
+    if (typeof window === 'undefined') {
+      return;
+    }
     localStorage.removeItem('debug:drag');
     console.log('%c[DRAG DEBUG] Disabled', 'color: #ef4444; font-weight: bold');
-  }
+  },
 };
 
 // Export convenience functions for console usage

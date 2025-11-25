@@ -83,7 +83,7 @@ test.describe('My Reservations Page', () => {
       const wish1 = await db.wish.create({
         data: {
           id: createId(),
-          title: 'Alice\'s Item',
+          title: "Alice's Item",
           ownerId: owner1Id,
           wishLevel: 2,
         },
@@ -92,7 +92,7 @@ test.describe('My Reservations Page', () => {
       const wish2 = await db.wish.create({
         data: {
           id: createId(),
-          title: 'Bob\'s Item',
+          title: "Bob's Item",
           ownerId: owner2Id,
           wishLevel: 2,
         },
@@ -143,8 +143,8 @@ test.describe('My Reservations Page', () => {
       await page.waitForLoadState('networkidle');
 
       // Verify both owners' items are visible
-      await expect(page.getByText('Alice\'s Item')).toBeVisible({ timeout: 10000 });
-      await expect(page.getByText('Bob\'s Item')).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("Alice's Item")).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("Bob's Item")).toBeVisible({ timeout: 10000 });
 
       // Verify owner names appear as breadcrumbs
       await expect(page.getByText('Alice Owner')).toBeVisible();
@@ -346,7 +346,9 @@ test.describe('My Reservations Page', () => {
       }
 
       // Click bulk mark as purchased
-      const bulkPurchaseButton = page.locator('button:has-text("Mark Purchased"), button:has-text("Purchased")').first();
+      const bulkPurchaseButton = page
+        .locator('button:has-text("Mark Purchased"), button:has-text("Purchased")')
+        .first();
       await bulkPurchaseButton.click();
 
       // Confirm in dialog
@@ -366,7 +368,7 @@ test.describe('My Reservations Page', () => {
   });
 
   test.describe('Filtering', () => {
-    test('filter by owner shows only that owner\'s items', async ({ page }) => {
+    test("filter by owner shows only that owner's items", async ({ page }) => {
       const userEmail = generateUniqueEmail('reserver');
       const reserverId = createId();
 
@@ -519,7 +521,9 @@ test.describe('My Reservations Page', () => {
       await page.waitForTimeout(500);
 
       // Enter search query
-      const searchInput = page.locator('input[type="search"], input[placeholder*="Search"]').first();
+      const searchInput = page
+        .locator('input[type="search"], input[placeholder*="Search"]')
+        .first();
       await searchInput.fill('bicycle');
 
       // Close filter panel if needed
@@ -619,7 +623,10 @@ test.describe('My Reservations Page', () => {
 
       // Select "Purchased" filter
       await page.waitForTimeout(500);
-      const purchasedFilter = page.getByText('Purchased only').or(page.getByText('Purchased')).first();
+      const purchasedFilter = page
+        .getByText('Purchased only')
+        .or(page.getByText('Purchased'))
+        .first();
       await purchasedFilter.click();
 
       // Close filter panel
@@ -648,8 +655,14 @@ test.describe('My Reservations Page', () => {
       await page.waitForLoadState('networkidle');
 
       // Find view toggle buttons
-      const gridButton = page.getByRole('button', { name: /grid/i }).or(page.locator('[aria-label*="grid" i]')).first();
-      const listButton = page.getByRole('button', { name: /list/i }).or(page.locator('[aria-label*="list" i]')).first();
+      const gridButton = page
+        .getByRole('button', { name: /grid/i })
+        .or(page.locator('[aria-label*="grid" i]'))
+        .first();
+      const listButton = page
+        .getByRole('button', { name: /list/i })
+        .or(page.locator('[aria-label*="list" i]'))
+        .first();
 
       // Default should be grid view
       const cardContainer = page.locator('.grid, [class*="grid-cols"]').first();
@@ -683,7 +696,10 @@ test.describe('My Reservations Page', () => {
       await page.waitForLoadState('networkidle');
 
       // Switch to list view
-      const listButton = page.getByRole('button', { name: /list/i }).or(page.locator('[aria-label*="list" i]')).first();
+      const listButton = page
+        .getByRole('button', { name: /list/i })
+        .or(page.locator('[aria-label*="list" i]'))
+        .first();
       await listButton.click();
       await page.waitForTimeout(500);
 
@@ -831,7 +847,7 @@ test.describe('My Reservations Page', () => {
   });
 
   test.describe('Purchased Items UI', () => {
-    test('purchased items don\'t show checkbox', async ({ page }) => {
+    test("purchased items don't show checkbox", async ({ page }) => {
       const userEmail = generateUniqueEmail('reserver');
       const reserverId = createId();
 
@@ -1045,7 +1061,10 @@ test.describe('My Reservations Page', () => {
       await expect(page.getByText('Test Item')).toBeVisible({ timeout: 10000 });
 
       // View toggle should still work (in-memory state)
-      const listButton = page.getByRole('button', { name: /list/i }).or(page.locator('[aria-label*="list" i]')).first();
+      const listButton = page
+        .getByRole('button', { name: /list/i })
+        .or(page.locator('[aria-label*="list" i]'))
+        .first();
       await listButton.click();
       await page.waitForTimeout(500);
 

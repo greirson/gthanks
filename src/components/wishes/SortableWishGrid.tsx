@@ -234,7 +234,7 @@ export function SortableWishGrid({
               priority={false}
               isSelectionMode={false}
               isSelected={false}
-              sortable={false}  // Disable drag handle on overlay
+              sortable={false} // Disable drag handle on overlay
               isDragging={false}
             />
           </div>

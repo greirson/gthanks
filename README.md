@@ -40,6 +40,7 @@ pnpm dev
 **That's it!** 🎉
 
 The first time you run `pnpm dev`, it will:
+
 - ✅ Detect you need setup
 - ✅ Offer automatic or manual configuration
 - ✅ Generate `.env.local` with secure secrets

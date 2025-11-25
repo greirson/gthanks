@@ -137,7 +137,11 @@ export function ReservationFilterPanel({
       <div className="space-y-2">
         <Label className="text-sm font-medium">Sort By</Label>
         <Select value={filterState.sort} onValueChange={setSortOption}>
-          <SelectTrigger className="w-full" data-testid="sort-select" aria-label="Sort reservations by">
+          <SelectTrigger
+            className="w-full"
+            data-testid="sort-select"
+            aria-label="Sort reservations by"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -165,7 +169,7 @@ export function ReservationFilterPanel({
               </Badge>
             )}
           </div>
-          <div className="space-y-3 max-h-48 overflow-y-auto">
+          <div className="max-h-48 space-y-3 overflow-y-auto">
             {uniqueOwners.map((owner) => (
               <div key={owner.id} className="flex items-center space-x-2">
                 <Checkbox

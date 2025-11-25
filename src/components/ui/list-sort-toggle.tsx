@@ -20,7 +20,9 @@ export function ListSortToggle({
   isHydrated = true,
 }: ListSortToggleProps) {
   const handleClick = (clickedMode: ListSortMode) => {
-    if (!isHydrated) {return;}
+    if (!isHydrated) {
+      return;
+    }
 
     if (clickedMode === preference.mode) {
       // Same mode → toggle direction

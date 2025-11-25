@@ -3,6 +3,7 @@
 ## Task Checklist
 
 ### Phase 1: Database Schema
+
 - [x] Add `sortOrder Float?` field to ListWish model in prisma/schema.prisma
 - [x] Add `@@index([listId, sortOrder])` for efficient queries
 - [x] Run `pnpm prisma generate`
@@ -10,6 +11,7 @@
 - [ ] Verify schema in Prisma Studio
 
 ### Phase 2: Backend - Service Layer
+
 - [x] Add `updateWishSortOrder()` method to list-service.ts (single wish update)
 - [x] Add `initializeCustomSort()` method to list-service.ts (first-time setup)
 - [x] Modify `getList()` to order by sortOrder (with addedAt fallback)
@@ -17,6 +19,7 @@
 - [ ] Write unit tests for service methods
 
 ### Phase 3: Backend - API Routes
+
 - [x] Create `PATCH /api/lists/[listId]/wishes/[wishId]/route.ts`
 - [x] Add `sortOrder` field validation (Zod schema)
 - [x] Implement permission check via permissionService
@@ -24,17 +27,20 @@
 - [ ] Write integration tests for API route
 
 ### Phase 4: Frontend - API Client
+
 - [x] Add `updateWishSortOrder()` method to src/lib/api/lists.ts
 - [x] Add Zod schema for response validation
 - [ ] Test API client method
 
 ### Phase 5: Frontend - Hooks & Utilities
+
 - [x] Add `'custom'` to SortOption type in useWishFilters.ts
 - [x] Add `case 'custom'` to sorting logic
 - [x] Create `calculateNewSortOrder()` utility (fractional indexing)
 - [x] Create `shouldRenumberList()` utility (precision check)
 
 ### Phase 6: Frontend - Sortable Components
+
 - [x] Create `SortableWishGrid.tsx` (wraps WishGrid with DndContext)
 - [x] Create `SortableWishList.tsx` (wraps WishList with DndContext)
 - [x] Create `SortableWishCard.tsx` (individual draggable card)
@@ -43,6 +49,7 @@
 - [x] Add error handling with rollback
 
 ### Phase 7: Frontend - UI Integration
+
 - [x] Modify `WishesDisplay.tsx` to conditionally use sortable components
 - [x] Add "Custom Order" option to WishFilterPanel.tsx
 - [x] Add "Custom Order" option to MobileFilterSheet.tsx
@@ -51,6 +58,7 @@
 - [x] Show/hide "Custom Order" based on whether custom sort exists
 
 ### Phase 8: Testing
+
 - [ ] Write unit tests for fractional indexing utilities
 - [ ] Write unit tests for list-service methods
 - [ ] Write integration tests for API routes
@@ -61,6 +69,7 @@
 - [SKIP] Write E2E test: concurrent editing shows conflict
 
 ### Phase 9: Edge Cases & Polish
+
 - [ ] Handle precision limit (renumber when gap < 0.001)
 - [ ] Handle new wish insertion (calculate sortOrder for end of list)
 - [ ] Add loading states during drag operations
@@ -70,6 +79,7 @@
 - [ ] Test screen reader announcements
 
 ### Phase 10: Documentation & Rollout
+
 - [ ] Update API documentation
 - [ ] Add JSDoc comments to new methods
 - [ ] Update CLAUDE.md if needed
@@ -82,23 +92,25 @@
 ## Executive Summary
 
 ### Problem
+
 List owners and co-managers need the ability to manually reorder wishes in their lists, preserving custom priority beyond algorithmic sorting.
 
 ### Solution
+
 Implement drag-and-drop custom sorting using **fractional indexing** for efficient, conflict-resistant reordering with auto-save on drop.
 
 ### Key Technical Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| **Order Storage** | `sortOrder Float?` in ListWish | Nullable for backward compatibility, Float for fractional indexing |
-| **Update Strategy** | Single-wish update | Only update moved item (not all wishes), better performance |
-| **API Endpoint** | `PATCH /api/lists/[listId]/wishes/[wishId]` | RESTful, simple payload, fast |
-| **Indexing Strategy** | Fractional indexing | Industry-proven (Figma, Linear, Notion), avoids renumbering |
-| **Concurrent Editing** | Optimistic lock via `updatedAt` check | Detect conflicts, return 409, force refresh |
-| **Save Strategy** | Auto-save on drop | User requirement, feasible with fractional indexing |
-| **New Wish Placement** | End of list (`MAX(sortOrder) + 1.0`) | User requirement, clear behavior |
-| **Sort Persistence** | Keep `sortOrder` when switching sorts | UX: custom order available when returning to "Custom" |
+| Decision               | Choice                                      | Rationale                                                          |
+| ---------------------- | ------------------------------------------- | ------------------------------------------------------------------ |
+| **Order Storage**      | `sortOrder Float?` in ListWish              | Nullable for backward compatibility, Float for fractional indexing |
+| **Update Strategy**    | Single-wish update                          | Only update moved item (not all wishes), better performance        |
+| **API Endpoint**       | `PATCH /api/lists/[listId]/wishes/[wishId]` | RESTful, simple payload, fast                                      |
+| **Indexing Strategy**  | Fractional indexing                         | Industry-proven (Figma, Linear, Notion), avoids renumbering        |
+| **Concurrent Editing** | Optimistic lock via `updatedAt` check       | Detect conflicts, return 409, force refresh                        |
+| **Save Strategy**      | Auto-save on drop                           | User requirement, feasible with fractional indexing                |
+| **New Wish Placement** | End of list (`MAX(sortOrder) + 1.0`)        | User requirement, clear behavior                                   |
+| **Sort Persistence**   | Keep `sortOrder` when switching sorts       | UX: custom order available when returning to "Custom"              |
 
 ---
 
@@ -107,6 +119,7 @@ Implement drag-and-drop custom sorting using **fractional indexing** for efficie
 ### 1. Fractional Indexing vs. Sequential Integers
 
 **Original Plan (REJECTED)**:
+
 ```typescript
 // BAD: Update ALL wishes on every drag
 sortOrder: Int
@@ -115,6 +128,7 @@ Move wish 5 to position 2 → Renumber wishes 2, 3, 4, 5 (4 UPDATEs)
 ```
 
 **Improved Plan (APPROVED)**:
+
 ```typescript
 // GOOD: Update ONLY moved wish
 sortOrder: Float
@@ -123,6 +137,7 @@ Move wish 5.0 to position 2 → Update only wish to 1.5 (1 UPDATE)
 ```
 
 **Benefits**:
+
 - 50x fewer database writes (1 UPDATE vs 50 UPDATEs on 50-wish list)
 - No cascading renumbering
 - Better concurrent editing (smaller conflict surface)
@@ -131,28 +146,31 @@ Move wish 5.0 to position 2 → Update only wish to 1.5 (1 UPDATE)
 ### 2. Single-Wish API vs. Bulk Update
 
 **Original Plan (REJECTED)**:
+
 ```typescript
 // BAD: Large payload, slow transaction
-POST /api/lists/[listId]/wishes/reorder
+POST / api / lists / [listId] / wishes / reorder;
 {
   updates: [
-    { wishId: "1", sortOrder: 0 },
-    { wishId: "2", sortOrder: 1 },
+    { wishId: '1', sortOrder: 0 },
+    { wishId: '2', sortOrder: 1 },
     // ... 50 more items
-  ]
+  ];
 }
 ```
 
 **Improved Plan (APPROVED)**:
+
 ```typescript
 // GOOD: Small payload, fast update
-PATCH /api/lists/[listId]/wishes/[wishId]
+PATCH / api / lists / [listId] / wishes / [wishId];
 {
-  sortOrder: 1.5
+  sortOrder: 1.5;
 }
 ```
 
 **Benefits**:
+
 - Tiny payload (one wish ID, one float)
 - Simple validation
 - Fast database write (1 UPDATE)
@@ -162,16 +180,18 @@ PATCH /api/lists/[listId]/wishes/[wishId]
 ### 3. Conflict Detection
 
 **Original Plan (MISSING)**:
+
 - No version tracking
 - No conflict detection
 - "last-write-wins" with silent overwrites
 
 **Improved Plan (ADDED)**:
+
 ```typescript
 // Check if list was modified since client loaded
 const list = await db.list.findUnique({
   where: { id: listId },
-  select: { updatedAt: true }
+  select: { updatedAt: true },
 });
 
 if (req.headers.get('If-Unmodified-Since')) {
@@ -186,6 +206,7 @@ if (req.headers.get('If-Unmodified-Since')) {
 ```
 
 **Benefits**:
+
 - Prevents silent overwrites
 - Clear error message to user
 - Industry-standard HTTP 409 Conflict
@@ -199,6 +220,7 @@ if (req.headers.get('If-Unmodified-Since')) {
 **File**: `prisma/schema.prisma`
 
 **Current ListWish model** (lines 146-157):
+
 ```prisma
 model ListWish {
   listId    String
@@ -215,6 +237,7 @@ model ListWish {
 ```
 
 **Modified ListWish model** (ADD sortOrder):
+
 ```prisma
 model ListWish {
   listId    String
@@ -233,18 +256,21 @@ model ListWish {
 ```
 
 **Why Float instead of Int?**
+
 - Fractional indexing requires decimal precision
 - Moving between 1.0 and 2.0 → insert at 1.5
 - Moving between 1.0 and 1.5 → insert at 1.25
 - Allows infinite subdivision (until precision limit)
 
 **Why nullable?**
+
 - Backward compatibility: existing lists have `sortOrder = null`
 - Null means "not using custom sort yet"
 - Non-null means "custom sort is active"
 - Query optimization: `WHERE sortOrder IS NOT NULL` to find custom-sorted lists
 
 **Index strategy**:
+
 - Composite index `[listId, sortOrder]` for efficient `ORDER BY sortOrder` queries
 - Covers common query: `SELECT * FROM ListWish WHERE listId = ? ORDER BY sortOrder ASC`
 
@@ -270,10 +296,7 @@ model ListWish {
  * - Moving between items: calculateNewSortOrder(1.0, 2.0) → 1.5
  * - Moving to last position: calculateNewSortOrder(5.0, null) → 6.0
  */
-export function calculateNewSortOrder(
-  prevOrder: number | null,
-  nextOrder: number | null
-): number {
+export function calculateNewSortOrder(prevOrder: number | null, nextOrder: number | null): number {
   // First position (before all items)
   if (prevOrder === null && nextOrder === null) {
     return 1.0; // Default first item
@@ -304,10 +327,7 @@ export function calculateNewSortOrder(
  * @param nextOrder - Next sortOrder
  * @returns True if gap is too small and renumbering is needed
  */
-export function shouldRenumberList(
-  prevOrder: number,
-  nextOrder: number
-): boolean {
+export function shouldRenumberList(prevOrder: number, nextOrder: number): boolean {
   const gap = Math.abs(nextOrder - prevOrder);
   return gap < 0.000001; // 1e-6 threshold
 }
@@ -320,10 +340,7 @@ export function shouldRenumberList(
  * @param db - Prisma client
  * @returns Number of wishes renumbered
  */
-export async function renumberListWishes(
-  listId: string,
-  db: PrismaClient
-): Promise<number> {
+export async function renumberListWishes(listId: string, db: PrismaClient): Promise<number> {
   // Fetch wishes in current custom sort order
   const wishes = await db.listWish.findMany({
     where: { listId, sortOrder: { not: null } },
@@ -516,6 +533,7 @@ async initializeCustomSort(
 **Modify method: getList() to support custom sorting**
 
 **Current code** (line 349-356):
+
 ```typescript
 listWishes: {
   include: {
@@ -528,6 +546,7 @@ listWishes: {
 ```
 
 **Modified code**:
+
 ```typescript
 listWishes: {
   include: {
@@ -541,6 +560,7 @@ listWishes: {
 ```
 
 **Why two orderBy clauses?**
+
 - Wishes with `sortOrder = null` use `addedAt` order
 - Wishes with `sortOrder = 1.5, 2.0, 3.5...` use custom order
 - Database handles nulls automatically (nulls last in most databases)
@@ -553,12 +573,7 @@ listWishes: {
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { listService } from '@/lib/services/list-service';
-import {
-  ForbiddenError,
-  NotFoundError,
-  ValidationError,
-  ConflictError
-} from '@/lib/errors';
+import { ForbiddenError, NotFoundError, ValidationError, ConflictError } from '@/lib/errors';
 import { z } from 'zod';
 
 const updateWishSchema = z.object({
@@ -593,10 +608,7 @@ export async function PATCH(
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await req.json();
@@ -620,34 +632,19 @@ export async function PATCH(
     return NextResponse.json({ wish: updated });
   } catch (error) {
     if (error instanceof ForbiddenError) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 403 });
     }
     if (error instanceof NotFoundError) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 404 });
     }
     if (error instanceof ValidationError || error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid sortOrder value' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid sortOrder value' }, { status: 400 });
     }
     if (error instanceof ConflictError) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 409 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 409 });
     }
     console.error('Update wish sortOrder error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 ```
@@ -671,37 +668,22 @@ import { ForbiddenError } from '@/lib/errors';
  * - 401: Not authenticated
  * - 403: Not authorized
  */
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { listId: string } }
-) {
+export async function POST(req: NextRequest, { params }: { params: { listId: string } }) {
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const result = await listService.initializeCustomSort(
-      params.listId,
-      user.id
-    );
+    const result = await listService.initializeCustomSort(params.listId, user.id);
 
     return NextResponse.json(result);
   } catch (error) {
     if (error instanceof ForbiddenError) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 403 });
     }
     console.error('Initialize custom sort error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 ```
@@ -777,7 +759,7 @@ initializeCustomSort: async (
 
 ```typescript
 export type SortOption =
-  | 'custom'          // ADD THIS FIRST
+  | 'custom' // ADD THIS FIRST
   | 'featured'
   | 'wishLevel-high'
   | 'wishLevel-low'
@@ -1185,6 +1167,7 @@ const handleSortChange = async (newSort: SortOption) => {
 **Problem**: After many subdivisions, floats lose precision.
 
 **Example**:
+
 ```
 Start: 1.0, 2.0
 Move between: 1.5
@@ -1255,6 +1238,7 @@ async addWishToList(listId: string, wishId: string, userId: string) {
 ```
 
 **Edge case**: What if custom sort doesn't exist yet?
+
 - Leave `sortOrder = null`
 - Wish uses default sort (addedAt DESC)
 - When user enables custom sort, all wishes get sortOrder values
@@ -1262,12 +1246,14 @@ async addWishToList(listId: string, wishId: string, userId: string) {
 ### 3. Concurrent Editing by Multiple Admins
 
 **Scenario**:
+
 1. Admin A loads list at 10:00:00 (list.updatedAt = 10:00:00)
 2. Admin B loads list at 10:00:05 (list.updatedAt = 10:00:00)
 3. Admin A drags wish X at 10:00:10 (list.updatedAt = 10:00:10)
 4. Admin B drags wish Y at 10:00:15 (client thinks list.updatedAt = 10:00:00)
 
 **Conflict detection**:
+
 ```typescript
 // Admin B's request includes header:
 // If-Unmodified-Since: 2024-01-15T10:00:00Z
@@ -1283,6 +1269,7 @@ if (clientLastFetchedAt < list.updatedAt) {
 ```
 
 **Client handling**:
+
 ```typescript
 try {
   await listsApi.updateWishSortOrder(listId, wishId, newSortOrder, clientLastFetchedAt);
@@ -1296,6 +1283,7 @@ try {
 ```
 
 **Why this is acceptable**:
+
 - Fractional indexing only updates 1 wish (small conflict surface)
 - If Admin A moved wish X and Admin B moved wish Y, both moves can succeed (different wishes)
 - Only conflicts if both admins move the same wish simultaneously (rare)
@@ -1307,12 +1295,14 @@ try {
 **Expected behavior**: Custom order is preserved.
 
 **Implementation**:
+
 - `sortOrder` values stay in database when switching sorts
 - `sortOrder !== null` indicates "custom sort exists"
 - Show "Custom Order" option in dropdown only if `wishes.some(w => w.sortOrder !== null)`
 - Switching to "Custom" just changes the `orderBy` clause, doesn't modify data
 
 **Code**:
+
 ```typescript
 // Client-side sorting logic
 case 'custom':
@@ -1332,6 +1322,7 @@ case 'wishLevel-high':
 **Solution**: No. Fractional indexing has gaps, deleting one item doesn't affect others.
 
 **Example**:
+
 ```
 Before delete: [A=1.0, B=2.0, C=3.0, D=4.0]
 Delete B
@@ -1343,6 +1334,7 @@ After delete: [A=1.0, C=3.0, D=4.0]  ← No renumbering needed!
 ### 6. First-Time Custom Sort Activation
 
 **UX Flow**:
+
 1. User opens list (all wishes have `sortOrder = null`)
 2. User selects "Custom Order" from dropdown
 3. System checks: `hasCustomSort = wishes.some(w => w.sortOrder !== null)`
@@ -1362,10 +1354,7 @@ After delete: [A=1.0, C=3.0, D=4.0]  ← No renumbering needed!
 **File**: `tests/unit/lib/utils/fractional-indexing.test.ts`
 
 ```typescript
-import {
-  calculateNewSortOrder,
-  shouldRenumberList
-} from '@/lib/utils/fractional-indexing';
+import { calculateNewSortOrder, shouldRenumberList } from '@/lib/utils/fractional-indexing';
 
 describe('calculateNewSortOrder', () => {
   it('returns 1.0 for first item in empty list', () => {
@@ -1427,12 +1416,7 @@ describe('listService.updateWishSortOrder', () => {
       sortOrder: 2.5,
     });
 
-    const result = await listService.updateWishSortOrder(
-      'list1',
-      'wish1',
-      2.5,
-      'user1'
-    );
+    const result = await listService.updateWishSortOrder('list1', 'wish1', 2.5, 'user1');
 
     expect(result.sortOrder).toBe(2.5);
     expect(permissionService.require).toHaveBeenCalledWith('user1', 'edit', {
@@ -1446,9 +1430,9 @@ describe('listService.updateWishSortOrder', () => {
       new ForbiddenError('Not authorized')
     );
 
-    await expect(
-      listService.updateWishSortOrder('list1', 'wish1', 2.5, 'user2')
-    ).rejects.toThrow(ForbiddenError);
+    await expect(listService.updateWishSortOrder('list1', 'wish1', 2.5, 'user2')).rejects.toThrow(
+      ForbiddenError
+    );
   });
 
   it('throws ConflictError when list was modified', async () => {
@@ -1586,8 +1570,8 @@ test.describe('Custom List Sort', () => {
     await page.selectOption('[data-testid="sort-dropdown"]', 'custom');
 
     // Wait for initialization
-    await page.waitForResponse((res) =>
-      res.url().includes('initialize-custom-sort') && res.status() === 200
+    await page.waitForResponse(
+      (res) => res.url().includes('initialize-custom-sort') && res.status() === 200
     );
 
     // Drag first wish to third position
@@ -1600,8 +1584,8 @@ test.describe('Custom List Sort', () => {
     await page.mouse.up();
 
     // Wait for API call
-    await page.waitForResponse((res) =>
-      res.url().includes(`/wishes/${wishes[0].id}`) && res.status() === 200
+    await page.waitForResponse(
+      (res) => res.url().includes(`/wishes/${wishes[0].id}`) && res.status() === 200
     );
 
     // Verify order changed in UI
@@ -1732,10 +1716,12 @@ await permissionService.require(userId, 'edit', {
 ```
 
 **Who can reorder**:
+
 - List owner
 - Co-managers (ListAdmin)
 
 **Who CANNOT reorder**:
+
 - Group members (view-only)
 - Public viewers
 - Password-protected viewers
@@ -1751,6 +1737,7 @@ const updateWishSchema = z.object({
 ```
 
 **Malicious inputs to reject**:
+
 - `Infinity` / `-Infinity`
 - `NaN`
 - Non-numeric values
@@ -1759,6 +1746,7 @@ const updateWishSchema = z.object({
 ### 3. Rate Limiting
 
 Inherit global rate limiting from middleware:
+
 - 100 requests per minute per user
 - Prevents spam dragging attacks
 
@@ -1787,6 +1775,7 @@ PATCH /api/lists/[listId]/wishes/[wishId]
 ### 1. Database Query Optimization
 
 **Index usage**:
+
 ```sql
 -- Query: Get wishes in custom sort order
 SELECT * FROM ListWish
@@ -1803,11 +1792,13 @@ ORDER BY sortOrder ASC;
 ### 2. Update Performance
 
 **Sequential integers (BAD)**:
+
 - Move 1 wish → Update 50 wishes
 - 50 database UPDATEs
 - Transaction time: ~500ms
 
 **Fractional indexing (GOOD)**:
+
 - Move 1 wish → Update 1 wish
 - 1 database UPDATE
 - Transaction time: ~10ms
@@ -1817,11 +1808,13 @@ ORDER BY sortOrder ASC;
 ### 3. Client-Side Sorting
 
 Sorting happens in-memory (JavaScript):
+
 ```typescript
 wishes.sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999));
 ```
 
 **Performance**: O(n log n) where n = number of wishes
+
 - 10 wishes: ~33 operations
 - 100 wishes: ~664 operations
 - 1000 wishes: ~9965 operations
@@ -1831,6 +1824,7 @@ wishes.sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999));
 ### 4. Optimistic UI Updates
 
 **No loading spinners** - instant feedback:
+
 1. User drags wish
 2. UI updates immediately (optimistic)
 3. API call happens in background

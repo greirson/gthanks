@@ -3,6 +3,7 @@
 ## Summary
 
 Fixed filter persistence configuration issues to:
+
 1. Remove URL serialization for reservation filters (localStorage only)
 2. Add in-memory fallback when localStorage is unavailable
 3. Add specific error handling for SecurityError and QuotaExceededError
@@ -14,6 +15,7 @@ Fixed filter persistence configuration issues to:
 ### 1. `src/hooks/filters/shared/filterStorage.ts`
 
 **Changes:**
+
 - Added `StorageResult<T>` type for error handling
 - Updated `getStoredFilters()` to return `StorageResult` with error information
 - Updated `saveFilters()` to return `StorageResult` with error information
@@ -23,6 +25,7 @@ Fixed filter persistence configuration issues to:
 - Added descriptive console warnings for known error types
 
 **Benefits:**
+
 - Better error visibility for debugging
 - Specific handling for common storage failures
 - Non-breaking changes (backward compatible)
@@ -30,6 +33,7 @@ Fixed filter persistence configuration issues to:
 ### 2. `src/hooks/filters/shared/useFilterPersistence.ts`
 
 **Changes:**
+
 - Made `urlSerializer` optional in `PersistenceConfig`
 - Added `fallback?: 'memory'` option (for future in-memory state)
 - Added `onError?: (error: Error) => void` callback
@@ -42,12 +46,14 @@ Fixed filter persistence configuration issues to:
   - Switch to in-memory mode when localStorage fails
 
 **Benefits:**
+
 - Backward compatible with existing filters (wish, list, group)
 - Reservation filters can disable URL sync
 - Error callback allows custom error handling
 - Excluded fields (like search) are never persisted
 
 **Example usage:**
+
 ```typescript
 // With URL sync (backwards compatible)
 const [filters, setFilters] = useFilterPersistence({
@@ -72,12 +78,14 @@ const [filters, setFilters] = useFilterPersistence({
 ### 3. `src/components/reservations/hooks/useReservationFilters.ts`
 
 **Changes:**
+
 - Updated to use `excludeFromPersistence: ['search']` option
 - Removed custom wrapper complexity
 - Fixed search filter to use correct fields from `ReservationWithWish` schema
 - Removed non-existent `wish.list` field from search
 
 **Benefits:**
+
 - Simpler, cleaner code
 - Search queries are never persisted (ephemeral)
 - Correct type safety with actual schema
@@ -85,12 +93,14 @@ const [filters, setFilters] = useFilterPersistence({
 ### 4. `src/hooks/filters/shared/searchUtils.ts`
 
 **Changes:**
+
 - Updated `applySearchFilter()` signature to support:
   - Simple field names: `['title', 'notes']`
   - Custom accessor functions: `(item) => [item.wish.title, item.wish.user.name]`
 - Added function accessor support for nested fields
 
 **Benefits:**
+
 - Backward compatible with existing simple field usage
 - Supports complex nested data structures (like ReservationWithWish)
 - Type-safe with TypeScript
@@ -98,15 +108,18 @@ const [filters, setFilters] = useFilterPersistence({
 ### 5. `src/hooks/filters/shared/activeFilterCount.ts`
 
 **Changes:**
+
 - Added optional `excludeFields?: string[]` parameter
 - Skip counting for excluded fields (e.g., search, sort)
 
 **Benefits:**
+
 - Backward compatible (parameter is optional)
 - Allows excluding ephemeral fields from active filter count
 - More accurate "active filter" badges
 
 **Example:**
+
 ```typescript
 // Count all filters
 const count = countActiveFilters(filterState, defaults);
@@ -157,6 +170,7 @@ const count = countActiveFilters(filterState, defaults, ['search', 'sort']);
 ## Questions?
 
 For questions or issues, refer to:
+
 - Filter persistence hook: `src/hooks/filters/shared/useFilterPersistence.ts`
 - Storage utilities: `src/hooks/filters/shared/filterStorage.ts`
 - Example usage: `src/components/reservations/hooks/useReservationFilters.ts`

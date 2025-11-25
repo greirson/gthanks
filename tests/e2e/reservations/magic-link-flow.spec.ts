@@ -26,10 +26,9 @@ test.describe('Magic Link Reservation Flow', () => {
 
   test('new user: reserve → magic link → dashboard', async ({ page }) => {
     // Setup: Create a public list with wishes
-    const { list, wishes } = await createPublicListWithWishes(
-      generateUniqueEmail('owner'),
-      ['Red Bike']
-    );
+    const { list, wishes } = await createPublicListWithWishes(generateUniqueEmail('owner'), [
+      'Red Bike',
+    ]);
     const targetWish = wishes[0];
 
     // 1. Visit public list (not logged in)
@@ -98,10 +97,9 @@ test.describe('Magic Link Reservation Flow', () => {
 
   test('logged in user: instant reservation', async ({ page }) => {
     // Setup: Create a public list with wishes
-    const { list, wishes } = await createPublicListWithWishes(
-      generateUniqueEmail('owner2'),
-      ['Red Bike']
-    );
+    const { list, wishes } = await createPublicListWithWishes(generateUniqueEmail('owner2'), [
+      'Red Bike',
+    ]);
     const targetWish = wishes[0];
 
     // Login first
@@ -136,9 +134,7 @@ test.describe('Magic Link Reservation Flow', () => {
     // Navigate to My Reservations
     // Try multiple possible navigation methods
     const myReservationsLink = page
-      .locator(
-        'a:has-text("My Reservations"), a[href="/reservations"], a:has-text("Reservations")'
-      )
+      .locator('a:has-text("My Reservations"), a[href="/reservations"], a:has-text("Reservations")')
       .first();
 
     if ((await myReservationsLink.count()) > 0) {
@@ -213,10 +209,9 @@ test.describe('Magic Link Reservation Flow', () => {
 
   test('unauthenticated user sees auth prompt on reserve', async ({ page }) => {
     // Setup: Create a public list with wishes
-    const { list, wishes } = await createPublicListWithWishes(
-      generateUniqueEmail('owner3'),
-      ['Blue Headphones']
-    );
+    const { list, wishes } = await createPublicListWithWishes(generateUniqueEmail('owner3'), [
+      'Blue Headphones',
+    ]);
     const targetWish = wishes[0];
 
     // Ensure we're logged out
@@ -247,10 +242,9 @@ test.describe('Magic Link Reservation Flow', () => {
 
   test('reservation persists across sessions', async ({ page, context }) => {
     // Setup: Create a public list with wishes
-    const { list, wishes } = await createPublicListWithWishes(
-      generateUniqueEmail('owner4'),
-      ['Gaming Mouse']
-    );
+    const { list, wishes } = await createPublicListWithWishes(generateUniqueEmail('owner4'), [
+      'Gaming Mouse',
+    ]);
     const targetWish = wishes[0];
     const userEmail = generateUniqueEmail('persistent');
 

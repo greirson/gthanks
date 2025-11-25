@@ -42,6 +42,7 @@ HAVING COUNT(*) > 1
 Both reservation creation methods already implement duplicate prevention:
 
 **Method 1: `createReservation()` (Line 126)**
+
 ```typescript
 // Check if already reserved (within transaction)
 const existingReservation = await tx.reservation.findFirst({
@@ -54,6 +55,7 @@ if (existingReservation) {
 ```
 
 **Method 2: `createReservationViaShareToken()` (Line 18)**
+
 ```typescript
 // Check if already reserved (within transaction)
 const existingReservation = await tx.reservation.findFirst({
@@ -68,6 +70,7 @@ if (existingReservation) {
 ### Current Protection Level
 
 The existing logic enforces:
+
 - **One reservation per wish TOTAL** (any user)
 - Implemented within `Serializable` transactions
 - Race condition protection via transaction isolation
@@ -75,6 +78,7 @@ The existing logic enforces:
 ### Unique Constraint Enhancement
 
 The proposed `@@unique([wishId, userId])` constraint adds:
+
 - **Database-level enforcement** (secondary safety net)
 - **Prevents same user reserving same wish twice** (edge case protection)
 - **Complements existing business logic** (doesn't replace it)
@@ -124,6 +128,7 @@ if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P20
 ## Migration Plan
 
 ### Step 1: Add Unique Constraint ✅ READY
+
 ```prisma
 model Reservation {
   id         String   @id
@@ -140,16 +145,19 @@ model Reservation {
 ```
 
 ### Step 2: Generate Prisma Client
+
 ```bash
 pnpm prisma generate
 ```
 
 ### Step 3: Push Schema Changes
+
 ```bash
 pnpm db:push
 ```
 
 ### Step 4: Update Error Handling (Optional Enhancement)
+
 ```typescript
 // In reservation-service.ts createReservation() and createReservationViaShareToken()
 catch (error) {

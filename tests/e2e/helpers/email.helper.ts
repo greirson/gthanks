@@ -30,9 +30,7 @@ export function generateUniqueEmail(role: string = 'user'): string {
  * const emails = generateUniqueEmails(['owner', 'member', 'admin']);
  * // Returns: { owner: 'owner-...@test.com', member: 'member-...@test.com', ... }
  */
-export function generateUniqueEmails(
-  roles: string[]
-): Record<string, string> {
+export function generateUniqueEmails(roles: string[]): Record<string, string> {
   const emails: Record<string, string> = {};
   for (const role of roles) {
     emails[role] = generateUniqueEmail(role);

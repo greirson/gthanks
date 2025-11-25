@@ -19,22 +19,24 @@ import { Separator } from '@/components/ui/separator';
 import type { ReservationWithWish } from '@/lib/validators/api-responses/reservations';
 
 interface WishDetailsModalProps {
-  reservation: (ReservationWithWish & {
-    wish: ReservationWithWish['wish'] & {
-      price?: number | null;
-      currency?: string | null;
-      notes?: string | null;
-      size?: string | null;
-      color?: string | null;
-      quantity?: number;
-      imageUrl?: string | null;
-      localImagePath?: string | null;
-      list?: {
-        id: string;
-        name: string;
-      };
-    };
-  }) | null;
+  reservation:
+    | (ReservationWithWish & {
+        wish: ReservationWithWish['wish'] & {
+          price?: number | null;
+          currency?: string | null;
+          notes?: string | null;
+          size?: string | null;
+          color?: string | null;
+          quantity?: number;
+          imageUrl?: string | null;
+          localImagePath?: string | null;
+          list?: {
+            id: string;
+            name: string;
+          };
+        };
+      })
+    | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCancel: () => void;
@@ -52,7 +54,9 @@ export function WishDetailsModal({
 }: WishDetailsModalProps) {
   const [isActionLoading, setIsActionLoading] = useState(false);
 
-  if (!reservation) {return null;}
+  if (!reservation) {
+    return null;
+  }
 
   const wish = reservation.wish;
   const wishImageUrl = wish.localImagePath || wish.imageUrl;
@@ -144,9 +148,7 @@ export function WishDetailsModal({
           {/* Price and Quantity */}
           {(formattedPrice || (wish.quantity && wish.quantity > 1)) && (
             <div className="flex flex-wrap items-center gap-3">
-              {formattedPrice && (
-                <div className="text-2xl font-bold">{formattedPrice}</div>
-              )}
+              {formattedPrice && <div className="text-2xl font-bold">{formattedPrice}</div>}
               {wish.quantity && wish.quantity > 1 && (
                 <Badge variant="outline" className="text-sm">
                   Quantity: {wish.quantity}

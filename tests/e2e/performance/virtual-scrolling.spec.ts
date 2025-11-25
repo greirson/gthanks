@@ -493,9 +493,7 @@ test.describe('Virtual Scrolling Performance - 500 Reservations', () => {
     }
   });
 
-  test('purchased items maintain fixed height and render at bottom of groups', async ({
-    page,
-  }) => {
+  test('purchased items maintain fixed height and render at bottom of groups', async ({ page }) => {
     const users = await createTestUsers();
     const { giver: reserver, owner } = users;
 
@@ -534,9 +532,7 @@ test.describe('Virtual Scrolling Performance - 500 Reservations', () => {
           document.querySelectorAll('[data-testid^="reservation-card-"]')
         ) as HTMLElement[];
 
-        const purchasedCards = allCards.filter((card) =>
-          card.classList.contains('opacity-60')
-        );
+        const purchasedCards = allCards.filter((card) => card.classList.contains('opacity-60'));
         const activeCards = allCards.filter((card) => !card.classList.contains('opacity-60'));
 
         const activeHeights = activeCards.slice(0, 10).map((c) => c.offsetHeight);
@@ -605,10 +601,9 @@ test.describe('Virtual Scrolling Performance - 500 Reservations', () => {
         'Mobile scroll should maintain adequate FPS (45+)'
       ).toBeGreaterThanOrEqual(45);
 
-      expect(
-        scrollMetrics.layoutShiftScore,
-        'Mobile layout shift should be minimal'
-      ).toBeLessThan(0.15);
+      expect(scrollMetrics.layoutShiftScore, 'Mobile layout shift should be minimal').toBeLessThan(
+        0.15
+      );
 
       console.log('✅ Mobile performance test PASSED');
     } finally {

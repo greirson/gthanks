@@ -12,7 +12,13 @@ import { useDebounce } from '@/hooks/use-debounce';
 // Types for filter/sort functionality
 export type DateFilterOption = 'all' | 'thisWeek' | 'thisMonth' | 'older';
 
-export type SortOption = 'recent' | 'oldest' | 'title-asc' | 'title-desc' | 'owner-asc' | 'owner-desc';
+export type SortOption =
+  | 'recent'
+  | 'oldest'
+  | 'title-asc'
+  | 'title-desc'
+  | 'owner-asc'
+  | 'owner-desc';
 
 export interface FilterState {
   dateFilter: DateFilterOption;
@@ -118,17 +124,13 @@ export function useReservationFilters(reservations: ReservationWithWish[]) {
 
     // Apply search filter (includes title, owner, and URL)
     if (debouncedSearch) {
-      filtered = applySearchFilter(
-        filtered,
-        debouncedSearch,
-        (res) => [
-          res.wish.title,
-          res.wish.user.name || '',
-          res.wish.user.email,
-          res.wish.user.username || '',
-          res.wish.url || '', // Search by product URL
-        ]
-      );
+      filtered = applySearchFilter(filtered, debouncedSearch, (res) => [
+        res.wish.title,
+        res.wish.user.name || '',
+        res.wish.user.email,
+        res.wish.user.username || '',
+        res.wish.url || '', // Search by product URL
+      ]);
     }
 
     // Apply date filter
@@ -155,9 +157,7 @@ export function useReservationFilters(reservations: ReservationWithWish[]) {
 
     // Apply owner filter
     if (filterState.ownerIds.length > 0) {
-      filtered = filtered.filter((res) =>
-        filterState.ownerIds.includes(res.wish.user.id)
-      );
+      filtered = filtered.filter((res) => filterState.ownerIds.includes(res.wish.user.id));
     }
 
     // Apply purchase status filter
@@ -171,13 +171,13 @@ export function useReservationFilters(reservations: ReservationWithWish[]) {
     // Apply sorting
     switch (filterState.sort) {
       case 'recent':
-        filtered.sort((a, b) =>
-          new Date(b.reservedAt).getTime() - new Date(a.reservedAt).getTime()
+        filtered.sort(
+          (a, b) => new Date(b.reservedAt).getTime() - new Date(a.reservedAt).getTime()
         );
         break;
       case 'oldest':
-        filtered.sort((a, b) =>
-          new Date(a.reservedAt).getTime() - new Date(b.reservedAt).getTime()
+        filtered.sort(
+          (a, b) => new Date(a.reservedAt).getTime() - new Date(b.reservedAt).getTime()
         );
         break;
       case 'title-asc':

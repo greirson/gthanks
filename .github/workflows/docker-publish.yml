@@ -7,7 +7,7 @@ on:
     tags:
       - 'v*.*.*'
   workflow_dispatch:
-  workflow_call:  # Allow release.yml to trigger
+  workflow_call: # Allow release.yml to trigger
 
 jobs:
   build-and-push:

@@ -1,7 +1,10 @@
 'use client';
 
 import { Wish } from '@/lib/validators/api-responses/wishes';
-import { WishesDisplay, type SortOption as DisplaySortOption } from '@/components/wishes/wishes-display';
+import {
+  WishesDisplay,
+  type SortOption as DisplaySortOption,
+} from '@/components/wishes/wishes-display';
 import { WishViewMode } from '@/components/wishes/wish-controls-bar';
 
 interface ListDetailWishesSectionProps {

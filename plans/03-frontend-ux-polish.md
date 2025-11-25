@@ -10,6 +10,7 @@
 ## Executive Summary
 
 **Codebase Analysis Findings**:
+
 - Touch targets: ✅ Already 48px (exceeds 44px requirement)
 - Input mobile sizing: ✅ Already text-base/16px
 - Toast positioning: ✅ Already bottom-16 on mobile
@@ -20,6 +21,7 @@
 - Empty states: ⚠️ Need enhancement
 
 **Focus Areas**: 3 critical gaps to address:
+
 1. Loading state architecture (forms stay editable during submission)
 2. Error message consistency (generic fallbacks)
 3. Visual feedback utilities (copy button, success states)
@@ -29,6 +31,7 @@
 ## ❌ DO NOT IMPLEMENT (Already Compliant)
 
 Skip Phase 6 (Mobile Polish) - already meets requirements:
+
 - Button sizes: h-12 (48px) ✅
 - Input sizes: h-11 (44px), text-base (16px) ✅
 - Toast positioning: bottom-16 on mobile ✅
@@ -46,12 +49,14 @@ Skip Phase 6 (Mobile Polish) - already meets requirements:
 **File**: `src/components/ui/button.tsx`
 
 **Add to ButtonProps interface** (after line ~15):
+
 ```typescript
 loading?: boolean;
 loadingText?: string;
 ```
 
 **Update Button component** (replace render logic):
+
 ```typescript
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, loading, loadingText, children, disabled, ...props }, ref) => {
@@ -78,6 +83,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 ```
 
 **Add import**:
+
 ```typescript
 import { Loader2 } from 'lucide-react';
 ```
@@ -87,6 +93,7 @@ import { Loader2 } from 'lucide-react';
 **File**: `src/components/wishes/wish-form.tsx`
 
 **Wrap form fields** (around lines 413-666):
+
 ```typescript
 <form onSubmit={handleSubmit} className="space-y-6">
   <fieldset disabled={isPending} className="space-y-6">
@@ -114,6 +121,7 @@ import { Loader2 } from 'lucide-react';
 **File**: `src/components/lists/list-form.tsx`
 
 **Same pattern**:
+
 ```typescript
 <form onSubmit={handleSubmit} className="space-y-6">
   <fieldset disabled={isLoading} className="space-y-6">
@@ -134,6 +142,7 @@ import { Loader2 } from 'lucide-react';
 **File**: `src/components/groups/group-form.tsx`
 
 **Same pattern**:
+
 ```typescript
 <form onSubmit={handleSubmit} className="space-y-6">
   <fieldset disabled={isLoading} className="space-y-6">
@@ -166,7 +175,7 @@ export const errorMessages: Record<string, { title: string; description: string 
   // Authentication
   INVALID_CREDENTIALS: {
     title: "Couldn't sign you in",
-    description: "Check your email or password and try again",
+    description: 'Check your email or password and try again',
   },
   EMAIL_NOT_VERIFIED: {
     title: 'Email not verified yet',
@@ -232,9 +241,7 @@ export const errorMessages: Record<string, { title: string; description: string 
  * Get a user-friendly error message for a given error code.
  * Falls back to a generic message if the code is unknown.
  */
-export function getFriendlyError(
-  code?: string
-): { title: string; description: string } {
+export function getFriendlyError(code?: string): { title: string; description: string } {
   if (!code || !errorMessages[code]) {
     return errorMessages.UNKNOWN_ERROR;
   }
@@ -268,19 +275,22 @@ export function formatApiError(error: unknown): { title: string; description: st
 **File**: `src/components/lists/list-form.tsx`
 
 **Add import**:
+
 ```typescript
 import { formatApiError } from '@/lib/utils/error-messages';
 ```
 
 **Replace error handling** (around lines 219-230):
+
 ```typescript
 onError: (error) => {
   const { title, description } = formatApiError(error);
   toast({ title, description, variant: 'destructive' });
-}
+};
 ```
 
 **Apply same pattern to**:
+
 - `src/components/wishes/wish-form.tsx`
 - `src/components/groups/group-form.tsx`
 - Other forms as needed
@@ -294,6 +304,7 @@ onError: (error) => {
 **File**: `tailwind.config.ts`
 
 **Add to `theme.extend.colors`**:
+
 ```typescript
 success: {
   DEFAULT: 'hsl(var(--success))',
@@ -304,12 +315,14 @@ success: {
 **File**: `src/app/globals.css`
 
 **Add to `:root`**:
+
 ```css
 --success: 142 76% 36%;
 --success-foreground: 355 100% 100%;
 ```
 
 **Add to `.dark`**:
+
 ```css
 --success: 142 71% 45%;
 --success-foreground: 355 100% 100%;
@@ -374,6 +387,7 @@ export function CopyButton({
 ```
 
 **Usage example**:
+
 ```typescript
 import { CopyButton } from '@/components/ui/copy-button';
 
@@ -397,12 +411,14 @@ import { CopyButton } from '@/components/ui/copy-button';
 **File**: `src/components/groups/group-form.tsx`
 
 **Line 120**:
+
 ```diff
 - placeholder="Enter group name"
 + placeholder="Smith Family"
 ```
 
 **Line 133**:
+
 ```diff
 - placeholder="Describe your group..."
 + placeholder="Our family gift exchange group"
@@ -413,24 +429,28 @@ import { CopyButton } from '@/components/ui/copy-button';
 **File**: `src/components/wishes/wish-form.tsx`
 
 **Line 428**:
+
 ```diff
 - placeholder="https://example.com/product"
 + placeholder="https://amazon.com/bike-model-123"
 ```
 
 **Line 469**:
+
 ```diff
 - placeholder="What do you want?"
 + placeholder="Red mountain bike with gears"
 ```
 
 **Line 501**:
+
 ```diff
 - placeholder="0.00"
 + placeholder="299.99"
 ```
 
 **Line 552**:
+
 ```diff
 - placeholder="1"
 + placeholder="2"
@@ -441,18 +461,21 @@ import { CopyButton } from '@/components/ui/copy-button';
 **File**: `src/components/lists/list-form.tsx`
 
 **Line 374**:
+
 ```diff
 - placeholder="My Wishlist"
 + placeholder="Birthday 2025"
 ```
 
 **Line 388**:
+
 ```diff
 - placeholder="Describe your wishlist..."
 + placeholder="Things I'd love for my birthday party"
 ```
 
 **Line 406**:
+
 ```diff
 - placeholder="my-awesome-list"
 + placeholder="birthday-2025"
@@ -463,18 +486,21 @@ import { CopyButton } from '@/components/ui/copy-button';
 **File**: `src/components/lists/AddGiftCardDialog.tsx`
 
 **Line 131**:
+
 ```diff
 - placeholder="Amazon Gift Card"
 + placeholder="Amazon"
 ```
 
 **Line 144**:
+
 ```diff
 - placeholder="https://www.amazon.com/gift-cards"
 + placeholder="https://amazon.com/gift-cards"
 ```
 
 **Line 158**:
+
 ```diff
 - placeholder="25.00"
 + placeholder="50.00"
@@ -483,18 +509,21 @@ import { CopyButton } from '@/components/ui/copy-button';
 #### 4.5 Other Forms
 
 **File**: `src/components/settings/username-form.tsx` Line 178:
+
 ```diff
 - placeholder="yourname"
 + placeholder="johnsmith"
 ```
 
 **File**: `src/components/settings/name-form.tsx` Line 135:
+
 ```diff
 - placeholder="Your name"
 + placeholder="John Smith"
 ```
 
 **File**: `src/components/auth/login-form.tsx` Line 239:
+
 ```diff
 - placeholder="you@example.com"
 + placeholder="john@gmail.com"
@@ -509,6 +538,7 @@ import { CopyButton } from '@/components/ui/copy-button';
 **File**: `src/components/lists/empty-list-state.tsx`
 
 **Replace entire component**:
+
 ```typescript
 import { Package, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -557,6 +587,7 @@ export function EmptyListState({ onCreateList }: EmptyListStateProps) {
 **File**: `src/components/wishes/empty-state-with-filters.tsx`
 
 **Update no wishes state** (around line 22-28):
+
 ```typescript
 <div className="text-center">
   <div className="mx-auto mb-6 w-fit rounded-full bg-gradient-to-br from-primary/10 to-primary/5 p-6">
@@ -578,6 +609,7 @@ export function EmptyListState({ onCreateList }: EmptyListStateProps) {
 ## Implementation Checklist
 
 ### Phase 1: Loading States (30 min)
+
 - [ ] Update `src/components/ui/button.tsx` with loading props
 - [ ] Update `src/components/wishes/wish-form.tsx` with fieldset pattern
 - [ ] Update `src/components/lists/list-form.tsx` with fieldset pattern
@@ -585,6 +617,7 @@ export function EmptyListState({ onCreateList }: EmptyListStateProps) {
 - [ ] Test form submission - verify inputs disable during loading
 
 ### Phase 2: Error Messages (30 min)
+
 - [ ] Create `src/lib/utils/error-messages.ts`
 - [ ] Update `src/components/lists/list-form.tsx` error handling
 - [ ] Update `src/components/wishes/wish-form.tsx` error handling
@@ -592,6 +625,7 @@ export function EmptyListState({ onCreateList }: EmptyListStateProps) {
 - [ ] Test error scenarios - verify friendly messages appear
 
 ### Phase 3: Visual Feedback (30 min)
+
 - [ ] Add success colors to `tailwind.config.ts`
 - [ ] Add success CSS variables to `src/app/globals.css`
 - [ ] Create `src/components/ui/copy-button.tsx`
@@ -599,6 +633,7 @@ export function EmptyListState({ onCreateList }: EmptyListStateProps) {
 - [ ] Test copy functionality - verify success animation
 
 ### Phase 4: Content Polish (30 min)
+
 - [ ] Update placeholder text in all forms (7 files)
 - [ ] Update `src/components/lists/empty-list-state.tsx`
 - [ ] Update `src/components/wishes/empty-state-with-filters.tsx`
@@ -609,10 +644,12 @@ export function EmptyListState({ onCreateList }: EmptyListStateProps) {
 ## Files Modified Summary
 
 **New Files (2)**:
+
 - `src/lib/utils/error-messages.ts`
 - `src/components/ui/copy-button.tsx`
 
 **Modified Files (12)**:
+
 - `src/components/ui/button.tsx`
 - `src/components/wishes/wish-form.tsx`
 - `src/components/lists/list-form.tsx`

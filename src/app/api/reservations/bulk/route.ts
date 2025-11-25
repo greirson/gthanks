@@ -139,10 +139,7 @@ export async function POST(req: NextRequest) {
       const { reservationIds } = validationResult.data;
 
       // Use service layer (handles ownership verification + transaction)
-      const result = await reservationService.bulkUnmarkPurchased(
-        reservationIds,
-        session.user.id
-      );
+      const result = await reservationService.bulkUnmarkPurchased(reservationIds, session.user.id);
 
       return NextResponse.json({
         success: result.failed.length === 0,

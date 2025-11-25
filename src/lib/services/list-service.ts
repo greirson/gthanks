@@ -354,8 +354,8 @@ export class ListService {
             wish: true,
           },
           orderBy: [
-            { sortOrder: 'asc' },   // Primary: custom order (nulls last)
-            { addedAt: 'desc' },    // Fallback: for wishes without custom sort
+            { sortOrder: 'asc' }, // Primary: custom order (nulls last)
+            { addedAt: 'desc' }, // Fallback: for wishes without custom sort
           ],
         },
       },
@@ -725,10 +725,7 @@ export class ListService {
           include: {
             wish: true, // Include all wish fields for editing
           },
-          orderBy: [
-            { sortOrder: 'asc' },
-            { addedAt: 'desc' },
-          ],
+          orderBy: [{ sortOrder: 'asc' }, { addedAt: 'desc' }],
         },
       },
     });
@@ -929,10 +926,7 @@ export class ListService {
           include: {
             wish: true,
           },
-          orderBy: [
-            { sortOrder: 'asc' },
-            { addedAt: 'desc' },
-          ],
+          orderBy: [{ sortOrder: 'asc' }, { addedAt: 'desc' }],
         },
       },
     });
@@ -1052,9 +1046,7 @@ export class ListService {
 
     // Conflict detection: list was modified since client loaded it
     if (clientLastFetchedAt && list.updatedAt > clientLastFetchedAt) {
-      throw new ConflictError(
-        'List was modified by another user. Please refresh and try again.'
-      );
+      throw new ConflictError('List was modified by another user. Please refresh and try again.');
     }
 
     // 3. Verify wish belongs to this list

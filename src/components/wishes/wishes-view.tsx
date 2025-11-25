@@ -136,7 +136,6 @@ export function WishesView() {
   return (
     <>
       <div className="relative">
-
         {/* Desktop Filter Panel - Sliding Overlay */}
         <div className="hidden lg:block">
           <div
@@ -222,7 +221,7 @@ export function WishesView() {
             </div>
 
             {/* Content with bottom padding for mobile */}
-            <div className="pt-2 pb-24 md:pb-0">
+            <div className="pb-24 pt-2 md:pb-0">
               {/* Loading Skeleton */}
               {isLoading && <WishesLoadingSkeleton variant={viewMode} count={8} />}
 
@@ -365,10 +364,7 @@ export function WishesView() {
             >
               <CheckSquare className="h-5 w-5" />
             </Button>
-            <ThemeButton
-              onClick={() => setShowAddWishDialog(true)}
-              className="min-h-[44px]"
-            >
+            <ThemeButton onClick={() => setShowAddWishDialog(true)} className="min-h-[44px]">
               <PlusIcon className="mr-2 h-4 w-4" />
               Add Wish
             </ThemeButton>

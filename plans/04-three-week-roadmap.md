@@ -11,6 +11,7 @@
 ### Day 1: Quick Wins + Database Optimization (3-4h)
 
 **Tasks:**
+
 - [ ] Disable auto-save in wish/list forms
 - [ ] Reduce polling intervals: lists 60s→5min, wishes 30s→2min
 - [ ] Add debouncing to search inputs (300ms)
@@ -18,6 +19,7 @@
 - [ ] Add composite indexes to Prisma schema
 
 **Files to Modify:**
+
 - `src/components/wishes/wish-form.tsx`
 - `src/components/lists/list-form.tsx`
 - Page components using React Query (search for `refetchInterval`)
@@ -25,6 +27,7 @@
 - `prisma/schema.prisma`
 
 **Database Indexes to Add:**
+
 ```prisma
 model Wish {
   // Add composite index
@@ -48,6 +51,7 @@ model ListGroup {
 ```
 
 **Verification:**
+
 ```bash
 pnpm db:push
 pnpm dev
@@ -65,22 +69,27 @@ pnpm dev
 Use React's `cache()` for request-scoped memoization:
 
 **Files to Modify:**
+
 - `src/lib/services/permission-service.ts`
 
 **Implementation:**
+
 ```typescript
 import { cache } from 'react';
 
 // Create request-scoped cached version
-export const checkPermissionCached = cache(async (userId: string, action: string, resourceType: string, resourceId: string) => {
-  const service = new PermissionService();
-  return service.can(userId, action, { type: resourceType, id: resourceId });
-});
+export const checkPermissionCached = cache(
+  async (userId: string, action: string, resourceType: string, resourceId: string) => {
+    const service = new PermissionService();
+    return service.can(userId, action, { type: resourceType, id: resourceId });
+  }
+);
 
 // Update API routes to use cached version
 ```
 
 **Verification:**
+
 ```bash
 pnpm test src/lib/services/permission-service.test.ts
 pnpm dev
@@ -92,18 +101,21 @@ pnpm dev
 ### Day 3: Image Optimization Review (2h)
 
 **Current State:**
+
 - Sharp processing already implemented
 - Server-side processing via `/api/upload/image`
 - Serving via `/api/images/[filename]`
 - Storage in `/uploads/` directory
 
 **Tasks:**
+
 - [ ] Review `next.config.js` for remotePatterns configuration (already uses modern pattern)
 - [ ] Verify Sharp optimization settings in upload endpoint
 - [ ] Add lazy loading attributes to image components
 - [ ] Audit image sizes in production
 
 **Files to Review:**
+
 - `next.config.js:130` (verify `remotePatterns` in use, NOT deprecated `domains`)
 - `src/app/api/upload/image/route.ts`
 - `src/app/api/images/[filename]/route.ts`
@@ -113,6 +125,7 @@ pnpm dev
 **Note:** Do NOT migrate to next/image - current Sharp implementation is production-ready.
 
 **Verification:**
+
 ```bash
 # Check Sharp settings
 grep -A 10 "sharp(" src/app/api/upload/image/route.ts
@@ -126,12 +139,14 @@ grep "remotePatterns" next.config.js
 ### Day 4: Mobile UX Polish (3-4h)
 
 **Tasks:**
+
 - [ ] Audit all buttons for 44x44px minimum touch targets
 - [ ] Update placeholder text to use examples (not instructions)
 - [ ] Add loading states to all forms
 - [ ] Fix toast z-index issues
 
 **Files to Modify:**
+
 - `src/components/ui/button.tsx`
 - `src/components/wishes/wish-form.tsx`
 - `src/components/lists/list-form.tsx`
@@ -139,6 +154,7 @@ grep "remotePatterns" next.config.js
 - `src/components/ui/toast.tsx`
 
 **Button Size Requirements:**
+
 ```typescript
 // src/components/ui/button.tsx
 size: {
@@ -150,12 +166,14 @@ size: {
 ```
 
 **Placeholder Updates:**
+
 ```typescript
 // Before: placeholder="Enter wish title"
 // After: placeholder="New bike, red color"
 ```
 
 **Verification:**
+
 ```bash
 pnpm dev
 # Test on Chrome DevTools → Device Toolbar
@@ -170,18 +188,22 @@ pnpm dev
 ### Day 1-2: Auth Middleware Refactoring (6-8h)
 
 **Current State:**
+
 - 78 API routes total
 - No centralized auth middleware
 
 **Tasks:**
+
 - [ ] Create `withAuth` higher-order function
 - [ ] Migrate 10 pilot API routes
 - [ ] Migrate remaining 68 API routes
 
 **Files to Create:**
+
 - `src/lib/api-utils.ts`
 
 **Implementation:**
+
 ```typescript
 // src/lib/api-utils.ts
 import { auth } from '@/lib/auth';
@@ -193,7 +215,11 @@ type AuthOptions = {
 };
 
 export function withAuth<T extends { params: any }>(
-  handler: (req: Request, context: T, user: { id: string; email: string; isAdmin: boolean }) => Promise<Response>,
+  handler: (
+    req: Request,
+    context: T,
+    user: { id: string; email: string; isAdmin: boolean }
+  ) => Promise<Response>,
   options: AuthOptions = { requireAuth: true }
 ) {
   return async (req: Request, context: T) => {
@@ -213,6 +239,7 @@ export function withAuth<T extends { params: any }>(
 ```
 
 **Migration Pattern:**
+
 ```typescript
 // Before
 export async function GET(req: Request) {
@@ -230,6 +257,7 @@ export const GET = withAuth(async (req, context, user) => {
 ```
 
 **Pilot Routes (10):**
+
 - `src/app/api/wishes/route.ts` (GET, POST)
 - `src/app/api/wishes/[id]/route.ts` (GET, PATCH, DELETE)
 - `src/app/api/lists/route.ts` (GET, POST)
@@ -237,6 +265,7 @@ export const GET = withAuth(async (req, context, user) => {
 - `src/app/api/admin/users/route.ts` (GET - requireAdmin)
 
 **Verification:**
+
 ```bash
 pnpm lint
 pnpm typecheck
@@ -249,25 +278,40 @@ pnpm test:integration api/lists
 ### Day 3: Standardized Error Handling (4-5h)
 
 **Tasks:**
+
 - [ ] Enhance handleApiError utility
 - [ ] Add error context logging
 - [ ] Migrate 20 pilot API routes
 
 **Files to Modify:**
+
 - `src/lib/errors.ts`
 
 **Implementation:**
+
 ```typescript
 // src/lib/errors.ts
 import * as Sentry from '@sentry/nextjs';
 import { NextResponse } from 'next/server';
 
-export class NotFoundError extends Error { statusCode = 404; }
-export class ForbiddenError extends Error { statusCode = 403; }
-export class ValidationError extends Error { statusCode = 400; }
-export class UnauthorizedError extends Error { statusCode = 401; }
-export class ConflictError extends Error { statusCode = 409; }
-export class RateLimitError extends Error { statusCode = 429; }
+export class NotFoundError extends Error {
+  statusCode = 404;
+}
+export class ForbiddenError extends Error {
+  statusCode = 403;
+}
+export class ValidationError extends Error {
+  statusCode = 400;
+}
+export class UnauthorizedError extends Error {
+  statusCode = 401;
+}
+export class ConflictError extends Error {
+  statusCode = 409;
+}
+export class RateLimitError extends Error {
+  statusCode = 429;
+}
 
 type ErrorContext = {
   userId?: string;
@@ -315,6 +359,7 @@ export function handleApiError(error: unknown, context?: ErrorContext): Response
 ```
 
 **Usage in Service Layer:**
+
 ```typescript
 // src/lib/services/wish-service.ts
 export async function deleteWish(wishId: string, userId: string) {
@@ -342,6 +387,7 @@ export const DELETE = withAuth(async (req, context, user) => {
 ```
 
 **Verification:**
+
 ```bash
 pnpm test src/lib/errors.test.ts
 pnpm test:integration
@@ -352,15 +398,18 @@ pnpm test:integration
 ### Day 4: Bundle Optimization (3-4h)
 
 **Tasks:**
+
 - [ ] Add dynamic imports for large form components
 - [ ] Identify components that can be Server Components
 - [ ] Configure bundle analyzer
 
 **Files to Modify:**
+
 - Components using large forms (wish-form.tsx, list-form.tsx, group-form.tsx)
 - Parent components importing dialogs
 
 **Dynamic Import Pattern:**
+
 ```typescript
 import dynamic from 'next/dynamic';
 
@@ -374,6 +423,7 @@ const WishForm = dynamic(
 ```
 
 **Bundle Analyzer Setup:**
+
 ```bash
 pnpm add -D @next/bundle-analyzer
 
@@ -388,6 +438,7 @@ module.exports = withBundleAnalyzer({
 ```
 
 **Verification:**
+
 ```bash
 ANALYZE=true pnpm build
 # Review bundle sizes
@@ -398,14 +449,17 @@ ANALYZE=true pnpm build
 ### Day 5: Frontend Error Messages (2-3h)
 
 **Tasks:**
+
 - [ ] Create error code → user message mapping
 - [ ] Update all toast notifications
 - [ ] Update form error messages
 
 **Files to Create:**
+
 - `src/lib/error-messages.ts`
 
 **Implementation:**
+
 ```typescript
 // src/lib/error-messages.ts
 export const ERROR_MESSAGES = {
@@ -434,7 +488,10 @@ export const ERROR_MESSAGES = {
   NETWORK_ERROR: 'Connection problem. Check your internet and try again',
 };
 
-export function getUserFriendlyError(error: any, fallback = ERROR_MESSAGES.SOMETHING_WENT_WRONG): string {
+export function getUserFriendlyError(
+  error: any,
+  fallback = ERROR_MESSAGES.SOMETHING_WENT_WRONG
+): string {
   if (error.response?.data?.code) {
     return ERROR_MESSAGES[error.response.data.code] || fallback;
   }
@@ -450,12 +507,14 @@ export function getUserFriendlyError(error: any, fallback = ERROR_MESSAGES.SOMET
 ```
 
 **Files to Update:**
+
 - `src/components/wishes/wish-form.tsx`
 - `src/components/lists/list-form.tsx`
 - `src/components/groups/group-form.tsx`
 - All components using toast
 
 **Usage:**
+
 ```typescript
 import { getUserFriendlyError } from '@/lib/error-messages';
 
@@ -469,12 +528,14 @@ toast.error(getUserFriendlyError(error));
 ### Day 1-2: Complete API Refactoring (4-5h)
 
 **Tasks:**
+
 - [ ] Migrate remaining 48 API routes to handleApiError
 - [ ] Add error context to all routes
 - [ ] Run ESLint and fix warnings
 - [ ] Run TypeScript type checking
 
 **Files to Migrate:**
+
 - Wishes: 15 routes remaining
 - Lists: 11 routes remaining
 - Groups: 9 routes remaining
@@ -482,6 +543,7 @@ toast.error(getUserFriendlyError(error));
 - Other: 2 routes remaining
 
 **Verification:**
+
 ```bash
 pnpm lint:fix
 pnpm typecheck
@@ -494,16 +556,19 @@ pnpm build
 ### Day 3: Empty States Improvement (2h)
 
 **Tasks:**
+
 - [ ] Add helpful guidance to empty states
 - [ ] Include 2-3 examples per empty state
 - [ ] Add action buttons
 
 **Files to Modify:**
+
 - `src/components/wishes/empty-state-with-filters.tsx`
 - `src/components/lists/empty-list-state.tsx`
 - `src/components/groups/empty-state-quick-add.tsx`
 
 **Pattern:**
+
 ```typescript
 export function EmptyWishList({ onCreateWish }) {
   return (
@@ -539,14 +604,17 @@ export function EmptyWishList({ onCreateWish }) {
 ### Day 4: Prefetching Strategy (2h)
 
 **Tasks:**
+
 - [ ] Add prefetch on hover for list cards
 - [ ] Configure React Query staleTime/cacheTime
 
 **Files to Modify:**
+
 - `src/components/lists/list-card.tsx`
 - Page components using React Query
 
 **Implementation:**
+
 ```typescript
 // src/components/lists/list-card.tsx
 import { useQueryClient } from '@tanstack/react-query';
@@ -583,15 +651,18 @@ export function ListCard({ list }) {
 ### Day 5: Success Animations (1h)
 
 **Tasks:**
+
 - [ ] Add copy action animation
 - [ ] Add smooth selection transitions
 - [ ] Polish loading states
 
 **Files to Modify:**
+
 - `src/components/ui/button.tsx`
 - Card components with selection states
 
 **Copy Animation Pattern:**
+
 ```typescript
 const [copied, setCopied] = useState(false);
 
@@ -617,6 +688,7 @@ const handleCopy = () => {
 ```
 
 **Selection Transition:**
+
 ```typescript
 <Card
   className={cn(
@@ -635,6 +707,7 @@ const handleCopy = () => {
 **Total Effort:** 35-43 hours over 3 weeks
 
 **Key Files Modified:**
+
 - Forms: wish-form.tsx, list-form.tsx, group-form.tsx
 - Services: permission-service.ts (caching)
 - API utilities: api-utils.ts (withAuth), errors.ts (handleApiError)
@@ -643,11 +716,13 @@ const handleCopy = () => {
 - Config: prisma/schema.prisma (indexes)
 
 **Critical Warnings:**
+
 1. ⚠️ Do NOT use Map on singleton services (use React.cache)
 2. ⚠️ Do NOT migrate to next/image domains (use remotePatterns)
 3. ⚠️ Verify file paths against actual codebase structure
 
 **Verification Commands:**
+
 ```bash
 pnpm lint
 pnpm typecheck
@@ -657,6 +732,7 @@ pnpm build
 ```
 
 **Next Steps:**
+
 - Run code review before Week 1 starts
 - Verify all file paths exist
 - Test changes incrementally

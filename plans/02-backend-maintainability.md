@@ -3,6 +3,7 @@
 ## Current State (Verified 2025-11-22)
 
 **Codebase Analysis:**
+
 - **78 API routes** total across application
 - **6 routes** use centralized error handling (`handleApiError`)
 - **72 routes** use manual error handling (inconsistent patterns)
@@ -12,9 +13,11 @@
 - **lib/api-utils.ts**: ❌ Does not exist yet
 
 **Files to Create:**
+
 - `/src/lib/api-utils.ts` - Auth wrappers and centralized patterns
 
 **Files to Modify:**
+
 - 72 API route files (phased migration)
 
 ---
@@ -24,6 +27,7 @@
 Reduce API route code by ~60% through centralized auth/error handling.
 
 **Impact:**
+
 - Current: ~2,730 lines (78 routes × ~35 lines avg)
 - Target: ~936 lines (78 routes × ~12 lines avg)
 - Reduction: 1,794 lines (66%)
@@ -35,7 +39,7 @@ Reduce API route code by ~60% through centralized auth/error handling.
 
 ### Step 1.1: Create `/src/lib/api-utils.ts`
 
-```typescript
+````typescript
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth-utils';
 import { UnauthorizedError, ForbiddenError, handleApiError } from '@/lib/errors';
@@ -164,7 +168,7 @@ export function withAuthParams<T = unknown, P = Record<string, string>>(
     }
   };
 }
-```
+````
 
 ### Step 1.2: Write Unit Tests
 
@@ -208,10 +212,9 @@ describe('withAuth', () => {
     const mockUser = { id: 'user1', isAdmin: false };
     (getCurrentUser as jest.Mock).mockResolvedValue(mockUser);
 
-    const handler = withAuth(
-      async () => NextResponse.json({ success: true }),
-      { requireAdmin: true }
-    );
+    const handler = withAuth(async () => NextResponse.json({ success: true }), {
+      requireAdmin: true,
+    });
 
     const response = await handler(new NextRequest('http://localhost/api/test'));
     expect(response.status).toBe(403);
@@ -226,12 +229,14 @@ describe('withAuth', () => {
 ### Batch 0: Pilot Routes
 
 **Target routes:**
+
 1. `/src/app/api/wishes/route.ts` - GET, POST
 2. `/src/app/api/wishes/[wishId]/route.ts` - GET, PATCH, DELETE
 
 ### Migration Pattern
 
 **BEFORE** (45 lines):
+
 ```typescript
 export async function GET(request: NextRequest) {
   try {
@@ -258,6 +263,7 @@ export async function GET(request: NextRequest) {
 ```
 
 **AFTER** (10 lines):
+
 ```typescript
 import { withAuth } from '@/lib/api-utils';
 
@@ -277,11 +283,9 @@ export const GET = withAuth(
 ```
 
 **Route with params - BEFORE** (40 lines):
+
 ```typescript
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { wishId: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: { wishId: string } }) {
   try {
     const user = await getCurrentUser();
     if (!user) {
@@ -300,6 +304,7 @@ export async function GET(
 ```
 
 **Route with params - AFTER** (8 lines):
+
 ```typescript
 export const GET = withAuthParams<unknown, { wishId: string }>(
   async ({ user }, { params }) => {
@@ -334,12 +339,14 @@ curl -H "Cookie: ..." http://localhost:3000/api/wishes # Should return wishes
 ## Phase 3: Batch Rollout
 
 ### Batch 1: Wishes Routes (10 routes)
+
 - `/src/app/api/wishes/route.ts` - GET, POST
 - `/src/app/api/wishes/[wishId]/route.ts` - GET, PATCH, DELETE
 - `/src/app/api/wishes/[wishId]/image/route.ts` - POST, DELETE
 - `/src/app/api/wishes/bulk/delete/route.ts` - POST
 
 ### Batch 2: Lists Routes (13 routes)
+
 - `/src/app/api/lists/route.ts` - GET, POST
 - `/src/app/api/lists/[listId]/route.ts` - GET, PATCH, DELETE
 - `/src/app/api/lists/[listId]/wishes/route.ts` - GET, POST
@@ -351,6 +358,7 @@ curl -H "Cookie: ..." http://localhost:3000/api/wishes # Should return wishes
 - `/src/app/api/lists/[listId]/password/route.ts` - POST
 
 ### Batch 3: Groups Routes (13 routes)
+
 - `/src/app/api/groups/route.ts` - GET, POST
 - `/src/app/api/groups/[id]/route.ts` - GET, PATCH, DELETE
 - `/src/app/api/groups/[id]/members/route.ts` - GET
@@ -363,6 +371,7 @@ curl -H "Cookie: ..." http://localhost:3000/api/wishes # Should return wishes
 - `/src/app/api/groups/[id]/image/route.ts` - POST, DELETE
 
 ### Batch 4: User Routes (15 routes)
+
 - `/src/app/api/user/profile/route.ts` - GET, PATCH
 - `/src/app/api/user/username/route.ts` - PATCH
 - `/src/app/api/user/avatar/route.ts` - GET, POST, DELETE
@@ -375,6 +384,7 @@ curl -H "Cookie: ..." http://localhost:3000/api/wishes # Should return wishes
 - `/src/app/api/user/preferences/route.ts` - GET, PATCH
 
 ### Batch 5: Admin Routes (10 routes)
+
 - `/src/app/api/admin/users/route.ts` - GET
 - `/src/app/api/admin/users/[userId]/route.ts` - GET, PATCH
 - `/src/app/api/admin/users/[userId]/username/route.ts` - PATCH
@@ -384,6 +394,7 @@ curl -H "Cookie: ..." http://localhost:3000/api/wishes # Should return wishes
 - `/src/app/api/admin/settings/route.ts` - GET, PATCH
 
 ### Batch 6: Remaining Routes (11 routes)
+
 - `/src/app/api/reservations/route.ts` - POST
 - `/src/app/api/reservations/[id]/route.ts` - DELETE
 - `/src/app/api/reservations/verify/route.ts` - POST
@@ -392,6 +403,7 @@ curl -H "Cookie: ..." http://localhost:3000/api/wishes # Should return wishes
 - Other misc routes
 
 **Validation after each batch:**
+
 ```bash
 pnpm typecheck
 pnpm lint
@@ -410,11 +422,7 @@ pnpm test:integration
 import { rateLimiter, getClientIdentifier } from '@/lib/rate-limiter';
 import { AppError } from '@/lib/errors';
 
-export type RateLimitCategory =
-  | 'image-upload'
-  | 'metadata-extract'
-  | 'email-add'
-  | 'email-verify';
+export type RateLimitCategory = 'image-upload' | 'metadata-extract' | 'email-add' | 'email-verify';
 
 export interface WithAuthAndRateLimitOptions extends WithAuthOptions {
   rateLimit?: {
@@ -440,9 +448,7 @@ export function withAuthAndRateLimit<T = unknown>(
 
       // Apply rate limiting if configured
       if (options.rateLimit) {
-        const identifier = options.rateLimit.useUserId
-          ? user.id
-          : getClientIdentifier(request);
+        const identifier = options.rateLimit.useUserId ? user.id : getClientIdentifier(request);
 
         const result = await rateLimiter.check(options.rateLimit.category, identifier);
 
@@ -464,6 +470,7 @@ export function withAuthAndRateLimit<T = unknown>(
 ```
 
 **Usage:**
+
 ```typescript
 export const POST = withAuthAndRateLimit(
   async ({ user, request }) => {
@@ -474,7 +481,7 @@ export const POST = withAuthAndRateLimit(
   },
   {
     rateLimit: { category: 'image-upload', useUserId: true },
-    context: 'POST /api/upload/image'
+    context: 'POST /api/upload/image',
   }
 );
 ```
@@ -484,6 +491,7 @@ export const POST = withAuthAndRateLimit(
 ## Common Patterns Reference
 
 ### Pattern 1: Simple GET Route
+
 ```typescript
 export const GET = withAuth(async ({ user }) => {
   const items = await service.getItems(user.id);
@@ -492,26 +500,30 @@ export const GET = withAuth(async ({ user }) => {
 ```
 
 ### Pattern 2: POST with Validation
-```typescript
-export const POST = withAuth(async ({ user, request }) => {
-  const body = await request.json();
-  const validatedData = schema.parse(body);
-  const item = await service.createItem(validatedData, user.id);
-  return NextResponse.json(item, { status: 201 });
-}, { context: 'POST /api/items' });
-```
 
-### Pattern 3: Route with Params
 ```typescript
-export const GET = withAuthParams<unknown, { id: string }>(
-  async ({ user }, { params }) => {
-    const item = await service.getItem(params.id, user.id);
-    return NextResponse.json(item);
-  }
+export const POST = withAuth(
+  async ({ user, request }) => {
+    const body = await request.json();
+    const validatedData = schema.parse(body);
+    const item = await service.createItem(validatedData, user.id);
+    return NextResponse.json(item, { status: 201 });
+  },
+  { context: 'POST /api/items' }
 );
 ```
 
+### Pattern 3: Route with Params
+
+```typescript
+export const GET = withAuthParams<unknown, { id: string }>(async ({ user }, { params }) => {
+  const item = await service.getItem(params.id, user.id);
+  return NextResponse.json(item);
+});
+```
+
 ### Pattern 4: Admin Route
+
 ```typescript
 export const DELETE = withAuthParams<unknown, { userId: string }>(
   async ({ user }, { params }) => {
@@ -523,6 +535,7 @@ export const DELETE = withAuthParams<unknown, { userId: string }>(
 ```
 
 ### Pattern 5: Query Parameters
+
 ```typescript
 export const GET = withAuth(async ({ user, request }) => {
   const searchParams = request.nextUrl.searchParams;
@@ -539,18 +552,21 @@ export const GET = withAuth(async ({ user, request }) => {
 ## Implementation Timeline
 
 ### Week 1: Foundation
+
 - [ ] Create `src/lib/api-utils.ts`
 - [ ] Implement `withAuth` and `withAuthParams`
 - [ ] Write unit tests
 - [ ] Update `.claude/guides/api.md` documentation
 
 ### Week 2: Pilot
+
 - [ ] Migrate wishes routes (10 routes)
 - [ ] Run integration tests
 - [ ] Verify type safety
 - [ ] Get team approval
 
 ### Weeks 3-4: Batch Rollout
+
 - [ ] Batch 1: Lists routes (13)
 - [ ] Batch 2: Groups routes (13)
 - [ ] Batch 3: User routes (15)
@@ -559,6 +575,7 @@ export const GET = withAuth(async ({ user, request }) => {
 - [ ] Test after each batch
 
 ### Week 5: Validation
+
 - [ ] Full integration test suite
 - [ ] E2E test suite
 - [ ] Security audit (auth checks, permission checks)
@@ -569,12 +586,14 @@ export const GET = withAuth(async ({ user, request }) => {
 ## Success Metrics
 
 **Quantitative:**
+
 - Code reduction: 2,730 → 936 lines (66% reduction)
 - New route length: 10-15 lines vs 40-50 lines
 - Error response consistency: 100% of routes
 - Type safety: Zero TypeScript errors
 
 **Qualitative:**
+
 - Single source of truth for auth/error handling
 - Impossible to forget auth check
 - Faster onboarding for new developers
@@ -592,6 +611,7 @@ If issues found during rollout:
 4. **Re-apply to reverted routes**
 
 **Emergency rollback:**
+
 ```bash
 git revert <commit-hash>
 git push origin main
@@ -615,12 +635,14 @@ Before marking complete:
 ## Notes
 
 **What NOT to change:**
+
 - ✅ Service layer (already excellent)
 - ✅ Permission service (working correctly)
 - ✅ Middleware rate limiting (already implemented)
 - ✅ ESLint enforcement rules
 
 **What TO change:**
+
 - ❌ Manual auth checks in every route → `withAuth` wrapper
 - ❌ Manual error handling → `handleApiError` centralized
 - ❌ Inconsistent error messages → Standardized via wrapper
@@ -630,6 +652,7 @@ Before marking complete:
 ## References
 
 **Key Files:**
+
 - `/src/lib/api-utils.ts` - Auth wrappers (to create)
 - `/src/lib/errors.ts` - Error handling utilities (existing)
 - `/src/lib/auth-utils.ts` - `getCurrentUser()` (existing)

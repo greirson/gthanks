@@ -42,10 +42,12 @@ export function getStoredFilters<F>(key: string): StorageResult<Partial<F>> {
 
     // Provide specific error messages for known issues
     if (err.name === 'SecurityError') {
-      console.warn(`[FilterStorage] Private browsing mode detected - localStorage unavailable (${key})`);
+      console.warn(
+        `[FilterStorage] Private browsing mode detected - localStorage unavailable (${key})`
+      );
       return {
         success: false,
-        error: new Error('Private browsing mode: localStorage unavailable')
+        error: new Error('Private browsing mode: localStorage unavailable'),
       };
     }
 
@@ -84,7 +86,7 @@ export function saveFilters<F>(key: string, filters: F): StorageResult<void> {
       console.warn(`[FilterStorage] Private browsing mode detected - cannot save (${key})`);
       return {
         success: false,
-        error: new Error('Private browsing mode: localStorage unavailable')
+        error: new Error('Private browsing mode: localStorage unavailable'),
       };
     }
 
@@ -92,7 +94,7 @@ export function saveFilters<F>(key: string, filters: F): StorageResult<void> {
       console.warn(`[FilterStorage] Storage quota exceeded - cannot save (${key})`);
       return {
         success: false,
-        error: new Error('Storage quota exceeded')
+        error: new Error('Storage quota exceeded'),
       };
     }
 

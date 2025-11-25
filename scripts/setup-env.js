@@ -13,7 +13,7 @@ const envExamplePath = path.join(__dirname, '..', '.env.local.example');
 async function promptUser(question) {
   const rl = readline.createInterface({
     input: process.stdin,
-    output: process.stdout
+    output: process.stdout,
   });
 
   return new Promise((resolve) => {
@@ -31,9 +31,9 @@ async function interactiveSetup() {
 
   const choice = await promptUser(
     'How would you like to set up?\n' +
-    '  1. Automatic (recommended - generates .env.local for you)\n' +
-    '  2. Manual (I\'ll configure .env.local myself)\n' +
-    'Choice (1 or 2): '
+      '  1. Automatic (recommended - generates .env.local for you)\n' +
+      "  2. Manual (I'll configure .env.local myself)\n" +
+      'Choice (1 or 2): '
   );
 
   if (choice.trim() === '2') {
@@ -66,10 +66,7 @@ async function interactiveSetup() {
   let envContent = fs.readFileSync(envExamplePath, 'utf-8');
 
   // Replace placeholder
-  envContent = envContent.replace(
-    /^NEXTAUTH_SECRET=.*$/m,
-    `NEXTAUTH_SECRET=${secret}`
-  );
+  envContent = envContent.replace(/^NEXTAUTH_SECRET=.*$/m, `NEXTAUTH_SECRET=${secret}`);
 
   // Write file
   fs.writeFileSync(envLocalPath, envContent);
@@ -100,10 +97,7 @@ async function nonInteractiveSetup() {
 
   const secret = crypto.randomBytes(32).toString('base64');
   let envContent = fs.readFileSync(envExamplePath, 'utf-8');
-  envContent = envContent.replace(
-    /^NEXTAUTH_SECRET=.*$/m,
-    `NEXTAUTH_SECRET=${secret}`
-  );
+  envContent = envContent.replace(/^NEXTAUTH_SECRET=.*$/m, `NEXTAUTH_SECRET=${secret}`);
 
   fs.writeFileSync(envLocalPath, envContent);
   console.log('✅ Created .env.local with auto-generated NEXTAUTH_SECRET\n');
@@ -132,8 +126,7 @@ async function main() {
   }
 
   // Check for non-interactive mode
-  const isNonInteractive = process.argv.includes('--non-interactive') ||
-                           !process.stdin.isTTY;
+  const isNonInteractive = process.argv.includes('--non-interactive') || !process.stdin.isTTY;
 
   if (isNonInteractive) {
     await nonInteractiveSetup();

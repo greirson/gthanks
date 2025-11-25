@@ -53,10 +53,7 @@ export {
 } from './database.helper';
 
 // Email helpers
-export {
-  generateUniqueEmail,
-  generateUniqueEmails,
-} from './email.helper';
+export { generateUniqueEmail, generateUniqueEmails } from './email.helper';
 
 // Reservation helpers
 export {

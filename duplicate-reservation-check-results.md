@@ -32,6 +32,7 @@ HAVING COUNT(*) > 1
 The database contains no duplicate reservations that would violate the proposed unique constraint.
 
 **Next Steps:**
+
 1. ✅ Duplicate check complete - no issues found
 2. ⏭️ Ready to add `@@unique([wishId, userId])` to Reservation model
 3. ⏭️ Run `pnpm db:push` to apply schema changes

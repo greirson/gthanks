@@ -2,15 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import {
-  Clock,
-  Edit,
-  ExternalLink,
-  ListPlus,
-  Menu,
-  ShoppingCart,
-  Trash,
-} from 'lucide-react';
+import { Clock, Edit, ExternalLink, ListPlus, Menu, ShoppingCart, Trash } from 'lucide-react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

@@ -291,14 +291,14 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
       const previousData = queryClient.getQueryData(['lists', listId]);
 
       queryClient.setQueryData(['lists', listId], (oldData: any) => {
-        if (!oldData) {return oldData;}
+        if (!oldData) {
+          return oldData;
+        }
 
         return {
           ...oldData,
           listWishes: oldData.listWishes.map((lw: any) =>
-            lw.wishId === wishId
-              ? { ...lw, sortOrder: newSortOrder }
-              : lw
+            lw.wishId === wishId ? { ...lw, sortOrder: newSortOrder } : lw
           ),
         };
       });
@@ -504,7 +504,6 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
 
       {/* Mobile Layout */}
       <div className="md:hidden">
-
         {/* Main Content with Bottom Padding */}
         <div className="pb-24 md:pb-0">
           {/* List Header */}
@@ -544,11 +543,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
               <div className="flex items-center justify-between">
                 {/* Left side - Filter only */}
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsMobileFilterOpen(true)}
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => setIsMobileFilterOpen(true)}>
                     <Filter className="mr-2 h-4 w-4" />
                     Filter
                   </Button>

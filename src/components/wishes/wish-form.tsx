@@ -435,8 +435,7 @@ export function WishForm({
         );
       case 'newest':
         return lists.sort(
-          (a, b) =>
-            multiplier * (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+          (a, b) => multiplier * (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
         );
       default:
         return lists;

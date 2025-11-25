@@ -26,10 +26,7 @@
  * // Move wish to last position
  * calculateNewSortOrder(5.0, null) // Returns 6.0
  */
-export function calculateNewSortOrder(
-  prevOrder: number | null,
-  nextOrder: number | null
-): number {
+export function calculateNewSortOrder(prevOrder: number | null, nextOrder: number | null): number {
   // First position (before all items)
   if (prevOrder === null && nextOrder === null) {
     return 1.0;
@@ -65,10 +62,7 @@ export function calculateNewSortOrder(
  * // Tiny gap - warn about precision limits
  * shouldWarnRenumber(1.0000001, 1.0000002) // Returns true
  */
-export function shouldWarnRenumber(
-  prevOrder: number,
-  nextOrder: number
-): boolean {
+export function shouldWarnRenumber(prevOrder: number, nextOrder: number): boolean {
   const gap = Math.abs(nextOrder - prevOrder);
   return gap < 0.000001;
 }

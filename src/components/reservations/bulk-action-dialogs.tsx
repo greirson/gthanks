@@ -32,9 +32,7 @@ export function BulkActionDialogs({
   onCancel,
 }: BulkActionDialogsProps) {
   const [useToday, setUseToday] = useState(true);
-  const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split('T')[0]
-  );
+  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
   const handlePurchaseConfirm = () => {
     if (useToday) {
@@ -137,11 +135,7 @@ export function BulkActionDialogs({
             <Button type="button" variant="outline" onClick={onCancel}>
               Cancel
             </Button>
-            <Button
-              type="button"
-              onClick={handlePurchaseConfirm}
-              className="w-full sm:w-auto"
-            >
+            <Button type="button" onClick={handlePurchaseConfirm} className="w-full sm:w-auto">
               Mark as Purchased
             </Button>
           </DialogFooter>

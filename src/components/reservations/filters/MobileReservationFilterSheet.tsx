@@ -15,11 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { X, Search } from 'lucide-react';
-import type {
-  FilterState,
-  DateFilterOption,
-  SortOption,
-} from '../hooks/useReservationFilters';
+import type { FilterState, DateFilterOption, SortOption } from '../hooks/useReservationFilters';
 
 interface MobileReservationFilterSheetProps {
   open: boolean;
@@ -51,9 +47,7 @@ export function MobileReservationFilterSheet({
   const [isOpen, setIsOpen] = useState(false);
 
   // Temporary state for filters (batch application)
-  const [tempDateFilter, setTempDateFilter] = useState<DateFilterOption>(
-    filterState.dateFilter
-  );
+  const [tempDateFilter, setTempDateFilter] = useState<DateFilterOption>(filterState.dateFilter);
   const [tempOwnerIds, setTempOwnerIds] = useState<string[]>(filterState.ownerIds);
   const [tempPurchaseStatus, setTempPurchaseStatus] = useState<'all' | 'active' | 'purchased'>(
     'all'
@@ -214,11 +208,7 @@ export function MobileReservationFilterSheet({
                     </Label>
                   </div>
                   <div className="flex items-center space-x-3">
-                    <RadioGroupItem
-                      value="thisWeek"
-                      id="mobile-date-week"
-                      className="h-5 w-5"
-                    />
+                    <RadioGroupItem value="thisWeek" id="mobile-date-week" className="h-5 w-5" />
                     <Label
                       htmlFor="mobile-date-week"
                       className="flex-1 cursor-pointer py-2 text-base font-normal"
@@ -227,11 +217,7 @@ export function MobileReservationFilterSheet({
                     </Label>
                   </div>
                   <div className="flex items-center space-x-3">
-                    <RadioGroupItem
-                      value="thisMonth"
-                      id="mobile-date-month"
-                      className="h-5 w-5"
-                    />
+                    <RadioGroupItem value="thisMonth" id="mobile-date-month" className="h-5 w-5" />
                     <Label
                       htmlFor="mobile-date-month"
                       className="flex-1 cursor-pointer py-2 text-base font-normal"
@@ -271,11 +257,7 @@ export function MobileReservationFilterSheet({
                     </Label>
                   </div>
                   <div className="flex items-center space-x-3">
-                    <RadioGroupItem
-                      value="active"
-                      id="mobile-status-active"
-                      className="h-5 w-5"
-                    />
+                    <RadioGroupItem value="active" id="mobile-status-active" className="h-5 w-5" />
                     <Label
                       htmlFor="mobile-status-active"
                       className="flex-1 cursor-pointer py-2 text-base font-normal"
@@ -329,7 +311,10 @@ export function MobileReservationFilterSheet({
                 <Label htmlFor="mobile-sort" className="text-sm font-medium">
                   Sort by
                 </Label>
-                <Select value={tempSortOption} onValueChange={(value) => setTempSortOption(value as SortOption)}>
+                <Select
+                  value={tempSortOption}
+                  onValueChange={(value) => setTempSortOption(value as SortOption)}
+                >
                   <SelectTrigger id="mobile-sort" className="h-11 w-full">
                     <SelectValue />
                   </SelectTrigger>

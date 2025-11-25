@@ -142,7 +142,9 @@ export function ReservationCard({
                 aria-label={`View ${ownerName}'s ${listName}`}
                 onClick={(e) => e.stopPropagation()}
               >
-                <span className="font-medium text-foreground group-hover:underline">{ownerName}</span>
+                <span className="font-medium text-foreground group-hover:underline">
+                  {ownerName}
+                </span>
                 <ArrowRight className="h-3 w-3 shrink-0" aria-hidden="true" />
                 <span className="truncate group-hover:underline">{listName}</span>
               </Link>

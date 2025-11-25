@@ -103,7 +103,7 @@ async function checkDuplicateReservations() {
     const results = {
       timestamp: new Date().toISOString(),
       duplicateCount: duplicates.length,
-      duplicates: duplicates.map(dup => ({
+      duplicates: duplicates.map((dup) => ({
         wishId: dup.wishId,
         userId: dup.userId,
         count: dup.duplicate_count,
@@ -130,7 +130,9 @@ async function checkDuplicateReservations() {
 checkDuplicateReservations()
   .then((results) => {
     if (results.duplicates && results.duplicates.length > 0) {
-      console.log('⚠️  ACTION REQUIRED: Remove duplicate reservations before adding unique constraint');
+      console.log(
+        '⚠️  ACTION REQUIRED: Remove duplicate reservations before adding unique constraint'
+      );
       process.exit(1);
     } else {
       console.log('✅ All checks passed - ready to proceed with schema migration');

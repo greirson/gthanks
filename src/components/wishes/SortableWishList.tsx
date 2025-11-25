@@ -184,9 +184,11 @@ export function SortableWishList({
     setLocalWishes(reorderedWishes);
 
     // Calculate new sortOrder using fractional indexing
-    const prevOrder = newIndex > 0 ? reorderedWishes[newIndex - 1].sortOrder ?? null : null;
+    const prevOrder = newIndex > 0 ? (reorderedWishes[newIndex - 1].sortOrder ?? null) : null;
     const nextOrder =
-      newIndex < reorderedWishes.length - 1 ? reorderedWishes[newIndex + 1].sortOrder ?? null : null;
+      newIndex < reorderedWishes.length - 1
+        ? (reorderedWishes[newIndex + 1].sortOrder ?? null)
+        : null;
 
     const newSortOrder = calculateNewSortOrder(prevOrder, nextOrder);
 
