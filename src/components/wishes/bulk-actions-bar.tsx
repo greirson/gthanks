@@ -339,10 +339,6 @@ export function BulkActionsBar({
 
   // No longer preventing scroll on mobile - users need to scroll to select more items
 
-  if (selectedCount === 0) {
-    return null;
-  }
-
   return (
     <>
       {/* Floating Toolbar - Fixed to Bottom on All Screen Sizes */}
@@ -383,7 +379,7 @@ export function BulkActionsBar({
               size="sm"
               variant="ghost"
               onClick={() => setShowListSelector(true)}
-              disabled={isProcessing}
+              disabled={selectedCount === 0 || isProcessing}
               className="h-11 w-11 p-0"
               title="Add to List"
             >
@@ -393,7 +389,7 @@ export function BulkActionsBar({
               size="sm"
               variant="ghost"
               onClick={handleRemove}
-              disabled={isProcessing}
+              disabled={selectedCount === 0 || isProcessing}
               className="h-11 w-11 p-0"
               title="Remove"
             >
@@ -403,7 +399,7 @@ export function BulkActionsBar({
               size="sm"
               variant="ghost"
               onClick={handleBulkDelete}
-              disabled={isProcessing}
+              disabled={selectedCount === 0 || isProcessing}
               className="h-11 w-11 p-0 text-destructive hover:bg-destructive/10"
               title="Delete Selected"
             >

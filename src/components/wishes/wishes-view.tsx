@@ -137,31 +137,6 @@ export function WishesView() {
   return (
     <>
       <div className="relative">
-        {/* Mobile Top Menu Row - Sticky */}
-        <div className="sticky top-0 z-30 flex items-center justify-between border-b bg-background px-4 py-1.5 md:hidden">
-          {/* Left side */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsMobileFilterOpen(true)}
-              aria-label="Filter wishes"
-            >
-              <Filter className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleSelectionMode}
-              aria-label={isSelectionMode ? 'Exit selection mode' : 'Select wishes'}
-            >
-              <CheckSquare className={cn('h-4 w-4', isSelectionMode && 'text-primary')} />
-            </Button>
-          </div>
-
-          {/* Right side - View Toggle */}
-          <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
-        </div>
 
         {/* Desktop Filter Panel - Sliding Overlay */}
         <div className="hidden lg:block">
@@ -219,28 +194,32 @@ export function WishesView() {
               </ThemeButton>
             </div>
 
-            {/* Controls Bar - Desktop Only */}
-            <div className="hidden md:block">
-              <WishControlsBar
-                isHydrated={isHydrated}
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-                filterCount={activeFilterCount}
-                onToggleFilters={() => {
-                  const isMobile = window.innerWidth < 1024;
-                  if (isMobile) {
-                    setIsMobileFilterOpen(!isMobileFilterOpen);
-                  } else {
-                    setIsDesktopFilterOpen(!isDesktopFilterOpen);
-                  }
-                }}
-                isFiltersOpen={isDesktopFilterOpen || isMobileFilterOpen}
-                showSelectButton={true}
-                isSelectionMode={isSelectionMode}
-                onToggleSelection={toggleSelectionMode}
-                showMobileActions={true}
-                onAddAction={() => setShowAddWishDialog(true)}
-              />
+            {/* Controls Bar - Unified across all viewports */}
+            <div className="mb-4">
+              <div className="sticky top-16 z-20 bg-background md:static md:z-0">
+                <div className="border-b bg-background px-4 py-2 md:px-0">
+                  <WishControlsBar
+                    isHydrated={isHydrated}
+                    viewMode={viewMode}
+                    onViewModeChange={setViewMode}
+                    filterCount={activeFilterCount}
+                    onToggleFilters={() => {
+                      const isMobile = window.innerWidth < 1024;
+                      if (isMobile) {
+                        setIsMobileFilterOpen(!isMobileFilterOpen);
+                      } else {
+                        setIsDesktopFilterOpen(!isDesktopFilterOpen);
+                      }
+                    }}
+                    isFiltersOpen={isDesktopFilterOpen || isMobileFilterOpen}
+                    showSelectButton={true}
+                    isSelectionMode={isSelectionMode}
+                    onToggleSelection={toggleSelectionMode}
+                    showMobileActions={false}
+                    onAddAction={() => setShowAddWishDialog(true)}
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Content with bottom padding for mobile */}
@@ -273,24 +252,8 @@ export function WishesView() {
         </div>
       </div>
 
-      {/* Mobile Bottom Bar - Fixed (only when not in selection mode) */}
-      {!isSelectionMode && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background shadow-md lg:hidden">
-          <div className="flex items-center justify-end px-4 py-1.5">
-            <Button
-              onClick={() => setShowAddWishDialog(true)}
-              size="lg"
-              className="min-h-[44px] min-w-[110px]"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add Wish
-            </Button>
-          </div>
-        </div>
-      )}
-
       {/* Bulk Actions Bar - Fixed to Bottom on All Screen Sizes */}
-      {isSelectionMode && selectedWishIds.size > 0 && (
+      {isSelectionMode && (
         <BulkActionsBar
           selectedCount={selectedWishIds.size}
           selectedWishIds={Array.from(selectedWishIds)}
@@ -388,6 +351,30 @@ export function WishesView() {
           onConfirm={confirmDelete}
           variant="destructive"
         />
+      )}
+
+      {/* Mobile Bottom Bar - Select + Add Wish */}
+      {!isSelectionMode && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background shadow-md lg:hidden">
+          <div className="flex items-center justify-between px-3 py-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleSelectionMode}
+              aria-label="Select wishes"
+              className="h-11 w-11 p-0"
+            >
+              <CheckSquare className="h-5 w-5" />
+            </Button>
+            <ThemeButton
+              onClick={() => setShowAddWishDialog(true)}
+              className="min-h-[44px]"
+            >
+              <PlusIcon className="mr-2 h-4 w-4" />
+              Add Wish
+            </ThemeButton>
+          </div>
+        </div>
       )}
     </>
   );

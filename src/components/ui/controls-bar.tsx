@@ -38,9 +38,10 @@ export function ControlsBar({
   isHydrated = true,
 }: ControlsBarProps) {
   return (
-    <div className="mb-0 flex flex-col gap-3 border-b pb-2 sm:flex-row sm:items-center sm:justify-between">
-      {/* Desktop: Filter + Select on left */}
-      <div className="hidden sm:flex sm:items-center sm:gap-3">
+    <div className="mb-0 flex flex-row flex-wrap items-center justify-between gap-3 border-b pb-2">
+      {/* Left side - Filter button (all screens) + Select (desktop only) */}
+      <div className="flex items-center gap-3">
+        {/* Filter button - Always visible */}
         <Button
           variant={isFiltersOpen ? 'default' : 'outline'}
           size="sm"
@@ -48,7 +49,7 @@ export function ControlsBar({
           className="relative"
         >
           <Filter className="mr-2 h-4 w-4" />
-          Filters
+          <span className="hidden sm:inline">Filters</span>
           {filterCount > 0 && (
             <Badge
               variant="secondary"
@@ -61,7 +62,11 @@ export function ControlsBar({
 
         {/* Select Button - Desktop Only */}
         {showSelectButton && onToggleSelection && (
-          <Button variant={isSelectionMode ? 'default' : 'outline'} onClick={onToggleSelection}>
+          <Button
+            variant={isSelectionMode ? 'default' : 'outline'}
+            onClick={onToggleSelection}
+            className="hidden sm:flex"
+          >
             {isSelectionMode ? 'Exit Selection' : 'Select'}
           </Button>
         )}

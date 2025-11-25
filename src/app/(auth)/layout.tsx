@@ -1,22 +1,34 @@
-import { redirect } from 'next/navigation';
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { useEffect } from 'react';
 
 import { MainNavWrapper } from '@/components/navigation/main-nav-wrapper';
-import { getCurrentUser } from '@/lib/auth-utils';
 
-export default async function AuthLayout({ children }: { children: React.ReactNode }) {
-  const sessionUser = await getCurrentUser();
+export default function AuthLayout({ children }: { children: React.ReactNode }) {
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
-  if (!sessionUser) {
-    redirect('/auth/login');
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/login');
+    }
+  }, [status, router]);
+
+  // Show nothing while loading
+  if (status === 'loading' || !session?.user) {
+    return null;
   }
 
-  // The sessionUser already has the correct type from our session callback
+  // The session user data
   const user = {
-    id: sessionUser.id,
-    name: sessionUser.name || null,
-    email: sessionUser.email || '',
-    avatarUrl: sessionUser.avatarUrl || null, // Use avatarUrl from getCurrentUser, not image
-    isAdmin: sessionUser.isAdmin || false,
+    id: session.user.id,
+    name: session.user.name || null,
+    email: session.user.email || '',
+    avatarUrl: session.user.avatarUrl || null,
+    isAdmin: session.user.isAdmin || false,
   };
 
   return (

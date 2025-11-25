@@ -455,6 +455,8 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
             visibility={list.visibility}
             wishCount={list._count.listWishes}
             shareToken={list.shareToken}
+            showBackButton={true}
+            onBack={() => router.push('/lists')}
           />
 
           {/* Controls Bar - Filter button and View toggle */}
@@ -512,42 +514,6 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
 
       {/* Mobile Layout */}
       <div className="md:hidden">
-        {/* Mobile Top Menu Row - Sticky */}
-        <div className="sticky top-0 z-30 flex items-center justify-between border-b bg-background px-4 py-1.5 md:hidden">
-          {/* Left side - Back + Controls */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.back()}
-              aria-label="Go back"
-              title="Go back"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsMobileFilterOpen(true)}
-              aria-label="Filter wishes"
-            >
-              <Filter className="h-4 w-4" />
-            </Button>
-            {list.isOwner && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleSelectionMode}
-                aria-label={isSelectionMode ? 'Exit selection mode' : 'Select wishes'}
-              >
-                <CheckSquare className={cn('h-4 w-4', isSelectionMode && 'text-primary')} />
-              </Button>
-            )}
-          </div>
-
-          {/* Right side - View Toggle */}
-          <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
-        </div>
 
         {/* Main Content with Bottom Padding */}
         <div className="pb-24 md:pb-0">
@@ -559,6 +525,8 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
             wishCount={list._count.listWishes}
             shareToken={list.shareToken}
             className="mb-2 sm:mb-4"
+            showBackButton={true}
+            onBack={() => router.push('/lists')}
           />
 
           {/* Gift Cards Section - Mobile */}
@@ -580,17 +548,27 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
             />
           </div>
 
-          {/* Mobile Selection Controls */}
-          {isSelectionMode && list.isOwner && (
-            <div className="mb-4 flex items-center justify-between rounded-lg bg-muted px-3 py-2">
-              <span className="text-sm font-medium">{selectedWishIds.size} selected</span>
-              <div className="flex gap-2">
-                <ThemeButtonAlias variant="ghost" size="sm" onClick={handleSelectAllToggle}>
-                  {allSelected ? 'Deselect All' : 'Select All'}
-                </ThemeButtonAlias>
+          {/* Mobile Controls Bar - Between Gift Cards and Wishes */}
+          <div className="sticky top-16 z-20 mb-4 mt-4 bg-background">
+            <div className="border-b px-4 py-2">
+              <div className="flex items-center justify-between">
+                {/* Left side - Filter only */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsMobileFilterOpen(true)}
+                  >
+                    <Filter className="mr-2 h-4 w-4" />
+                    Filter
+                  </Button>
+                </div>
+
+                {/* Right side - View Toggle */}
+                <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
               </div>
             </div>
-          )}
+          </div>
 
           {/* Mobile Wishes Display */}
           <div className="mt-0 pt-4">
@@ -614,8 +592,8 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
       {/* Bottom Bar - Mobile Only, Hidden in Selection Mode */}
       {!isSelectionMode && !!list?.isOwner && (
         <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background shadow-md md:hidden">
-          <div className="flex items-center justify-between px-3 py-1.5">
-            {/* Left side - Secondary actions */}
+          <div className="flex items-center justify-between px-3 py-2">
+            {/* Left side - Share, Edit, Select icons */}
             {list.isOwner && (
               <div className="flex items-center gap-2">
                 <Button
@@ -638,6 +616,16 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
                 >
                   <Pencil className="h-5 w-5" />
                 </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-11 w-11 p-0"
+                  onClick={toggleSelectionMode}
+                  aria-label="Select wishes"
+                  title="Select wishes"
+                >
+                  <CheckSquare className="h-5 w-5" />
+                </Button>
               </div>
             )}
 
@@ -653,7 +641,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
       )}
 
       {/* Bulk Actions Bar - Fixed to Bottom on All Screen Sizes */}
-      {isSelectionMode && selectedWishIds.size > 0 && list.isOwner && (
+      {isSelectionMode && list.isOwner && (
         <BulkActionsBar
           selectedCount={selectedWishIds.size}
           selectedWishIds={Array.from(selectedWishIds)}
