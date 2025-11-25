@@ -1,5 +1,6 @@
 'use client';
 
+import { useId } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -41,6 +42,8 @@ export function GiftCardTable({
   onDelete,
   onBlur,
 }: GiftCardTableProps) {
+  const dndId = useId();
+
   // Configure sensors for drag-and-drop
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -66,7 +69,7 @@ export function GiftCardTable({
   };
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+    <DndContext id={dndId} sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       {/* Mobile Card List (< md breakpoint) */}
       <div className="md:hidden">
         {cards.length === 0 ? (

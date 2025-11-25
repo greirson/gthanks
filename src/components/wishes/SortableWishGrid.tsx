@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useId } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -49,6 +49,7 @@ export function SortableWishGrid({
   selectedWishIds = new Set(),
   onToggleSelection,
 }: SortableWishGridProps) {
+  const dndId = useId();
   const [activeId, setActiveId] = useState<string | null>(null);
 
   // Configure sensors for drag-and-drop
@@ -187,6 +188,7 @@ export function SortableWishGrid({
 
   return (
     <DndContext
+      id={dndId}
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}

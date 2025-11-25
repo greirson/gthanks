@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useId } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -118,6 +118,7 @@ export function SortableWishList({
   selectedWishIds = new Set(),
   onToggleSelection,
 }: SortableWishListProps) {
+  const dndId = useId();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [localWishes, setLocalWishes] = useState<WishWithSort[]>(wishes);
 
@@ -238,6 +239,7 @@ export function SortableWishList({
 
   return (
     <DndContext
+      id={dndId}
       sensors={sensors}
       collisionDetection={closestCenter}
       modifiers={[restrictToVerticalAxis]}

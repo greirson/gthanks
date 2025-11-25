@@ -321,11 +321,6 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
       // 3. Call API
       try {
         await listsApi.updateWishSortOrder(listId, wishId, newSortOrder, listLastFetchedAt);
-
-        toast({
-          title: 'Order updated',
-          description: 'Your custom list order has been saved.',
-        });
       } catch (error: any) {
         // 4. Rollback on error
         queryClient.setQueryData(['lists', listId], previousData);
