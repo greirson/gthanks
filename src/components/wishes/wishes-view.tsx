@@ -213,7 +213,7 @@ export function WishesView() {
                 </p>
               </div>
               {/* Add Wish Button - Desktop Only */}
-              <ThemeButton onClick={() => setShowAddWishDialog(true)} className="hidden sm:flex">
+              <ThemeButton onClick={() => setShowAddWishDialog(true)} className="hidden lg:flex">
                 <PlusIcon className="mr-2 h-4 w-4" />
                 Add Wish
               </ThemeButton>
@@ -275,7 +275,7 @@ export function WishesView() {
 
       {/* Mobile Bottom Bar - Fixed (only when not in selection mode) */}
       {!isSelectionMode && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background shadow-md md:hidden">
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background shadow-md lg:hidden">
           <div className="flex items-center justify-end px-4 py-1.5">
             <Button
               onClick={() => setShowAddWishDialog(true)}

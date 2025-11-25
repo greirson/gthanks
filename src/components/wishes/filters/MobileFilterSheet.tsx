@@ -118,7 +118,7 @@ export function MobileFilterSheet({
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 z-50 bg-black/50 md:hidden"
+            className="fixed inset-0 z-50 bg-black/50 lg:hidden"
             onClick={closeFilter}
             aria-hidden="true"
           />
@@ -129,7 +129,7 @@ export function MobileFilterSheet({
               'fixed bottom-0 left-0 right-0 z-50 bg-background',
               'transform transition-transform duration-300 ease-out',
               'max-h-[80vh] overflow-y-auto rounded-t-lg shadow-lg',
-              'md:hidden',
+              'lg:hidden',
               isFilterOpen ? 'translate-y-0' : 'translate-y-full'
             )}
             role="dialog"
