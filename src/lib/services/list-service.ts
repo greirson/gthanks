@@ -172,8 +172,19 @@ export class ListService {
     // Use centralized permission service
     await permissionService.require(userId, 'edit', { type: 'list', id: listId });
 
+    // Get current list to check visibility and other settings
+    const currentList = await db.list.findUnique({
+      where: { id: listId },
+      select: { shareToken: true, visibility: true, slug: true, name: true, ownerId: true },
+    });
+
+    if (!currentList) {
+      throw new NotFoundError('List not found');
+    }
+
     // Validate password requirement for password-protected lists
-    if (data.visibility === 'password' && !data.password) {
+    // Only require password when CHANGING to password visibility (not when already password-protected)
+    if (data.visibility === 'password' && !data.password && currentList.visibility !== 'password') {
       throw new ValidationError('Password is required for password-protected lists');
     }
 
@@ -184,16 +195,8 @@ export class ListService {
     } else if (data.visibility !== 'password') {
       hashedPassword = null;
     }
-
-    // Get current list to check if we need to generate/remove share token
-    const currentList = await db.list.findUnique({
-      where: { id: listId },
-      select: { shareToken: true, visibility: true, slug: true, name: true, ownerId: true },
-    });
-
-    if (!currentList) {
-      throw new NotFoundError('List not found');
-    }
+    // Note: if visibility === 'password' and no new password provided, hashedPassword stays undefined
+    // which means the existing password is preserved (not updated in the database)
 
     const updateData: Prisma.ListUpdateInput = {
       name: data.name,
