@@ -3,94 +3,18 @@ name: Build and Push Docker Image
 on:
   push:
     branches:
-      - staging
-      - production
+      - main
     tags:
       - 'v*.*.*'
   workflow_dispatch:
+  workflow_call:  # Allow release.yml to trigger
 
 jobs:
-  test-basic:
-    name: Run Basic Tests
-    runs-on: ubuntu-latest
-    if: github.ref_type == 'branch' && (github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/dev')
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 9
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Generate Prisma Client
-        run: pnpm prisma generate
-
-      - name: Run linting
-        run: pnpm lint || true # Allow warnings (non-blocking for now)
-
-      - name: Run type checking
-        run: pnpm typecheck
-
-      - name: Run unit tests
-        run: pnpm test
-
-      - name: Run integration tests
-        run: pnpm test:integration
-
-  test-full:
-    name: Run Full Test Suite
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/production' || github.ref_type == 'tag'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 9
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Generate Prisma Client
-        run: pnpm prisma generate
-
-      - name: Run linting
-        run: pnpm lint || true # Allow warnings (non-blocking for now)
-
-      - name: Run type checking
-        run: pnpm typecheck
-
-      - name: Run unit tests
-        run: pnpm test
-
-      - name: Run integration tests
-        run: pnpm test:integration
-
   build-and-push:
     name: Build and Push Docker Image
-    needs: [test-basic, test-full]
-    if: always() && (needs.test-basic.result == 'success' || needs.test-full.result == 'success')
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.meta.outputs.version }}
 
     steps:
       - name: Checkout code
@@ -137,3 +61,36 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             NODE_ENV=production
+
+  verify-image:
+    name: Verify Docker Image
+    needs: [build-and-push]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Pull and test image
+        run: |
+          docker pull greirson/gthanks:${{ needs.build-and-push.outputs.tag }}
+
+          docker run -d --name test-container \
+            -p 3000:3000 \
+            -e DATABASE_URL=file:/app/data/gthanks.db \
+            -e NEXTAUTH_SECRET=test-secret-32-chars-minimum-length \
+            -e NEXTAUTH_URL=http://localhost:3000 \
+            greirson/gthanks:${{ needs.build-and-push.outputs.tag }}
+
+          # Wait for healthy status (max 60s)
+          for i in $(seq 1 12); do
+            STATUS=$(docker inspect --format='{{.State.Health.Status}}' test-container 2>/dev/null || echo "starting")
+            echo "Health check attempt $i: $STATUS"
+            [ "$STATUS" = "healthy" ] && exit 0
+            sleep 5
+          done
+
+          echo "Container failed to become healthy"
+          docker logs test-container
+          exit 1
+
+      - name: Cleanup
+        if: always()
+        run: docker rm -f test-container || true

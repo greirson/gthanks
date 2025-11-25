@@ -2,69 +2,26 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [main, develop, production, staging, dev]
+    branches: [main, dev]
   pull_request:
-    branches: [main, develop, production, staging, dev]
+    branches: [main, dev]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  tests:
-    name: Run Tests
+  # Fast checks - run on all PRs and pushes (~1.5 min)
+  quality-checks:
+    name: Quality Checks
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 10.20.0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Generate Prisma client
-        run: pnpm run db:generate
-
-      - name: Run tests
-        run: pnpm exec jest --passWithNoTests
-        env:
-          NODE_ENV: test
-
-  lint-and-typecheck:
-    name: Lint and Type Check
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 10.20.0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Generate Prisma client
-        run: pnpm run db:generate
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Run linter
         run: pnpm run lint
@@ -78,31 +35,36 @@ jobs:
       - name: Check service layer compliance
         run: pnpm run lint:service-layer
 
-  build:
-    name: Build Check
+  # Unit tests - run on all PRs and pushes (~1.5 min)
+  unit-tests:
+    name: Unit Tests
     runs-on: ubuntu-latest
-    needs: [tests, lint-and-typecheck]
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 10.20.0
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
+      - name: Run tests
+        run: pnpm exec jest --passWithNoTests
+        env:
+          NODE_ENV: test
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+  # Build check - runs after quality checks pass (~2 min)
+  # Essential: catches Next.js SSR/SSG issues that TypeScript misses
+  build:
+    name: Build Check
+    runs-on: ubuntu-latest
+    needs: [quality-checks, unit-tests]
 
-      - name: Generate Prisma client
-        run: pnpm run db:generate
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Build application
         run: pnpm run build
@@ -112,10 +74,16 @@ jobs:
           NEXTAUTH_SECRET: build-time-secret-minimum-32-characters-long
           NEXTAUTH_URL: http://localhost:3000
 
+  # E2E smoke tests - run on:
+  # 1. Push to main (safety net after merge)
+  # 2. PRs targeting main (catch issues BEFORE merge)
   e2e-smoke:
     name: E2E Smoke Tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    if: |
+      (github.ref == 'refs/heads/main' && github.event_name == 'push') ||
+      (github.event_name == 'pull_request' && github.base_ref == 'main')
 
     services:
       postgres:
@@ -135,33 +103,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
         with:
-          version: 10.20.0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps
+          install-playwright: 'true'
 
       - name: Configure Prisma for PostgreSQL
         run: |
           sed -i 's/provider = "sqlite"/provider = "postgresql"/' prisma/schema.prisma
         shell: bash
 
-      - name: Generate Prisma client
+      - name: Regenerate Prisma client for PostgreSQL
         run: pnpm run db:generate
 
       - name: Run E2E smoke tests
-        run: pnpm exec playwright test smoke.spec.ts
+        run: pnpm exec playwright test smoke.spec.ts --project=chromium
         env:
           DATABASE_URL: postgresql://postgres:test@localhost:5432/gthanks_test
           NEXTAUTH_SECRET: test-secret-minimum-32-characters-long
@@ -173,4 +129,4 @@ jobs:
         with:
           name: playwright-report
           path: playwright-report/
-          retention-days: 7
+          retention-days: 14

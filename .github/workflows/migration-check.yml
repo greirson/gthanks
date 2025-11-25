@@ -2,7 +2,7 @@ name: Database Migration Check
 
 on:
   pull_request:
-    branches: [staging, production]
+    branches: [main]
     paths:
       - 'prisma/schema.prisma'
 
@@ -17,65 +17,23 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 10.20.0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Check for breaking schema changes
         run: |
-          echo "🔍 Checking for breaking database schema changes..."
+          echo "Checking for breaking database schema changes..."
 
           # Check if schema exists on base branch (skip for initial deployment)
           if ! git cat-file -e origin/${{ github.base_ref }}:prisma/schema.prisma 2>/dev/null; then
-            echo "✅ Initial schema deployment - skipping migration safety check"
+            echo "Initial schema deployment - skipping migration safety check"
             exit 0
           fi
 
-          # Check PR title for v0.0.1 release (most reliable for PR workflows)
+          # Check PR title for release versions
           PR_TITLE="${{ github.event.pull_request.title }}"
-          if echo "$PR_TITLE" | grep -qi "v0\.0\.1\|Release v0\.0\.1"; then
-            echo "✅ v0.0.1 release detected in PR title - skipping migration safety check"
-            exit 0
-          fi
-
-          # Check PR title for v0.0.2 release (intentional breaking changes for reservation auth)
-          if echo "$PR_TITLE" | grep -qi "v0\.0\.2\|Release v0\.0\.2"; then
-            echo "✅ v0.0.2 release detected in PR title - skipping migration safety check (breaking changes expected)"
-            echo "ℹ️  This release includes Prisma migrations for reservation authentication"
-            exit 0
-          fi
-
-          # Check for v0.0.1 tag (initial production release - no data to migrate)
-          if git describe --tags --exact-match 2>/dev/null | grep -q "^v0\.0\.1$"; then
-            echo "✅ v0.0.1 initial release - skipping migration safety check (no production data)"
-            exit 0
-          fi
-
-          # Check for v0.0.2 tag (reservation auth migration)
-          if git describe --tags --exact-match 2>/dev/null | grep -q "^v0\.0\.2$"; then
-            echo "✅ v0.0.2 release - skipping migration safety check (breaking changes expected)"
-            exit 0
-          fi
-
-          # Check commit message for v0.0.1 marker (for untagged commits)
-          if git log -1 --pretty=%B | grep -qi "v0\.0\.1\|Release v0\.0\.1"; then
-            echo "✅ v0.0.1 initial release commit - skipping migration safety check"
-            exit 0
-          fi
-
-          # Check commit message for v0.0.2 marker (for untagged commits)
-          if git log -1 --pretty=%B | grep -qi "v0\.0\.2\|Release v0\.0\.2"; then
-            echo "✅ v0.0.2 release commit - skipping migration safety check (breaking changes expected)"
+          if echo "$PR_TITLE" | grep -qi "v0\.0\.[12]\|Release v0\.0\.[12]"; then
+            echo "Release version detected - skipping migration safety check"
             exit 0
           fi
 
@@ -86,35 +44,30 @@ jobs:
           BREAKING_CHANGES=false
 
           if grep -E "@map\(|@@map\(|@db\." schema-diff.txt | grep -E "^-" > /dev/null; then
-            echo "⚠️  WARNING: Detected renamed columns or tables!"
-            echo "This may cause data loss. Please review carefully."
+            echo "WARNING: Detected renamed columns or tables!"
             BREAKING_CHANGES=true
           fi
 
           if grep -E "^-\s+\w+\s+\w+" schema-diff.txt > /dev/null; then
-            echo "⚠️  WARNING: Detected removed fields!"
-            echo "This will cause permanent data loss."
+            echo "WARNING: Detected removed fields!"
             BREAKING_CHANGES=true
           fi
 
           if grep -E "onDelete:\s*(Cascade|SetNull)" schema-diff.txt | grep -E "^[\+\-]" > /dev/null; then
-            echo "⚠️  WARNING: Detected cascade delete changes!"
-            echo "This may affect referential integrity."
+            echo "WARNING: Detected cascade delete changes!"
             BREAKING_CHANGES=true
           fi
 
           if [ "$BREAKING_CHANGES" = true ]; then
             echo ""
-            echo "📋 Migration Safety Checklist:"
+            echo "Migration Safety Checklist:"
             echo "  - [ ] Database backup strategy confirmed"
             echo "  - [ ] Migration tested on staging database"
             echo "  - [ ] Rollback plan documented"
-            echo "  - [ ] Schema changes reviewed by team"
             echo ""
-            echo "⚠️  Please ensure the above checklist is complete before merging."
             exit 1
           else
-            echo "✅ No breaking schema changes detected"
+            echo "No breaking schema changes detected"
           fi
 
       - name: Validate Prisma schema
@@ -126,8 +79,8 @@ jobs:
         run: |
           pnpm prisma format
           if git diff --exit-code prisma/schema.prisma; then
-            echo "✅ Schema is properly formatted"
+            echo "Schema is properly formatted"
           else
-            echo "❌ Schema needs formatting. Run 'pnpm prisma format'"
+            echo "Schema needs formatting. Run 'pnpm prisma format'"
             exit 1
           fi
