@@ -19,6 +19,7 @@ import {
   enforceMaxSessions,
   regenerateSession,
 } from '@/lib/services/session-service';
+import { signupRestrictionService } from '@/lib/services/signup-restriction.service';
 import { UserProfileService } from '@/lib/services/user-profile';
 import { sanitizeRedirectUrl } from '@/lib/utils/url-validation';
 
@@ -247,7 +248,14 @@ const authOptions: NextAuthOptions = {
             return true;
           }
 
-          // New user - allow sign in (NextAuth's PrismaAdapter will create the user)
+          // New user - check if signup is allowed
+          if (!signupRestrictionService.isSignupAllowed(user.email)) {
+            signupRestrictionService.logSignupDenial(user.email, 'email');
+            const errorCode = signupRestrictionService.getErrorCode();
+            return `/auth/error?error=${errorCode}`;
+          }
+
+          // Signup allowed - NextAuth's PrismaAdapter will create the user
           // The UserEmail record will be created in the events.signIn callback
           return true;
         }
@@ -406,7 +414,14 @@ const authOptions: NextAuthOptions = {
             }
           }
 
-          // New user - NextAuth's PrismaAdapter will handle user creation
+          // New user - check if signup is allowed
+          if (!signupRestrictionService.isSignupAllowed(user.email)) {
+            signupRestrictionService.logSignupDenial(user.email, account.provider);
+            const errorCode = signupRestrictionService.getErrorCode();
+            return `/auth/error?error=${errorCode}`;
+          }
+
+          // Signup allowed - NextAuth's PrismaAdapter will handle user creation
           // The UserEmail record will be created in the events.signIn callback
           return true;
         } catch (error) {
