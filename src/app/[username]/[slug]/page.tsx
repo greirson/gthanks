@@ -63,8 +63,9 @@ export default function PublicListVanityUrlPage() {
   const [password, setPassword] = useState('');
   const [passwordSubmitted, setPasswordSubmitted] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [signupsDisabled, setSignupsDisabled] = useState(false);
 
-  // Fetch current user to check if they're viewing their own list
+  // Fetch current user and site settings
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
@@ -77,7 +78,21 @@ export default function PublicListVanityUrlPage() {
         // User is not logged in, keep currentUserId as null
       }
     };
-    fetchCurrentUser();
+
+    const fetchSignupsDisabled = async () => {
+      try {
+        const response = await fetch('/api/settings/signups-disabled');
+        if (response.ok) {
+          const data: { disabled: boolean } = await response.json();
+          setSignupsDisabled(data.disabled);
+        }
+      } catch {
+        // Default to false if fetch fails
+      }
+    };
+
+    void fetchCurrentUser();
+    void fetchSignupsDisabled();
   }, []);
 
   // Fetch list by vanity URL
@@ -219,6 +234,7 @@ export default function PublicListVanityUrlPage() {
         currentUserId={currentUserId ?? undefined}
         reservations={reservations ?? undefined}
         reservationsLoading={reservationsLoading}
+        signupsDisabled={signupsDisabled}
       />
     </div>
   );

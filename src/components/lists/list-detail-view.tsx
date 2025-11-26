@@ -497,6 +497,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
               onDelete={removeWishDialog.open}
               onToggleSelection={toggleWishSelection}
               onReorder={handleReorder}
+              hideMenu={!list.isOwner && !list.canEdit}
             />
           </div>
         </div>
@@ -569,6 +570,7 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
               onDelete={removeWishDialog.open}
               onToggleSelection={toggleWishSelection}
               onReorder={handleReorder}
+              hideMenu={!list.isOwner && !list.canEdit}
             />
           </div>
         </div>

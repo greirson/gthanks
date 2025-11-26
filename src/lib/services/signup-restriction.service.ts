@@ -126,6 +126,15 @@ class SignupRestrictionService {
   }
 
   /**
+   * Check if signups are globally disabled
+   *
+   * @returns true if DISABLE_SIGNUPS=true, false otherwise
+   */
+  isSignupsDisabled(): boolean {
+    return this.getConfig().disabled;
+  }
+
+  /**
    * Reset cached configuration (useful for testing)
    * @internal
    */

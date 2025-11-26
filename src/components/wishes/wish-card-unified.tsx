@@ -460,7 +460,7 @@ export function UnifiedWishCard({
       <Card
         className={`${config.cardClassName} ${wish.url ? 'cursor-pointer' : ''} ${
           isSelected ? 'scale-[1.02] transform ring-2 ring-primary' : ''
-        } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
+        } flex h-full flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
         onClick={handleCardClick}
         onKeyDown={handleKeyDown}
         tabIndex={wish.url ? 0 : undefined}
@@ -517,7 +517,7 @@ export function UnifiedWishCard({
           </div>
         )}
 
-        <CardContent className={config.contentPadding}>
+        <CardContent className={`${config.contentPadding} flex-grow`}>
           {/* Title and Actions */}
           <div
             className={`${variant === 'compact' ? 'flex items-start justify-between gap-1' : 'mb-2 flex items-start justify-between'}`}

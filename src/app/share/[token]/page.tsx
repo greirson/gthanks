@@ -38,6 +38,7 @@ export default function PublicListPage({ params }: PageProps) {
   const [password, setPassword] = useState('');
   const [_showPasswordForm, setShowPasswordForm] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [signupsDisabled, setSignupsDisabled] = useState(false);
 
   // Fetch public list
   const {
@@ -57,7 +58,7 @@ export default function PublicListPage({ params }: PageProps) {
     enabled: !!list?.id,
   });
 
-  // Fetch current user to check if they're viewing their own list
+  // Fetch current user and site settings
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
@@ -70,7 +71,21 @@ export default function PublicListPage({ params }: PageProps) {
         // User is not logged in, keep currentUserId as null
       }
     };
+
+    const fetchSignupsDisabled = async () => {
+      try {
+        const response = await fetch('/api/settings/signups-disabled');
+        if (response.ok) {
+          const data: { disabled: boolean } = await response.json();
+          setSignupsDisabled(data.disabled);
+        }
+      } catch {
+        // Default to false if fetch fails
+      }
+    };
+
     void fetchCurrentUser();
+    void fetchSignupsDisabled();
   }, []);
 
   // Check if we need password - more robust detection
@@ -196,6 +211,7 @@ export default function PublicListPage({ params }: PageProps) {
         currentUserId={currentUserId ?? undefined}
         reservations={reservations ?? undefined}
         reservationsLoading={reservationsLoading}
+        signupsDisabled={signupsDisabled}
       />
     </div>
   );

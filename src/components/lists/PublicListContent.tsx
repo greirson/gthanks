@@ -46,6 +46,7 @@ interface PublicListContentProps {
   currentUserId?: string;
   reservations?: Record<string, { isReserved: boolean }>;
   reservationsLoading?: boolean;
+  signupsDisabled?: boolean;
 }
 
 export function PublicListContent({
@@ -53,6 +54,7 @@ export function PublicListContent({
   currentUserId,
   reservations,
   reservationsLoading = false,
+  signupsDisabled = false,
 }: PublicListContentProps) {
   const [showReservationDialog, setShowReservationDialog] = useState(false);
   const [selectedWish, setSelectedWish] = useState<ApiWish | null>(null);
@@ -228,7 +230,10 @@ export function PublicListContent({
               onPriceChange={setPriceRange}
               onSortChange={setSortOption}
               onResetFilters={resetFilters}
-              onReserve={(wish) => handleReserveWish(wish)}
+              onReserve={
+                // Hide Reserve button for unauthenticated users when signups are disabled
+                signupsDisabled && !currentUserId ? undefined : (wish) => handleReserveWish(wish)
+              }
               reservedWishIds={
                 reservations
                   ? Object.keys(reservations).filter((wishId) => reservations[wishId].isReserved)

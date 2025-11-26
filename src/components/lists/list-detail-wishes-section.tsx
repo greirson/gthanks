@@ -22,6 +22,7 @@ interface ListDetailWishesSectionProps {
     event?: React.MouseEvent | React.ChangeEvent | React.KeyboardEvent
   ) => void;
   onReorder?: (wishId: string, newSortOrder: number) => Promise<void>;
+  hideMenu?: boolean;
 }
 
 export function ListDetailWishesSection({
@@ -36,6 +37,7 @@ export function ListDetailWishesSection({
   onDelete,
   onToggleSelection,
   onReorder,
+  hideMenu,
 }: ListDetailWishesSectionProps) {
   return (
     <WishesDisplay
@@ -51,6 +53,7 @@ export function ListDetailWishesSection({
       isSelectionMode={isSelectionMode}
       selectedWishIds={selectedWishIds}
       onToggleSelection={onToggleSelection}
+      hideMenu={hideMenu}
     />
   );
 }
