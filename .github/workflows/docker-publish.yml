@@ -61,6 +61,8 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             NODE_ENV=production
+            SKIP_ENV_VALIDATION=true
+            NEXTAUTH_SECRET=build-time-placeholder-replaced-at-runtime
 
   verify-image:
     name: Verify Docker Image

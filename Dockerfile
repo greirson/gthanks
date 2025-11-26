@@ -48,6 +48,13 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Use SQLite URL for build (matches schema provider)
 ENV DATABASE_URL="file:./dev.db"
 ENV NEXT_PRIVATE_PROFILE=1
+
+# Build args for CI - NEXTAUTH_SECRET is required by ensure-env.js but replaced at runtime
+ARG SKIP_ENV_VALIDATION=false
+ARG NEXTAUTH_SECRET
+ENV SKIP_ENV_VALIDATION=${SKIP_ENV_VALIDATION}
+ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+
 RUN --mount=type=cache,id=nextjs,target=/app/.next/cache \
     pnpm build
 
