@@ -14,7 +14,7 @@ interface Member {
 interface StackedAvatarsProps {
   members: Member[];
   max?: number;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   className?: string;
   onShowAll?: () => void;
 }
@@ -33,6 +33,7 @@ export const StackedAvatars = React.memo(function StackedAvatars({
   );
 
   const sizeClasses = {
+    xs: 'h-6 w-6',
     sm: 'h-8 w-8',
     md: 'h-10 w-10',
     lg: 'h-16 w-16',

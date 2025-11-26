@@ -35,6 +35,13 @@ export interface ListWithDetails extends Omit<List, 'password'> {
     user: Pick<User, 'id' | 'name' | 'email' | 'avatarUrl'>;
     addedAt: Date;
   }>;
+  listGroups?: Array<{
+    group: {
+      id: string;
+      name: string;
+      avatarUrl: string | null;
+    };
+  }>;
   isOwner?: boolean;
   canEdit?: boolean;
   hasAccess?: boolean;
@@ -495,6 +502,17 @@ export class ListService {
             addedAt: 'asc',
           },
         },
+        listGroups: {
+          include: {
+            group: {
+              select: {
+                id: true,
+                name: true,
+                avatarUrl: true,
+              },
+            },
+          },
+        },
         _count: {
           select: {
             listWishes: true,
@@ -534,6 +552,15 @@ export class ListService {
               avatarUrl: resolveAvatarUrlSync(admin.user),
             },
             addedAt: admin.addedAt,
+          })),
+          listGroups: list.listGroups.map((lg) => ({
+            group: {
+              id: lg.group.id,
+              name: lg.group.name,
+              avatarUrl: lg.group.avatarUrl?.startsWith('avatar:')
+                ? `/api/groups/${lg.group.id}/avatar`
+                : lg.group.avatarUrl,
+            },
           })),
           // Note: wishes not included for performance (loaded separately when needed)
           isOwner,

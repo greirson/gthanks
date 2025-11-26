@@ -1,8 +1,9 @@
 'use client';
 
-import { MoreVertical, FileText, Share2, User, Users, UserPlus } from 'lucide-react';
+import { MoreVertical, FileText, Share2, User, Users2, UserCog } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { ListAvatarRow } from '@/components/lists/list-avatar-row';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -32,40 +33,9 @@ export function ListCardCompact({
 }: ListCardCompactProps) {
   const router = useRouter();
   const isOwner = currentUserId ? list.ownerId === currentUserId : false;
-  const isSharedWithUser =
-    !isOwner && list.listAdmins?.some((admin) => admin.user.id === currentUserId);
-  const adminCount = list._count?.listAdmins || 0;
 
   const handleClick = () => {
     router.push(`/lists/${list.id}`);
-  };
-
-  const getSharingBadge = () => {
-    if (isSharedWithUser) {
-      return (
-        <Badge
-          variant="secondary"
-          className="flex h-5 shrink-0 items-center gap-1 border border-info/30 bg-info/10 px-1.5 text-[10px] text-info dark:border-info/40 dark:bg-info/5"
-        >
-          <UserPlus className="h-2.5 w-2.5" />
-          Shared with you
-        </Badge>
-      );
-    }
-
-    if (isOwner && adminCount > 0) {
-      return (
-        <Badge
-          variant="secondary"
-          className="flex h-5 shrink-0 items-center gap-1 border border-success/30 bg-success/10 px-1.5 text-[10px] text-success dark:border-success/40 dark:bg-success/5"
-        >
-          <Users className="h-2.5 w-2.5" />
-          {adminCount} {adminCount === 1 ? 'person' : 'people'}
-        </Badge>
-      );
-    }
-
-    return null;
   };
 
   return (
@@ -73,10 +43,7 @@ export function ListCardCompact({
       <div className="flex items-start justify-between gap-3">
         {/* Left: Title + Description */}
         <div className="min-w-0 flex-1">
-          <div className="flex items-start gap-2">
-            <h3 className="flex-1 truncate text-sm font-semibold">{list.name}</h3>
-            {getSharingBadge()}
-          </div>
+          <h3 className="truncate text-sm font-semibold">{list.name}</h3>
 
           {/* Metadata row - compact inline layout */}
           <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
@@ -111,6 +78,19 @@ export function ListCardCompact({
               </span>
             )}
           </div>
+
+          {/* Avatar rows for groups and co-admins */}
+          {((list.listGroups && list.listGroups.length > 0) ||
+            (list.listAdmins && list.listAdmins.length > 0)) && (
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              {list.listGroups && list.listGroups.length > 0 && (
+                <ListAvatarRow icon={Users2} members={list.listGroups.map((lg) => lg.group)} />
+              )}
+              {list.listAdmins && list.listAdmins.length > 0 && (
+                <ListAvatarRow icon={UserCog} members={list.listAdmins.map((la) => la.user)} />
+              )}
+            </div>
+          )}
         </div>
 
         {/* Right: Actions */}

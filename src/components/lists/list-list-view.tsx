@@ -1,7 +1,8 @@
 'use client';
 
-import { MoreVertical, FileText, Share2, User } from 'lucide-react';
+import { MoreVertical, FileText, Share2, User, Users2, UserCog } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { ListAvatarRow } from '@/components/lists/list-avatar-row';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -67,14 +68,7 @@ export function ListListView({
               {/* Left: Title, description, and metadata */}
               <div className="min-w-0 flex-1 space-y-2">
                 {/* Title */}
-                <div className="flex items-center gap-2">
-                  <h3 className="truncate text-sm font-medium sm:text-base">{list.name}</h3>
-                  {!isOwner && (
-                    <Badge variant="secondary" className="h-5 shrink-0 text-[10px]">
-                      Shared
-                    </Badge>
-                  )}
-                </div>
+                <h3 className="truncate text-sm font-medium sm:text-base">{list.name}</h3>
 
                 {/* Description */}
                 {list.description && (
@@ -120,60 +114,82 @@ export function ListListView({
                 </div>
               </div>
 
-              {/* Right: Actions */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 sm:h-8 sm:w-8"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <MoreVertical className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    <span className="sr-only">List options</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      router.push(`/lists/${list.id}`);
-                    }}
-                  >
-                    View List
-                  </DropdownMenuItem>
-                  {isOwner && (
-                    <>
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEdit?.(list);
-                        }}
-                      >
-                        Edit Details
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onShare?.(list);
-                        }}
-                      >
-                        Share Settings
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDelete?.(list);
-                        }}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        Delete List
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {/* Right: Avatar rows + Actions */}
+              <div className="flex shrink-0 items-center gap-3">
+                {/* Avatar rows - hidden on mobile for space */}
+                {((list.listGroups && list.listGroups.length > 0) ||
+                  (list.listAdmins && list.listAdmins.length > 0)) && (
+                  <div className="hidden items-center gap-3 sm:flex">
+                    {list.listGroups && list.listGroups.length > 0 && (
+                      <ListAvatarRow
+                        icon={Users2}
+                        members={list.listGroups.map((lg) => lg.group)}
+                      />
+                    )}
+                    {list.listAdmins && list.listAdmins.length > 0 && (
+                      <ListAvatarRow
+                        icon={UserCog}
+                        members={list.listAdmins.map((la) => la.user)}
+                      />
+                    )}
+                  </div>
+                )}
+
+                {/* Actions */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 sm:h-8 sm:w-8"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <MoreVertical className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      <span className="sr-only">List options</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/lists/${list.id}`);
+                      }}
+                    >
+                      View List
+                    </DropdownMenuItem>
+                    {isOwner && (
+                      <>
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit?.(list);
+                          }}
+                        >
+                          Edit Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onShare?.(list);
+                          }}
+                        >
+                          Share Settings
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete?.(list);
+                          }}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          Delete List
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </div>
         );

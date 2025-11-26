@@ -45,6 +45,17 @@ export const ListWithOwnerSchema = ListSchema.extend({
       })
     )
     .optional(),
+  listGroups: z
+    .array(
+      z.object({
+        group: z.object({
+          id: z.string(),
+          name: z.string(),
+          avatarUrl: z.string().nullable(),
+        }),
+      })
+    )
+    .optional(),
   isOwner: z.boolean().optional(),
   canEdit: z.boolean().optional(),
   hasAccess: z.boolean().optional(),
