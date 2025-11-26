@@ -204,11 +204,9 @@ See `docs/SECRETS_MANAGEMENT.md` for secure secrets handling and complete enviro
 ## Documentation
 
 - **CLAUDE.md** - Development guidelines and project overview
-- **docs/DEVELOPMENT_WORKFLOW.md** - Git workflow and branching strategy
 - **docs/DOCKER_DEPLOYMENT.md** - Complete deployment guide
 - **docs/QUICK_REFERENCE.md** - Command and configuration cheat sheet
 - **docs/SECRETS_MANAGEMENT.md** - Environment variables and secrets
-- **docs/POST_DEPLOY_CHECKLIST.md** - Post-deployment verification
 
 ## Tech Stack
 
@@ -224,13 +222,15 @@ See `docs/SECRETS_MANAGEMENT.md` for secure secrets handling and complete enviro
 
 ## Development Workflow
 
-This project uses a structured branching strategy:
+This project uses GitHub Flow:
 
-- `main` - Production-ready code
-- `staging` - Testing and QA
-- `dev` - Active development
+1. Create a feature branch from `main`
+2. Make changes and push
+3. Open a pull request
+4. CI runs automatically (lint, test, build)
+5. Merge to `main` after CI passes
 
-See `docs/DEVELOPMENT_WORKFLOW.md` for complete workflow details.
+Branch protection requires all PRs to pass CI before merging.
 
 ## Testing
 

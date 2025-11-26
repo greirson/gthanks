@@ -1,10 +1,8 @@
 import { useState, useCallback } from 'react';
 import { usePreventUnsavedClose } from '@/hooks/use-form-dirty-state';
+import type { GiftCard } from '@/types/gift-card.types';
 
-export interface GiftCard {
-  name: string;
-  url: string;
-}
+export type { GiftCard } from '@/types/gift-card.types';
 
 const MAX_CARDS = 8;
 
