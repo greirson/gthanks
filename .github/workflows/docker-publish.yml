@@ -81,16 +81,19 @@ jobs:
             -e NEXTAUTH_URL=http://localhost:3000 \
             greirson/gthanks:${{ needs.build-and-push.outputs.tag }}
 
-          # Wait for healthy status (max 60s)
-          for i in $(seq 1 12); do
+          # Wait for healthy status (max 120s - allows for 30s start-period + initialization)
+          for i in $(seq 1 24); do
             STATUS=$(docker inspect --format='{{.State.Health.Status}}' test-container 2>/dev/null || echo "starting")
-            echo "Health check attempt $i: $STATUS"
+            echo "Health check attempt $i/24: $STATUS"
             [ "$STATUS" = "healthy" ] && exit 0
             sleep 5
           done
 
           echo "Container failed to become healthy"
+          echo "=== Container Logs ==="
           docker logs test-container
+          echo "=== Health Check Details ==="
+          docker inspect --format='{{json .State.Health}}' test-container || true
           exit 1
 
       - name: Cleanup

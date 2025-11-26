@@ -111,9 +111,9 @@ RUN mkdir -p /app/data /app/uploads && chown nextjs:nodejs /app/data /app/upload
 # Expose port
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => {r.statusCode === 200 ? process.exit(0) : process.exit(1)})" || exit 1
+# Health check - use curl for simpler, synchronous check
+HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost:3000/api/health || exit 1
 
 # Start the application with initialization
 ENTRYPOINT ["./docker-entrypoint.sh"]
