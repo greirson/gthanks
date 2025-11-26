@@ -102,7 +102,8 @@ describe('SignupRestrictionService', () => {
 
   describe('Mixed whitelist (emails + domains)', () => {
     beforeEach(() => {
-      process.env.ALLOWED_SIGNUP_EMAILS = 'admin@external.com,contractor@freelance.com,*@company.com';
+      process.env.ALLOWED_SIGNUP_EMAILS =
+        'admin@external.com,contractor@freelance.com,*@company.com';
       signupRestrictionService.resetConfig();
     });
 
