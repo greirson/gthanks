@@ -116,9 +116,16 @@ jobs:
       - name: Regenerate Prisma client for PostgreSQL
         run: pnpm run db:generate
 
+      - name: Push database schema
+        run: pnpm run db:push
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+          DATABASE_URL: postgresql://postgres:test@localhost:5432/gthanks_test
+
       - name: Run E2E smoke tests
         run: pnpm exec playwright test smoke.spec.ts --project=chromium
         env:
+          SKIP_ENV_VALIDATION: 'true'
           DATABASE_URL: postgresql://postgres:test@localhost:5432/gthanks_test
           NEXTAUTH_SECRET: test-secret-minimum-32-characters-long
           NEXTAUTH_URL: http://localhost:3000

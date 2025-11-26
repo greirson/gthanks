@@ -9,6 +9,16 @@ const { execSync } = require('child_process');
 const envLocalPath = path.join(__dirname, '..', '.env.local');
 
 function checkEnvironment() {
+  // Skip validation in CI when SKIP_ENV_VALIDATION is set
+  if (process.env.SKIP_ENV_VALIDATION === 'true') {
+    // Still verify critical env vars are present
+    if (!process.env.NEXTAUTH_SECRET || process.env.NEXTAUTH_SECRET.trim() === '') {
+      console.error('\n❌ NEXTAUTH_SECRET is required but not set\n');
+      process.exit(1);
+    }
+    console.log('✓ Environment configured (CI mode)');
+    return;
+  }
   // Check 1: .env.local exists?
   if (!fs.existsSync(envLocalPath)) {
     console.log('\n⚠️  Environment not configured\n');

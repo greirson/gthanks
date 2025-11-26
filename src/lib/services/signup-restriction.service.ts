@@ -32,7 +32,9 @@ class SignupRestrictionService {
    * Runs once at startup for performance
    */
   private getConfig(): SignupConfig {
-    if (this.config) {return this.config;}
+    if (this.config) {
+      return this.config;
+    }
 
     const disabled = process.env.DISABLE_SIGNUPS === 'true';
     const allowed = process.env.ALLOWED_SIGNUP_EMAILS || '';
@@ -74,10 +76,14 @@ class SignupRestrictionService {
     const config = this.getConfig();
 
     // Check 1: Signups globally disabled?
-    if (config.disabled) {return false;}
+    if (config.disabled) {
+      return false;
+    }
 
     // Check 2: No whitelist = allow all (backward compatible)
-    if (config.allowedPatterns.size === 0) {return true;}
+    if (config.allowedPatterns.size === 0) {
+      return true;
+    }
 
     const normalized = email.trim().toLowerCase();
     const domain = '@' + normalized.split('@')[1];

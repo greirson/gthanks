@@ -44,6 +44,7 @@ DISABLE_SIGNUPS=true
 ```
 
 **Use cases:**
+
 - Maintenance mode
 - Private family instance (after everyone has signed up)
 - Closed beta
@@ -61,6 +62,7 @@ ALLOWED_SIGNUP_EMAILS="alice@gmail.com,bob@yahoo.com,grandma@hotmail.com"
 ```
 
 **Use cases:**
+
 - Family wishlist (known members only)
 - Small friend group
 - Invite-only instance
@@ -78,6 +80,7 @@ ALLOWED_SIGNUP_EMAILS="*@company.com,*@partner.org"
 ```
 
 **Use cases:**
+
 - Company internal tool
 - Organization-specific deployment
 - School/university instance
@@ -95,6 +98,7 @@ ALLOWED_SIGNUP_EMAILS="admin@external.com,contractor@freelance.com,*@company.com
 ```
 
 **Use cases:**
+
 - Company employees + external consultants
 - Organization + selected partners
 - Flexible access control
@@ -114,18 +118,21 @@ ALLOWED_SIGNUP_EMAILS="admin@external.com,contractor@freelance.com,*@company.com
 ### Matching Rules
 
 **Email matching is case-insensitive:**
+
 ```bash
 ALLOWED_SIGNUP_EMAILS="User@Example.com"
 # Matches: user@example.com, USER@EXAMPLE.COM, etc.
 ```
 
 **Whitespace is automatically trimmed:**
+
 ```bash
 ALLOWED_SIGNUP_EMAILS=" user@example.com , *@company.com "
 # Works correctly despite extra spaces
 ```
 
 **Wildcard domains match exactly:**
+
 ```bash
 ALLOWED_SIGNUP_EMAILS="*@company.com"
 # ✅ Matches: user@company.com
@@ -135,6 +142,7 @@ ALLOWED_SIGNUP_EMAILS="*@company.com"
 ### Applied to All Auth Methods
 
 Restrictions apply equally to:
+
 - ✅ Magic link (email) authentication
 - ✅ Google OAuth
 - ✅ Facebook OAuth
@@ -150,12 +158,14 @@ Restrictions apply equally to:
 ### No Information Disclosure
 
 Error messages are generic and don't reveal:
+
 - Whether signups are globally disabled
 - If a whitelist exists
 - Whether the email or domain was the issue
 - Whitelist contents
 
 **Error messages users see:**
+
 - "New user registration is currently disabled" (when DISABLE_SIGNUPS=true)
 - "You do not have permission to sign in" (when email not on whitelist)
 
@@ -284,6 +294,7 @@ Restart the application.
 **Symptom:** User sees "Access Denied" error
 
 **Solution:**
+
 1. Verify their email is in `ALLOWED_SIGNUP_EMAILS`
 2. Check for typos in email/domain
 3. Ensure domain wildcard uses correct format: `*@company.com`
@@ -294,6 +305,7 @@ Restart the application.
 **Symptom:** Blocked users can still sign up
 
 **Solution:**
+
 1. Verify environment variables are set correctly
 2. Restart application after env var changes
 3. Check logs to confirm service is reading config
@@ -304,6 +316,7 @@ Restart the application.
 **Symptom:** Existing user sees "Access Denied"
 
 **Solution:** This shouldn't happen - restrictions only apply to NEW signups. If it does:
+
 1. Check application logs for errors
 2. Verify user exists in database
 3. File a bug report with details

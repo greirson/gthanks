@@ -369,6 +369,55 @@ When you see: `Expected object, received undefined` at path `["wish"]`
 **E2E Test Execution:**
 @.claude/commands/testing/run-e2e.md
 
+## Git Hooks (Pre-Commit & Pre-Push)
+
+**IMPORTANT**: This project uses Husky to enforce code quality before commits and pushes.
+
+### Pre-Commit Checks (Blocking)
+
+Every commit runs these checks automatically:
+
+1. **lint-staged** - Auto-fixes staged files (ESLint + Prettier)
+2. **typecheck** - Full TypeScript type check
+3. **lint** - Full ESLint check
+
+If any check fails, the commit is blocked. Fix the issues before committing.
+
+### Pre-Push Checks (Blocking)
+
+Every push runs these additional checks:
+
+1. **typecheck** - Full TypeScript type check
+2. **lint** - Full ESLint check
+3. **test** - Unit test suite
+
+If any check fails, the push is blocked. Fix the issues before pushing.
+
+### Commit Message Format
+
+Commits must follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+<type>(<scope>): <subject>
+
+Types: feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert
+```
+
+Examples:
+
+- `feat: add user authentication`
+- `fix(api): resolve memory leak in group service`
+- `docs: update README with setup instructions`
+
+### Bypassing Hooks (Emergency Only)
+
+```bash
+git commit --no-verify  # Skip pre-commit hooks
+git push --no-verify    # Skip pre-push hooks
+```
+
+Use sparingly - CI will still catch issues.
+
 ## Working Directory Convention (IMPORTANT)
 
 **CRITICAL**: All commands must be run from the project root directory, not from subdirectories.

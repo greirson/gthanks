@@ -42,10 +42,10 @@ async function checkDuplicateReservations() {
   const duplicates = Array.from(groupedByWishUser.entries())
     .filter(([_, reservations]) => reservations.length > 1)
     .map(([key, reservations]) => {
-      const [wishId, userId] = key.split('_');
+      const [wishId, userIdStr] = key.split('_');
       return {
         wishId,
-        userId,
+        userId: userIdStr === 'null' ? null : userIdStr,
         duplicate_count: reservations.length,
         reservation_ids: reservations.map((r) => r.id).join(', '),
         reservations,

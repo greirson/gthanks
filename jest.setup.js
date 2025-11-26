@@ -551,9 +551,11 @@ const mockDb = {
           lists = lists.filter((l) => l.slug?.toLowerCase() === slug);
         }
 
-        // Filter by owner username
-        if (args.where.owner?.username) {
-          const username = args.where.owner.username.toLowerCase();
+        // Filter by owner username (supports both 'owner' and 'user' relation names)
+        const usernameFilter = args.where.owner?.username || args.where.user?.username;
+        if (usernameFilter) {
+          const username =
+            typeof usernameFilter === 'string' ? usernameFilter.toLowerCase() : usernameFilter;
           lists = lists.filter((l) => {
             const owner = mockDataStore.users.get(l.ownerId);
             return owner?.username?.toLowerCase() === username;
