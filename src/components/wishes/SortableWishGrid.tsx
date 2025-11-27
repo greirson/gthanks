@@ -201,7 +201,7 @@ export function SortableWishGrid({
             <SortableWishCard
               key={wish.id}
               wish={wish}
-              variant="comfortable"
+              variant="grid"
               onEdit={onEdit}
               onDelete={onDelete}
               onReserve={onReserve}
@@ -225,7 +225,7 @@ export function SortableWishGrid({
             <SortableWishCard
               key={activeWish.id}
               wish={activeWish}
-              variant="comfortable"
+              variant="grid"
               onEdit={onEdit}
               onDelete={onDelete}
               onReserve={onReserve}

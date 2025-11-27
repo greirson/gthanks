@@ -22,7 +22,7 @@ interface SortableWishCardProps {
   ) => void;
   isDragging?: boolean;
   sortable?: boolean; // Controls whether this is sortable or not
-  variant?: 'comfortable' | 'compact'; // Allow variant to be passed in
+  variant?: 'grid' | 'list'; // Allow variant to be passed in
 }
 
 export function SortableWishCard({
@@ -38,7 +38,7 @@ export function SortableWishCard({
   onToggleSelection,
   isDragging = false,
   sortable = true,
-  variant = 'compact',
+  variant = 'grid',
 }: SortableWishCardProps) {
   const {
     attributes,

@@ -31,8 +31,8 @@ import { safeOpenUrl } from '@/lib/utils/url-validation';
 import { type Wish } from '@/lib/validators/api-responses/wishes';
 
 interface UnifiedWishCardProps {
-  // Layout variant (replaces 3 separate components)
-  variant: 'comfortable' | 'compact' | 'list';
+  // Layout variant: grid (vertical cards) or list (horizontal rows)
+  variant: 'grid' | 'list';
 
   // Shared props (ALL THREE USE IDENTICAL INTERFACE)
   wish: Wish & { isOwner?: boolean };
@@ -58,35 +58,7 @@ interface UnifiedWishCardProps {
 
 // Variant configuration for different layouts
 const variantConfig = {
-  comfortable: {
-    layout: 'vertical' as const,
-    cardClassName: 'relative overflow-hidden transition-shadow duration-150 hover:shadow-lg',
-    imageAspect: 'aspect-square sm:aspect-video',
-    imageSizes:
-      '(max-width: 767px) 100vw, (max-width: 1023px) 50vw, (max-width: 1279px) 33vw, 25vw',
-    contentPadding: 'p-4',
-    titleSize: 'text-lg',
-    titleClamp: 'line-clamp-2',
-    priceSize: 'text-xl sm:text-2xl',
-    showNotes: true,
-    notesClamp: 'line-clamp-3',
-    reserveText: "I'm getting this",
-    reserveTextFull: "I'm getting this",
-    reserveTextShort: 'Reserve',
-    processingText: 'Optimizing...',
-    processingBadge: 'px-2.5 py-1.5',
-    processingIcon: 'h-3.5 w-3.5',
-    processingTextClass: 'text-xs font-medium',
-    hasFooter: true,
-    externalLinkInFooter: true,
-    useSelectionCheckbox: true,
-    menuIconSize: 'h-4 w-4',
-    buttonSize: 'default' as const,
-    badgeSize: 'default' as const,
-    showMetadataLabels: true,
-    includeDataAttributes: true,
-  },
-  compact: {
+  grid: {
     layout: 'vertical' as const,
     cardClassName: 'relative overflow-hidden transition-shadow duration-150 hover:shadow-md',
     imageAspect: 'aspect-square',
@@ -94,7 +66,7 @@ const variantConfig = {
     contentPadding: 'p-3',
     titleSize: 'text-sm',
     titleClamp: 'line-clamp-2',
-    priceSize: 'text-base',
+    priceSize: 'text-xs',
     showNotes: false,
     notesClamp: 'line-clamp-1',
     reserveText: 'Reserve',
@@ -121,7 +93,7 @@ const variantConfig = {
     contentPadding: 'p-4',
     titleSize: 'text-sm',
     titleClamp: 'line-clamp-2',
-    priceSize: 'text-sm',
+    priceSize: 'text-xs',
     showNotes: false,
     notesClamp: 'line-clamp-2 sm:line-clamp-1',
     reserveTextFull: "I'm getting this",
@@ -286,7 +258,7 @@ export function UnifiedWishCard({
                 <div className="flex items-center gap-3">
                   {/* Price */}
                   {wish.price && (
-                    <p className={`font-semibold text-muted-foreground ${config.priceSize}`}>
+                    <p className={`font-bold text-green-600 ${config.priceSize}`}>
                       {formatPrice(wish.price)}
                     </p>
                   )}
@@ -454,7 +426,7 @@ export function UnifiedWishCard({
     );
   }
 
-  // Render vertical layout (comfortable/compact variants)
+  // Render vertical layout (grid variant)
   return (
     <>
       <Card
@@ -494,7 +466,7 @@ export function UnifiedWishCard({
             {/* Processing overlay */}
             {isImageProcessing && (
               <div
-                className={`absolute inset-0 flex items-start justify-end ${variant === 'compact' ? 'p-2' : 'p-3'}`}
+                className={`absolute inset-0 flex items-start justify-end ${variant === 'grid' ? 'p-2' : 'p-3'}`}
               >
                 <div
                   className={`flex items-center gap-1.5 rounded-full bg-blue-600/90 text-white shadow-lg ${config.processingBadge}`}
@@ -509,8 +481,7 @@ export function UnifiedWishCard({
             {wish.imageStatus === 'FAILED' && (
               <div className="flex h-full items-center justify-center">
                 <div className="text-center text-muted-foreground">
-                  <div className={variant === 'compact' ? 'text-2xl' : 'mb-1 text-lg'}>📷</div>
-                  {variant === 'comfortable' && <div className="text-sm">Image unavailable</div>}
+                  <div className="text-2xl">📷</div>
                 </div>
               </div>
             )}
@@ -520,12 +491,12 @@ export function UnifiedWishCard({
         <CardContent className={`${config.contentPadding} flex-grow`}>
           {/* Title and Actions */}
           <div
-            className={`${variant === 'compact' ? 'flex items-start justify-between gap-1' : 'mb-2 flex items-start justify-between'}`}
+            className={`${variant === 'grid' ? 'flex items-start justify-between gap-1' : 'mb-2 flex items-start justify-between'}`}
           >
             <div className="flex flex-1 items-center gap-2 pr-2">
               <h3
                 className={`${config.titleClamp} font-semibold ${config.titleSize}`}
-                title={variant === 'compact' ? wish.title : undefined}
+                title={variant === 'grid' ? wish.title : undefined}
               >
                 {wish.title}
               </h3>
@@ -545,7 +516,7 @@ export function UnifiedWishCard({
           {/* Price */}
           {wish.price && (
             <p
-              className={`${variant === 'compact' ? 'mt-1' : 'mb-2'} font-bold text-green-600 ${config.priceSize}`}
+              className={`${variant === 'grid' ? 'mt-1' : 'mb-2'} font-bold text-green-600 ${config.priceSize}`}
             >
               {formatPrice(wish.price)}
             </p>
@@ -553,7 +524,7 @@ export function UnifiedWishCard({
 
           {/* Wish Level */}
           {wish.wishLevel && (
-            <div className={variant === 'compact' ? 'mt-1' : 'mb-2 flex items-center gap-2'}>
+            <div className={variant === 'grid' ? 'mt-1' : 'mb-2 flex items-center gap-2'}>
               <StarRating
                 value={wish.wishLevel}
                 readonly
@@ -565,41 +536,29 @@ export function UnifiedWishCard({
 
           {/* Metadata badges */}
           <div
-            className={`flex flex-wrap gap-${variant === 'compact' ? '1' : '2'} ${variant === 'compact' ? 'mt-2' : ''}`}
+            className={`flex flex-wrap gap-${variant === 'grid' ? '1' : '2'} ${variant === 'grid' ? 'mt-2' : ''}`}
           >
             {wish.quantity && wish.quantity > 1 && (
-              <Badge
-                variant="secondary"
-                className={variant === 'compact' ? 'px-1 py-0 text-xs' : ''}
-              >
+              <Badge variant="secondary" className={variant === 'grid' ? 'px-1 py-0 text-xs' : ''}>
                 {config.showMetadataLabels ? `Qty: ${wish.quantity}` : wish.quantity}
               </Badge>
             )}
             {wish.size && (
-              <Badge
-                variant="secondary"
-                className={variant === 'compact' ? 'px-1 py-0 text-xs' : ''}
-              >
+              <Badge variant="secondary" className={variant === 'grid' ? 'px-1 py-0 text-xs' : ''}>
                 {config.showMetadataLabels ? `Size: ${wish.size}` : wish.size}
               </Badge>
             )}
             {wish.color && (
-              <Badge
-                variant="secondary"
-                className={variant === 'compact' ? 'px-1 py-0 text-xs' : ''}
-              >
+              <Badge variant="secondary" className={variant === 'grid' ? 'px-1 py-0 text-xs' : ''}>
                 {config.showMetadataLabels ? `Color: ${wish.color}` : wish.color}
               </Badge>
-            )}
-            {variant === 'comfortable' && wish.imageStatus === 'FAILED' && (
-              <Badge variant="destructive">Image failed to load</Badge>
             )}
           </div>
         </CardContent>
 
         {config.hasFooter && (
           <CardFooter
-            className={`flex ${variant === 'compact' ? 'gap-1 p-3 pt-0' : 'flex-col gap-3 p-4 pt-0 sm:flex-row sm:gap-2'}`}
+            className={`flex ${variant === 'grid' ? 'gap-1 p-3 pt-0' : 'flex-col gap-3 p-4 pt-0 sm:flex-row sm:gap-2'}`}
           >
             {/* Reserve button (for non-owners) */}
             {!wish.isOwner && (
@@ -608,15 +567,15 @@ export function UnifiedWishCard({
                 disabled={isReserved}
                 variant={isReserved ? 'secondary' : 'default'}
                 size={config.buttonSize}
-                className={variant === 'compact' ? 'flex-1 text-xs' : 'w-full sm:flex-1'}
+                className={variant === 'grid' ? 'flex-1 text-xs' : 'w-full sm:flex-1'}
                 data-testid={`reserve-${wish.id}`}
               >
-                <ShoppingCart className={variant === 'compact' ? 'mr-1 h-3 w-3' : 'mr-2 h-4 w-4'} />
+                <ShoppingCart className={variant === 'grid' ? 'mr-1 h-3 w-3' : 'mr-2 h-4 w-4'} />
                 {isReserved ? 'Reserved' : config.reserveText}
               </Button>
             )}
 
-            {/* View product link - only in comfortable variant footer */}
+            {/* View product link - controlled by config.externalLinkInFooter */}
             {config.externalLinkInFooter && wish.url && (
               <Button variant="outline" size="sm" asChild>
                 <a
@@ -662,7 +621,7 @@ export function UnifiedWishCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {/* Compact variant has different menu order */}
-              {variant === 'compact' ? (
+              {variant === 'grid' ? (
                 <>
                   {onEdit && (
                     <DropdownMenuItem onClick={() => onEdit(wish)}>

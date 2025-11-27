@@ -9,7 +9,7 @@ import { type Wish } from '@/lib/validators/api-responses/wishes';
 
 interface SortableWishCardProps {
   // Layout variant (passed to UnifiedWishCard)
-  variant: 'comfortable' | 'compact' | 'list';
+  variant: 'grid' | 'list';
 
   // Wish data and callbacks (passed to UnifiedWishCard)
   wish: Wish & { isOwner?: boolean };

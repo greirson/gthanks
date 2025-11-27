@@ -73,7 +73,7 @@ export function WishGrid({
       {wishes.map((wish, index) => (
         <UnifiedWishCard
           key={wish.id}
-          variant="compact"
+          variant="grid"
           wish={wish}
           onEdit={onEdit}
           onDelete={onDelete}
