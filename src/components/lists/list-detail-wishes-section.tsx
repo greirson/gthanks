@@ -5,11 +5,11 @@ import {
   WishesDisplay,
   type SortOption as DisplaySortOption,
 } from '@/components/wishes/wishes-display';
-import { WishViewMode } from '@/components/wishes/wish-controls-bar';
+import type { ViewMode } from '@/components/ui/view-toggle';
 
 interface ListDetailWishesSectionProps {
   wishes: Wish[];
-  viewMode: WishViewMode;
+  viewMode: ViewMode;
   isOwner: boolean;
   isSelectionMode: boolean;
   selectedWishIds: Set<string>;

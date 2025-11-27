@@ -1,16 +1,18 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
-import { PlusIcon, X, CheckSquare } from 'lucide-react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { PlusIcon, X, Filter, CheckSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useViewPreference } from '@/lib/utils/view-preferences';
+import { useWishSortPreference, type WishSortPreference } from '@/lib/utils/sort-preferences';
 import { Button as ThemeButton } from '@/components/ui/button';
 import { Button } from '@/components/ui/button';
+import { ViewToggle } from '@/components/ui/view-toggle';
+import { WishSortToggle } from '@/components/ui/wish-sort-toggle';
 import { MobileFilterSheet } from './filters/MobileFilterSheet';
 import { WishFilterPanel } from './filters/WishFilterPanel';
-import { WishControlsBar } from './wish-controls-bar';
-import { useWishFilters, useWishesQuery } from './hooks/useWishFilters';
+import { useWishFilters, useWishesQuery, type SortOption } from './hooks/useWishFilters';
 import { BulkActionsBar } from './bulk-actions-bar';
 import { WishesDisplay } from './wishes-display';
 import { EmptyStateWithFilters } from './empty-state-with-filters';
@@ -44,7 +46,16 @@ export function WishesView() {
   const [deletingWish, setDeletingWish] = useState<Wish | null>(null);
 
   // View mode state - default to grid for better space efficiency
-  const [viewMode, setViewMode, isHydrated] = useViewPreference('viewMode.wishes', 'grid');
+  const [viewMode, setViewMode, isViewHydrated] = useViewPreference('viewMode.wishes', 'grid');
+
+  // Sort preference state for toolbar toggle
+  const [sortPreference, setSortPreference, isSortHydrated] = useWishSortPreference(
+    'sortMode.wishes',
+    'priority'
+  );
+
+  // Combined hydration state
+  const isHydrated = isViewHydrated && isSortHydrated;
 
   // Use React Query to fetch wishes data with loading state
   const { data: wishesData, isLoading } = useWishesQuery();
@@ -61,6 +72,30 @@ export function WishesView() {
     activeFilterCount,
     maxPrice,
   } = useWishFilters(currentWishes);
+
+  // Map sort preference to SortOption for useWishFilters
+  const mapSortPreferenceToOption = useCallback((pref: WishSortPreference): SortOption => {
+    switch (pref.mode) {
+      case 'priority':
+        return pref.direction === 'desc' ? 'wishLevel-high' : 'wishLevel-low';
+      case 'price':
+        return pref.direction === 'desc' ? 'price-high' : 'price-low';
+      case 'newest':
+        // 'custom' sorts by addedAt/createdAt desc by default
+        // For asc, we'd need a new option, but for now map to custom
+        return 'custom';
+      default:
+        return 'custom';
+    }
+  }, []);
+
+  // Sync toolbar sort preference with filter hook
+  useEffect(() => {
+    if (isSortHydrated) {
+      const sortOption = mapSortPreferenceToOption(sortPreference);
+      setSortOption(sortOption);
+    }
+  }, [sortPreference, isSortHydrated, mapSortPreferenceToOption, setSortOption]);
 
   // Memoize filtered wishes to avoid unnecessary re-renders
   const memoizedFilteredWishes = useMemo(() => filteredWishes, [filteredWishes]);
@@ -192,31 +227,79 @@ export function WishesView() {
               </ThemeButton>
             </div>
 
-            {/* Controls Bar - Unified across all viewports */}
-            <div className="mb-4 mt-4">
-              <div className="sticky top-16 z-20 bg-background md:static md:z-0">
-                <div className="border-b bg-background px-4 py-2 md:px-0">
-                  <WishControlsBar
-                    isHydrated={isHydrated}
-                    viewMode={viewMode}
-                    onViewModeChange={setViewMode}
-                    filterCount={activeFilterCount}
-                    onToggleFilters={() => {
-                      const isMobile = window.innerWidth < 1024;
-                      if (isMobile) {
-                        setIsMobileFilterOpen(!isMobileFilterOpen);
-                      } else {
-                        setIsDesktopFilterOpen(!isDesktopFilterOpen);
-                      }
-                    }}
-                    isFiltersOpen={isDesktopFilterOpen || isMobileFilterOpen}
-                    showSelectButton={true}
-                    isSelectionMode={isSelectionMode}
-                    onToggleSelection={toggleSelectionMode}
-                    showMobileActions={false}
-                    onAddAction={() => setShowAddWishDialog(true)}
-                  />
-                </div>
+            {/* Desktop Toolbar */}
+            <div className="mb-4 hidden items-center justify-between border-b pb-4 md:flex">
+              {/* Left side: Filters + Select */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={isDesktopFilterOpen ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setIsDesktopFilterOpen(!isDesktopFilterOpen)}
+                  className="relative"
+                >
+                  <Filter className="mr-2 h-4 w-4" />
+                  Filters
+                  {activeFilterCount > 0 && (
+                    <span className="ml-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1 text-xs text-primary-foreground">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </Button>
+                <Button
+                  variant={isSelectionMode ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={toggleSelectionMode}
+                >
+                  {isSelectionMode ? 'Exit Selection' : 'Select'}
+                </Button>
+              </div>
+
+              {/* Right side: Sort + View */}
+              <div className="flex items-center gap-2">
+                <WishSortToggle
+                  preference={sortPreference}
+                  onPreferenceChange={setSortPreference}
+                  isHydrated={isHydrated}
+                />
+                <ViewToggle
+                  viewMode={viewMode}
+                  onViewModeChange={setViewMode}
+                  isHydrated={isHydrated}
+                />
+              </div>
+            </div>
+
+            {/* Mobile Top Menu Bar */}
+            <div className="sticky top-0 z-30 flex items-center justify-between border-b bg-background px-0 py-1.5 md:hidden">
+              {/* Left: Filter only */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsMobileFilterOpen(true)}
+                  className="relative min-h-[44px] min-w-[44px]"
+                >
+                  <Filter className="h-4 w-4" />
+                  {activeFilterCount > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1 text-xs text-primary-foreground">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </Button>
+              </div>
+
+              {/* Right: Sort + View */}
+              <div className="flex items-center gap-2">
+                <WishSortToggle
+                  preference={sortPreference}
+                  onPreferenceChange={setSortPreference}
+                  isHydrated={isHydrated}
+                />
+                <ViewToggle
+                  viewMode={viewMode}
+                  onViewModeChange={setViewMode}
+                  isHydrated={isHydrated}
+                />
               </div>
             </div>
 
@@ -353,18 +436,22 @@ export function WishesView() {
 
       {/* Mobile Bottom Bar - Select + Add Wish */}
       {!isSelectionMode && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background shadow-md lg:hidden">
-          <div className="flex items-center justify-between px-3 py-2">
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background shadow-md md:hidden">
+          <div className="flex items-center justify-between px-4 py-1.5">
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
               onClick={toggleSelectionMode}
-              aria-label="Select wishes"
-              className="h-11 w-11 p-0"
+              className="min-h-[44px] min-w-[44px]"
+              aria-label="Enter selection mode"
             >
               <CheckSquare className="h-5 w-5" />
             </Button>
-            <ThemeButton onClick={() => setShowAddWishDialog(true)} className="min-h-[44px]">
+            <ThemeButton
+              onClick={() => setShowAddWishDialog(true)}
+              size="lg"
+              className="min-h-[44px] min-w-[130px]"
+            >
               <PlusIcon className="mr-2 h-4 w-4" />
               Add Wish
             </ThemeButton>

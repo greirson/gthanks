@@ -30,7 +30,6 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { WishForm } from '@/components/wishes/wish-form';
-import { WishControlsBar } from '@/components/wishes/wish-controls-bar';
 import { useViewPreference } from '@/lib/utils/view-preferences';
 import { WishFilterPanel } from '@/components/wishes/filters/WishFilterPanel';
 import { MobileFilterSheet } from '@/components/wishes/filters/MobileFilterSheet';
@@ -449,18 +448,40 @@ export function ListDetailView({ initialList, listId }: ListDetailViewProps) {
             onBack={() => router.push('/lists')}
           />
 
-          {/* Controls Bar - Filter button and View toggle */}
-          <div className="mt-4">
-            <WishControlsBar
-              isHydrated={isHydrated}
-              onToggleFilters={() => setIsDesktopFilterOpen(!isDesktopFilterOpen)}
-              isFiltersOpen={isDesktopFilterOpen}
-              filterCount={activeFilterCount}
+          {/* Controls Bar - Filter button, Select button, and View toggle */}
+          <div className="mt-4 flex items-center justify-between border-b pb-4">
+            {/* Left side: Filters + Select (if owner) */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant={isDesktopFilterOpen ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setIsDesktopFilterOpen(!isDesktopFilterOpen)}
+                className="relative"
+              >
+                <Filter className="mr-2 h-4 w-4" />
+                Filters
+                {activeFilterCount > 0 && (
+                  <span className="ml-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1 text-xs text-primary-foreground">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </Button>
+              {list.isOwner && (
+                <Button
+                  variant={isSelectionMode ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={toggleSelectionMode}
+                >
+                  {isSelectionMode ? 'Exit Selection' : 'Select'}
+                </Button>
+              )}
+            </div>
+
+            {/* Right side: View toggle */}
+            <ViewToggle
               viewMode={viewMode}
               onViewModeChange={setViewMode}
-              showSelectButton={!!list.isOwner}
-              isSelectionMode={isSelectionMode}
-              onToggleSelection={toggleSelectionMode}
+              isHydrated={isHydrated}
             />
           </div>
 

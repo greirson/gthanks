@@ -1,11 +1,13 @@
 /**
- * Sort preferences hook for list sorting with direction support
+ * Sort preferences hook for list/wish sorting with direction support
  * Stores user's preferred sort mode and direction in localStorage
  */
 
 import { useState, useEffect } from 'react';
 
 export type SortDirection = 'asc' | 'desc';
+
+// List sort types
 export type ListSortMode = 'name' | 'wishes' | 'newest';
 
 export interface ListSortPreference {
@@ -13,10 +15,25 @@ export interface ListSortPreference {
   direction: SortDirection;
 }
 
-// Smart defaults per mode
+// Smart defaults per mode for lists
 export const DEFAULT_DIRECTION: Record<ListSortMode, SortDirection> = {
   name: 'asc', // A-Z natural
   wishes: 'desc', // Most wishes first
+  newest: 'desc', // Newest first
+};
+
+// Wish sort types
+export type WishSortMode = 'priority' | 'price' | 'newest';
+
+export interface WishSortPreference {
+  mode: WishSortMode;
+  direction: SortDirection;
+}
+
+// Smart defaults per mode for wishes
+export const WISH_DEFAULT_DIRECTION: Record<WishSortMode, SortDirection> = {
+  priority: 'desc', // Highest priority first
+  price: 'desc', // Most expensive first
   newest: 'desc', // Newest first
 };
 
@@ -90,6 +107,77 @@ export function useSortPreference(
 
   // Update preference handler
   const updateSortPreference = (preference: ListSortPreference) => {
+    setSortPreference(preference);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(storageKey, JSON.stringify(preference));
+    }
+  };
+
+  return [sortPreference, updateSortPreference, isHydrated];
+}
+
+/**
+ * Hook to manage wish sort preference with direction
+ * @param storageKey - localStorage key for storing the preference
+ * @param defaultMode - default sort mode if no preference is stored
+ * @returns [preference, setPreference, isHydrated]
+ */
+export function useWishSortPreference(
+  storageKey: string,
+  defaultMode: WishSortMode
+): [WishSortPreference, (preference: WishSortPreference) => void, boolean] {
+  const [sortPreference, setSortPreference] = useState<WishSortPreference>({
+    mode: defaultMode,
+    direction: WISH_DEFAULT_DIRECTION[defaultMode],
+  });
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Load preference from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(storageKey);
+
+      if (stored) {
+        try {
+          // Try parsing as new JSON format
+          const parsed = JSON.parse(stored) as WishSortPreference;
+
+          if (
+            parsed &&
+            typeof parsed === 'object' &&
+            'mode' in parsed &&
+            'direction' in parsed &&
+            ['priority', 'price', 'newest'].includes(parsed.mode) &&
+            ['asc', 'desc'].includes(parsed.direction)
+          ) {
+            setSortPreference(parsed);
+          } else {
+            // Invalid format, use defaults
+            setSortPreference({
+              mode: defaultMode,
+              direction: WISH_DEFAULT_DIRECTION[defaultMode],
+            });
+          }
+        } catch {
+          // Old format (simple string) or invalid JSON - use defaults
+          setSortPreference({
+            mode: defaultMode,
+            direction: WISH_DEFAULT_DIRECTION[defaultMode],
+          });
+        }
+      } else {
+        setSortPreference({
+          mode: defaultMode,
+          direction: WISH_DEFAULT_DIRECTION[defaultMode],
+        });
+      }
+
+      setIsHydrated(true);
+    }
+  }, [storageKey, defaultMode]);
+
+  // Update preference handler
+  const updateSortPreference = (preference: WishSortPreference) => {
     setSortPreference(preference);
     if (typeof window !== 'undefined') {
       localStorage.setItem(storageKey, JSON.stringify(preference));

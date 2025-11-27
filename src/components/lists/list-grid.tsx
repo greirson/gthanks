@@ -8,7 +8,7 @@ import { ListWithOwner } from '@/lib/validators/api-responses/lists';
 import { ListCardCompact } from './list-card-compact';
 import { ListListView } from './list-list-view';
 import { EmptyListState } from './empty-list-state';
-import type { ListViewMode } from './list-controls-bar';
+import type { ViewMode } from '@/components/ui/view-toggle';
 
 interface ListGridProps {
   lists: (ListWithDetails | ListWithOwner)[];
@@ -16,7 +16,7 @@ interface ListGridProps {
   onDelete?: (list: ListWithDetails | ListWithOwner) => void;
   onShare?: (list: ListWithDetails | ListWithOwner) => void;
   isLoading?: boolean;
-  viewMode?: ListViewMode;
+  viewMode?: ViewMode;
   currentUserId?: string;
 }
 
