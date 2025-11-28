@@ -23,7 +23,7 @@ import {
 
 interface GroupFormProps {
   group?: Group | GroupWithCountsResponse;
-  onSubmit: (data: GroupCreateInput | GroupUpdateInput) => void;
+  onSubmit: (data: GroupUpdateInput) => void;
   isLoading?: boolean;
   onCancel?: () => void;
   onDirtyStateChange?: (isDirty: boolean) => void;

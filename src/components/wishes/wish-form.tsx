@@ -397,7 +397,7 @@ export function WishForm({
       ...formData,
       title: formData.title ?? '',
       wishLevel: formData.wishLevel || 1,
-    } as WishCreateInput | WishUpdateInput;
+    } as WishUpdateInput;
 
     // Clean up empty strings and convert to null
     Object.keys(dataToSubmit).forEach((key) => {
@@ -409,7 +409,7 @@ export function WishForm({
     });
 
     if (isEditing) {
-      await updateMutation.mutateAsync(dataToSubmit as WishUpdateInput);
+      await updateMutation.mutateAsync(dataToSubmit);
     } else {
       await createMutation.mutateAsync(dataToSubmit as WishCreateInput);
     }

@@ -556,7 +556,7 @@ export class WishService {
    */
   async getUserWishes(
     userId: string,
-    options: WishQueryOptions & Partial<WishQueryValidatedParams>
+    options: Partial<WishQueryOptions>
   ): Promise<PaginatedResult<Wish>> {
     // If no advanced query params provided, use simple pagination
     if (!this.hasAdvancedQueryParams(options)) {
