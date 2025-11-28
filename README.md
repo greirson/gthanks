@@ -1,6 +1,6 @@
 # gthanks
 
-Simple family wishlist coordination to prevent duplicate gifts.
+The easy way to keep wishlists and share them with family.
 
 ## ⚠️ ACTIVE DEVELOPMENT WARNING
 

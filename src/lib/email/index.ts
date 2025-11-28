@@ -214,7 +214,7 @@ export async function sendMagicLink(email: string, token: string, baseUrl?: stri
       <a href="${loginUrl}" style="display: inline-block; background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">Sign In</a>
       <p style="margin: 28px 0 0; font-size: 13px; color: #9ca3af; line-height: 1.5;">This link expires in 15 minutes.<br>If you didn't request this, you can safely ignore this email.</p>
     </div>
-    <p style="margin: 20px 0 0; text-align: center; font-size: 12px; color: #9ca3af;">gThanks &ndash; Wishlist coordination for families</p>
+    <p style="margin: 20px 0 0; text-align: center; font-size: 12px; color: #9ca3af;">gThanks &ndash; Family wishlist hub</p>
   </div>
 </body>
 </html>`,
@@ -339,7 +339,7 @@ function createNewUserInvitationTemplate(data: ListInvitationEmailData): string 
           <div style="background-color: #e3f2fd; border-radius: 8px; padding: 20px; margin: 20px 0;">
             <h4 style="margin: 0 0 12px; color: #1565c0; font-size: 16px; font-weight: 600;">What is GThanks?</h4>
             <p style="margin: 0; color: #1565c0; font-size: 14px;">
-              GThanks helps families coordinate wishlists to prevent duplicate gifts. As a co-manager, you'll help organize and manage wishes in this shared list.
+              GThanks makes it easy to keep track of wishes and share them with family. As a co-manager, you'll help organize and manage wishes in this shared list.
             </p>
           </div>
         </div>

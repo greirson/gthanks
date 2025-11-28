@@ -18,6 +18,10 @@ module.exports = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        handwriting: ['var(--font-handwriting)', 'cursive'],
+      },
       colors: {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
@@ -84,10 +88,34 @@ module.exports = {
           from: { height: 'var(--radix-accordion-content-height)' },
           to: { height: 0 },
         },
+        'ticker-scroll': {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
+        'fly-out': {
+          '0%': { transform: 'translateX(0) translateY(0) rotate(0deg)', opacity: 1 },
+          '100%': { transform: 'translateX(100vw) translateY(30vh) rotate(720deg)', opacity: 1 },
+        },
+        'land-bounce': {
+          '0%': { transform: 'translateY(-50vh) rotate(var(--rotation, 0deg))', opacity: 0 },
+          '20%': { opacity: 1 },
+          '70%': { transform: 'translateY(0) rotate(var(--rotation, 0deg))' },
+          '85%': { transform: 'translateY(-15px) rotate(var(--rotation, 0deg))' },
+          '100%': { transform: 'translateY(0) rotate(var(--rotation, 0deg))' },
+        },
+        shake: {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '25%': { transform: 'translateX(-2px)' },
+          '75%': { transform: 'translateX(2px)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'ticker-scroll': 'ticker-scroll 15s linear infinite',
+        'fly-out': 'fly-out 0.6s ease-in forwards',
+        'land-bounce': 'land-bounce 0.7s ease-out forwards',
+        shake: 'shake 0.1s ease-in-out infinite',
       },
     },
   },

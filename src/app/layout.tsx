@@ -1,7 +1,7 @@
 import { Toaster } from '@/components/ui/toaster';
 
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Caveat, Inter } from 'next/font/google';
 
 import { ChunkLoadErrorHandler } from '@/components/error/chunk-load-error-handler';
 import { ErrorBoundary } from '@/components/error/error-boundary';
@@ -17,11 +17,18 @@ const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
   preload: true,
+  variable: '--font-inter',
+});
+
+const caveat = Caveat({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-handwriting',
 });
 
 export const metadata: Metadata = {
-  title: 'gthanks - Wishlist Manager',
-  description: 'Create and share wishlists with friends and family',
+  title: 'gthanks - Family Wishlist Hub',
+  description: 'Create wishlists, share with family, and make gift-giving easier',
   formatDetection: {
     telephone: false,
   },
@@ -43,7 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <ThemeScript />
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.variable} ${caveat.variable} font-sans`}>
         <SkipLink href="#main-content">Skip to main content</SkipLink>
         <SessionProvider>
           <ChunkLoadErrorHandler>
