@@ -44,6 +44,14 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     // Fetch list using service
     const list = await listService.getByVanityUrl(username, slug);
 
+    // Handle list not found
+    if (!list) {
+      return NextResponse.json(
+        { error: getUserFriendlyError('NOT_FOUND'), code: 'NOT_FOUND' },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json(list);
   } catch (error) {
     if (error instanceof NotFoundError) {

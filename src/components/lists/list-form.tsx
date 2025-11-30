@@ -8,6 +8,16 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -67,7 +77,10 @@ export function ListForm({
   });
 
   const [slug, setSlug] = useState(list?.slug ?? '');
-  const [slugTouched, setSlugTouched] = useState(false);
+  const [slugTouched, setSlugTouched] = useState(Boolean(list?.slug));
+  const [showSlugChangeDialog, setShowSlugChangeDialog] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState<Partial<ListCreateInput> | null>(null);
+  const originalSlug = list?.slug ?? '';
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isMounted, setIsMounted] = useState(false);
 
@@ -100,6 +113,10 @@ export function ListForm({
   const setSlugMutation = useMutation({
     mutationFn: async ({ listId, slug }: { listId: string; slug: string }) => {
       return vanityApi.setListSlug(listId, slug);
+    },
+    onSuccess: async (_, variables) => {
+      // Refetch the list query so parent components get fresh data (e.g., share dialog)
+      await queryClient.refetchQueries({ queryKey: ['lists', variables.listId] });
     },
     onError: (error: Error) => {
       toast({
@@ -245,7 +262,8 @@ export function ListForm({
     },
     onSuccess: async (updatedData) => {
       // Set/update slug if changed and user has access
-      if (list?.id && slug !== list.slug && canUseVanityUrls && username) {
+      const slugWasUpdated = list?.id && slug !== list.slug && canUseVanityUrls && username;
+      if (slugWasUpdated) {
         await setSlugMutation.mutateAsync({ listId: list.id, slug });
       }
 
@@ -254,11 +272,14 @@ export function ListForm({
         description: 'Your list has been updated',
       });
 
+      // Merge new slug into updatedData so cache updates include the correct slug
+      const dataWithSlug = slugWasUpdated ? { ...updatedData, slug } : updatedData;
+
       // Update specific list query (detail page) if it exists
       if (list?.id) {
         queryClient.setQueryData(['lists', list.id], (oldData: ListWithDetails | undefined) => {
           if (oldData) {
-            return { ...oldData, ...updatedData };
+            return { ...oldData, ...dataWithSlug };
           }
           return oldData;
         });
@@ -268,7 +289,7 @@ export function ListForm({
       queryClient.setQueryData(['lists'], (oldData: PaginatedListsResponse | undefined) => {
         if (oldData?.items) {
           const updatedLists = oldData.items.map((listItem: ListWithOwner) =>
-            listItem.id === list?.id ? { ...listItem, ...updatedData } : listItem
+            listItem.id === list?.id ? { ...listItem, ...dataWithSlug } : listItem
           );
           return {
             ...oldData,
@@ -337,6 +358,24 @@ export function ListForm({
     }
   };
 
+  // Proceed with actual form submission
+  const proceedWithSubmit = (cleanData: Partial<ListCreateInput>) => {
+    if (isEditing) {
+      updateMutation.mutate(cleanData as ListUpdateInput);
+    } else {
+      createMutation.mutate(cleanData as ListCreateInput);
+    }
+  };
+
+  // Handle confirmed slug change
+  const handleConfirmSlugChange = () => {
+    setShowSlugChangeDialog(false);
+    if (pendingFormData) {
+      proceedWithSubmit(pendingFormData);
+      setPendingFormData(null);
+    }
+  };
+
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -354,11 +393,16 @@ export function ListForm({
       cleanData.password = null;
     }
 
-    if (isEditing) {
-      updateMutation.mutate(cleanData as ListUpdateInput);
-    } else {
-      createMutation.mutate(cleanData as ListCreateInput);
+    // Check if slug is being changed on an existing list
+    const slugChanged = isEditing && originalSlug && slug !== originalSlug;
+    if (slugChanged && canUseVanityUrls && username) {
+      // Show confirmation dialog
+      setPendingFormData(cleanData);
+      setShowSlugChangeDialog(true);
+      return;
     }
+
+    proceedWithSubmit(cleanData);
   };
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
@@ -483,6 +527,29 @@ export function ListForm({
           </Button>
         )}
       </div>
+
+      {/* Confirmation dialog for slug changes */}
+      <AlertDialog open={showSlugChangeDialog} onOpenChange={setShowSlugChangeDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change custom URL?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Changing this URL will break any links you have already shared. Anyone with the old
+              link will see &quot;List not found&quot;.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setPendingFormData(null);
+              }}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmSlugChange}>Change URL</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </form>
   );
 }
