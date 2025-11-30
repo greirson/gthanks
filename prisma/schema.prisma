@@ -213,7 +213,7 @@ model User {
   isOnboardingComplete Boolean           @default(false)
   username             String?           @unique
   usernameSetAt        DateTime?
-  canUseVanityUrls     Boolean           @default(true)
+  canUseVanityUrls     Boolean           @default(false)
   showPublicProfile    Boolean           @default(false)
   accounts             Account[]
   groupInvitations     GroupInvitation[]
