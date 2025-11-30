@@ -42,7 +42,7 @@ export function PriceRangeSlider({
         min={min}
         max={sliderMax}
         step={max > 100 ? 10 : 5}
-        value={[Math.min(value[0], sliderMax), Math.min(value[1], sliderMax)]}
+        value={[value[0], Math.min(value[1], sliderMax)]}
         onValueChange={(newValue) => {
           // If user drags to max and actual max is higher, set to actual max
           const adjustedValue: [number, number] = [

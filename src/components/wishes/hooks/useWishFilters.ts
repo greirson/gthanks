@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
 import type { Wish } from '@/lib/validators/api-responses/wishes';
@@ -133,19 +133,29 @@ export function useWishFilters(wishes: WishWithListContext[], pageSize = 24) {
 
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Auto-update price max when maxPrice changes and current max is at old default
+  // Track if user has manually adjusted the price filter
+  // We use a ref to track the previous maxPrice to detect when it actually changes
+  const prevMaxPriceRef = useRef(maxPrice);
+
+  // Auto-update price max ONLY when maxPrice increases (new expensive items added)
+  // Do NOT reset when user manually lowers the max filter
   useEffect(() => {
-    // Auto-update the max price when:
-    // 1. maxPrice changes and is greater than 0
-    // 2. User hasn't set a custom price filter (min is still 0)
-    // 3. Current max is less than the new maxPrice
-    if (maxPrice > 0 && filterState.cost.min === 0 && filterState.cost.max < maxPrice) {
+    const prevMaxPrice = prevMaxPriceRef.current;
+    prevMaxPriceRef.current = maxPrice;
+
+    // Only auto-update when:
+    // 1. maxPrice actually increased (new items added with higher prices)
+    // 2. Current max equals the old maxPrice (user hasn't customized it)
+    const maxPriceIncreased = maxPrice > prevMaxPrice;
+    const maxIsAtPreviousDefault = filterState.cost.max === prevMaxPrice;
+
+    if (maxPrice > 0 && maxPriceIncreased && maxIsAtPreviousDefault) {
       setFilterState((prev) => ({
         ...prev,
         cost: { ...prev.cost, max: maxPrice },
       }));
     }
-  }, [maxPrice, filterState.cost.min, filterState.cost.max, setFilterState]);
+  }, [maxPrice, filterState.cost.max, setFilterState]);
 
   // Updated to handle array-based wish level selection
   const setWishLevelSelection = useCallback(

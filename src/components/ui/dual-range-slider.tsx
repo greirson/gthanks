@@ -28,16 +28,16 @@ export function DualRangeSlider({
   ariaLabel = 'Range slider',
 }: DualRangeSliderProps) {
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn('space-y-2 px-2', className)}>
       {showLabels && (
-        <div className="flex justify-between text-sm text-muted-foreground">
+        <div className="pointer-events-none flex justify-between text-sm text-muted-foreground">
           <span>{formatValue(value[0])}</span>
           <span>{formatValue(value[1])}</span>
         </div>
       )}
 
       <SliderPrimitive.Root
-        className="relative flex w-full touch-none select-none items-center"
+        className="relative flex w-full select-none items-center"
         value={value}
         onValueChange={onValueChange}
         min={min}
@@ -52,19 +52,19 @@ export function DualRangeSlider({
 
         {/* First thumb for min value */}
         <SliderPrimitive.Thumb
-          className="block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+          className="block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
           aria-label={`Minimum ${ariaLabel}`}
         />
 
-        {/* Second thumb for max value */}
+        {/* Second thumb for max value - z-10 ensures it's always interactable when thumbs overlap */}
         <SliderPrimitive.Thumb
-          className="block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+          className="z-10 block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
           aria-label={`Maximum ${ariaLabel}`}
         />
       </SliderPrimitive.Root>
 
       {showLabels && (
-        <div className="flex justify-between text-xs text-muted-foreground">
+        <div className="pointer-events-none flex justify-between text-xs text-muted-foreground">
           <span>{formatValue(min)}</span>
           <span>{formatValue(max)}</span>
         </div>
