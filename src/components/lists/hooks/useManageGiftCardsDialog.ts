@@ -4,8 +4,6 @@ import type { GiftCard } from '@/types/gift-card.types';
 
 export type { GiftCard } from '@/types/gift-card.types';
 
-const MAX_CARDS = 8;
-
 /**
  * Custom hook for managing the table-based gift card editor state
  */
@@ -44,12 +42,7 @@ export function useManageGiftCardsDialog(initialCards: GiftCard[]) {
   }, []);
 
   const addCard = useCallback(() => {
-    setCards((prev) => {
-      if (prev.length >= MAX_CARDS) {
-        return prev;
-      }
-      return [...prev, { name: '', url: '' }];
-    });
+    setCards((prev) => [...prev, { name: '', url: '' }]);
     setIsDirty(true);
   }, []);
 

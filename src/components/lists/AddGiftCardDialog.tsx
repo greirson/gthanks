@@ -77,16 +77,6 @@ export function AddGiftCardDialog({
       return;
     }
 
-    // Check max cards (10)
-    if (existingCards.length >= 10) {
-      toast({
-        title: 'Maximum cards reached',
-        description: 'You can only have up to 10 gift cards per list',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     const newCard: GiftCard = {
       name: name.trim(),
       url: url.trim(),
@@ -161,7 +151,7 @@ export function AddGiftCardDialog({
 
             {existingCards.length >= 8 && (
               <p className="text-sm text-muted-foreground">
-                You have {existingCards.length} of 10 maximum gift cards.
+                Adding more cards may push wishes lower on the page.
               </p>
             )}
           </DialogBody>

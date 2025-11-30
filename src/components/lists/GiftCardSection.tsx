@@ -155,12 +155,7 @@ export function GiftCardSection({
           </h3>
 
           {canEdit && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => manageDialog.open()}
-              disabled={giftCards.length >= 8}
-            >
+            <Button variant="ghost" size="sm" onClick={() => manageDialog.open()}>
               <Plus className="mr-1 h-4 w-4" />
               Manage Gift Cards
             </Button>

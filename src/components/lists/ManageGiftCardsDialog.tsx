@@ -37,9 +37,9 @@ interface ManageGiftCardsDialogProps {
  * - Auto-save with 1000ms debouncing
  * - Manual save button (only enabled when dirty)
  * - Cancel button (reverts changes)
- * - Card limit: 8 cards max
  * - Validation on save (filters empty cards)
  * - Mobile responsive
+ * - Warning shown when 8+ cards (may push wishes lower on page)
  */
 export function ManageGiftCardsDialog({
   isOpen,
@@ -127,7 +127,7 @@ export function ManageGiftCardsDialog({
         {/* Header */}
         <DialogHeader className="pb-4">
           <DialogTitle className="text-lg sm:text-xl">Manage Gift Cards</DialogTitle>
-          <DialogDescription>{dialog.cards.length}/8 cards</DialogDescription>
+          <DialogDescription>{dialog.cards.length} cards</DialogDescription>
         </DialogHeader>
 
         {/* Table/Cards (scrollable) */}
@@ -142,33 +142,45 @@ export function ManageGiftCardsDialog({
         </div>
 
         {/* Footer */}
-        <DialogFooter className="mb-0 flex flex-col items-stretch gap-3 pb-2 pt-4 sm:flex-row sm:items-center">
-          <Button
-            variant="outline"
-            onClick={dialog.addCard}
-            disabled={dialog.cards.length >= 8}
-            className="h-11 w-full sm:h-10 sm:w-auto"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Card ({dialog.cards.length}/8)
-          </Button>
-
-          <div className="flex w-full gap-2 sm:w-auto">
+        {/* Override DialogFooter's sm:flex-row with sm:flex-col to keep stacked layout */}
+        <DialogFooter className="mb-0 flex flex-col gap-3 pb-2 pt-4 sm:flex-col sm:space-x-0">
+          {/* Top row: Add Card button + Cancel/Save buttons */}
+          <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
             <Button
               variant="outline"
-              onClick={handleCancel}
-              className="h-11 flex-1 sm:h-10 sm:flex-initial"
+              onClick={dialog.addCard}
+              className="h-11 w-full sm:h-10 sm:w-auto"
             >
-              Cancel
+              <Plus className="mr-2 h-4 w-4" />
+              Add Card
             </Button>
-            <Button
-              onClick={handleSave}
-              disabled={!dialog.isDirty}
-              className="h-11 flex-1 sm:h-10 sm:flex-initial"
-            >
-              Save
-            </Button>
+
+            <div className="flex w-full gap-2 sm:w-auto">
+              <Button
+                variant="outline"
+                onClick={handleCancel}
+                className="h-11 flex-1 sm:h-10 sm:flex-initial"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={!dialog.isDirty}
+                className="h-11 flex-1 sm:h-10 sm:flex-initial"
+              >
+                Save
+              </Button>
+            </div>
           </div>
+
+          {/* Bottom row: Warning text (only when 8+ cards) */}
+          {dialog.cards.length >= 8 && (
+            <div className="w-full">
+              <p className="text-left text-xs text-muted-foreground">
+                Adding more cards may push wishes lower on the page
+              </p>
+            </div>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
