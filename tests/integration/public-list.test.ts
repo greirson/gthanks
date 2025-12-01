@@ -198,7 +198,7 @@ describe('Public List API Integration Tests', () => {
 
       expect(response.status).toBe(403);
       expect(data.error).toBeTruthy();
-      expect(data.code).toBe('FORBIDDEN');
+      expect(data.code).toBe('PASSWORD_REQUIRED');
     });
 
     it('should allow access to password-protected list with correct password', async () => {

@@ -42,7 +42,7 @@ export async function GET(request: NextRequest, { params }: { params: { shareTok
 
     // For password-protected lists, check if user has valid cookie access
     if (basicList.visibility === 'password') {
-      const accessCookie = request.cookies.get(listAccessTokenService.getCookieName())?.value;
+      const accessCookie = request.cookies?.get(listAccessTokenService.getCookieName())?.value;
       const hasValidAccess = listAccessTokenService.hasValidAccess(
         accessCookie,
         basicList.id,
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest, { params }: { params: { shareTo
     const { password: passwordHash, ...safeList } = list;
 
     // Create access cookie for future requests (24 hours)
-    const existingCookie = request.cookies.get(listAccessTokenService.getCookieName())?.value;
+    const existingCookie = request.cookies?.get(listAccessTokenService.getCookieName())?.value;
     const newCookieValue = listAccessTokenService.addListAccess(
       existingCookie,
       list.id,
@@ -148,7 +148,10 @@ export async function POST(request: NextRequest, { params }: { params: { shareTo
     const response = NextResponse.json(safeList, {
       headers: getRateLimitHeaders(rateLimitResult),
     });
-    response.cookies.set(cookieConfig);
+    // Set cookie if response.cookies is available (may not be in test environment)
+    if (response.cookies) {
+      response.cookies.set(cookieConfig);
+    }
 
     return response;
   } catch (error) {

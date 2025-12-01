@@ -3,6 +3,9 @@
 // Used for __tests__/testing-library.js
 // Learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';
+
+// Set test environment variables
+process.env.NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || 'test-secret-for-jest-tests-32chars';
 // Add TextEncoder/TextDecoder polyfills for jose browser version
 import { TextDecoder, TextEncoder } from 'util';
 
