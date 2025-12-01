@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getCurrentUser } from '@/lib/auth-utils';
+import { getCurrentUserOrToken, type AuthResult } from '@/lib/auth-utils';
 import { AppError, ForbiddenError, NotFoundError, getUserFriendlyError } from '@/lib/errors';
 import { wishService } from '@/lib/services/wish-service';
 import { WishUpdateSchema } from '@/lib/validators/wish';
@@ -40,13 +40,13 @@ interface RouteParams {
  * @see {@link wishService.updateWish} for update logic with permission checks
  */
 export async function PUT(request: NextRequest, { params }: RouteParams) {
-  let user: Awaited<ReturnType<typeof getCurrentUser>> | null = null;
+  let auth: AuthResult | null = null;
   const { wishId } = params;
 
   try {
     // Check authentication
-    user = await getCurrentUser();
-    if (!user) {
+    auth = await getCurrentUserOrToken(request);
+    if (!auth) {
       return NextResponse.json(
         { error: getUserFriendlyError('UNAUTHORIZED'), code: 'UNAUTHORIZED' },
         { status: 401 }
@@ -58,11 +58,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const data = WishUpdateSchema.parse(body);
 
     // Update wish
-    const updated = await wishService.updateWish(wishId, data, user.id);
+    const updated = await wishService.updateWish(wishId, data, auth.userId);
 
     return NextResponse.json(serializePrismaResponse(updated));
   } catch (error) {
-    logger.error({ error, userId: user?.id, wishId }, 'PUT /api/wishes/[wishId] error');
+    logger.error({ error, userId: auth?.userId, wishId }, 'PUT /api/wishes/[wishId] error');
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -124,8 +124,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     // Check authentication
-    const user = await getCurrentUser();
-    if (!user) {
+    const auth = await getCurrentUserOrToken(request);
+    if (!auth) {
       return NextResponse.json(
         { error: getUserFriendlyError('UNAUTHORIZED'), code: 'UNAUTHORIZED' },
         { status: 401 }
@@ -133,7 +133,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     // Delete wish
-    await wishService.deleteWish(params.wishId, user.id);
+    await wishService.deleteWish(params.wishId, auth.userId);
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {

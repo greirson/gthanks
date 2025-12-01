@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getCurrentUser } from '@/lib/auth-utils';
+import { getCurrentUserOrToken } from '@/lib/auth-utils';
 import { AppError } from '@/lib/errors';
 import { listService } from '@/lib/services/list-service';
 import { logger } from '@/lib/services/logger';
@@ -24,9 +24,9 @@ import { WishCreateSchema, WishQuerySchema } from '@/lib/validators/wish';
  */
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
-    const user = await getCurrentUser();
-    if (!user) {
+    // Check authentication (supports both session and Bearer token)
+    const auth = await getCurrentUserOrToken(request);
+    if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get wishes
-    const result = await wishService.getUserWishes(user.id, queryParams);
+    const result = await wishService.getUserWishes(auth.userId, queryParams);
 
     // Serialize dates in the result and wrap in unified pagination format
     const serializedResult = {
@@ -124,14 +124,14 @@ export async function GET(request: NextRequest) {
  *   "listId": "abc123"
  * }
  *
- * @see {@link getCurrentUser} for authentication details
+ * @see {@link getCurrentUserOrToken} for authentication details
  * @see {@link WishCreateSchema} for request validation
  */
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const user = await getCurrentUser();
-    if (!user) {
+    // Check authentication (supports both session and Bearer token)
+    const auth = await getCurrentUserOrToken(request);
+    if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
     const { listIds, ...wishData } = validatedData;
 
     // Create wish
-    const wish = await wishService.createWish(wishData, user.id);
+    const wish = await wishService.createWish(wishData, auth.userId);
 
     // Track which lists the wish was added to
     const addedToLists: string[] = [];
@@ -154,19 +154,19 @@ export async function POST(request: NextRequest) {
       for (const listId of listIds) {
         try {
           // Check if user can edit this list (owner or co-admin)
-          const { allowed } = await permissionService.can(user.id, 'edit', {
+          const { allowed } = await permissionService.can(auth.userId, 'edit', {
             type: 'list',
             id: listId,
           });
 
           if (allowed) {
             // Add wish to list via service layer
-            await listService.addWishToList(listId, { wishId: wish.id }, user.id);
+            await listService.addWishToList(listId, { wishId: wish.id }, auth.userId);
             addedToLists.push(listId);
           } else {
             // Log warning but don't expose which lists exist
             logger.warn(
-              { userId: user.id, listId, wishId: wish.id },
+              { userId: auth.userId, listId, wishId: wish.id },
               'User lacks permission to add wish to list'
             );
           }
@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
           // Log error but continue with other lists
           // Don't expose list existence information
           logger.warn(
-            { userId: user.id, listId, wishId: wish.id, error: listError },
+            { userId: auth.userId, listId, wishId: wish.id, error: listError },
             'Failed to add wish to list'
           );
         }

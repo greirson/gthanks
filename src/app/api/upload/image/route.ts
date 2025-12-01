@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getCurrentUser } from '@/lib/auth-utils';
+import { getCurrentUserOrToken } from '@/lib/auth-utils';
 import { getUserFriendlyError } from '@/lib/errors';
 import { imageProcessor } from '@/lib/services/image-processor';
 import { logger } from '@/lib/services/logger';
@@ -40,8 +40,8 @@ export async function POST(request: NextRequest) {
   try {
     // Image uploads always enabled in MVP
     // Check authentication
-    const user = await getCurrentUser();
-    if (!user) {
+    const auth = await getCurrentUserOrToken(request);
+    if (!auth) {
       return NextResponse.json(
         { error: getUserFriendlyError('UNAUTHORIZED'), code: 'UNAUTHORIZED' },
         { status: 401 }
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Apply rate limit (user-based for authenticated endpoint)
-    const rateLimitResult = await rateLimiter.check('image-upload', user.id);
+    const rateLimitResult = await rateLimiter.check('image-upload', auth.userId);
 
     if (!rateLimitResult.allowed) {
       return NextResponse.json(

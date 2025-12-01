@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getCurrentUser } from '@/lib/auth-utils';
+import { getCurrentUserOrToken } from '@/lib/auth-utils';
 import { ForbiddenError, NotFoundError, getUserFriendlyError } from '@/lib/errors';
 import { listService } from '@/lib/services/list-service';
 import { AddWishToListSchema, RemoveWishFromListSchema } from '@/lib/validators/list';
@@ -41,8 +41,8 @@ interface RouteParams {
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     // Check authentication
-    const user = await getCurrentUser();
-    if (!user) {
+    const auth = await getCurrentUserOrToken(request);
+    if (!auth) {
       return NextResponse.json(
         { error: getUserFriendlyError('UNAUTHORIZED'), code: 'UNAUTHORIZED' },
         { status: 401 }
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const validatedData = AddWishToListSchema.parse(body);
 
     // Add wish to list
-    await listService.addWishToList(listId, validatedData, user.id);
+    await listService.addWishToList(listId, validatedData, auth.userId);
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -125,8 +125,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     // Check authentication
-    const user = await getCurrentUser();
-    if (!user) {
+    const auth = await getCurrentUserOrToken(request);
+    if (!auth) {
       return NextResponse.json(
         { error: getUserFriendlyError('UNAUTHORIZED'), code: 'UNAUTHORIZED' },
         { status: 401 }
@@ -140,7 +140,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const validatedData = RemoveWishFromListSchema.parse(body);
 
     // Remove wish from list
-    await listService.removeWishFromList(listId, validatedData, user.id);
+    await listService.removeWishFromList(listId, validatedData, auth.userId);
 
     return NextResponse.json({ success: true });
   } catch (error) {
