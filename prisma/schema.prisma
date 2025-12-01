@@ -195,31 +195,32 @@ model Session {
 }
 
 model User {
-  id                   String            @id @default(cuid())
-  email                String            @unique
+  id                   String                @id @default(cuid())
+  email                String                @unique
   name                 String?
   avatarUrl            String?
-  createdAt            DateTime          @default(now())
-  updatedAt            DateTime          @updatedAt
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
   emailVerified        DateTime?
   image                String?
-  role                 String            @default("user")
-  isAdmin              Boolean           @default(false)
+  role                 String                @default("user")
+  isAdmin              Boolean               @default(false)
   lastLoginAt          DateTime?
   suspendedAt          DateTime?
   suspendedBy          String?
   suspensionReason     String?
-  themePreference      String?           @default("system")
-  isOnboardingComplete Boolean           @default(false)
-  username             String?           @unique
+  themePreference      String?               @default("system")
+  isOnboardingComplete Boolean               @default(false)
+  username             String?               @unique
   usernameSetAt        DateTime?
-  canUseVanityUrls     Boolean           @default(false)
-  showPublicProfile    Boolean           @default(false)
+  canUseVanityUrls     Boolean               @default(false)
+  showPublicProfile    Boolean               @default(false)
   accounts             Account[]
   groupInvitations     GroupInvitation[]
   lists                List[]
   listAdmins           ListAdmin[]
   listInvitations      ListInvitation[]
+  personalAccessTokens PersonalAccessToken[]
   reservations         Reservation[]
   sessions             Session[]
   emails               UserEmail[]
@@ -336,4 +337,35 @@ model SiteSettings {
   updatedAt             DateTime  @updatedAt
 
   @@map("site_settings")
+}
+
+model PersonalAccessToken {
+  id     String @id @default(cuid())
+  userId String
+  name   String // "Safari Extension", "iPhone App"
+
+  // Token storage (hashed, never plaintext)
+  accessTokenHash  String  @unique // Argon2id hash
+  refreshTokenHash String? @unique // Argon2id hash (optional)
+  tokenPrefix      String  @unique // First 8 chars for O(1) lookup: "gth_abc1"
+
+  // Expiration
+  expiresAt        DateTime // Access token: 24 hours
+  refreshExpiresAt DateTime? // Refresh token: 30 days
+
+  // Metadata for UI display
+  deviceType String? // "safari_extension", "ios_app", etc.
+  lastUsedAt DateTime?
+  lastUsedIp String?
+
+  // Audit
+  createdAt DateTime  @default(now())
+  createdIp String?
+  revokedAt DateTime? // Soft delete for audit trail
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
+  @@map("personal_access_tokens")
 }
