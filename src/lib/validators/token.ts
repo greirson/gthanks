@@ -181,9 +181,9 @@ const deviceTypeSchema = z.enum(DEVICE_TYPES);
 export const createTokenSchema = z.object({
   name: z
     .string()
+    .trim() // Trim BEFORE validation to reject whitespace-only names
     .min(1, 'Name is required')
-    .max(100, 'Name must be less than 100 characters')
-    .trim(),
+    .max(100, 'Name must be less than 100 characters'),
   deviceType: deviceTypeSchema.optional(),
 });
 

@@ -469,6 +469,12 @@ export async function cleanupTestData(userIds?: string[]): Promise<void> {
       },
     });
 
+    await db.personalAccessToken.deleteMany({
+      where: {
+        userId: { in: userIds },
+      },
+    });
+
     await db.user.deleteMany({
       where: {
         id: { in: userIds },
@@ -492,6 +498,7 @@ export async function cleanupTestData(userIds?: string[]): Promise<void> {
     await db.magicLink.deleteMany({});
     await db.userPreference.deleteMany({});
     await db.userEmail.deleteMany({});
+    await db.personalAccessToken.deleteMany({});
     await db.user.deleteMany({});
   }
 }

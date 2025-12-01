@@ -61,6 +61,7 @@ const mockDataStore = {
   emailTemplates: new Map(),
   emailLogs: new Map(),
   deadLetterEmails: new Map(),
+  personalAccessTokens: new Map(),
 };
 
 const mockDb = {
@@ -122,6 +123,7 @@ const mockDb = {
         usernameSetAt: data.data.usernameSetAt !== undefined ? data.data.usernameSetAt : null,
         canUseVanityUrls:
           data.data.canUseVanityUrls !== undefined ? data.data.canUseVanityUrls : true,
+        suspendedAt: data.data.suspendedAt !== undefined ? data.data.suspendedAt : null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -1934,6 +1936,171 @@ const mockDb = {
       return Promise.resolve([]);
     }),
   },
+  personalAccessToken: {
+    create: jest.fn().mockImplementation((data) => {
+      const id = data.data.id || `pat-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+      const token = {
+        id,
+        userId: data.data.userId,
+        name: data.data.name,
+        deviceType: data.data.deviceType || null,
+        accessTokenHash: data.data.accessTokenHash,
+        refreshTokenHash: data.data.refreshTokenHash || null,
+        tokenPrefix: data.data.tokenPrefix,
+        expiresAt: data.data.expiresAt,
+        refreshExpiresAt: data.data.refreshExpiresAt || null,
+        createdIp: data.data.createdIp || null,
+        lastUsedAt: null,
+        lastUsedIp: null,
+        revokedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      mockDataStore.personalAccessTokens.set(id, token);
+      return Promise.resolve(token);
+    }),
+    findUnique: jest.fn().mockImplementation((args) => {
+      let token = null;
+      if (args.where.id) {
+        token = mockDataStore.personalAccessTokens.get(args.where.id);
+      } else if (args.where.tokenPrefix) {
+        token = Array.from(mockDataStore.personalAccessTokens.values()).find(
+          (t) => t.tokenPrefix === args.where.tokenPrefix
+        );
+      }
+
+      if (!token) return Promise.resolve(null);
+
+      // Handle include for user
+      if (args.include?.user) {
+        const user = mockDataStore.users.get(token.userId);
+        if (user) {
+          token = { ...token, user };
+        }
+      }
+
+      // Handle select clause
+      if (args.select) {
+        const selected = {};
+        Object.keys(args.select).forEach((key) => {
+          if (args.select[key] && token[key] !== undefined) {
+            selected[key] = token[key];
+          }
+        });
+        return Promise.resolve(selected);
+      }
+
+      return Promise.resolve(token);
+    }),
+    findMany: jest.fn().mockImplementation((args) => {
+      let tokens = Array.from(mockDataStore.personalAccessTokens.values());
+
+      // Apply where filters
+      if (args?.where) {
+        if (args.where.userId) {
+          tokens = tokens.filter((t) => t.userId === args.where.userId);
+        }
+        if (args.where.revokedAt === null) {
+          tokens = tokens.filter((t) => t.revokedAt === null);
+        }
+        if (args.where.refreshExpiresAt?.gt) {
+          const compareDate = args.where.refreshExpiresAt.gt;
+          tokens = tokens.filter((t) => t.refreshExpiresAt && t.refreshExpiresAt > compareDate);
+        }
+        if (args.where.refreshTokenHash?.not === null) {
+          tokens = tokens.filter((t) => t.refreshTokenHash !== null);
+        }
+      }
+
+      // Handle include for user
+      if (args?.include?.user) {
+        tokens = tokens.map((token) => {
+          const user = mockDataStore.users.get(token.userId);
+          return user ? { ...token, user } : token;
+        });
+      }
+
+      // Handle select clause
+      if (args?.select) {
+        tokens = tokens.map((token) => {
+          const selected = {};
+          Object.keys(args.select).forEach((key) => {
+            if (args.select[key] && token[key] !== undefined) {
+              selected[key] = token[key];
+            }
+          });
+          return selected;
+        });
+      }
+
+      // Apply ordering
+      if (args?.orderBy?.createdAt) {
+        tokens.sort((a, b) => {
+          const aTime = new Date(a.createdAt).getTime();
+          const bTime = new Date(b.createdAt).getTime();
+          return args.orderBy.createdAt === 'asc' ? aTime - bTime : bTime - aTime;
+        });
+      }
+
+      return Promise.resolve(tokens);
+    }),
+    update: jest.fn().mockImplementation((args) => {
+      const token = mockDataStore.personalAccessTokens.get(args.where.id);
+      if (!token) return Promise.resolve(null);
+
+      const updated = { ...token, ...args.data, updatedAt: new Date() };
+      mockDataStore.personalAccessTokens.set(args.where.id, updated);
+      return Promise.resolve(updated);
+    }),
+    updateMany: jest.fn().mockImplementation((args) => {
+      let count = 0;
+      mockDataStore.personalAccessTokens.forEach((token, id) => {
+        let matches = true;
+        if (args.where?.userId && token.userId !== args.where.userId) {
+          matches = false;
+        }
+        if (args.where?.revokedAt === null && token.revokedAt !== null) {
+          matches = false;
+        }
+        if (matches) {
+          const updated = { ...token, ...args.data, updatedAt: new Date() };
+          mockDataStore.personalAccessTokens.set(id, updated);
+          count++;
+        }
+      });
+      return Promise.resolve({ count });
+    }),
+    delete: jest.fn().mockImplementation((args) => {
+      const token = mockDataStore.personalAccessTokens.get(args.where.id);
+      if (token) {
+        mockDataStore.personalAccessTokens.delete(args.where.id);
+      }
+      return Promise.resolve(token);
+    }),
+    deleteMany: jest.fn().mockImplementation((args) => {
+      let count = 0;
+      if (!args || !args.where || Object.keys(args.where).length === 0) {
+        count = mockDataStore.personalAccessTokens.size;
+        mockDataStore.personalAccessTokens.clear();
+      } else {
+        const toDelete = [];
+        mockDataStore.personalAccessTokens.forEach((token, id) => {
+          let matches = true;
+          if (args.where.userId && token.userId !== args.where.userId) {
+            matches = false;
+          }
+          if (matches) {
+            toDelete.push(id);
+          }
+        });
+        toDelete.forEach((id) => {
+          mockDataStore.personalAccessTokens.delete(id);
+          count++;
+        });
+      }
+      return Promise.resolve({ count });
+    }),
+  },
   $connect: jest.fn().mockResolvedValue(undefined),
   $disconnect: jest.fn().mockResolvedValue(undefined),
   $executeRawUnsafe: jest.fn().mockResolvedValue(undefined),
@@ -1963,6 +2130,7 @@ const mockDb = {
     mockDataStore.emailTemplates.clear();
     mockDataStore.emailLogs.clear();
     mockDataStore.deadLetterEmails.clear();
+    mockDataStore.personalAccessTokens.clear();
     if (mockDataStore.verificationTokens) mockDataStore.verificationTokens.clear();
     if (mockDataStore.magicLinks) mockDataStore.magicLinks.clear();
     if (mockDataStore.sessions) mockDataStore.sessions.clear();

@@ -131,11 +131,9 @@ const authOptions: NextAuthOptions = {
   },
   callbacks: {
     redirect: ({ url, baseUrl }) => {
-      // Allow gthanks-extension:// scheme for Safari extension OAuth
-      // This enables ASWebAuthenticationSession to complete the OAuth flow
-      // Only the exact callback path is allowed, not arbitrary extension URLs
+      // Safari extension OAuth: route through intermediary to create PAT
       if (url.startsWith('gthanks-extension://auth/callback')) {
-        return url;
+        return `${baseUrl}/api/auth/safari-extension-callback`;
       }
 
       // Use secure URL validation to prevent open redirect attacks
