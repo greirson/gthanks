@@ -318,6 +318,22 @@ rateLimiter.configure('bulk-operation', {
   maxRequests: 10, // 10 bulk operations per hour per user
 });
 
+// Personal Access Token rate limits
+rateLimiter.configure('token-create', {
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 10, // 10 token creations per hour per user
+});
+
+rateLimiter.configure('token-refresh', {
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 20, // 20 refresh requests per hour per IP
+});
+
+rateLimiter.configure('token-revoke', {
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 20, // 20 revocation requests per hour per user
+});
+
 export function getRateLimitHeaders(result: Awaited<ReturnType<typeof rateLimiter.check>>) {
   return {
     'X-RateLimit-Limit': result.limit.toString(),
