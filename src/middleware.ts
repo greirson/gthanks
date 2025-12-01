@@ -62,6 +62,15 @@ export async function middleware(request: NextRequest) {
 
       // Rate limit passed - headers will be added later if this is an API response
       // For now, just continue processing
+
+      // Check for Bearer token with gth_ prefix on API routes
+      // Pass through for route handler validation - Edge Runtime cannot access database
+      const authHeader = request.headers.get('authorization');
+      if (authHeader?.startsWith('Bearer gth_')) {
+        // Valid access token format detected (not refresh tokens which use gth_ref_)
+        // Let route handler perform actual token validation against database
+        return NextResponse.next();
+      }
     }
   }
 
