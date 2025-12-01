@@ -345,13 +345,11 @@ model PersonalAccessToken {
   name   String // "Safari Extension", "iPhone App"
 
   // Token storage (hashed, never plaintext)
-  accessTokenHash  String  @unique // Argon2id hash
-  refreshTokenHash String? @unique // Argon2id hash (optional)
-  tokenPrefix      String  @unique // First 8 chars for O(1) lookup: "gth_abc1"
+  accessTokenHash String @unique // Argon2id hash
+  tokenPrefix     String @unique // First 8 chars for O(1) lookup: "gth_abc1"
 
-  // Expiration
-  expiresAt        DateTime // Access token: 24 hours
-  refreshExpiresAt DateTime? // Refresh token: 30 days
+  // Expiration (null = never expires)
+  expiresAt DateTime? // User-configured: 30d, 90d, 6m, 1y, or null (never)
 
   // Metadata for UI display
   deviceType String? // "safari_extension", "ios_app", etc.

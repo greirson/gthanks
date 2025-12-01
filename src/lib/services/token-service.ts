@@ -1,10 +1,9 @@
 /**
- * Personal Access Token Service
+ * Personal Access Token Service (Simplified)
  *
  * Manages the lifecycle of Personal Access Tokens (PATs) for API authentication:
- * - Token creation with secure hashing
+ * - Token creation with secure hashing and configurable expiration
  * - Token validation with O(1) prefix lookup + Argon2 verification
- * - Token refresh mechanism
  * - Token management (list, revoke, cleanup)
  *
  * Security:
@@ -17,40 +16,68 @@
  * - O(1) database lookup via indexed tokenPrefix
  * - Non-blocking lastUsedAt updates
  * - Early expiration/revocation checks before hash verification
+ *
+ * Expiration Options (GitHub PAT style):
+ * - 30 days, 90 days (default), 6 months, 1 year, or never (null)
  */
 
 import { db } from '@/lib/db';
 import {
   extractTokenPrefix,
   generateAccessToken,
-  generateRefreshToken,
   getTokenType,
   verifyToken,
 } from '@/lib/crypto/token-generator';
 import { ForbiddenError, NotFoundError } from '@/lib/errors';
+import { type ExpirationOption, DEFAULT_EXPIRATION } from '@/lib/validators/token';
 
 import { logger } from './logger';
-
-// Token lifetime constants
-const ACCESS_TOKEN_LIFETIME_MS = 24 * 60 * 60 * 1000; // 24 hours
-const REFRESH_TOKEN_LIFETIME_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 // Cleanup thresholds
 const EXPIRED_TOKEN_RETENTION_DAYS = 7; // Keep expired tokens for 7 days
 const REVOKED_TOKEN_RETENTION_DAYS = 30; // Keep revoked tokens for 30 days
 
 /**
- * Token pair returned on creation (raw tokens shown once)
+ * Calculate expiration date from option
+ * @param option - Expiration option (30d, 90d, 6m, 1y, never)
+ * @returns Date or null (never expires)
  */
-export interface TokenPair {
-  /** Raw access token (shown once to user) */
-  accessToken: string;
-  /** Raw refresh token (shown once to user) */
-  refreshToken: string;
-  /** Access token expiration */
-  expiresAt: Date;
-  /** Refresh token expiration */
-  refreshExpiresAt: Date;
+export function calculateExpirationDate(option: ExpirationOption): Date | null {
+  if (option === 'never') {
+    return null;
+  }
+
+  const now = new Date();
+
+  switch (option) {
+    case '30d':
+      return new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    case '90d':
+      return new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+    case '6m':
+      // Add 6 months
+      const sixMonths = new Date(now);
+      sixMonths.setMonth(sixMonths.getMonth() + 6);
+      return sixMonths;
+    case '1y':
+      // Add 1 year
+      const oneYear = new Date(now);
+      oneYear.setFullYear(oneYear.getFullYear() + 1);
+      return oneYear;
+    default:
+      // Default to 90 days
+      return new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+  }
+}
+
+/**
+ * Token returned on creation (raw token shown once)
+ */
+export interface CreatedToken {
+  /** Raw token (shown once to user) */
+  token: string;
+  /** Token expiration (null = never expires) */
+  expiresAt: Date | null;
   /** Token record ID */
   tokenId: string;
 }
@@ -67,6 +94,8 @@ export interface CreateTokenOptions {
   deviceType?: string;
   /** IP address for audit trail */
   createdIp?: string;
+  /** Expiration option (default: 90d) */
+  expiresIn?: ExpirationOption;
 }
 
 /**
@@ -79,16 +108,6 @@ export interface ValidatedToken {
   tokenId: string;
   /** Authentication method identifier */
   authMethod: 'token';
-}
-
-/**
- * Result of access token refresh
- */
-export interface RefreshedToken {
-  /** New access token */
-  accessToken: string;
-  /** New expiration time */
-  expiresAt: Date;
 }
 
 /**
@@ -107,8 +126,8 @@ export interface TokenInfo {
   lastUsedAt: Date | null;
   /** Creation timestamp */
   createdAt: Date;
-  /** Access token expiration */
-  expiresAt: Date;
+  /** Token expiration (null = never) */
+  expiresAt: Date | null;
   /** True if this is the currently authenticating token */
   current?: boolean;
 }
@@ -122,24 +141,26 @@ export class TokenService {
   /**
    * Create a new personal access token
    *
-   * Generates both access and refresh tokens with:
+   * Generates a secure token with:
    * - Cryptographically secure random bytes
    * - Argon2id hashing for storage
    * - Prefix extraction for efficient lookup
+   * - Configurable expiration (30d, 90d, 6m, 1y, or never)
    *
    * @param options - Token creation options
-   * @returns Token pair with raw tokens (shown once)
+   * @returns Created token with raw token string (shown once)
    *
    * @example
-   * const { accessToken, refreshToken } = await tokenService.createToken({
+   * const { token, expiresAt } = await tokenService.createToken({
    *   userId: 'user123',
    *   name: 'Safari Extension - MacBook Pro',
    *   deviceType: 'safari_extension',
+   *   expiresIn: '90d',
    *   createdIp: '192.168.1.1'
    * });
    */
-  async createToken(options: CreateTokenOptions): Promise<TokenPair> {
-    const { userId, name, deviceType, createdIp } = options;
+  async createToken(options: CreateTokenOptions): Promise<CreatedToken> {
+    const { userId, name, deviceType, createdIp, expiresIn = DEFAULT_EXPIRATION } = options;
 
     // Verify user exists and is not suspended
     const user = await db.user.findUnique({
@@ -155,14 +176,11 @@ export class TokenService {
       throw new ForbiddenError('Account is suspended');
     }
 
-    // Generate tokens
-    const accessTokenData = await generateAccessToken();
-    const refreshTokenData = await generateRefreshToken();
+    // Generate token
+    const tokenData = await generateAccessToken();
 
-    // Calculate expiration times
-    const now = new Date();
-    const expiresAt = new Date(now.getTime() + ACCESS_TOKEN_LIFETIME_MS);
-    const refreshExpiresAt = new Date(now.getTime() + REFRESH_TOKEN_LIFETIME_MS);
+    // Calculate expiration
+    const expiresAt = calculateExpirationDate(expiresIn);
 
     // Create token record in database
     const tokenRecord = await db.personalAccessToken.create({
@@ -170,22 +188,21 @@ export class TokenService {
         userId,
         name,
         deviceType: deviceType || null,
-        accessTokenHash: accessTokenData.hash,
-        refreshTokenHash: refreshTokenData.hash,
-        tokenPrefix: accessTokenData.prefix,
+        accessTokenHash: tokenData.hash,
+        tokenPrefix: tokenData.prefix,
         expiresAt,
-        refreshExpiresAt,
         createdIp: createdIp || null,
       },
     });
 
-    logger.info({ userId, tokenId: tokenRecord.id, deviceType }, 'Personal access token created');
+    logger.info(
+      { userId, tokenId: tokenRecord.id, deviceType, expiresIn },
+      'Personal access token created'
+    );
 
     return {
-      accessToken: accessTokenData.token,
-      refreshToken: refreshTokenData.token,
+      token: tokenData.token,
       expiresAt,
-      refreshExpiresAt,
       tokenId: tokenRecord.id,
     };
   }
@@ -248,7 +265,8 @@ export class TokenService {
     }
 
     // Check if token is expired (early exit before expensive hash check)
-    if (tokenRecord.expiresAt < new Date()) {
+    // Note: null expiresAt means token never expires
+    if (tokenRecord.expiresAt && tokenRecord.expiresAt < new Date()) {
       return null;
     }
 
@@ -272,100 +290,6 @@ export class TokenService {
       userId: tokenRecord.userId,
       tokenId: tokenRecord.id,
       authMethod: 'token',
-    };
-  }
-
-  /**
-   * Refresh an access token using a refresh token
-   *
-   * @param refreshToken - Raw refresh token
-   * @returns New access token or null if invalid
-   *
-   * @example
-   * const refreshed = await tokenService.refreshAccessToken(refreshToken);
-   * if (!refreshed) {
-   *   // User needs to re-authenticate
-   * }
-   */
-  async refreshAccessToken(refreshToken: string): Promise<RefreshedToken | null> {
-    // Verify token format
-    const tokenType = getTokenType(refreshToken);
-    if (tokenType !== 'refresh') {
-      return null;
-    }
-
-    // Extract prefix - refresh tokens have different prefix but same extraction logic
-    const prefix = extractTokenPrefix(refreshToken);
-    if (!prefix) {
-      return null;
-    }
-
-    // Find tokens with refresh token hash (need to search all tokens)
-    // Note: We can't use prefix lookup for refresh tokens since the stored prefix
-    // is from the access token. We need to iterate through valid tokens.
-    const validTokens = await db.personalAccessToken.findMany({
-      where: {
-        revokedAt: null,
-        refreshExpiresAt: {
-          gt: new Date(),
-        },
-        refreshTokenHash: {
-          not: null,
-        },
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            suspendedAt: true,
-          },
-        },
-      },
-    });
-
-    // Find the matching token by verifying refresh token hash
-    let matchedToken = null;
-    for (const token of validTokens) {
-      if (token.refreshTokenHash) {
-        const isValid = await verifyToken(refreshToken, token.refreshTokenHash);
-        if (isValid) {
-          matchedToken = token;
-          break;
-        }
-      }
-    }
-
-    if (!matchedToken) {
-      return null;
-    }
-
-    // Check user suspension
-    if (matchedToken.user.suspendedAt) {
-      return null;
-    }
-
-    // Generate new access token
-    const newAccessToken = await generateAccessToken();
-    const newExpiresAt = new Date(Date.now() + ACCESS_TOKEN_LIFETIME_MS);
-
-    // Update the token record with new access token
-    await db.personalAccessToken.update({
-      where: { id: matchedToken.id },
-      data: {
-        accessTokenHash: newAccessToken.hash,
-        tokenPrefix: newAccessToken.prefix,
-        expiresAt: newExpiresAt,
-      },
-    });
-
-    logger.info(
-      { userId: matchedToken.userId, tokenId: matchedToken.id },
-      'Access token refreshed'
-    );
-
-    return {
-      accessToken: newAccessToken.token,
-      expiresAt: newExpiresAt,
     };
   }
 
@@ -484,7 +408,7 @@ export class TokenService {
    * Clean up expired tokens (for cron job)
    *
    * Deletes:
-   * - Access tokens expired more than 7 days ago
+   * - Access tokens expired more than 7 days ago (skips never-expiring tokens)
    * - Revoked tokens more than 30 days ago
    *
    * @returns Number of tokens deleted
@@ -505,12 +429,14 @@ export class TokenService {
     );
 
     // Delete in a single operation
+    // Note: Skip tokens where expiresAt is null (never-expiring tokens)
     const result = await db.personalAccessToken.deleteMany({
       where: {
         OR: [
-          // Expired tokens past retention
+          // Expired tokens past retention (only if expiresAt is not null)
           {
             expiresAt: {
+              not: null,
               lt: expiredThreshold,
             },
           },

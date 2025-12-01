@@ -2,9 +2,9 @@
  * E2E Tests for Token Manager UI and PAT Lifecycle
  *
  * Tests comprehensive personal access token management features including:
- * - Token Manager UI (empty state, create flow, list display, revoke flow)
+ * - Token Manager UI (empty state, create flow with expiration, list display, revoke flow)
  * - Bearer token API authentication
- * - Full token lifecycle (create -> use -> refresh -> revoke)
+ * - Full token lifecycle (create -> use -> revoke)
  * - Security edge cases (token escalation prevention, suspended users)
  */
 
@@ -49,9 +49,7 @@ test.describe('Token Manager UI', () => {
   });
 
   test.describe('Create Token Flow', () => {
-    test('creates token with name and shows show-once dialog with token prefixes', async ({
-      page,
-    }) => {
+    test('creates token with name, expiration, and shows show-once dialog', async ({ page }) => {
       const user = await createAndLoginUser(page, {
         email: generateUniqueEmail('token-create'),
         name: 'Token Creator',
@@ -76,29 +74,31 @@ test.describe('Token Manager UI', () => {
       await deviceTypeSelect.click();
       await page.getByText('Safari Extension').click();
 
+      // Select expiration (verify default is 90 days)
+      const expirationSelect = page.locator('#expiration');
+      await expect(expirationSelect).toContainText('90 days');
+
+      // Change to 1 year
+      await expirationSelect.click();
+      await page.getByText('1 year').click();
+
       // Submit the form
       const submitButton = page.getByRole('button', { name: 'Create Token' });
       await submitButton.click();
 
       // Wait for show-once dialog
       await expect(page.getByText('Token Created')).toBeVisible({ timeout: 10000 });
-      await expect(page.getByText(/copy your tokens now/i)).toBeVisible();
+      await expect(page.getByText(/copy your token now/i)).toBeVisible();
 
-      // Verify access token input is visible and has value starting with 'gth_'
-      const accessTokenInput = page.locator('input').filter({ hasText: /gth_/ }).first();
-      // Use parent locator since inputs don't have hasText
-      const accessTokenContainer = page.locator('label:has-text("Access Token")').locator('..');
-      const accessInput = accessTokenContainer.locator('input');
-      await expect(accessInput).toBeVisible();
-      const accessTokenValue = await accessInput.inputValue();
-      expect(accessTokenValue).toMatch(/^gth_/);
+      // Verify token input is visible and has value starting with 'gth_'
+      const tokenContainer = page.locator('label:has-text("Your Token")').locator('..');
+      const tokenInput = tokenContainer.locator('input');
+      await expect(tokenInput).toBeVisible();
+      const tokenValue = await tokenInput.inputValue();
+      expect(tokenValue).toMatch(/^gth_/);
 
-      // Verify refresh token input is visible and has value starting with 'gth_ref_'
-      const refreshTokenContainer = page.locator('label:has-text("Refresh Token")').locator('..');
-      const refreshInput = refreshTokenContainer.locator('input');
-      await expect(refreshInput).toBeVisible();
-      const refreshTokenValue = await refreshInput.inputValue();
-      expect(refreshTokenValue).toMatch(/^gth_ref_/);
+      // Verify expiration info is shown
+      await expect(page.getByText(/Expires:/)).toBeVisible();
 
       // Close the dialog
       const doneButton = page.getByRole('button', { name: 'Done' });
@@ -106,6 +106,35 @@ test.describe('Token Manager UI', () => {
 
       // Verify token appears in list
       await expect(page.getByText('My Safari Extension')).toBeVisible({ timeout: 5000 });
+    });
+
+    test('creates token that never expires', async ({ page }) => {
+      const user = await createAndLoginUser(page, {
+        email: generateUniqueEmail('token-never'),
+        name: 'Never Expire User',
+      });
+
+      await goToSettings(page);
+
+      // Open create dialog
+      await page.getByRole('button', { name: /create token/i }).click();
+      await page.locator('#token-name').fill('Eternal Token');
+
+      // Select "No expiration"
+      await page.locator('#expiration').click();
+      await page.getByText('No expiration').click();
+
+      // Create the token
+      await page.getByRole('button', { name: 'Create Token' }).click();
+
+      // Verify show-once dialog shows "Never" for expiration
+      await expect(page.getByText('Token Created')).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText('Expires:')).toBeVisible();
+      await expect(page.getByText('Never')).toBeVisible();
+
+      // Close and verify list shows "Never expires"
+      await page.getByRole('button', { name: 'Done' }).click();
+      await expect(page.getByText('Never expires')).toBeVisible({ timeout: 5000 });
     });
 
     test('validates token name is required', async ({ page }) => {
@@ -131,7 +160,7 @@ test.describe('Token Manager UI', () => {
   });
 
   test.describe('Token List Display', () => {
-    test('displays token with metadata, device icon, and "Never used" status', async ({ page }) => {
+    test('displays token with expiration badge and metadata', async ({ page }) => {
       const user = await createAndLoginUser(page, {
         email: generateUniqueEmail('token-list'),
         name: 'List User',
@@ -142,6 +171,7 @@ test.describe('Token Manager UI', () => {
         data: {
           name: 'iOS App Token',
           deviceType: 'ios_app',
+          expiresIn: '90d',
         },
       });
       expect(response.ok()).toBeTruthy();
@@ -158,9 +188,8 @@ test.describe('Token Manager UI', () => {
       // Verify created date is displayed
       await expect(page.getByText(/Created:/)).toBeVisible();
 
-      // Verify token prefix is displayed (gth_xxx...)
-      const tokenCard = page.locator('text=iOS App Token').locator('..').locator('..');
-      await expect(tokenCard.getByText(/gth_\w+\.\.\./)).toBeVisible();
+      // Verify expiration badge is displayed (should show "Expires in X months")
+      await expect(page.getByText(/Expires in/)).toBeVisible();
     });
 
     test('handles multiple tokens (5+) correctly', async ({ page }) => {
@@ -260,9 +289,9 @@ test.describe('Token Manager UI', () => {
 
       // Wait for show-once dialog and get the token value
       await expect(page.getByText('Token Created')).toBeVisible({ timeout: 10000 });
-      const accessTokenContainer = page.locator('label:has-text("Access Token")').locator('..');
-      const accessInput = accessTokenContainer.locator('input');
-      const tokenValue = await accessInput.inputValue();
+      const tokenContainer = page.locator('label:has-text("Your Token")').locator('..');
+      const tokenInput = tokenContainer.locator('input');
+      const tokenValue = await tokenInput.inputValue();
       expect(tokenValue).toMatch(/^gth_/);
 
       // Close the dialog
@@ -302,7 +331,7 @@ test.describe('API Authentication with Bearer Token', () => {
     expect(tokenResponse.ok()).toBeTruthy();
 
     const tokenData = await tokenResponse.json();
-    const accessToken = tokenData.accessToken;
+    const token = tokenData.token;
 
     // Create a wish for this user
     await db.wish.create({
@@ -317,7 +346,7 @@ test.describe('API Authentication with Bearer Token', () => {
     // Make API request with Bearer token (using standalone request context)
     const wishesResponse = await request.get('/api/wishes', {
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: 'Bearer ' + token,
       },
     });
 
@@ -355,11 +384,11 @@ test.describe('API Authentication with Bearer Token', () => {
     });
     expect(tokenResponse.ok()).toBeTruthy();
     const tokenData = await tokenResponse.json();
-    const accessToken = tokenData.accessToken;
+    const token = tokenData.token;
 
     // Verify token works initially
     const initialResponse = await request.get('/api/wishes', {
-      headers: { Authorization: `Bearer ${accessToken}` },
+      headers: { Authorization: 'Bearer ' + token },
     });
     expect(initialResponse.ok()).toBeTruthy();
 
@@ -370,12 +399,12 @@ test.describe('API Authentication with Bearer Token', () => {
     expect(tokenRecord).toBeDefined();
 
     // Revoke the token via API
-    const revokeResponse = await page.request.delete(`/api/auth/tokens/${tokenRecord!.id}`);
+    const revokeResponse = await page.request.delete('/api/auth/tokens/' + tokenRecord!.id);
     expect(revokeResponse.ok()).toBeTruthy();
 
     // Verify revoked token is rejected
     const rejectedResponse = await request.get('/api/wishes', {
-      headers: { Authorization: `Bearer ${accessToken}` },
+      headers: { Authorization: 'Bearer ' + token },
     });
     expect(rejectedResponse.status()).toBe(401);
   });
@@ -386,7 +415,7 @@ test.describe('Full Token Lifecycle', () => {
     await cleanupTestData();
   });
 
-  test('complete lifecycle: Create -> Use -> Refresh -> Revoke', async ({ page, request }) => {
+  test('complete lifecycle: Create -> Use -> Revoke', async ({ page, request }) => {
     const user = await createAndLoginUser(page, {
       email: generateUniqueEmail('token-lifecycle'),
       name: 'Lifecycle User',
@@ -397,19 +426,20 @@ test.describe('Full Token Lifecycle', () => {
       data: {
         name: 'Lifecycle Test Token',
         deviceType: 'api_client',
+        expiresIn: '90d',
       },
     });
     expect(createResponse.ok()).toBeTruthy();
     const tokenData = await createResponse.json();
-    const { accessToken, refreshToken } = tokenData;
-    expect(accessToken).toMatch(/^gth_/);
-    expect(refreshToken).toMatch(/^gth_ref_/);
+    const token = tokenData.token;
+    expect(token).toMatch(/^gth_/);
+    expect(tokenData.expiresAt).not.toBeNull();
 
     console.log('STEP 1: Token created successfully');
 
     // Step 2: USE token - make API call
     const useResponse = await request.get('/api/wishes', {
-      headers: { Authorization: `Bearer ${accessToken}` },
+      headers: { Authorization: 'Bearer ' + token },
     });
     expect(useResponse.ok()).toBeTruthy();
 
@@ -426,45 +456,19 @@ test.describe('Full Token Lifecycle', () => {
 
     console.log('STEP 3: lastUsedAt updated after API call');
 
-    // Step 4: REFRESH token
-    const refreshResponse = await request.post('/api/auth/tokens/refresh', {
-      data: { refreshToken },
-    });
-    expect(refreshResponse.ok()).toBeTruthy();
-    const refreshData = await refreshResponse.json();
-    const newAccessToken = refreshData.accessToken;
-    expect(newAccessToken).toMatch(/^gth_/);
-    expect(newAccessToken).not.toBe(accessToken); // Should be different
-
-    console.log('STEP 4: Token refreshed successfully');
-
-    // Step 5: Verify old token no longer works
-    const oldTokenResponse = await request.get('/api/wishes', {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    expect(oldTokenResponse.status()).toBe(401);
-
-    // Step 6: Verify new token works
-    const newTokenResponse = await request.get('/api/wishes', {
-      headers: { Authorization: `Bearer ${newAccessToken}` },
-    });
-    expect(newTokenResponse.ok()).toBeTruthy();
-
-    console.log('STEP 5-6: Old token rejected, new token works');
-
-    // Step 7: REVOKE token
-    const revokeResponse = await page.request.delete(`/api/auth/tokens/${tokenRecord!.id}`);
+    // Step 4: REVOKE token
+    const revokeResponse = await page.request.delete('/api/auth/tokens/' + tokenRecord!.id);
     expect(revokeResponse.ok()).toBeTruthy();
 
-    console.log('STEP 7: Token revoked');
+    console.log('STEP 4: Token revoked');
 
-    // Step 8: Verify revoked token is rejected
+    // Step 5: Verify revoked token is rejected
     const revokedTokenResponse = await request.get('/api/wishes', {
-      headers: { Authorization: `Bearer ${newAccessToken}` },
+      headers: { Authorization: 'Bearer ' + token },
     });
     expect(revokedTokenResponse.status()).toBe(401);
 
-    console.log('STEP 8: Revoked token rejected - LIFECYCLE COMPLETE');
+    console.log('STEP 5: Revoked token rejected - LIFECYCLE COMPLETE');
   });
 });
 
@@ -488,7 +492,7 @@ test.describe('Security Edge Cases', () => {
     });
     expect(tokenResponse.ok()).toBeTruthy();
     const tokenData = await tokenResponse.json();
-    const accessToken = tokenData.accessToken;
+    const token = tokenData.token;
 
     // Clear session cookies to simulate token-only auth
     await page.context().clearCookies();
@@ -496,7 +500,7 @@ test.describe('Security Edge Cases', () => {
     // Try to create a new token using only Bearer auth
     const escalationResponse = await request.post('/api/auth/tokens', {
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: 'Bearer ' + token,
         'Content-Type': 'application/json',
       },
       data: {
@@ -522,11 +526,11 @@ test.describe('Security Edge Cases', () => {
     });
     expect(tokenResponse.ok()).toBeTruthy();
     const tokenData = await tokenResponse.json();
-    const accessToken = tokenData.accessToken;
+    const token = tokenData.token;
 
     // Verify token works initially
     const initialResponse = await request.get('/api/wishes', {
-      headers: { Authorization: `Bearer ${accessToken}` },
+      headers: { Authorization: 'Bearer ' + token },
     });
     expect(initialResponse.ok()).toBeTruthy();
 
@@ -538,7 +542,7 @@ test.describe('Security Edge Cases', () => {
 
     // Verify suspended user's token is rejected
     const suspendedResponse = await request.get('/api/wishes', {
-      headers: { Authorization: `Bearer ${accessToken}` },
+      headers: { Authorization: 'Bearer ' + token },
     });
     expect(suspendedResponse.status()).toBe(401);
 
@@ -549,7 +553,7 @@ test.describe('Security Edge Cases', () => {
     });
 
     const unsuspendedResponse = await request.get('/api/wishes', {
-      headers: { Authorization: `Bearer ${accessToken}` },
+      headers: { Authorization: 'Bearer ' + token },
     });
     expect(unsuspendedResponse.ok()).toBeTruthy();
   });
@@ -566,7 +570,7 @@ test.describe('Security Edge Cases', () => {
     });
     expect(tokenResponse.ok()).toBeTruthy();
     const tokenData = await tokenResponse.json();
-    const accessToken = tokenData.accessToken;
+    const token = tokenData.token;
 
     // Manually expire the token in database
     await db.personalAccessToken.updateMany({
@@ -576,8 +580,39 @@ test.describe('Security Edge Cases', () => {
 
     // Verify expired token is rejected
     const expiredResponse = await request.get('/api/wishes', {
-      headers: { Authorization: `Bearer ${accessToken}` },
+      headers: { Authorization: 'Bearer ' + token },
     });
     expect(expiredResponse.status()).toBe(401);
+  });
+
+  test('never-expiring tokens remain valid indefinitely', async ({ page, request }) => {
+    const user = await createAndLoginUser(page, {
+      email: generateUniqueEmail('token-neverexp'),
+      name: 'Never Expire User',
+    });
+
+    // Create a never-expiring token
+    const tokenResponse = await page.request.post('/api/auth/tokens', {
+      data: {
+        name: 'Eternal Token',
+        expiresIn: 'never',
+      },
+    });
+    expect(tokenResponse.ok()).toBeTruthy();
+    const tokenData = await tokenResponse.json();
+    const token = tokenData.token;
+    expect(tokenData.expiresAt).toBeNull();
+
+    // Verify token works
+    const response = await request.get('/api/wishes', {
+      headers: { Authorization: 'Bearer ' + token },
+    });
+    expect(response.ok()).toBeTruthy();
+
+    // Verify database has null expiresAt
+    const tokenRecord = await db.personalAccessToken.findFirst({
+      where: { userId: user.id },
+    });
+    expect(tokenRecord?.expiresAt).toBeNull();
   });
 });

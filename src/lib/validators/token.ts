@@ -15,6 +15,15 @@ import { z } from 'zod';
  *         - api_client
  *         - other
  *       description: Type of device or client using the token
+ *     ExpirationOption:
+ *       type: string
+ *       enum:
+ *         - 30d
+ *         - 90d
+ *         - 6m
+ *         - 1y
+ *         - never
+ *       description: Token expiration option
  *     TokenCreate:
  *       type: object
  *       properties:
@@ -25,16 +34,10 @@ import { z } from 'zod';
  *           description: Human-readable name for the token
  *         deviceType:
  *           $ref: '#/components/schemas/DeviceType'
+ *         expiresIn:
+ *           $ref: '#/components/schemas/ExpirationOption'
  *       required:
  *         - name
- *     TokenRefresh:
- *       type: object
- *       properties:
- *         refreshToken:
- *           type: string
- *           description: The refresh token to exchange for a new access token
- *       required:
- *         - refreshToken
  *     TokenUser:
  *       type: object
  *       properties:
@@ -55,36 +58,19 @@ import { z } from 'zod';
  *     TokenCreationResponse:
  *       type: object
  *       properties:
- *         accessToken:
+ *         token:
  *           type: string
- *           description: JWT access token for API authentication
- *         refreshToken:
- *           type: string
- *           description: Token to obtain new access tokens
+ *           description: Personal access token for API authentication
  *         expiresAt:
  *           type: integer
  *           format: int64
- *           description: Unix timestamp in milliseconds when access token expires
+ *           nullable: true
+ *           description: Unix timestamp in milliseconds when token expires (null = never)
  *         user:
  *           $ref: '#/components/schemas/TokenUser'
  *       required:
- *         - accessToken
- *         - refreshToken
- *         - expiresAt
+ *         - token
  *         - user
- *     TokenRefreshResponse:
- *       type: object
- *       properties:
- *         accessToken:
- *           type: string
- *           description: New JWT access token
- *         expiresAt:
- *           type: integer
- *           format: int64
- *           description: Unix timestamp in milliseconds when new access token expires
- *       required:
- *         - accessToken
- *         - expiresAt
  *     TokenInfo:
  *       type: object
  *       properties:
@@ -113,7 +99,8 @@ import { z } from 'zod';
  *         expiresAt:
  *           type: string
  *           format: date-time
- *           description: When the token expires
+ *           nullable: true
+ *           description: When the token expires (null = never)
  *         current:
  *           type: boolean
  *           description: Whether this is the token used for the current request
@@ -122,7 +109,6 @@ import { z } from 'zod';
  *         - name
  *         - tokenPrefix
  *         - createdAt
- *         - expiresAt
  *     TokenListResponse:
  *       type: object
  *       properties:
@@ -140,7 +126,7 @@ import { z } from 'zod';
  *           enum:
  *             - unauthorized
  *             - invalid_token
- *             - invalid_refresh_token
+ *             - token_expired
  *             - token_revoked
  *             - not_found
  *             - rate_limited
@@ -167,8 +153,28 @@ export const DEVICE_TYPES = [
 
 export type DeviceType = (typeof DEVICE_TYPES)[number];
 
+// Expiration options (GitHub PAT style)
+export const EXPIRATION_OPTIONS = ['30d', '90d', '6m', '1y', 'never'] as const;
+
+export type ExpirationOption = (typeof EXPIRATION_OPTIONS)[number];
+
+// Default expiration (90 days like GitHub)
+export const DEFAULT_EXPIRATION: ExpirationOption = '90d';
+
+// Expiration labels for UI display
+export const EXPIRATION_LABELS: Record<ExpirationOption, string> = {
+  '30d': '30 days',
+  '90d': '90 days',
+  '6m': '6 months',
+  '1y': '1 year',
+  never: 'No expiration',
+};
+
 // Zod schema for device type
 const deviceTypeSchema = z.enum(DEVICE_TYPES);
+
+// Zod schema for expiration option
+const expirationOptionSchema = z.enum(EXPIRATION_OPTIONS);
 
 // =============================================================================
 // Request Schemas
@@ -185,14 +191,7 @@ export const createTokenSchema = z.object({
     .min(1, 'Name is required')
     .max(100, 'Name must be less than 100 characters'),
   deviceType: deviceTypeSchema.optional(),
-});
-
-/**
- * Schema for refreshing an access token
- * POST /api/auth/tokens/refresh
- */
-export const refreshTokenSchema = z.object({
-  refreshToken: z.string().min(1, 'Refresh token is required'),
+  expiresIn: expirationOptionSchema.optional().default(DEFAULT_EXPIRATION),
 });
 
 // =============================================================================
@@ -210,22 +209,12 @@ export const tokenUserSchema = z.object({
 
 /**
  * Token creation response schema
- * Returned when a new token is created
+ * Returned when a new token is created (simplified - no refresh token)
  */
 export const tokenCreationResponseSchema = z.object({
-  accessToken: z.string(),
-  refreshToken: z.string(),
-  expiresAt: z.number(), // Unix timestamp in milliseconds
+  token: z.string(),
+  expiresAt: z.number().nullable(), // Unix timestamp in milliseconds, null = never
   user: tokenUserSchema,
-});
-
-/**
- * Token refresh response schema
- * Returned when an access token is refreshed
- */
-export const tokenRefreshResponseSchema = z.object({
-  accessToken: z.string(),
-  expiresAt: z.number(), // Unix timestamp in milliseconds
 });
 
 /**
@@ -239,7 +228,7 @@ export const tokenInfoSchema = z.object({
   tokenPrefix: z.string(), // "gth_abc1" for display
   lastUsedAt: z.string().datetime().nullable(),
   createdAt: z.string().datetime(),
-  expiresAt: z.string().datetime(),
+  expiresAt: z.string().datetime().nullable(), // null = never expires
   current: z.boolean().optional(),
 });
 
@@ -261,7 +250,7 @@ export const tokenListResponseSchema = z.object({
 export const TOKEN_ERROR_CODES = [
   'unauthorized',
   'invalid_token',
-  'invalid_refresh_token',
+  'token_expired',
   'token_revoked',
   'not_found',
   'rate_limited',
@@ -283,10 +272,8 @@ export const tokenErrorSchema = z.object({
 // =============================================================================
 
 export type CreateTokenInput = z.infer<typeof createTokenSchema>;
-export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
 export type TokenUser = z.infer<typeof tokenUserSchema>;
 export type TokenCreationResponse = z.infer<typeof tokenCreationResponseSchema>;
-export type TokenRefreshResponse = z.infer<typeof tokenRefreshResponseSchema>;
 export type TokenInfo = z.infer<typeof tokenInfoSchema>;
 export type TokenListResponse = z.infer<typeof tokenListResponseSchema>;
 export type TokenError = z.infer<typeof tokenErrorSchema>;

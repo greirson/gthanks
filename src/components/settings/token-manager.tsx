@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   Loader2,
+  Infinity,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -37,7 +38,15 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { DEVICE_TYPES, type DeviceType, type TokenInfo } from '@/lib/validators/token';
+import {
+  DEVICE_TYPES,
+  EXPIRATION_OPTIONS,
+  EXPIRATION_LABELS,
+  DEFAULT_EXPIRATION,
+  type DeviceType,
+  type ExpirationOption,
+  type TokenInfo,
+} from '@/lib/validators/token';
 
 // Device type labels for display
 const DEVICE_TYPE_LABELS: Record<DeviceType, string> = {
@@ -85,9 +94,8 @@ interface ApiErrorResponse {
 }
 
 interface TokenCreationResponse {
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: number;
+  token: string;
+  expiresAt: number | null;
   user: {
     id: string;
     name: string | null;
@@ -126,16 +134,80 @@ function formatRelativeTime(dateString: string | null): string {
     return 'Just now';
   }
   if (diffMins < 60) {
-    return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
+    return diffMins + ' minute' + (diffMins === 1 ? '' : 's') + ' ago';
   }
   if (diffHours < 24) {
-    return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    return diffHours + ' hour' + (diffHours === 1 ? '' : 's') + ' ago';
   }
   if (diffDays < 7) {
-    return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+    return diffDays + ' day' + (diffDays === 1 ? '' : 's') + ' ago';
   }
 
   return date.toLocaleDateString();
+}
+
+// Format expiration display
+function formatExpiration(expiresAt: string | null): string {
+  if (!expiresAt) {
+    return 'Never expires';
+  }
+
+  const date = new Date(expiresAt);
+  const now = new Date();
+
+  // Check if expired
+  if (date < now) {
+    return 'Expired';
+  }
+
+  const diffMs = date.getTime() - now.getTime();
+  const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+
+  if (diffDays < 1) {
+    return 'Expires today';
+  }
+  if (diffDays === 1) {
+    return 'Expires tomorrow';
+  }
+  if (diffDays < 7) {
+    return 'Expires in ' + diffDays + ' days';
+  }
+  if (diffDays < 30) {
+    const weeks = Math.floor(diffDays / 7);
+    return 'Expires in ' + weeks + ' week' + (weeks === 1 ? '' : 's');
+  }
+  if (diffDays < 365) {
+    const months = Math.floor(diffDays / 30);
+    return 'Expires in ' + months + ' month' + (months === 1 ? '' : 's');
+  }
+
+  return 'Expires ' + date.toLocaleDateString();
+}
+
+// Get badge variant for expiration
+function getExpirationBadgeVariant(
+  expiresAt: string | null
+): 'default' | 'secondary' | 'destructive' | 'outline' {
+  if (!expiresAt) {
+    return 'secondary'; // Never expires
+  }
+
+  const date = new Date(expiresAt);
+  const now = new Date();
+  const diffMs = date.getTime() - now.getTime();
+  const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+
+  if (diffDays < 0) {
+    return 'destructive'; // Expired
+  }
+  if (diffDays < 7) {
+    return 'destructive'; // Expiring soon
+  }
+  if (diffDays < 30) {
+    return 'outline'; // Warning
+  }
+
+  return 'secondary'; // Normal
 }
 
 export function TokenManager() {
@@ -149,14 +221,16 @@ export function TokenManager() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newTokenName, setNewTokenName] = useState('');
   const [newTokenDeviceType, setNewTokenDeviceType] = useState<string>('');
+  const [newTokenExpiration, setNewTokenExpiration] =
+    useState<ExpirationOption>(DEFAULT_EXPIRATION);
 
   // Show-once dialog state (after token creation)
   const [showOnceDialogOpen, setShowOnceDialogOpen] = useState(false);
-  const [createdTokens, setCreatedTokens] = useState<{
-    accessToken: string;
-    refreshToken: string;
+  const [createdToken, setCreatedToken] = useState<{
+    token: string;
+    expiresAt: number | null;
   } | null>(null);
-  const [copiedField, setCopiedField] = useState<'access' | 'refresh' | null>(null);
+  const [copiedToken, setCopiedToken] = useState(false);
 
   // Revoke confirmation dialog state
   const [revokeDialog, setRevokeDialog] = useState<{
@@ -206,8 +280,9 @@ export function TokenManager() {
 
     setActionLoading('create');
     try {
-      const body: { name: string; deviceType?: string } = {
+      const body: { name: string; deviceType?: string; expiresIn: ExpirationOption } = {
         name: newTokenName.trim(),
+        expiresIn: newTokenExpiration,
       };
       if (newTokenDeviceType) {
         body.deviceType = newTokenDeviceType;
@@ -228,11 +303,11 @@ export function TokenManager() {
         throw new Error(errorMessage);
       }
 
-      if ('accessToken' in data) {
-        // Store tokens for show-once dialog
-        setCreatedTokens({
-          accessToken: data.accessToken,
-          refreshToken: data.refreshToken,
+      if ('token' in data) {
+        // Store token for show-once dialog
+        setCreatedToken({
+          token: data.token,
+          expiresAt: data.expiresAt,
         });
 
         // Close create dialog and open show-once dialog
@@ -242,6 +317,7 @@ export function TokenManager() {
         // Reset form
         setNewTokenName('');
         setNewTokenDeviceType('');
+        setNewTokenExpiration(DEFAULT_EXPIRATION);
 
         // Refresh token list
         void fetchTokens();
@@ -254,11 +330,11 @@ export function TokenManager() {
   };
 
   // Copy to clipboard handler
-  const handleCopy = async (text: string, field: 'access' | 'refresh') => {
+  const handleCopy = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      setCopiedField(field);
-      setTimeout(() => setCopiedField(null), 2000);
+      setCopiedToken(true);
+      setTimeout(() => setCopiedToken(false), 2000);
     } catch {
       showMessage('error', 'Failed to copy to clipboard');
     }
@@ -266,9 +342,9 @@ export function TokenManager() {
 
   // Revoke token handler
   const handleRevokeToken = async (tokenId: string) => {
-    setActionLoading(`revoke-${tokenId}`);
+    setActionLoading('revoke-' + tokenId);
     try {
-      const response = await fetch(`/api/auth/tokens/${tokenId}`, {
+      const response = await fetch('/api/auth/tokens/' + tokenId, {
         method: 'DELETE',
       });
 
@@ -293,8 +369,8 @@ export function TokenManager() {
   // Close show-once dialog handler
   const handleCloseShowOnce = () => {
     setShowOnceDialogOpen(false);
-    setCreatedTokens(null);
-    setCopiedField(null);
+    setCreatedToken(null);
+    setCopiedToken(false);
   };
 
   // Loading skeleton
@@ -346,6 +422,13 @@ export function TokenManager() {
                         Current
                       </Badge>
                     )}
+                    <Badge
+                      variant={getExpirationBadgeVariant(token.expiresAt)}
+                      className="flex-shrink-0"
+                    >
+                      {!token.expiresAt && <Infinity className="mr-1 h-3 w-3" />}
+                      {formatExpiration(token.expiresAt)}
+                    </Badge>
                   </div>
                   <div className="space-y-0.5 text-xs text-muted-foreground">
                     <p>
@@ -442,6 +525,31 @@ export function TokenManager() {
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="expiration">Expiration</Label>
+              <Select
+                value={newTokenExpiration}
+                onValueChange={(v) => setNewTokenExpiration(v as ExpirationOption)}
+              >
+                <SelectTrigger id="expiration">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {EXPIRATION_OPTIONS.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      <span className="flex items-center gap-2">
+                        {option === 'never' && <Infinity className="h-4 w-4" />}
+                        {EXPIRATION_LABELS[option]}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Choose how long this token should be valid. You can always revoke it early.
+              </p>
+            </div>
           </div>
 
           <DialogFooter>
@@ -478,7 +586,7 @@ export function TokenManager() {
               Token Created
             </DialogTitle>
             <DialogDescription>
-              Copy your tokens now. You won&apos;t be able to see them again.
+              Copy your token now. You won&apos;t be able to see it again.
             </DialogDescription>
           </DialogHeader>
 
@@ -486,28 +594,23 @@ export function TokenManager() {
             <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                Make sure to copy these tokens and store them securely. They won&apos;t be shown
-                again.
+                Make sure to copy this token and store it securely. It won&apos;t be shown again.
               </AlertDescription>
             </Alert>
 
-            {createdTokens && (
+            {createdToken && (
               <>
                 <div className="space-y-2">
-                  <Label>Access Token</Label>
+                  <Label>Your Token</Label>
                   <div className="flex gap-2">
-                    <Input
-                      readOnly
-                      value={createdTokens.accessToken}
-                      className="font-mono text-xs"
-                    />
+                    <Input readOnly value={createdToken.token} className="font-mono text-xs" />
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => void handleCopy(createdTokens.accessToken, 'access')}
+                      onClick={() => void handleCopy(createdToken.token)}
                       className="flex-shrink-0"
                     >
-                      {copiedField === 'access' ? (
+                      {copiedToken ? (
                         <Check className="h-4 w-4 text-green-600" />
                       ) : (
                         <Copy className="h-4 w-4" />
@@ -519,29 +622,17 @@ export function TokenManager() {
                   </p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Refresh Token</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      readOnly
-                      value={createdTokens.refreshToken}
-                      className="font-mono text-xs"
-                    />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => void handleCopy(createdTokens.refreshToken, 'refresh')}
-                      className="flex-shrink-0"
-                    >
-                      {copiedField === 'refresh' ? (
-                        <Check className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Use this token to get new access tokens when they expire.
+                <div className="rounded-lg bg-muted p-3">
+                  <p className="text-sm">
+                    <span className="font-medium">Expires: </span>
+                    {createdToken.expiresAt
+                      ? new Date(createdToken.expiresAt).toLocaleDateString('en-US', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })
+                      : 'Never'}
                   </p>
                 </div>
               </>
@@ -561,7 +652,11 @@ export function TokenManager() {
         open={revokeDialog.open}
         onOpenChange={(open) => setRevokeDialog({ open, tokenId: '', tokenName: '' })}
         title="Revoke Access Token"
-        description={`Are you sure you want to revoke "${revokeDialog.tokenName}"? Any apps or services using this token will no longer be able to access your account. This action cannot be undone.`}
+        description={
+          'Are you sure you want to revoke "' +
+          revokeDialog.tokenName +
+          '"? Any apps or services using this token will no longer be able to access your account. This action cannot be undone.'
+        }
         confirmText="Revoke"
         cancelText="Cancel"
         variant="destructive"

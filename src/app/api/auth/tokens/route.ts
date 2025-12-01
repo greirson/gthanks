@@ -11,12 +11,19 @@ import { createTokenSchema } from '@/lib/validators/token';
 /**
  * POST /api/auth/tokens - Create a new personal access token
  *
- * Creates a new personal access token pair (access + refresh) for API authentication.
+ * Creates a new personal access token for API authentication.
  * This endpoint ONLY accepts session authentication to prevent token escalation attacks.
+ *
+ * Expiration options (GitHub PAT style):
+ * - 30d: 30 days
+ * - 90d: 90 days (default)
+ * - 6m: 6 months
+ * - 1y: 1 year
+ * - never: No expiration
  *
  * @description Creates a PAT for programmatic API access (e.g., browser extensions)
  * @param {NextRequest} request - The incoming HTTP request with token metadata in JSON body
- * @returns {Promise<NextResponse>} JSON response with token pair or error
+ * @returns {Promise<NextResponse>} JSON response with token or error
  *
  * @throws {401} Unauthorized - Session authentication required
  * @throws {400} Bad Request - Invalid request body
@@ -27,13 +34,13 @@ import { createTokenSchema } from '@/lib/validators/token';
  * POST /api/auth/tokens
  * {
  *   "name": "Safari Extension - MacBook Pro",
- *   "deviceType": "safari_extension"
+ *   "deviceType": "safari_extension",
+ *   "expiresIn": "90d"
  * }
  *
  * Response (201):
  * {
- *   "accessToken": "gth_abc123...",
- *   "refreshToken": "gth_ref_xyz789...",
+ *   "token": "gth_abc123...",
  *   "expiresAt": 1735689600000,
  *   "user": { "id": "...", "name": "...", "email": "..." }
  * }
@@ -77,25 +84,25 @@ export async function POST(request: NextRequest) {
     // Get client IP for audit trail
     const clientIp = getClientIdentifier(request);
 
-    // Create token pair using token service
-    const tokenPair = await tokenService.createToken({
+    // Create token using token service
+    const createdToken = await tokenService.createToken({
       userId: user.id,
       name: validatedData.name,
       deviceType: validatedData.deviceType,
+      expiresIn: validatedData.expiresIn,
       createdIp: clientIp,
     });
 
     logger.info(
-      { userId: user.id, deviceType: validatedData.deviceType },
+      { userId: user.id, deviceType: validatedData.deviceType, expiresIn: validatedData.expiresIn },
       'Personal access token created via API'
     );
 
-    // Return token pair with user info (already fetched by getCurrentUser)
+    // Return token with user info (already fetched by getCurrentUser)
     return NextResponse.json(
       {
-        accessToken: tokenPair.accessToken,
-        refreshToken: tokenPair.refreshToken,
-        expiresAt: tokenPair.expiresAt.getTime(),
+        token: createdToken.token,
+        expiresAt: createdToken.expiresAt ? createdToken.expiresAt.getTime() : null,
         user: {
           id: user.id,
           name: user.name,
@@ -158,7 +165,7 @@ export async function POST(request: NextRequest) {
  *       "tokenPrefix": "gth_abc1...",
  *       "lastUsedAt": "2025-01-15T10:30:00Z",
  *       "createdAt": "2025-01-01T00:00:00Z",
- *       "expiresAt": "2025-01-16T10:30:00Z",
+ *       "expiresAt": "2025-04-01T00:00:00Z",
  *       "current": false
  *     }
  *   ]
@@ -191,7 +198,7 @@ export async function GET(_request: NextRequest) {
       tokenPrefix: token.tokenPrefix,
       lastUsedAt: token.lastUsedAt?.toISOString() || null,
       createdAt: token.createdAt.toISOString(),
-      expiresAt: token.expiresAt.toISOString(),
+      expiresAt: token.expiresAt?.toISOString() || null,
       current: token.current || false,
     }));
 

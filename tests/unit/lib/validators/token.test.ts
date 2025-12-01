@@ -1,14 +1,15 @@
 import {
   createTokenSchema,
-  refreshTokenSchema,
   tokenUserSchema,
   tokenCreationResponseSchema,
-  tokenRefreshResponseSchema,
   tokenInfoSchema,
   tokenListResponseSchema,
   tokenErrorSchema,
   DEVICE_TYPES,
   TOKEN_ERROR_CODES,
+  EXPIRATION_OPTIONS,
+  EXPIRATION_LABELS,
+  DEFAULT_EXPIRATION,
 } from '@/lib/validators/token';
 
 describe('Token Validators', () => {
@@ -116,11 +117,42 @@ describe('Token Validators', () => {
     it('accepts all valid device types', () => {
       for (const deviceType of DEVICE_TYPES) {
         const result = createTokenSchema.safeParse({
-          name: `Token for ${deviceType}`,
+          name: 'Token for ' + deviceType,
           deviceType,
         });
         expect(result.success).toBe(true);
       }
+    });
+
+    it('accepts all valid expiration options', () => {
+      for (const expiresIn of EXPIRATION_OPTIONS) {
+        const result = createTokenSchema.safeParse({
+          name: 'Token with ' + expiresIn + ' expiration',
+          expiresIn,
+        });
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.expiresIn).toBe(expiresIn);
+        }
+      }
+    });
+
+    it('defaults to 90d expiration when not specified', () => {
+      const result = createTokenSchema.safeParse({
+        name: 'Default Expiration Token',
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.expiresIn).toBe('90d');
+      }
+    });
+
+    it('rejects invalid expiresIn option', () => {
+      const result = createTokenSchema.safeParse({
+        name: 'Test Token',
+        expiresIn: '100d', // Invalid option
+      });
+      expect(result.success).toBe(false);
     });
 
     it('accepts name with special characters', () => {
@@ -149,73 +181,6 @@ describe('Token Validators', () => {
         name: null,
       });
       expect(result.success).toBe(false);
-    });
-  });
-
-  // =============================================================================
-  // refreshTokenSchema
-  // =============================================================================
-
-  describe('refreshTokenSchema', () => {
-    it('accepts valid refresh token string', () => {
-      const result = refreshTokenSchema.safeParse({
-        refreshToken: 'gth_refresh_abc123def456',
-      });
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.refreshToken).toBe('gth_refresh_abc123def456');
-      }
-    });
-
-    it('rejects empty refreshToken - SECURITY CRITICAL', () => {
-      const result = refreshTokenSchema.safeParse({
-        refreshToken: '',
-      });
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.issues[0].message).toBe('Refresh token is required');
-      }
-    });
-
-    it('rejects missing refreshToken - SECURITY CRITICAL', () => {
-      const result = refreshTokenSchema.safeParse({});
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects non-string refreshToken', () => {
-      const result = refreshTokenSchema.safeParse({
-        refreshToken: 12345,
-      });
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects null refreshToken', () => {
-      const result = refreshTokenSchema.safeParse({
-        refreshToken: null,
-      });
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects undefined refreshToken', () => {
-      const result = refreshTokenSchema.safeParse({
-        refreshToken: undefined,
-      });
-      expect(result.success).toBe(false);
-    });
-
-    it('accepts long refresh token strings', () => {
-      const longToken = 'gth_refresh_' + 'a'.repeat(500);
-      const result = refreshTokenSchema.safeParse({
-        refreshToken: longToken,
-      });
-      expect(result.success).toBe(true);
-    });
-
-    it('accepts refresh token with special characters', () => {
-      const result = refreshTokenSchema.safeParse({
-        refreshToken: 'gth_refresh_abc-123_def.456',
-      });
-      expect(result.success).toBe(true);
     });
   });
 
@@ -279,14 +244,13 @@ describe('Token Validators', () => {
   });
 
   // =============================================================================
-  // tokenCreationResponseSchema
+  // tokenCreationResponseSchema (simplified - no refresh token)
   // =============================================================================
 
   describe('tokenCreationResponseSchema', () => {
-    it('accepts valid token creation response', () => {
+    it('accepts valid token creation response with expiration', () => {
       const result = tokenCreationResponseSchema.safeParse({
-        accessToken: 'gth_access_abc123',
-        refreshToken: 'gth_refresh_def456',
+        token: 'gth_access_abc123',
         expiresAt: Date.now() + 3600000,
         user: {
           id: 'user_123',
@@ -297,28 +261,22 @@ describe('Token Validators', () => {
       expect(result.success).toBe(true);
     });
 
-    it('rejects missing accessToken', () => {
+    it('accepts token creation response with null expiresAt (never expires)', () => {
       const result = tokenCreationResponseSchema.safeParse({
-        refreshToken: 'gth_refresh_def456',
-        expiresAt: Date.now() + 3600000,
-        user: { id: 'user_123', name: null, email: null },
+        token: 'gth_access_abc123',
+        expiresAt: null,
+        user: {
+          id: 'user_123',
+          name: 'John Doe',
+          email: 'john@example.com',
+        },
       });
-      expect(result.success).toBe(false);
+      expect(result.success).toBe(true);
     });
 
-    it('rejects missing refreshToken', () => {
+    it('rejects missing token', () => {
       const result = tokenCreationResponseSchema.safeParse({
-        accessToken: 'gth_access_abc123',
         expiresAt: Date.now() + 3600000,
-        user: { id: 'user_123', name: null, email: null },
-      });
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects missing expiresAt', () => {
-      const result = tokenCreationResponseSchema.safeParse({
-        accessToken: 'gth_access_abc123',
-        refreshToken: 'gth_refresh_def456',
         user: { id: 'user_123', name: null, email: null },
       });
       expect(result.success).toBe(false);
@@ -326,47 +284,17 @@ describe('Token Validators', () => {
 
     it('rejects missing user', () => {
       const result = tokenCreationResponseSchema.safeParse({
-        accessToken: 'gth_access_abc123',
-        refreshToken: 'gth_refresh_def456',
+        token: 'gth_access_abc123',
         expiresAt: Date.now() + 3600000,
       });
       expect(result.success).toBe(false);
     });
 
-    it('rejects non-number expiresAt', () => {
+    it('rejects string expiresAt (must be number or null)', () => {
       const result = tokenCreationResponseSchema.safeParse({
-        accessToken: 'gth_access_abc123',
-        refreshToken: 'gth_refresh_def456',
+        token: 'gth_access_abc123',
         expiresAt: '2024-01-01T00:00:00Z', // String instead of number
         user: { id: 'user_123', name: null, email: null },
-      });
-      expect(result.success).toBe(false);
-    });
-  });
-
-  // =============================================================================
-  // tokenRefreshResponseSchema
-  // =============================================================================
-
-  describe('tokenRefreshResponseSchema', () => {
-    it('accepts valid token refresh response', () => {
-      const result = tokenRefreshResponseSchema.safeParse({
-        accessToken: 'gth_access_new123',
-        expiresAt: Date.now() + 3600000,
-      });
-      expect(result.success).toBe(true);
-    });
-
-    it('rejects missing accessToken', () => {
-      const result = tokenRefreshResponseSchema.safeParse({
-        expiresAt: Date.now() + 3600000,
-      });
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects missing expiresAt', () => {
-      const result = tokenRefreshResponseSchema.safeParse({
-        accessToken: 'gth_access_new123',
       });
       expect(result.success).toBe(false);
     });
@@ -377,7 +305,7 @@ describe('Token Validators', () => {
   // =============================================================================
 
   describe('tokenInfoSchema', () => {
-    it('accepts valid token info', () => {
+    it('accepts valid token info with expiration', () => {
       const result = tokenInfoSchema.safeParse({
         id: 'token_123',
         name: 'My Safari Extension',
@@ -387,6 +315,20 @@ describe('Token Validators', () => {
         createdAt: '2024-01-01T00:00:00.000Z',
         expiresAt: '2024-12-31T23:59:59.999Z',
         current: true,
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('accepts token info with null expiresAt (never expires)', () => {
+      const result = tokenInfoSchema.safeParse({
+        id: 'token_123',
+        name: 'Eternal Token',
+        deviceType: 'api_client',
+        tokenPrefix: 'gth_abc1',
+        lastUsedAt: null,
+        createdAt: '2024-01-01T00:00:00.000Z',
+        expiresAt: null,
+        current: false,
       });
       expect(result.success).toBe(true);
     });
@@ -437,7 +379,7 @@ describe('Token Validators', () => {
       const result = tokenInfoSchema.safeParse({
         id: 'token_123',
         name: 'My Token',
-        // Missing tokenPrefix, createdAt, expiresAt
+        // Missing tokenPrefix, createdAt
       });
       expect(result.success).toBe(false);
     });
@@ -468,7 +410,7 @@ describe('Token Validators', () => {
             tokenPrefix: 'gth_def2',
             lastUsedAt: null,
             createdAt: '2024-01-05T00:00:00.000Z',
-            expiresAt: '2024-12-31T23:59:59.999Z',
+            expiresAt: null, // Never expires
           },
         ],
       });
@@ -518,7 +460,7 @@ describe('Token Validators', () => {
       for (const errorCode of TOKEN_ERROR_CODES) {
         const result = tokenErrorSchema.safeParse({
           error: errorCode,
-          message: `Error: ${errorCode}`,
+          message: 'Error: ' + errorCode,
         });
         expect(result.success).toBe(true);
       }
@@ -568,6 +510,59 @@ describe('Token Validators', () => {
   });
 
   // =============================================================================
+  // EXPIRATION_OPTIONS constant
+  // =============================================================================
+
+  describe('EXPIRATION_OPTIONS constant', () => {
+    it('contains expected expiration options', () => {
+      expect(EXPIRATION_OPTIONS).toContain('30d');
+      expect(EXPIRATION_OPTIONS).toContain('90d');
+      expect(EXPIRATION_OPTIONS).toContain('6m');
+      expect(EXPIRATION_OPTIONS).toContain('1y');
+      expect(EXPIRATION_OPTIONS).toContain('never');
+    });
+
+    it('has exactly 5 expiration options', () => {
+      expect(EXPIRATION_OPTIONS).toHaveLength(5);
+    });
+  });
+
+  // =============================================================================
+  // EXPIRATION_LABELS constant
+  // =============================================================================
+
+  describe('EXPIRATION_LABELS constant', () => {
+    it('has labels for all expiration options', () => {
+      for (const option of EXPIRATION_OPTIONS) {
+        expect(EXPIRATION_LABELS[option]).toBeDefined();
+        expect(typeof EXPIRATION_LABELS[option]).toBe('string');
+      }
+    });
+
+    it('has expected label values', () => {
+      expect(EXPIRATION_LABELS['30d']).toBe('30 days');
+      expect(EXPIRATION_LABELS['90d']).toBe('90 days');
+      expect(EXPIRATION_LABELS['6m']).toBe('6 months');
+      expect(EXPIRATION_LABELS['1y']).toBe('1 year');
+      expect(EXPIRATION_LABELS['never']).toBe('No expiration');
+    });
+  });
+
+  // =============================================================================
+  // DEFAULT_EXPIRATION constant
+  // =============================================================================
+
+  describe('DEFAULT_EXPIRATION constant', () => {
+    it('is 90d (like GitHub)', () => {
+      expect(DEFAULT_EXPIRATION).toBe('90d');
+    });
+
+    it('is a valid expiration option', () => {
+      expect(EXPIRATION_OPTIONS).toContain(DEFAULT_EXPIRATION);
+    });
+  });
+
+  // =============================================================================
   // TOKEN_ERROR_CODES constant
   // =============================================================================
 
@@ -575,7 +570,7 @@ describe('Token Validators', () => {
     it('contains expected error codes', () => {
       expect(TOKEN_ERROR_CODES).toContain('unauthorized');
       expect(TOKEN_ERROR_CODES).toContain('invalid_token');
-      expect(TOKEN_ERROR_CODES).toContain('invalid_refresh_token');
+      expect(TOKEN_ERROR_CODES).toContain('token_expired');
       expect(TOKEN_ERROR_CODES).toContain('token_revoked');
       expect(TOKEN_ERROR_CODES).toContain('not_found');
       expect(TOKEN_ERROR_CODES).toContain('rate_limited');
