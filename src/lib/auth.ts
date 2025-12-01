@@ -131,6 +131,13 @@ const authOptions: NextAuthOptions = {
   },
   callbacks: {
     redirect: ({ url, baseUrl }) => {
+      // Allow gthanks-extension:// scheme for Safari extension OAuth
+      // This enables ASWebAuthenticationSession to complete the OAuth flow
+      // Only the exact callback path is allowed, not arbitrary extension URLs
+      if (url.startsWith('gthanks-extension://auth/callback')) {
+        return url;
+      }
+
       // Use secure URL validation to prevent open redirect attacks
       const sanitizedUrl = sanitizeRedirectUrl(url, baseUrl, '/wishes');
       return sanitizedUrl;
