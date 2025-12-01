@@ -4,10 +4,12 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getCurrentUser } from '@/lib/auth-utils';
 import { AppError } from '@/lib/errors';
-import { wishService } from '@/lib/services/wish-service';
-import { WishCreateSchema, WishQuerySchema } from '@/lib/validators/wish';
-import { serializePrismaResponse } from '@/lib/utils/date-serialization';
+import { listService } from '@/lib/services/list-service';
 import { logger } from '@/lib/services/logger';
+import { permissionService } from '@/lib/services/permission-service';
+import { wishService } from '@/lib/services/wish-service';
+import { serializePrismaResponse } from '@/lib/utils/date-serialization';
+import { WishCreateSchema, WishQuerySchema } from '@/lib/validators/wish';
 
 /**
  * Handles GET requests for retrieving user wishes with filtering and pagination
@@ -137,13 +139,58 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as unknown;
     const validatedData = WishCreateSchema.parse(body);
 
+    // Extract listIds from validated data (not passed to wish service)
+    const { listIds, ...wishData } = validatedData;
+
     // Create wish
-    const wish = await wishService.createWish(validatedData, user.id);
+    const wish = await wishService.createWish(wishData, user.id);
+
+    // Track which lists the wish was added to
+    const addedToLists: string[] = [];
+
+    // If listIds provided, add wish to those lists
+    if (listIds && listIds.length > 0) {
+      // Check permissions and add to each list silently (don't fail on permission errors)
+      for (const listId of listIds) {
+        try {
+          // Check if user can edit this list (owner or co-admin)
+          const { allowed } = await permissionService.can(user.id, 'edit', {
+            type: 'list',
+            id: listId,
+          });
+
+          if (allowed) {
+            // Add wish to list via service layer
+            await listService.addWishToList(listId, { wishId: wish.id }, user.id);
+            addedToLists.push(listId);
+          } else {
+            // Log warning but don't expose which lists exist
+            logger.warn(
+              { userId: user.id, listId, wishId: wish.id },
+              'User lacks permission to add wish to list'
+            );
+          }
+        } catch (listError) {
+          // Log error but continue with other lists
+          // Don't expose list existence information
+          logger.warn(
+            { userId: user.id, listId, wishId: wish.id, error: listError },
+            'Failed to add wish to list'
+          );
+        }
+      }
+    }
 
     // Serialize dates before returning
     const serializedWish = serializePrismaResponse(wish);
 
-    return NextResponse.json(serializedWish, { status: 201 });
+    return NextResponse.json(
+      {
+        ...serializedWish,
+        addedToLists,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     logger.error({ error: error }, 'POST /api/wishes error');
 
