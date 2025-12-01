@@ -728,6 +728,69 @@ export class ListService {
   }
 
   /**
+   * Get list visibility and password hash by share token (lightweight check)
+   * Used for cookie-based access validation before fetching full list data
+   */
+  async getListAccessInfoByShareToken(
+    token: string
+  ): Promise<{ id: string; visibility: string; password: string | null } | null> {
+    const list = await db.list.findUnique({
+      where: { shareToken: token },
+      select: { id: true, visibility: true, password: true },
+    });
+
+    return list;
+  }
+
+  /**
+   * Get list by share token with cookie-based access (no password required)
+   * Used when cookie has already validated access
+   */
+  async getListByShareTokenWithCookieAccess(token: string): Promise<ListWithDetails> {
+    const list = await db.list.findUnique({
+      where: { shareToken: token },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
+        _count: {
+          select: {
+            listWishes: true,
+            listAdmins: true,
+          },
+        },
+        listWishes: {
+          include: {
+            wish: true,
+          },
+          orderBy: [{ sortOrder: 'asc' }, { addedAt: 'desc' }],
+        },
+      },
+    });
+
+    if (!list) {
+      throw new NotFoundError('List not found or share link is invalid');
+    }
+
+    // Only password-protected lists can use cookie access
+    if (list.visibility !== 'password') {
+      throw new ForbiddenError('Invalid access method for this list type');
+    }
+
+    return {
+      ...list,
+      isOwner: false,
+      canEdit: false,
+      hasAccess: true,
+    };
+  }
+
+  /**
    * Get list by share token
    */
   async getListByShareToken(token: string, password?: string): Promise<ListWithDetails> {

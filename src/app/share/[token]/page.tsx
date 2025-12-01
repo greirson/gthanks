@@ -21,15 +21,14 @@ interface PageProps {
 }
 
 interface ApiError {
-  response?: {
-    status: number;
-    data?: {
-      code?: string;
-      error?: string;
-    };
-  };
-  status?: number;
   message?: string;
+  statusCode?: number;
+  code?: string; // Error code like 'PASSWORD_REQUIRED', 'FORBIDDEN', etc.
+  response?: {
+    status?: number;
+    code?: string;
+    error?: string;
+  };
 }
 
 export default function PublicListPage({ params }: PageProps) {
@@ -88,13 +87,14 @@ export default function PublicListPage({ params }: PageProps) {
     void fetchSignupsDisabled();
   }, []);
 
-  // Check if we need password - more robust detection
+  // Check if we need password - detect PASSWORD_REQUIRED error code
+  // The ApiError class has: statusCode, code, message, response
+  const typedError = error as ApiError | null;
   const needsPassword =
     error &&
-    (((error as ApiError)?.response?.status === 403 &&
-      (error as ApiError)?.response?.data?.code === 'FORBIDDEN') ||
-      (error as ApiError)?.status === 403 ||
-      (error as ApiError)?.message?.includes('Password required'));
+    (typedError?.code === 'PASSWORD_REQUIRED' ||
+      (typedError?.response as { code?: string })?.code === 'PASSWORD_REQUIRED' ||
+      typedError?.message?.includes('Password required'));
 
   // Password submission mutation
   const passwordMutation = useMutation({
@@ -105,7 +105,7 @@ export default function PublicListPage({ params }: PageProps) {
       queryClient.setQueryData(['public-list', params.token], listData);
     },
     onError: (error: ApiError) => {
-      const message = error.response?.data?.error || 'Invalid password';
+      const message = error.response?.error || error.message || 'Invalid password';
       toast({
         title: 'Error',
         description: message,

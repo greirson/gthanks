@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AppError } from '@/lib/errors';
 import { getCurrentUser } from '@/lib/auth-utils';
 import { rateLimiter, getRateLimitHeaders, getClientIdentifier } from '@/lib/rate-limiter';
+import { listAccessTokenService } from '@/lib/services/list-access-token';
 import { reservationService } from '@/lib/services/reservation-service';
 import { ReservationCreateSchema } from '@/lib/validators/reservation';
 import { logger } from '@/lib/services/logger';
@@ -73,11 +74,15 @@ export async function POST(request: NextRequest, { params }: { params: { shareTo
     const body = (await request.json()) as unknown;
     const validatedData = ReservationCreateSchema.parse(body);
 
+    // Extract access cookie for password-protected list verification
+    const accessCookie = request.cookies.get(listAccessTokenService.getCookieName())?.value;
+
     // Create reservation via share token
     const reservation = await reservationService.createReservationViaShareToken(
       params.shareToken,
       validatedData,
-      user.id
+      user.id,
+      accessCookie
     );
 
     // Convert dates to ISO strings for JSON serialization

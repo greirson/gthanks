@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { ForbiddenError, NotFoundError, getUserFriendlyError } from '@/lib/errors';
+import { listAccessTokenService } from '@/lib/services/list-access-token';
 import { listService } from '@/lib/services/list-service';
 import { logger } from '@/lib/services/logger';
 
@@ -29,7 +30,7 @@ interface RouteContext {
  * GET /api/public-profile/[username]/[slug]
  * Get list by vanity URL (username + slug)
  */
-export async function GET(_request: NextRequest, context: RouteContext) {
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { username, slug } = await context.params;
 
@@ -52,7 +53,31 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       );
     }
 
-    return NextResponse.json(list);
+    // For password-protected lists, check cookie-based access
+    if (list.visibility === 'password') {
+      const accessCookie = request.cookies.get(listAccessTokenService.getCookieName())?.value;
+      const hasValidAccess = listAccessTokenService.hasValidAccess(
+        accessCookie,
+        list.id,
+        list.password ?? null
+      );
+
+      if (hasValidAccess) {
+        // Mark list as having access
+        list.hasAccess = true;
+      } else {
+        // Return 403 with PASSWORD_REQUIRED code
+        return NextResponse.json(
+          { error: 'Password required', code: 'PASSWORD_REQUIRED' },
+          { status: 403 }
+        );
+      }
+    }
+
+    // Exclude password hash from response
+    const { password: _, ...safeList } = list;
+
+    return NextResponse.json(safeList);
   } catch (error) {
     if (error instanceof NotFoundError) {
       return NextResponse.json(
@@ -144,9 +169,27 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
       // Mark list as having access
       list.hasAccess = true;
+
+      // Exclude password hash from response
+      const { password: _, ...safeList } = list;
+
+      // Create response with access cookie
+      const existingCookie = request.cookies.get(listAccessTokenService.getCookieName())?.value;
+      const newCookieValue = listAccessTokenService.addListAccess(
+        existingCookie,
+        list.id,
+        list.password ?? null
+      );
+      const cookieConfig = listAccessTokenService.getCookieConfig(newCookieValue);
+
+      const response = NextResponse.json(safeList);
+      response.cookies.set(cookieConfig);
+      return response;
     }
 
-    return NextResponse.json(list);
+    // For non-password lists, just return the list
+    const { password: _, ...safeList } = list;
+    return NextResponse.json(safeList);
   } catch (error) {
     if (error instanceof NotFoundError) {
       return NextResponse.json(

@@ -1,6 +1,7 @@
 import { db } from '@/lib/db';
 import { ForbiddenError, NotFoundError } from '@/lib/errors';
 import { listService } from '@/lib/services/list-service';
+import { listAccessTokenService } from './list-access-token';
 
 export type Resource =
   | { type: 'list'; id: string }
@@ -42,7 +43,7 @@ export class PermissionService {
     userId: string | undefined,
     action: Action,
     resource: Resource,
-    context?: { password?: string }
+    context?: { password?: string; accessCookie?: string }
   ): Promise<PermissionResult> {
     // Anonymous users - limited permissions
     if (!userId) {
@@ -95,7 +96,7 @@ export class PermissionService {
     userId: string | undefined,
     action: Action,
     resource: Resource,
-    context?: { password?: string }
+    context?: { password?: string; accessCookie?: string }
   ): Promise<void> {
     const result = await this.can(userId, action, resource, context);
     if (!result.allowed) {
@@ -113,7 +114,7 @@ export class PermissionService {
   private async checkAnonymousPermission(
     action: Action,
     resource: Resource,
-    context?: { password?: string }
+    context?: { password?: string; accessCookie?: string }
   ): Promise<PermissionResult> {
     switch (resource.type) {
       case 'list':
@@ -139,8 +140,20 @@ export class PermissionService {
           }
 
           if (list.visibility === 'password') {
+            // Priority 1: Check access cookie
+            if (
+              listAccessTokenService.hasValidAccess(
+                context?.accessCookie,
+                resource.id,
+                list.password
+              )
+            ) {
+              return { allowed: true };
+            }
+
+            // Priority 2: Check password in context
             if (!context?.password) {
-              return { allowed: false, reason: 'Password is required for this list' };
+              return { allowed: false, reason: 'Password required' };
             }
 
             // Always verify password even if null (constant-time operation)
@@ -176,7 +189,7 @@ export class PermissionService {
     userId: string,
     action: Action,
     listId: string,
-    context?: { password?: string }
+    context?: { password?: string; accessCookie?: string }
   ): Promise<PermissionResult> {
     // Single query with ALL needed data to prevent timing attacks
     const [list, isGroupMemberResult] = await Promise.all([
@@ -247,8 +260,16 @@ export class PermissionService {
       }
 
       if (list.visibility === 'password') {
+        // Priority 1: Group membership already checked above (line 247)
+
+        // Priority 2: Check access cookie
+        if (listAccessTokenService.hasValidAccess(context?.accessCookie, listId, list.password)) {
+          return { allowed: true };
+        }
+
+        // Priority 3: Check password in context
         if (!context?.password) {
-          return { allowed: false, reason: 'Password is required for this list' };
+          return { allowed: false, reason: 'Password required' };
         }
 
         // Always verify password even if null (constant-time operation)

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { NotFoundError, ForbiddenError } from '@/lib/errors';
 import { rateLimiter, getRateLimitHeaders, getClientIdentifier } from '@/lib/rate-limiter';
+import { listAccessTokenService } from '@/lib/services/list-access-token';
 import { listService } from '@/lib/services/list-service';
 import { logger } from '@/lib/services/logger';
 
@@ -29,7 +30,42 @@ export async function GET(request: NextRequest, { params }: { params: { shareTok
       );
     }
 
-    // Fetch list by share token (no password required for public lists)
+    // First, check visibility and password to determine access method
+    const basicList = await listService.getListAccessInfoByShareToken(params.shareToken);
+
+    if (!basicList) {
+      return NextResponse.json(
+        { error: 'List not found or share link is invalid' },
+        { status: 404, headers: getRateLimitHeaders(rateLimitResult) }
+      );
+    }
+
+    // For password-protected lists, check if user has valid cookie access
+    if (basicList.visibility === 'password') {
+      const accessCookie = request.cookies.get(listAccessTokenService.getCookieName())?.value;
+      const hasValidAccess = listAccessTokenService.hasValidAccess(
+        accessCookie,
+        basicList.id,
+        basicList.password
+      );
+
+      if (!hasValidAccess) {
+        return NextResponse.json(
+          { error: 'Password required', code: 'PASSWORD_REQUIRED' },
+          { status: 403, headers: getRateLimitHeaders(rateLimitResult) }
+        );
+      }
+
+      // User has valid cookie - fetch full list details via service
+      const list = await listService.getListByShareTokenWithCookieAccess(params.shareToken);
+
+      // Exclude password hash from response
+      const { password: _, ...safeList } = list;
+
+      return NextResponse.json(safeList, { headers: getRateLimitHeaders(rateLimitResult) });
+    }
+
+    // For public lists, use the service
     const list = await listService.getListByShareToken(params.shareToken);
 
     // Exclude password hash from response
@@ -93,15 +129,28 @@ export async function POST(request: NextRequest, { params }: { params: { shareTo
       );
     }
 
-    // Fetch list by share token with password
+    // Fetch list by share token with password (this validates the password)
     const list = await listService.getListByShareToken(params.shareToken, password);
 
     // Exclude password hash from response
-    const { password: _, ...safeList } = list;
+    const { password: passwordHash, ...safeList } = list;
 
-    return NextResponse.json(safeList, {
+    // Create access cookie for future requests (24 hours)
+    const existingCookie = request.cookies.get(listAccessTokenService.getCookieName())?.value;
+    const newCookieValue = listAccessTokenService.addListAccess(
+      existingCookie,
+      list.id,
+      passwordHash ?? null
+    );
+    const cookieConfig = listAccessTokenService.getCookieConfig(newCookieValue);
+
+    // Build response with cookie
+    const response = NextResponse.json(safeList, {
       headers: getRateLimitHeaders(rateLimitResult),
     });
+    response.cookies.set(cookieConfig);
+
+    return response;
   } catch (error) {
     if (error instanceof NotFoundError) {
       return NextResponse.json({ error: error.message }, { status: 404 });

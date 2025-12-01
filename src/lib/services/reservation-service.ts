@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { ForbiddenError, NotFoundError, ValidationError } from '@/lib/errors';
 import { ReservationCreateInput } from '@/lib/validators/reservation';
 
+import { listAccessTokenService } from './list-access-token';
 import { logger } from './logger';
 import { permissionService } from './permission-service';
 import { PublicReservation, ReservationStatus, ReservationWithWish } from './reservation-types';
@@ -18,7 +19,8 @@ export class ReservationService {
   async createReservationViaShareToken(
     shareToken: string,
     data: ReservationCreateInput,
-    userId: string
+    userId: string,
+    accessCookie?: string
   ): Promise<Reservation> {
     if (!userId) {
       throw new ForbiddenError('Authentication required to reserve wishes');
@@ -52,6 +54,36 @@ export class ReservationService {
             // Check if list is accessible (public or password-protected)
             if (list.visibility === 'private') {
               throw new ForbiddenError('Cannot create reservations on private lists');
+            }
+
+            // Check if list is password-protected
+            if (list.visibility === 'password') {
+              // Check if user is a group member (bypass password)
+              const isGroupMember = await tx.userGroup.findFirst({
+                where: {
+                  userId,
+                  group: {
+                    listGroups: {
+                      some: { listId: list.id },
+                    },
+                  },
+                },
+                select: { userId: true },
+              });
+
+              if (!isGroupMember) {
+                // Must have valid access cookie
+                const hasAccess = listAccessTokenService.hasValidAccess(
+                  accessCookie,
+                  list.id,
+                  list.password
+                );
+                if (!hasAccess) {
+                  throw new ForbiddenError(
+                    'Password verification required to reserve items on this list'
+                  );
+                }
+              }
             }
 
             // Can't reserve your own wish (surprise protection)
