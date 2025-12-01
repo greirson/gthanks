@@ -183,7 +183,7 @@ export default function GroupDetailPage({ params }: PageProps) {
                 <GroupForm
                   group={group}
                   onSubmit={(data) => {
-                    updateMutation.mutate(data as GroupUpdateInput);
+                    updateMutation.mutate(data);
                   }}
                   isLoading={updateMutation.isPending}
                 />

@@ -554,7 +554,7 @@ export default function GroupsPage() {
             <GroupForm
               group={editingGroup}
               onSubmit={(data) => {
-                updateGroupMutation.mutate({ id: editingGroup.id, data: data as GroupUpdateInput });
+                updateGroupMutation.mutate({ id: editingGroup.id, data });
               }}
               isLoading={updateGroupMutation.isPending}
               onCancel={() => {
