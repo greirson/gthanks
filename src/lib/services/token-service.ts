@@ -254,30 +254,52 @@ export class TokenService {
       },
     });
 
-    // Token not found
+    // Token not found - don't log (expected for invalid prefixes)
     if (!tokenRecord) {
       return null;
     }
 
     // Check if token is revoked (early exit before expensive hash check)
     if (tokenRecord.revokedAt) {
+      logger.warn(
+        { tokenId: tokenRecord.id, reason: 'revoked', ip: clientIp },
+        'Token validation failed: token was revoked'
+      );
       return null;
     }
 
     // Check if token is expired (early exit before expensive hash check)
     // Note: null expiresAt means token never expires
     if (tokenRecord.expiresAt && tokenRecord.expiresAt < new Date()) {
+      logger.warn(
+        { tokenId: tokenRecord.id, reason: 'expired', ip: clientIp },
+        'Token validation failed: token expired'
+      );
       return null;
     }
 
     // Verify the token hash (single Argon2 operation)
     const isValid = await verifyToken(token, tokenRecord.accessTokenHash);
     if (!isValid) {
+      // Security: Log hash mismatches - could indicate brute force attempt
+      logger.warn(
+        { tokenId: tokenRecord.id, reason: 'hash_mismatch', ip: clientIp },
+        'Token validation failed: hash mismatch (possible attack)'
+      );
       return null;
     }
 
     // Check user suspension status
     if (tokenRecord.user.suspendedAt) {
+      logger.warn(
+        {
+          tokenId: tokenRecord.id,
+          userId: tokenRecord.userId,
+          reason: 'user_suspended',
+          ip: clientIp,
+        },
+        'Token validation failed: user account suspended'
+      );
       return null;
     }
 

@@ -1,12 +1,16 @@
 /**
  * Safari Extension OAuth Callback
  * Creates PAT after OAuth success, redirects to extension with token
+ *
+ * Security Note: This endpoint creates tokens on GET (required for OAuth redirect flow).
+ * Rate limiting is applied to prevent abuse via CSRF-style attacks.
  */
 
 import { getServerSession } from 'next-auth';
 import { NextResponse } from 'next/server';
 
 import { authOptions } from '@/lib/auth';
+import { rateLimiter } from '@/lib/rate-limiter';
 import { tokenService } from '@/lib/services/token-service';
 
 export async function GET(request: Request) {
@@ -14,6 +18,14 @@ export async function GET(request: Request) {
 
   if (!session?.user?.id) {
     return NextResponse.redirect(new URL('/auth/login', request.url));
+  }
+
+  // Rate limit by user ID to prevent abuse (CSRF-style token creation attacks)
+  const rateLimitResult = await rateLimiter.check('safari-extension-callback', session.user.id);
+  if (!rateLimitResult.allowed) {
+    const errorUrl = new URL('gthanks-extension://auth/callback');
+    errorUrl.searchParams.set('error', 'rate_limited');
+    return NextResponse.redirect(errorUrl.toString());
   }
 
   try {

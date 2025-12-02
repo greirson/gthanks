@@ -324,14 +324,15 @@ rateLimiter.configure('token-create', {
   maxRequests: 10, // 10 token creations per hour per user
 });
 
-rateLimiter.configure('token-refresh', {
-  windowMs: 60 * 60 * 1000, // 1 hour
-  maxRequests: 20, // 20 refresh requests per hour per IP
-});
-
 rateLimiter.configure('token-revoke', {
   windowMs: 60 * 60 * 1000, // 1 hour
   maxRequests: 20, // 20 revocation requests per hour per user
+});
+
+// Safari extension OAuth callback - prevents CSRF-style token creation attacks
+rateLimiter.configure('safari-extension-callback', {
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 5, // 5 extension auth attempts per hour per user
 });
 
 export function getRateLimitHeaders(result: Awaited<ReturnType<typeof rateLimiter.check>>) {
