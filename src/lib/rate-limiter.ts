@@ -318,6 +318,23 @@ rateLimiter.configure('bulk-operation', {
   maxRequests: 10, // 10 bulk operations per hour per user
 });
 
+// Personal Access Token rate limits
+rateLimiter.configure('token-create', {
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 10, // 10 token creations per hour per user
+});
+
+rateLimiter.configure('token-revoke', {
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 20, // 20 revocation requests per hour per user
+});
+
+// Safari extension OAuth callback - prevents CSRF-style token creation attacks
+rateLimiter.configure('safari-extension-callback', {
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 5, // 5 extension auth attempts per hour per user
+});
+
 export function getRateLimitHeaders(result: Awaited<ReturnType<typeof rateLimiter.check>>) {
   return {
     'X-RateLimit-Limit': result.limit.toString(),

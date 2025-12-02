@@ -2,12 +2,14 @@ import { z } from 'zod';
 
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getCurrentUser } from '@/lib/auth-utils';
+import { getCurrentUserOrToken } from '@/lib/auth-utils';
 import { AppError } from '@/lib/errors';
-import { wishService } from '@/lib/services/wish-service';
-import { WishCreateSchema, WishQuerySchema } from '@/lib/validators/wish';
-import { serializePrismaResponse } from '@/lib/utils/date-serialization';
+import { listService } from '@/lib/services/list-service';
 import { logger } from '@/lib/services/logger';
+import { permissionService } from '@/lib/services/permission-service';
+import { wishService } from '@/lib/services/wish-service';
+import { serializePrismaResponse } from '@/lib/utils/date-serialization';
+import { WishCreateSchema, WishQuerySchema } from '@/lib/validators/wish';
 
 /**
  * Handles GET requests for retrieving user wishes with filtering and pagination
@@ -22,9 +24,9 @@ import { logger } from '@/lib/services/logger';
  */
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
-    const user = await getCurrentUser();
-    if (!user) {
+    // Check authentication (supports both session and Bearer token)
+    const auth = await getCurrentUserOrToken(request);
+    if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -73,7 +75,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get wishes
-    const result = await wishService.getUserWishes(user.id, queryParams);
+    const result = await wishService.getUserWishes(auth.userId, queryParams);
 
     // Serialize dates in the result and wrap in unified pagination format
     const serializedResult = {
@@ -122,14 +124,14 @@ export async function GET(request: NextRequest) {
  *   "listId": "abc123"
  * }
  *
- * @see {@link getCurrentUser} for authentication details
+ * @see {@link getCurrentUserOrToken} for authentication details
  * @see {@link WishCreateSchema} for request validation
  */
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const user = await getCurrentUser();
-    if (!user) {
+    // Check authentication (supports both session and Bearer token)
+    const auth = await getCurrentUserOrToken(request);
+    if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -137,13 +139,58 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as unknown;
     const validatedData = WishCreateSchema.parse(body);
 
+    // Extract listIds from validated data (not passed to wish service)
+    const { listIds, ...wishData } = validatedData;
+
     // Create wish
-    const wish = await wishService.createWish(validatedData, user.id);
+    const wish = await wishService.createWish(wishData, auth.userId);
+
+    // Track which lists the wish was added to
+    const addedToLists: string[] = [];
+
+    // If listIds provided, add wish to those lists
+    if (listIds && listIds.length > 0) {
+      // Check permissions and add to each list silently (don't fail on permission errors)
+      for (const listId of listIds) {
+        try {
+          // Check if user can edit this list (owner or co-admin)
+          const { allowed } = await permissionService.can(auth.userId, 'edit', {
+            type: 'list',
+            id: listId,
+          });
+
+          if (allowed) {
+            // Add wish to list via service layer
+            await listService.addWishToList(listId, { wishId: wish.id }, auth.userId);
+            addedToLists.push(listId);
+          } else {
+            // Log warning but don't expose which lists exist
+            logger.warn(
+              { userId: auth.userId, listId, wishId: wish.id },
+              'User lacks permission to add wish to list'
+            );
+          }
+        } catch (listError) {
+          // Log error but continue with other lists
+          // Don't expose list existence information
+          logger.warn(
+            { userId: auth.userId, listId, wishId: wish.id, error: listError },
+            'Failed to add wish to list'
+          );
+        }
+      }
+    }
 
     // Serialize dates before returning
     const serializedWish = serializePrismaResponse(wish);
 
-    return NextResponse.json(serializedWish, { status: 201 });
+    return NextResponse.json(
+      {
+        ...serializedWish,
+        addedToLists,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     logger.error({ error: error }, 'POST /api/wishes error');
 

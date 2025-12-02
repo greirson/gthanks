@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getCurrentUser } from '@/lib/auth-utils';
+import { getCurrentUserOrToken, AuthResult } from '@/lib/auth-utils';
 import { AppError, ForbiddenError, NotFoundError, getUserFriendlyError } from '@/lib/errors';
 import { logger } from '@/lib/services/logger';
 import { wishService } from '@/lib/services/wish-service';
@@ -34,14 +34,14 @@ interface RouteParams {
  * @see {@link getCurrentUser} for authentication details
  * @see {@link permissionService} for authorization checks
  */
-export async function GET(_request: NextRequest, { params }: RouteParams) {
-  let user: Awaited<ReturnType<typeof getCurrentUser>> | null = null;
+export async function GET(request: NextRequest, { params }: RouteParams) {
+  let auth: AuthResult | null = null;
   const { wishId } = params;
 
   try {
     // Check authentication
-    user = await getCurrentUser();
-    if (!user) {
+    auth = await getCurrentUserOrToken(request);
+    if (!auth) {
       return NextResponse.json(
         { error: getUserFriendlyError('UNAUTHORIZED'), code: 'UNAUTHORIZED' },
         { status: 401 }
@@ -49,11 +49,11 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     }
 
     // Use service layer to get lists containing this wish
-    const lists = await wishService.getWishLists(wishId, user.id);
+    const lists = await wishService.getWishLists(wishId, auth.userId);
 
     return NextResponse.json(serializePrismaResponse(lists));
   } catch (error) {
-    logger.error({ error, userId: user?.id, wishId }, 'GET /api/wishes/[wishId]/lists error');
+    logger.error({ error, userId: auth?.userId, wishId }, 'GET /api/wishes/[wishId]/lists error');
 
     // Return 404 for both NotFoundError and ForbiddenError to prevent resource enumeration
     if (error instanceof NotFoundError || error instanceof ForbiddenError) {

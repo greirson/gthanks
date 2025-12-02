@@ -258,6 +258,10 @@ export const WishCreateSchema = z.object({
     .max(3, 'Wish level must be at most 3')
     .default(1)
     .optional(),
+  listIds: z
+    .array(z.string().min(1, 'List ID cannot be empty'))
+    .max(10, 'Cannot add to more than 10 lists at once')
+    .optional(),
 });
 
 // Input validation for updating a wish

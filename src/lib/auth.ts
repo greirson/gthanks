@@ -131,6 +131,11 @@ const authOptions: NextAuthOptions = {
   },
   callbacks: {
     redirect: ({ url, baseUrl }) => {
+      // Safari extension OAuth: route through intermediary to create PAT
+      if (url.startsWith('gthanks-extension://auth/callback')) {
+        return `${baseUrl}/api/auth/safari-extension-callback`;
+      }
+
       // Use secure URL validation to prevent open redirect attacks
       const sanitizedUrl = sanitizeRedirectUrl(url, baseUrl, '/wishes');
       return sanitizedUrl;

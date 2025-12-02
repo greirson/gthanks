@@ -5,6 +5,7 @@ import { AvatarUpload } from '@/components/profile/avatar-upload';
 import { EmailManager } from '@/components/settings/email-manager';
 import { NameForm } from '@/components/settings/name-form';
 import { ProfileVisibilityToggle } from '@/components/settings/profile-visibility-toggle';
+import { TokenManager } from '@/components/settings/token-manager';
 import { UsernameForm } from '@/components/settings/username-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getCurrentUser } from '@/lib/auth-utils';
@@ -203,6 +204,20 @@ export default async function SettingsPage({ searchParams }: PageProps) {
         </CardHeader>
         <CardContent>
           <EmailManager userEmails={userEmails} />
+        </CardContent>
+      </Card>
+
+      {/* Access Tokens Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Access Tokens</CardTitle>
+          <CardDescription>
+            Create and manage personal access tokens for browser extensions, mobile apps, and
+            third-party integrations.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <TokenManager />
         </CardContent>
       </Card>
     </div>

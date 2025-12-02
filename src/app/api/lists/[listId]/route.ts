@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getCurrentUser } from '@/lib/auth-utils';
+import { getCurrentUserOrToken, type AuthResult } from '@/lib/auth-utils';
 import { AppError, ForbiddenError, NotFoundError, getUserFriendlyError } from '@/lib/errors';
 import { listService } from '@/lib/services/list-service';
 import { ListUpdateSchema } from '@/lib/validators/list';
@@ -34,13 +34,13 @@ interface RouteParams {
  * @see {@link listService.getList} for fetch logic with permission checks
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  let user: Awaited<ReturnType<typeof getCurrentUser>> | null = null;
+  let auth: AuthResult | null = null;
   const { listId } = params;
 
   try {
-    // Check authentication
-    user = await getCurrentUser();
-    if (!user) {
+    // Check authentication (supports both session and Bearer token)
+    auth = await getCurrentUserOrToken(request);
+    if (!auth) {
       return NextResponse.json(
         { error: getUserFriendlyError('UNAUTHORIZED'), code: 'UNAUTHORIZED' },
         { status: 401 }
@@ -48,11 +48,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Fetch list with details
-    const list = await listService.getList(listId, user.id);
+    const list = await listService.getList(listId, auth.userId);
 
     return NextResponse.json(list);
   } catch (error) {
-    logger.error({ error, userId: user?.id, listId }, 'GET /api/lists/[listId] error');
+    logger.error({ error, userId: auth?.userId, listId }, 'GET /api/lists/[listId] error');
 
     // Return 404 for both NotFoundError and ForbiddenError to prevent resource enumeration
     if (error instanceof NotFoundError || error instanceof ForbiddenError) {
@@ -104,13 +104,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  * @see {@link listService.updateList} for update logic with permission checks
  */
 export async function PUT(request: NextRequest, { params }: RouteParams) {
-  let user: Awaited<ReturnType<typeof getCurrentUser>> | null = null;
+  let auth: AuthResult | null = null;
   const { listId } = params;
 
   try {
-    // Check authentication
-    user = await getCurrentUser();
-    if (!user) {
+    // Check authentication (supports both session and Bearer token)
+    auth = await getCurrentUserOrToken(request);
+    if (!auth) {
       return NextResponse.json(
         { error: getUserFriendlyError('UNAUTHORIZED'), code: 'UNAUTHORIZED' },
         { status: 401 }
@@ -122,11 +122,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const data = ListUpdateSchema.parse(body);
 
     // Update list
-    const updated = await listService.updateList(listId, data, user.id);
+    const updated = await listService.updateList(listId, data, auth.userId);
 
     return NextResponse.json(updated);
   } catch (error) {
-    logger.error({ error, userId: user?.id, listId }, 'PUT /api/lists/[listId] error');
+    logger.error({ error, userId: auth?.userId, listId }, 'PUT /api/lists/[listId] error');
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -186,13 +186,13 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
  * @see {@link listService.deleteList} for deletion logic with cascade handling
  */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
-  let user: Awaited<ReturnType<typeof getCurrentUser>> | null = null;
+  let auth: AuthResult | null = null;
   const { listId } = params;
 
   try {
-    // Check authentication
-    user = await getCurrentUser();
-    if (!user) {
+    // Check authentication (supports both session and Bearer token)
+    auth = await getCurrentUserOrToken(request);
+    if (!auth) {
       return NextResponse.json(
         { error: getUserFriendlyError('UNAUTHORIZED'), code: 'UNAUTHORIZED' },
         { status: 401 }
@@ -200,11 +200,11 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     // Delete list
-    await listService.deleteList(listId, user.id);
+    await listService.deleteList(listId, auth.userId);
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    logger.error({ error, userId: user?.id, listId }, 'DELETE /api/lists/[listId] error');
+    logger.error({ error, userId: auth?.userId, listId }, 'DELETE /api/lists/[listId] error');
 
     // Return 404 for both NotFoundError and ForbiddenError to prevent resource enumeration
     if (error instanceof NotFoundError || error instanceof ForbiddenError) {

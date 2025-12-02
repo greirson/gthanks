@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getCurrentUser } from '@/lib/auth-utils';
+import { getCurrentUserOrToken } from '@/lib/auth-utils';
 import { handleApiError } from '@/lib/errors';
 import { listService } from '@/lib/services/list-service';
 import { ListCreateSchema, ListPaginationSchema } from '@/lib/validators/list';
@@ -18,9 +18,9 @@ import { serializePrismaArray, serializePrismaResponse } from '@/lib/utils/date-
  */
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
-    const user = await getCurrentUser();
-    if (!user) {
+    // Check authentication (supports both session and Bearer token)
+    const auth = await getCurrentUserOrToken(request);
+    if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Get lists
-    const result = await listService.getUserLists(user.id, pagination);
+    const result = await listService.getUserLists(auth.userId, pagination);
 
     // Serialize dates in the result
     const serializedLists = serializePrismaArray(result.lists);
@@ -84,9 +84,9 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const user = await getCurrentUser();
-    if (!user) {
+    // Check authentication (supports both session and Bearer token)
+    const auth = await getCurrentUserOrToken(request);
+    if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     const validatedData = ListCreateSchema.parse(body);
 
     // Create list
-    const list = await listService.createList(validatedData, user.id);
+    const list = await listService.createList(validatedData, auth.userId);
 
     // Serialize dates before returning
     const serializedList = serializePrismaResponse(list);
