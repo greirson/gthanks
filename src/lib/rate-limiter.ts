@@ -335,6 +335,23 @@ rateLimiter.configure('safari-extension-callback', {
   maxRequests: 5, // 5 extension auth attempts per hour per user
 });
 
+// Admin audit log rate limits
+rateLimiter.configure('admin-audit-logs', {
+  windowMs: 60 * 1000, // 1 minute
+  maxRequests: 60, // 60 requests per minute per admin user
+});
+
+rateLimiter.configure('admin-audit-logs-settings', {
+  windowMs: 60 * 1000, // 1 minute
+  maxRequests: 30, // 30 requests per minute per admin user
+});
+
+// Audit log export rate limit (expensive database operation)
+rateLimiter.configure('admin-audit-logs-export', {
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 10, // 10 exports per hour per admin user
+});
+
 export function getRateLimitHeaders(result: Awaited<ReturnType<typeof rateLimiter.check>>) {
   return {
     'X-RateLimit-Limit': result.limit.toString(),

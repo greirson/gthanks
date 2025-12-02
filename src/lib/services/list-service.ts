@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import { resolveAvatarUrlSync } from '@/lib/avatar-utils';
 import { db } from '@/lib/db';
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '@/lib/errors';
+import { AuditActions } from '@/lib/schemas/audit-log';
 import { ListWithOwner } from '@/lib/services/group-types';
 import { generateSlugFromListName } from '@/lib/utils/slugify';
 import {
@@ -16,6 +17,7 @@ import {
   RemoveWishFromListInput,
 } from '@/lib/validators/list';
 
+import { auditService } from './audit-service';
 import { logger } from './logger';
 import { permissionService } from './permission-service';
 
@@ -115,6 +117,18 @@ export class ListService {
           },
         },
       },
+    });
+
+    // Fire and forget audit log
+    auditService.log({
+      actorId: userId,
+      actorType: 'user',
+      category: 'content',
+      action: AuditActions.LIST_CREATED,
+      resourceType: 'list',
+      resourceId: list.id,
+      resourceName: list.name,
+      details: { visibility: list.visibility },
     });
 
     return list as ListWithOwner;
@@ -268,6 +282,22 @@ export class ListService {
           },
         });
 
+        // Fire and forget audit log
+        auditService.log({
+          actorId: userId,
+          actorType: 'user',
+          category: 'content',
+          action: AuditActions.LIST_UPDATED,
+          resourceType: 'list',
+          resourceId: listId,
+          resourceName: updated.name,
+          details: {
+            updatedFields: Object.keys(data).filter(
+              (k) => data[k as keyof ListUpdateInput] !== undefined
+            ),
+          },
+        });
+
         return updated as ListWithOwner;
       } catch (error) {
         // Handle slug collision race condition
@@ -299,6 +329,12 @@ export class ListService {
   async deleteList(listId: string, userId: string): Promise<void> {
     // Use centralized permission service
     await permissionService.require(userId, 'delete', { type: 'list', id: listId });
+
+    // Get list name for audit log before deletion
+    const list = await db.list.findUnique({
+      where: { id: listId },
+      select: { name: true },
+    });
 
     // Delete list and all associations
     await db.$transaction(async (tx) => {
@@ -332,6 +368,17 @@ export class ListService {
       await tx.list.delete({
         where: { id: listId },
       });
+    });
+
+    // Fire and forget audit log
+    auditService.log({
+      actorId: userId,
+      actorType: 'user',
+      category: 'content',
+      action: AuditActions.LIST_DELETED,
+      resourceType: 'list',
+      resourceId: listId,
+      resourceName: list?.name || undefined,
     });
   }
 
@@ -719,9 +766,21 @@ export class ListService {
     const shareToken = crypto.randomBytes(32).toString('hex');
 
     // Update list with share token
-    await db.list.update({
+    const list = await db.list.update({
       where: { id: listId },
       data: { shareToken },
+    });
+
+    // Fire and forget audit log
+    auditService.log({
+      actorId: userId,
+      actorType: 'user',
+      category: 'content',
+      action: AuditActions.LIST_SHARED,
+      resourceType: 'list',
+      resourceId: listId,
+      resourceName: list.name,
+      details: { shareMethod: 'token' },
     });
 
     return shareToken;

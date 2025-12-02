@@ -1,6 +1,8 @@
 import { z } from 'zod';
 
 import { db } from '@/lib/db';
+import { auditService } from '@/lib/services/audit-service';
+import { AuditActions } from '@/lib/schemas/audit-log';
 
 // Type for Prisma transaction client
 type PrismaTransactionClient = Omit<
@@ -320,9 +322,23 @@ export class AdminService {
     userId: string,
     adminId: string,
     reason: string,
-    tx?: PrismaTransactionClient
+    tx?: PrismaTransactionClient,
+    ipAddress?: string,
+    userAgent?: string
   ) {
-    return this.updateUser(
+    // Get admin name for audit log
+    const admin = await db.user.findUnique({
+      where: { id: adminId },
+      select: { name: true, email: true },
+    });
+
+    // Get target user for audit log
+    const targetUser = await db.user.findUnique({
+      where: { id: userId },
+      select: { name: true, email: true },
+    });
+
+    const result = await this.updateUser(
       userId,
       adminId,
       {
@@ -331,13 +347,48 @@ export class AdminService {
       },
       tx
     );
+
+    // Fire and forget audit log
+    auditService.log({
+      actorId: adminId,
+      actorName: admin?.name || admin?.email || undefined,
+      actorType: 'user',
+      category: 'admin',
+      action: AuditActions.USER_SUSPENDED,
+      resourceType: 'user',
+      resourceId: userId,
+      resourceName: targetUser?.name || targetUser?.email || undefined,
+      details: { reason },
+      ipAddress,
+      userAgent,
+    });
+
+    return result;
   }
 
   /**
    * Unsuspend user
    */
-  static async unsuspendUser(userId: string, adminId: string, tx?: PrismaTransactionClient) {
-    return this.updateUser(
+  static async unsuspendUser(
+    userId: string,
+    adminId: string,
+    tx?: PrismaTransactionClient,
+    ipAddress?: string,
+    userAgent?: string
+  ) {
+    // Get admin name for audit log
+    const admin = await db.user.findUnique({
+      where: { id: adminId },
+      select: { name: true, email: true },
+    });
+
+    // Get target user for audit log
+    const targetUser = await db.user.findUnique({
+      where: { id: userId },
+      select: { name: true, email: true },
+    });
+
+    const result = await this.updateUser(
       userId,
       adminId,
       {
@@ -345,6 +396,22 @@ export class AdminService {
       },
       tx
     );
+
+    // Fire and forget audit log
+    auditService.log({
+      actorId: adminId,
+      actorName: admin?.name || admin?.email || undefined,
+      actorType: 'user',
+      category: 'admin',
+      action: AuditActions.USER_UNSUSPENDED,
+      resourceType: 'user',
+      resourceId: userId,
+      resourceName: targetUser?.name || targetUser?.email || undefined,
+      ipAddress,
+      userAgent,
+    });
+
+    return result;
   }
 
   /**

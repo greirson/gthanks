@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getCurrentUser } from '@/lib/auth-utils';
 import { getUserFriendlyError } from '@/lib/errors';
+import { AuditActions } from '@/lib/schemas/audit-log';
+import { auditService } from '@/lib/services/audit-service';
 import { userService } from '@/lib/services/user-service';
 import { logger } from '@/lib/services/logger';
+// eslint-disable-next-line local-rules/no-direct-db-import -- Read-only query for email lookup before deletion
+import { db } from '@/lib/db';
 
 /**
  * Handles DELETE requests for removing an email from the user's account
@@ -38,8 +42,26 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
 
     const emailId = params.id;
 
+    // Get email for audit log before deletion
+    const emailRecord = await db.userEmail.findUnique({
+      where: { id: emailId },
+      select: { email: true },
+    });
+
     // Use service layer
     await userService.deleteEmail(user.id, emailId);
+
+    // Fire and forget audit log
+    auditService.log({
+      actorId: user.id,
+      actorName: user.name || user.email || undefined,
+      actorType: 'user',
+      category: 'user',
+      action: AuditActions.EMAIL_REMOVED,
+      resourceType: 'user_email',
+      resourceId: emailId,
+      resourceName: emailRecord?.email || undefined,
+    });
 
     return NextResponse.json({
       success: true,

@@ -2,8 +2,10 @@ import { Prisma, Reservation } from '@prisma/client';
 
 import { db } from '@/lib/db';
 import { ForbiddenError, NotFoundError, ValidationError } from '@/lib/errors';
+import { AuditActions } from '@/lib/schemas/audit-log';
 import { ReservationCreateInput } from '@/lib/validators/reservation';
 
+import { auditService } from './audit-service';
 import { listAccessTokenService } from './list-access-token';
 import { logger } from './logger';
 import { permissionService } from './permission-service';
@@ -106,6 +108,18 @@ export class ReservationService {
                 wishId: data.wishId,
                 userId,
               },
+            });
+
+            // Fire and forget audit log
+            auditService.log({
+              actorId: userId,
+              actorType: 'user',
+              category: 'content',
+              action: AuditActions.RESERVATION_CREATED,
+              resourceType: 'reservation',
+              resourceId: newReservation.id,
+              resourceName: list.listWishes[0].wish.title,
+              details: { wishId: data.wishId },
             });
 
             return newReservation;
@@ -224,6 +238,18 @@ export class ReservationService {
                 wishId: data.wishId,
                 userId,
               },
+            });
+
+            // Fire and forget audit log
+            auditService.log({
+              actorId: userId,
+              actorType: 'user',
+              category: 'content',
+              action: AuditActions.RESERVATION_CREATED,
+              resourceType: 'reservation',
+              resourceId: newReservation.id,
+              resourceName: wish.title,
+              details: { wishId: data.wishId },
             });
 
             return newReservation;

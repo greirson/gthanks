@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, Users, Settings } from 'lucide-react';
+import { Home, Users, Settings, ScrollText } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -20,6 +20,7 @@ export function AdminNavigation({ admin }: AdminNavigationProps) {
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: Home },
     { name: 'Users', href: '/admin/users', icon: Users },
+    { name: 'Audit Logs', href: '/admin/audit-logs', icon: ScrollText },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
   ];
 

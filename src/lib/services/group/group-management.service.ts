@@ -1,6 +1,8 @@
 import { resolveGroupAvatarUrlSync } from '@/lib/avatar-utils';
 import { db } from '@/lib/db';
 import { NotFoundError, ValidationError } from '@/lib/errors';
+import { AuditActions } from '@/lib/schemas/audit-log';
+import { auditService } from '@/lib/services/audit-service';
 import { GroupWithCounts, GroupWithDetails } from '@/lib/services/group-types';
 import { permissionService } from '@/lib/services/permission-service';
 import { GroupCreateInput, GroupUpdateInput } from '@/lib/validators/group';
@@ -62,6 +64,17 @@ export class GroupManagementService {
       }
 
       return groupWithCounts as GroupWithCounts;
+    });
+
+    // Fire and forget audit log
+    auditService.log({
+      actorId: userId,
+      actorType: 'user',
+      category: 'content',
+      action: AuditActions.GROUP_CREATED,
+      resourceType: 'group',
+      resourceId: group.id,
+      resourceName: group.name,
     });
 
     return group;

@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getCurrentUser } from '@/lib/auth-utils';
 import { getUserFriendlyError } from '@/lib/errors';
+import { AuditActions } from '@/lib/schemas/audit-log';
+import { auditService } from '@/lib/services/audit-service';
 import { UserProfileService } from '@/lib/services/user-profile';
 import { logger } from '@/lib/services/logger';
 
@@ -108,6 +110,20 @@ export async function PATCH(request: NextRequest) {
     const data = UpdateProfileSchema.parse(body);
 
     await UserProfileService.updateProfile(user.id, data);
+
+    // Fire and forget audit log
+    auditService.log({
+      actorId: user.id,
+      actorName: user.name || user.email || undefined,
+      actorType: 'user',
+      category: 'user',
+      action: AuditActions.PROFILE_UPDATE,
+      resourceType: 'user',
+      resourceId: user.id,
+      details: {
+        updatedFields: Object.keys(data).filter((k) => data[k as keyof typeof data] !== undefined),
+      },
+    });
 
     // Get the updated profile after update
     const profileData = await UserProfileService.getProfile(user.id);

@@ -10,6 +10,7 @@ export { wishesApi } from './wishes';
 export { listsApi } from './lists';
 export { reservationsApi } from './reservations';
 export { adminApi } from './admin';
+export { auditLogsApi } from './audit-logs';
 
 // Re-export types for convenience
 export type {

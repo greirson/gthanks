@@ -367,3 +367,50 @@ model PersonalAccessToken {
   @@index([expiresAt])
   @@map("personal_access_tokens")
 }
+
+// =============================================================================
+// Audit Logging
+// =============================================================================
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  timestamp DateTime @default(now())
+
+  // Actor information
+  actorId   String? // User ID if logged in, null for anonymous/system
+  actorName String? // Cached name for display (user may be deleted later)
+  actorType String // "user" | "system" | "anonymous"
+
+  // Action information
+  category String // "auth" | "user" | "content" | "admin"
+  action   String // "login_success" | "wish_created" | etc.
+
+  // Resource information
+  resourceType String? // "wish" | "list" | "group" | "user" | etc.
+  resourceId   String? // ID of the affected resource
+  resourceName String? // Cached name for display
+
+  // Additional details (JSON string)
+  details String?
+
+  // Request context (security events only)
+  ipAddress String?
+  userAgent String?
+
+  // Optimized indexes for common query patterns
+  @@index([timestamp(sort: Desc)])
+  @@index([category, timestamp(sort: Desc)])
+  @@index([actorId, timestamp(sort: Desc)])
+  @@map("audit_logs")
+}
+
+model AuditLogSettings {
+  id                    String   @id @default("default")
+  authEnabled           Boolean  @default(true)
+  userManagementEnabled Boolean  @default(true)
+  contentEnabled        Boolean  @default(true)
+  adminEnabled          Boolean  @default(true)
+  updatedAt             DateTime @updatedAt
+
+  @@map("audit_log_settings")
+}

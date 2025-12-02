@@ -2,6 +2,7 @@ import { Prisma, Wish } from '@prisma/client';
 
 import { db } from '@/lib/db';
 import { ForbiddenError, NotFoundError, ValidationError } from '@/lib/errors';
+import { AuditActions } from '@/lib/schemas/audit-log';
 import {
   WishCreateInput,
   WishQueryOptions,
@@ -9,6 +10,7 @@ import {
   WishUpdateInput,
 } from '@/lib/validators/wish';
 
+import { auditService } from './audit-service';
 import { imageProcessor } from './image-processor';
 import { logger } from './logger';
 import { permissionService } from './permission-service';
@@ -106,6 +108,18 @@ export class WishService {
         }
       }
 
+      // Fire and forget audit log
+      auditService.log({
+        actorId: userId,
+        actorType: 'user',
+        category: 'content',
+        action: AuditActions.WISH_CREATED,
+        resourceType: 'wish',
+        resourceId: result.id,
+        resourceName: result.title,
+        details: { price: result.price, wishLevel: result.wishLevel },
+      });
+
       return result;
     } catch (error) {
       logger.error(
@@ -189,6 +203,22 @@ export class WishService {
         await imageProcessor.deleteImage(_oldLocalImagePath);
       }
 
+      // Fire and forget audit log
+      auditService.log({
+        actorId: userId,
+        actorType: 'user',
+        category: 'content',
+        action: AuditActions.WISH_UPDATED,
+        resourceType: 'wish',
+        resourceId: wishId,
+        resourceName: result.title,
+        details: {
+          updatedFields: Object.keys(data).filter(
+            (k) => data[k as keyof WishUpdateInput] !== undefined
+          ),
+        },
+      });
+
       return result;
     } catch (error) {
       logger.error(
@@ -250,6 +280,17 @@ export class WishService {
     if (wish.localImagePath) {
       await imageProcessor.deleteImage(wish.localImagePath);
     }
+
+    // Fire and forget audit log
+    auditService.log({
+      actorId: userId,
+      actorType: 'user',
+      category: 'content',
+      action: AuditActions.WISH_DELETED,
+      resourceType: 'wish',
+      resourceId: wishId,
+      resourceName: wish.title,
+    });
   }
 
   /**

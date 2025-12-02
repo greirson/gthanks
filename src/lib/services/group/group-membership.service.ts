@@ -1,6 +1,8 @@
 import { resolveAvatarUrlSync } from '@/lib/avatar-utils';
 import { db } from '@/lib/db';
 import { AppError, ForbiddenError, NotFoundError, ValidationError } from '@/lib/errors';
+import { AuditActions } from '@/lib/schemas/audit-log';
+import { auditService } from '@/lib/services/audit-service';
 import { GroupMemberDetails, GroupPermissions } from '@/lib/services/group-types';
 import { permissionService } from '@/lib/services/permission-service';
 import { GroupAddMemberInput, GroupMemberInput } from '@/lib/validators/group';
@@ -58,11 +60,33 @@ export class GroupMembershipService {
       throw new ValidationError('User is already a member of this group');
     }
 
+    // Get group name for audit log
+    const group = await this.db.group.findUnique({
+      where: { id: groupId },
+      select: { name: true },
+    });
+
     // Add member
     await this.db.userGroup.create({
       data: {
         userId: targetUser.id,
         groupId: groupId,
+        role: data.role || 'member',
+      },
+    });
+
+    // Fire and forget audit log
+    auditService.log({
+      actorId: userId,
+      actorType: 'user',
+      category: 'content',
+      action: AuditActions.GROUP_MEMBER_ADDED,
+      resourceType: 'group',
+      resourceId: groupId,
+      resourceName: group?.name || undefined,
+      details: {
+        addedUserId: targetUser.id,
+        addedUserEmail: targetUser.email,
         role: data.role || 'member',
       },
     });

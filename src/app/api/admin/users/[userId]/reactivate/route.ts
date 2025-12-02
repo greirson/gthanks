@@ -24,8 +24,18 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     const { userId } = params;
 
+    // Get IP and user agent for audit logging
+    const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0] || undefined;
+    const userAgent = request.headers.get('user-agent') || undefined;
+
     // Reactivate user
-    const reactivatedUser = await AdminService.unsuspendUser(userId, admin.id);
+    const reactivatedUser = await AdminService.unsuspendUser(
+      userId,
+      admin.id,
+      undefined,
+      ipAddress,
+      userAgent
+    );
 
     return NextResponse.json({
       user: reactivatedUser,
