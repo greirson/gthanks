@@ -82,7 +82,7 @@ NEXTAUTH_URL=https://your-production-domain.com
 ### 4. Generate Prisma Client
 
 ```bash
-pnpm prisma generate
+pnpm db:generate
 ```
 
 This regenerates the Prisma client for PostgreSQL.
@@ -99,7 +99,7 @@ This creates all tables in your PostgreSQL database.
 
 ```bash
 # Check tables were created
-pnpm prisma studio
+pnpm db:studio
 
 # Or connect directly to PostgreSQL
 psql $DATABASE_URL -c "\dt"
@@ -259,7 +259,7 @@ If you need to revert to SQLite:
 
 3. Regenerate client:
    ```bash
-   pnpm prisma generate
+   pnpm db:generate
    pnpm db:push
    ```
 
@@ -301,9 +301,29 @@ For database issues:
 4. Check PostgreSQL logs
 5. Consult provider documentation (Neon, Supabase, etc.)
 
+## Important: SQLite Path Resolution
+
+When using SQLite locally, always use the `pnpm` scripts instead of `npx prisma` directly:
+
+```bash
+# Correct - pnpm scripts handle path resolution
+pnpm db:push
+pnpm db:studio
+pnpm migrate:status
+
+# Incorrect for SQLite - path resolves from prisma/ directory
+npx prisma db push
+npx prisma studio
+```
+
+**Why?** Prisma CLI resolves relative `DATABASE_URL` paths from `prisma/schema.prisma`, not the project root. The pnpm scripts inject absolute paths using `$(pwd)`.
+
+For PostgreSQL, this is not an issue since the connection string is a URL, not a file path.
+
 ## Resources
 
 - [Prisma PostgreSQL Guide](https://www.prisma.io/docs/concepts/database-connectors/postgresql)
 - [Neon Documentation](https://neon.tech/docs)
 - [Supabase Documentation](https://supabase.com/docs)
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+- [gthanks Migration Baseline Guide](./MIGRATION_BASELINE.md)

@@ -118,14 +118,18 @@ If this outputs SQL statements, your database schema differs from `schema.prisma
 
 Run `prisma migrate resolve` for each migration in chronological order. This marks migrations as applied without executing them.
 
+**Important:** Use the `pnpm` scripts, not `npx` directly. The pnpm scripts handle SQLite path resolution correctly (Prisma CLI resolves relative paths from `prisma/schema.prisma`, not the project root).
+
 ```bash
 # Mark the baseline migration as applied
-npx prisma migrate resolve --applied 0_baseline
+pnpm migrate:resolve --applied 0_baseline
 
 # Mark subsequent migrations as applied
-npx prisma migrate resolve --applied 20251122_reservation_authentication_required
-npx prisma migrate resolve --applied 20251202_add_personal_access_tokens
+pnpm migrate:resolve --applied 20251122_reservation_authentication_required
+pnpm migrate:resolve --applied 20251202_add_personal_access_tokens
 ```
+
+> **Note:** Do NOT use `--` before the arguments. `pnpm migrate:resolve --applied` is correct, `pnpm migrate:resolve -- --applied` is wrong.
 
 **For Docker deployments:**
 
@@ -135,6 +139,8 @@ docker exec -it gthanks-app npx prisma migrate resolve --applied 20251122_reserv
 docker exec -it gthanks-app npx prisma migrate resolve --applied 20251202_add_personal_access_tokens
 ```
 
+> In Docker, the entrypoint script handles path resolution, so `npx` works directly.
+
 **Important:** Run these commands in order from oldest to newest migration.
 
 ## Step 5: Verify Baseline
@@ -142,7 +148,7 @@ docker exec -it gthanks-app npx prisma migrate resolve --applied 20251202_add_pe
 Confirm all migrations are marked as applied:
 
 ```bash
-npx prisma migrate status
+pnpm migrate:status
 ```
 
 **Expected output:**
@@ -202,10 +208,10 @@ After baselining, use `prisma migrate deploy` for all future schema changes:
 
 ```bash
 # In development: Create new migration
-npx prisma migrate dev --name add_new_feature
+pnpm migrate:dev --name add_new_feature
 
 # In production: Apply pending migrations
-npx prisma migrate deploy
+pnpm migrate:deploy
 ```
 
 **Docker entrypoint integration:**
@@ -221,11 +227,25 @@ exec "$@"
 
 ## Troubleshooting
 
+### Error: P1003 - Database does not exist at path
+
+**Cause:** Running `npx prisma migrate resolve` directly instead of using `pnpm migrate:resolve`. Prisma CLI resolves relative paths from `prisma/schema.prisma`, so `file:./data/gthanks.db` becomes `prisma/data/gthanks.db` (wrong).
+
+**Solution:** Use the pnpm scripts which handle path resolution:
+
+```bash
+# Wrong - uses relative path from schema location
+npx prisma migrate resolve --applied 0_baseline
+
+# Correct - pnpm script uses $(pwd) for absolute path
+pnpm migrate:resolve --applied 0_baseline
+```
+
 ### Error: P3005 - Database schema is not empty
 
 **Cause:** Prisma detected existing tables but no migration history.
 
-**Solution:** This is expected! Use `migrate resolve --applied` to baseline.
+**Solution:** This is expected! Use `pnpm migrate:resolve --applied` to baseline.
 
 ### Error: P3006 - Migration failed to apply cleanly
 
@@ -252,19 +272,16 @@ exec "$@"
 
 ```bash
 # Check current state
-npx prisma migrate status
+pnpm migrate:status
 
 # Generate diff to see what's different
-npx prisma migrate diff \
-  --from-url "$DATABASE_URL" \
-  --to-schema-datamodel prisma/schema.prisma \
-  --script
+pnpm migrate:diff
 
 # Apply any missing changes manually or via db:push
-npx prisma db push
+pnpm db:push
 
 # Then baseline remaining migrations
-npx prisma migrate resolve --applied <migration_name>
+pnpm migrate:resolve --applied <migration_name>
 ```
 
 ### Rollback after failed baseline
@@ -287,13 +304,14 @@ psql $DATABASE_URL < backup-YYYYMMDD-HHMMSS.sql
 
 ## Common Prisma Migrate Errors
 
-| Error Code | Description                      | Resolution                                      |
-| ---------- | -------------------------------- | ----------------------------------------------- |
-| P3005      | Schema is not empty              | Expected for baselining; use `--applied`        |
-| P3006      | Migration failed to apply        | Check SQL matches database state                |
-| P3008      | Migration already recorded       | Already baselined; no action needed             |
-| P3009      | Migration failed and rolled back | Check migration SQL for errors                  |
-| P3017      | Migration not found              | Ensure migration exists in `prisma/migrations/` |
+| Error Code | Description                      | Resolution                                              |
+| ---------- | -------------------------------- | ------------------------------------------------------- |
+| P1003      | Database does not exist at path  | Use `pnpm migrate:*` scripts, not `npx prisma` directly |
+| P3005      | Schema is not empty              | Expected for baselining; use `--applied`                |
+| P3006      | Migration failed to apply        | Check SQL matches database state                        |
+| P3008      | Migration already recorded       | Already baselined; no action needed                     |
+| P3009      | Migration failed and rolled back | Check migration SQL for errors                          |
+| P3017      | Migration not found              | Ensure migration exists in `prisma/migrations/`         |
 
 ## Safety Checklist
 
@@ -348,7 +366,22 @@ services:
 - [gthanks Database Migration Guide](./DATABASE_MIGRATION.md)
 - [gthanks PostgreSQL Setup](./POSTGRESQL_SETUP.md)
 
+## Available pnpm Migration Scripts
+
+The following pnpm scripts handle SQLite path resolution automatically:
+
+| Script                 | Description                            |
+| ---------------------- | -------------------------------------- |
+| `pnpm migrate:dev`     | Create new migration (development)     |
+| `pnpm migrate:deploy`  | Apply pending migrations (production)  |
+| `pnpm migrate:status`  | Check migration status                 |
+| `pnpm migrate:resolve` | Mark migrations as applied/rolled-back |
+| `pnpm migrate:reset`   | Reset database and reapply migrations  |
+| `pnpm migrate:diff`    | Show schema differences                |
+
+> **Why pnpm scripts?** Prisma CLI resolves relative DATABASE_URL paths from `prisma/schema.prisma`, not the project root. The pnpm scripts inject absolute paths using `$(pwd)` to ensure correct resolution.
+
 ---
 
-**Last Updated:** 2025-12-02
+**Last Updated:** 2025-12-03
 **Status:** Production-ready
