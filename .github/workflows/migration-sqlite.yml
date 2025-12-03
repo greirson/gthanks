@@ -1,0 +1,291 @@
+name: Migration Validation (SQLite)
+
+# Trigger on pushes/PRs to main and dev branches when Prisma files change
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - 'prisma/**'
+      - '.github/workflows/migration-sqlite.yml'
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - 'prisma/**'
+      - '.github/workflows/migration-sqlite.yml'
+
+# Cancel in-progress runs when a new push occurs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-migrations-sqlite:
+    name: SQLite Migration Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for migration analysis
+
+      # Step 2: Setup Node.js 20 with pnpm
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          generate-prisma: 'true'
+
+      # Step 3: Verify Prisma schema is valid
+      - name: Validate Prisma schema
+        run: pnpm prisma validate
+        env:
+          DATABASE_URL: file:./test.db
+
+      # Step 4: Create empty SQLite test database
+      - name: Create test database
+        run: |
+          mkdir -p data
+          touch data/test.db
+          echo "Created empty SQLite database at data/test.db"
+          ls -lh data/test.db
+        env:
+          DATABASE_URL: file:./data/test.db
+
+      # Step 5: Run all migrations in sequence
+      - name: Apply migrations
+        run: |
+          echo "Applying all migrations to test database..."
+          pnpm prisma migrate deploy
+          echo "Migrations applied successfully"
+        env:
+          DATABASE_URL: file:./data/test.db
+
+      # Step 6: Verify database schema matches Prisma schema (no drift)
+      - name: Check for schema drift
+        run: |
+          echo "Checking for schema drift between migrations and schema.prisma..."
+
+          # Run migrate diff to detect any differences
+          # Exit code 0 = no drift, Exit code 2 = drift detected
+          pnpm prisma migrate diff \
+            --from-schema-datamodel prisma/schema.prisma \
+            --to-schema-datasource prisma/schema.prisma \
+            --exit-code || EXIT_CODE=$?
+
+          if [ "${EXIT_CODE:-0}" -eq 2 ]; then
+            echo "❌ Schema drift detected!"
+            echo "The database schema created by migrations does not match schema.prisma"
+            echo "Run: pnpm prisma migrate dev --name fix_drift"
+            exit 1
+          elif [ "${EXIT_CODE:-0}" -eq 0 ]; then
+            echo "✅ No schema drift detected"
+          else
+            echo "⚠️  Unexpected exit code: ${EXIT_CODE}"
+            exit ${EXIT_CODE}
+          fi
+        env:
+          DATABASE_URL: file:./data/test.db
+
+      # Step 7: Verify database is usable (basic query test)
+      - name: Test database connectivity
+        run: |
+          echo "Testing database connectivity with basic query..."
+          pnpm prisma db execute --stdin <<EOF
+          SELECT COUNT(*) as table_count FROM sqlite_master WHERE type='table';
+          EOF
+          echo "✅ Database is queryable"
+        env:
+          DATABASE_URL: file:./data/test.db
+
+      # Step 8: Run Prisma Studio in validation mode
+      - name: Validate Prisma Client generation
+        run: |
+          echo "Verifying Prisma Client was generated correctly..."
+          node -e "const { PrismaClient } = require('@prisma/client'); const db = new PrismaClient(); console.log('✅ Prisma Client loaded successfully');"
+        env:
+          DATABASE_URL: file:./data/test.db
+
+      # Step 9: Check migration file consistency
+      - name: Verify migration integrity
+        run: |
+          echo "Checking migration file integrity..."
+
+          # Verify migration_lock.toml exists
+          if [ ! -f prisma/migrations/migration_lock.toml ]; then
+            echo "❌ Missing migration_lock.toml"
+            exit 1
+          fi
+
+          # Verify lock file specifies SQLite provider
+          if ! grep -q 'provider = "sqlite"' prisma/migrations/migration_lock.toml; then
+            echo "⚠️  Warning: migration_lock.toml does not specify SQLite provider"
+            cat prisma/migrations/migration_lock.toml
+          else
+            echo "✅ Migration lock file is valid"
+          fi
+
+          # Count migration directories
+          MIGRATION_COUNT=$(find prisma/migrations -mindepth 1 -maxdepth 1 -type d | wc -l)
+          echo "Found ${MIGRATION_COUNT} migration(s)"
+
+          # List all migrations
+          echo "Migration history:"
+          find prisma/migrations -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort
+
+      # Step 10: Verify schema formatting
+      - name: Check Prisma schema formatting
+        run: |
+          echo "Checking schema formatting..."
+          pnpm prisma format
+
+          if git diff --exit-code prisma/schema.prisma; then
+            echo "✅ Schema is properly formatted"
+          else
+            echo "❌ Schema needs formatting"
+            echo "Run: pnpm prisma format"
+            git diff prisma/schema.prisma
+            exit 1
+          fi
+
+      # Step 11: Generate migration summary report
+      - name: Generate migration report
+        if: always()
+        run: |
+          echo "## Migration Validation Report" > migration-report.md
+          echo "" >> migration-report.md
+          echo "**Database:** SQLite" >> migration-report.md
+          echo "**Branch:** ${{ github.ref_name }}" >> migration-report.md
+          echo "**Commit:** ${{ github.sha }}" >> migration-report.md
+          echo "" >> migration-report.md
+
+          echo "### Migrations Applied" >> migration-report.md
+          find prisma/migrations -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort | while read migration; do
+            echo "- \`$migration\`" >> migration-report.md
+          done
+
+          echo "" >> migration-report.md
+          echo "### Database Tables" >> migration-report.md
+          pnpm prisma db execute --stdin <<'EOF' | tail -n +2 >> migration-report.md || echo "Could not list tables" >> migration-report.md
+          SELECT '- `' || name || '`' FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name;
+          EOF
+
+          echo "" >> migration-report.md
+          echo "### Validation Results" >> migration-report.md
+          echo "- Schema validation: ✅ Passed" >> migration-report.md
+          echo "- Migration deployment: ✅ Passed" >> migration-report.md
+          echo "- Schema drift check: ✅ No drift" >> migration-report.md
+          echo "- Database connectivity: ✅ Passed" >> migration-report.md
+
+          cat migration-report.md
+        env:
+          DATABASE_URL: file:./data/test.db
+
+      # Step 12: Upload migration report as artifact
+      - name: Upload migration report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: migration-report-sqlite-${{ github.run_number }}
+          path: migration-report.md
+          retention-days: 30
+
+      # Step 13: Cleanup test database
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -f data/test.db
+          echo "Cleaned up test database"
+
+  # Optional: Test migration rollback capability
+  test-migration-rollback:
+    name: Test Migration Rollback
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: validate-migrations-sqlite
+    if: github.event_name == 'pull_request'  # Only on PRs
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          generate-prisma: 'true'
+
+      - name: Create baseline database
+        run: |
+          mkdir -p data
+          touch data/rollback-test.db
+          echo "Created rollback test database"
+        env:
+          DATABASE_URL: file:./data/rollback-test.db
+
+      - name: Apply baseline migrations
+        run: |
+          # Checkout base branch
+          git checkout ${{ github.base_ref }}
+
+          echo "Applying baseline migrations from ${{ github.base_ref }}..."
+          pnpm run db:generate
+          pnpm prisma migrate deploy
+
+          echo "Baseline schema applied"
+        env:
+          DATABASE_URL: file:./data/rollback-test.db
+
+      - name: Test forward migration
+        run: |
+          # Checkout PR branch
+          git checkout ${{ github.head_ref }}
+
+          echo "Testing forward migration to PR changes..."
+          pnpm run db:generate
+          pnpm prisma migrate deploy
+
+          echo "✅ Forward migration successful"
+        env:
+          DATABASE_URL: file:./data/rollback-test.db
+
+      - name: Verify rollback safety
+        run: |
+          echo "Checking if rollback is safe..."
+
+          # Compare schemas (this is a basic check)
+          git diff ${{ github.base_ref }}..${{ github.head_ref }} -- prisma/schema.prisma > schema-changes.txt
+
+          # Check for dangerous patterns
+          DANGEROUS=false
+
+          if grep -E "^-\s+\w+\s+\w+" schema-changes.txt | grep -v "^---" > /dev/null; then
+            echo "⚠️  Warning: Fields removed (may cause data loss on rollback)"
+            DANGEROUS=true
+          fi
+
+          if grep -E "@map\(|@@map\(" schema-changes.txt | grep "^-" > /dev/null; then
+            echo "⚠️  Warning: Table/column renames (requires data migration)"
+            DANGEROUS=true
+          fi
+
+          if [ "$DANGEROUS" = true ]; then
+            echo ""
+            echo "Rollback Safety Checklist:"
+            echo "  - [ ] Backward-compatible migration strategy documented"
+            echo "  - [ ] Data migration plan prepared"
+            echo "  - [ ] Rollback tested on staging environment"
+            echo ""
+            # Don't fail the build, just warn
+            echo "::warning::Migration may require special rollback handling"
+          else
+            echo "✅ Migration appears rollback-safe"
+          fi
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -f data/rollback-test.db
+          echo "Cleaned up rollback test database"

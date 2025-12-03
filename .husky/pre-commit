@@ -4,7 +4,17 @@
 echo "🔍 Running pre-commit checks..."
 echo ""
 
+# Migration check (blocks on destructive migrations)
+echo "🗄️  Checking for destructive schema migrations..."
+if ! bash scripts/check-migrations.sh; then
+  print_error "Destructive migration detected. Please review and update."
+  echo ""
+  echo "💡 To bypass this check (emergency only): git commit --no-verify"
+  exit 1
+fi
+
 # Run lint-staged for auto-fixes on changed files
+echo ""
 echo "📝 Auto-fixing changed files with lint-staged..."
 pnpm exec lint-staged
 

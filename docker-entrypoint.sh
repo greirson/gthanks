@@ -61,6 +61,25 @@ else
   echo "WARNING: Unknown DATABASE_URL protocol, assuming PostgreSQL"
 fi
 
+# Backup SQLite database before migrations (safety measure)
+if echo "$DATABASE_URL" | grep -q "^file:"; then
+  DB_PATH="${DATABASE_URL#file:}"
+  # Handle relative paths (convert ./data/file.db to /app/data/file.db)
+  case "$DB_PATH" in
+    ./*) DB_PATH="/app/${DB_PATH#./}" ;;
+  esac
+
+  if [ -f "$DB_PATH" ]; then
+    BACKUP_PATH="${DB_PATH}.backup-$(date +%Y%m%d_%H%M%S)"
+    echo "Creating backup: $BACKUP_PATH"
+    cp "$DB_PATH" "$BACKUP_PATH"
+
+    # Keep only last 5 backups to prevent disk fill
+    ls -t "${DB_PATH}.backup-"* 2>/dev/null | tail -n +6 | xargs -r rm -f
+    echo "Backup created successfully"
+  fi
+fi
+
 # Generate Prisma Client for runtime platform, then apply migrations
 # Use direct binary path to ensure version consistency (avoid npx downloading latest)
 node_modules/.bin/prisma generate

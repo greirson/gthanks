@@ -125,6 +125,8 @@ Thumbs.db
 # Prisma
 # Note: Migrations MUST be committed for production deployments
 # Only the .gitkeep is ignored (we don't need it with real migrations)
+prisma/shadow.db
+prisma/shadow.db-journal
 
 # Jest
 coverage/

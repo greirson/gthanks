@@ -1,0 +1,70 @@
+name: Migration Validation (PostgreSQL)
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+    paths:
+      - 'prisma/**'
+  pull_request:
+    branches:
+      - main
+      - dev
+    paths:
+      - 'prisma/**'
+
+jobs:
+  validate-migrations-postgres:
+    name: Validate PostgreSQL Migrations
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: gthanks_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    env:
+      DATABASE_URL: postgresql://test:test@localhost:5432/gthanks_test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.20.0
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Update Prisma schema to PostgreSQL
+        run: |
+          sed -i 's/provider = "sqlite"/provider = "postgresql"/' prisma/schema.prisma
+          cat prisma/schema.prisma | grep "provider ="
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Apply migrations
+        run: npx prisma migrate deploy
+
+      - name: Verify no schema drift
+        run: npx prisma migrate diff --exit-code --from-schema-datamodel prisma/schema.prisma --to-schema-datasource prisma/schema.prisma
