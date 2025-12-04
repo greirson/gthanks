@@ -5,6 +5,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentAdmin } from '@/lib/auth-admin';
 import { handleApiError, getUserFriendlyError } from '@/lib/errors';
 import { AdminService } from '@/lib/services/admin-service';
+import { auditService } from '@/lib/services/audit-service';
+import { AuditActions } from '@/lib/schemas/audit-log';
 
 const UserSearchSchema = z.object({
   search: z.string().optional(),
@@ -35,7 +37,7 @@ const UserSearchSchema = z.object({
  * @see {@link getCurrentAdmin} for admin authorization
  * @see {@link UserSearchSchema} for request validation
  * @see {@link AdminService.searchUsers} for business logic
- * @see {@link AdminService.createAuditLog} for audit trail
+ * @see {@link auditService} for audit trail
  */
 export async function GET(request: NextRequest) {
   try {
@@ -63,18 +65,18 @@ export async function GET(request: NextRequest) {
     // Search users
     const result = await AdminService.searchUsers(filters);
 
-    // Create audit log - not async for MVP
-    AdminService.createAuditLog(
-      admin.id,
-      'VIEW',
-      'USER_LIST',
-      null,
-      undefined,
-      undefined,
-      { filters, resultCount: result.users.length },
-      request.headers.get('x-forwarded-for') || undefined,
-      request.headers.get('user-agent') || undefined
-    );
+    // Fire-and-forget audit log - NO await
+    auditService.log({
+      actorId: admin.id,
+      actorName: admin.name || admin.email,
+      actorType: 'user',
+      category: 'admin',
+      action: AuditActions.USER_LIST_VIEWED,
+      resourceType: 'user_list',
+      details: { filters, resultCount: result.users.length },
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0] || undefined,
+      userAgent: request.headers.get('user-agent')?.slice(0, 500) || undefined,
+    });
 
     return NextResponse.json(result);
   } catch (error) {

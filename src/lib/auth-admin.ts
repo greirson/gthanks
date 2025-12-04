@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth-utils';
 import { db } from '@/lib/db';
 import { AdminService } from '@/lib/services/admin-service';
+import { auditService } from '@/lib/services/audit-service';
+import { AuditActions } from '@/lib/schemas/audit-log';
 
 /**
  * Admin authentication and authorization utilities
@@ -140,9 +142,15 @@ export async function adminLogout(adminId: string): Promise<void> {
     where: { userId: adminId },
   });
 
-  // Create audit log - not async for MVP
-  AdminService.createAuditLog(adminId, 'LOGOUT', 'ADMIN', adminId, undefined, undefined, {
-    allSessions: true,
+  // Fire-and-forget audit log - NO await
+  auditService.log({
+    actorId: adminId,
+    actorType: 'user',
+    category: 'admin',
+    action: AuditActions.ADMIN_LOGOUT,
+    resourceType: 'session',
+    resourceId: adminId,
+    details: { allSessions: true },
   });
 }
 
@@ -163,10 +171,15 @@ export async function validateAdminAction(
     throw new Error('Admin access revoked');
   }
 
-  // Log the attempted action - not async for MVP
-  AdminService.createAuditLog(adminId, 'ATTEMPT', entityType, entityId, undefined, undefined, {
-    action,
-    requireConfirmation,
+  // Fire-and-forget audit log - NO await
+  auditService.log({
+    actorId: adminId,
+    actorType: 'user',
+    category: 'admin',
+    action: AuditActions.ADMIN_ACTION_ATTEMPTED,
+    resourceType: entityType.toLowerCase(),
+    resourceId: entityId,
+    details: { action, requireConfirmation },
   });
 
   // For destructive actions, we might want additional checks here

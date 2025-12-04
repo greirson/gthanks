@@ -5,6 +5,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentAdmin } from '@/lib/auth-admin';
 import { getUserFriendlyError } from '@/lib/errors';
 import { AdminService } from '@/lib/services/admin-service';
+import { auditService } from '@/lib/services/audit-service';
+import { AuditActions } from '@/lib/schemas/audit-log';
 import { logger } from '@/lib/services/logger';
 // eslint-disable-next-line local-rules/no-direct-db-import -- Bulk operations require direct transaction access; uses AdminService for business logic
 import { db as prisma } from '@/lib/db';
@@ -102,26 +104,25 @@ export async function POST(request: NextRequest) {
       return results;
     });
 
-    // Create audit log - not async for MVP
-    AdminService.createAuditLog(
-      admin.id,
-      'BULK_OPERATION',
-      'USER',
-      null,
-      undefined,
-      undefined,
-      {
+    // Fire-and-forget audit log - NO await
+    auditService.log({
+      actorId: admin.id,
+      actorName: admin.name || admin.email,
+      actorType: 'user',
+      category: 'admin',
+      action: AuditActions.BULK_USER_OPERATION,
+      resourceType: 'user',
+      details: {
         action,
-        userIds, // Add the list of user IDs for audit trail
+        userIds,
         totalUsers: userIds.length,
         successful: result.success.length,
         failed: result.failed.length,
-        results: result, // Add the detailed results object
         metadata,
       },
-      request.headers.get('x-forwarded-for') || undefined,
-      request.headers.get('user-agent') || undefined
-    );
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0] || undefined,
+      userAgent: request.headers.get('user-agent')?.slice(0, 500) || undefined,
+    });
 
     return NextResponse.json({
       message: `Bulk ${action} completed`,

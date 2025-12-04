@@ -33,18 +33,19 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Get user details
     const user = await AdminService.getUserDetails(userId);
 
-    // Create audit log - not async for MVP
-    AdminService.createAuditLog(
-      admin.id,
-      'VIEW',
-      'USER',
-      userId,
-      undefined,
-      undefined,
-      { endpoint: `/api/admin/users/${userId}` },
-      request.headers.get('x-forwarded-for') || undefined,
-      request.headers.get('user-agent') || undefined
-    );
+    // Fire-and-forget audit log - NO await
+    auditService.log({
+      actorId: admin.id,
+      actorName: admin.name || admin.email,
+      actorType: 'user',
+      category: 'admin',
+      action: AuditActions.USER_VIEWED,
+      resourceType: 'user',
+      resourceId: userId,
+      resourceName: user.name || user.email || undefined,
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0] || undefined,
+      userAgent: request.headers.get('user-agent')?.slice(0, 500) || undefined,
+    });
 
     return NextResponse.json({ user });
   } catch (error) {
