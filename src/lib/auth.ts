@@ -647,6 +647,18 @@ const authOptions: NextAuthOptions = {
         secure: process.env.NODE_ENV === 'production',
       },
     },
+    // PKCE code verifier cookie - required for Apple OAuth
+    // Apple uses response_mode: "form_post" which is a cross-site POST request,
+    // so sameSite must be 'none' with secure: true
+    pkceCodeVerifier: {
+      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.pkce.code_verifier`,
+      options: {
+        httpOnly: true,
+        sameSite: 'none',
+        path: '/',
+        secure: true, // Must be true for sameSite: 'none'
+      },
+    },
   },
 };
 
