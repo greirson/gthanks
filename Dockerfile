@@ -106,6 +106,8 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV HOME=/app
 ENV npm_config_cache=/tmp/.npm
+# HOSTNAME=0.0.0.0 makes Next.js bind to all interfaces (required for healthcheck)
+ENV HOSTNAME=0.0.0.0
 
 # Create data directory for SQLite (if used) and uploads directory
 RUN mkdir -p /app/data /app/uploads && chown nextjs:nodejs /app/data /app/uploads
