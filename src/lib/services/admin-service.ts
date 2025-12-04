@@ -307,9 +307,28 @@ export class AdminService {
       data: updateData,
     });
 
-    // Log the update (synchronous in MVP) - only if not in transaction
+    // Fire-and-forget audit log - only if not in transaction (caller handles logging)
     if (!tx) {
-      this.createAuditLog(adminId, 'UPDATE', 'USER', userId, currentUser, validatedData);
+      // Get admin name for audit log
+      const admin = await db.user.findUnique({
+        where: { id: adminId },
+        select: { name: true, email: true },
+      });
+
+      auditService.log({
+        actorId: adminId,
+        actorName: admin?.name || admin?.email || undefined,
+        actorType: 'user',
+        category: 'admin',
+        action: AuditActions.USER_UPDATED,
+        resourceType: 'user',
+        resourceId: userId,
+        resourceName: currentUser.name || currentUser.email || undefined,
+        details: {
+          oldValues: currentUser,
+          newValues: validatedData,
+        },
+      });
     }
 
     return updatedUser;
@@ -412,35 +431,5 @@ export class AdminService {
     });
 
     return result;
-  }
-
-  /**
-   * Create audit log entry
-   */
-  static createAuditLog(
-    _userId: string | null,
-    _action: string,
-    _entityType: string,
-    _entityId: string | null,
-    _oldValues?: Record<string, unknown>,
-    _newValues?: Record<string, unknown>,
-    _metadata?: Record<string, unknown>,
-    _ipAddress?: string,
-    _userAgent?: string
-  ) {
-    // MVP: Audit logging removed, return minimal response
-    return {
-      id: 'mock-audit-log',
-      userId: _userId,
-      action: _action,
-      entityType: _entityType,
-      entityId: _entityId,
-      oldValues: null,
-      newValues: null,
-      metadata: null,
-      ipAddress: _ipAddress || null,
-      userAgent: _userAgent || null,
-      createdAt: new Date(),
-    };
   }
 }
