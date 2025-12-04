@@ -181,3 +181,5 @@ zen_generated.code
 
 # Playwright MCP authentication profile
 .playwright-profile/
+.env*.local
+.env.vercel
