@@ -7,22 +7,12 @@ const globalForPrisma = globalThis as unknown as {
   dbInitPromise: Promise<void> | undefined;
 };
 
-// Initialize database on first import (skip during build phase)
-// Skip auto-init during Next.js build to prevent database connection errors
-const isBuilding =
-  process.env.NEXT_PHASE === 'phase-production-build' ||
-  process.argv.some((arg) => arg.includes('next') && process.argv.includes('build'));
-
-if (!globalForPrisma.dbInitPromise && typeof window === 'undefined' && !isBuilding) {
-  globalForPrisma.dbInitPromise = ensureDatabaseInitialized().catch((error) => {
-    console.error('[DB] Failed to auto-initialize database:', error);
-    // Don't throw here - let the actual database operations fail with proper error messages
-  });
-}
-
-export const db =
-  globalForPrisma.prisma ??
-  new PrismaClient({
+/**
+ * Creates a PrismaClient instance with proper configuration.
+ * Only called when the database is actually accessed, not at import time.
+ */
+function createPrismaClient(): PrismaClient {
+  return new PrismaClient({
     datasources: {
       db: {
         url: resolveDatabaseUrl(process.env.DATABASE_URL),
@@ -30,10 +20,44 @@ export const db =
     },
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
   });
-
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = db;
 }
+
+/**
+ * Gets or creates the PrismaClient singleton.
+ * Uses lazy initialization to avoid creating the client during build phase.
+ */
+function getPrismaClient(): PrismaClient {
+  if (!globalForPrisma.prisma) {
+    globalForPrisma.prisma = createPrismaClient();
+
+    // Trigger database initialization in the background (non-blocking)
+    if (typeof window === 'undefined') {
+      globalForPrisma.dbInitPromise = ensureDatabaseInitialized().catch((error) => {
+        console.error('[DB] Failed to auto-initialize database:', error);
+      });
+    }
+  }
+  return globalForPrisma.prisma;
+}
+
+/**
+ * Lazy-initialized Prisma Client using Proxy pattern.
+ *
+ * This ensures PrismaClient is NOT instantiated at module import time,
+ * which is critical for Next.js builds where routes are statically analyzed.
+ * The actual client is only created when a database operation is performed.
+ */
+export const db = new Proxy({} as PrismaClient, {
+  get(_target, prop: string | symbol) {
+    const client = getPrismaClient();
+    const value = client[prop as keyof PrismaClient];
+    // Bind methods to the client instance
+    if (typeof value === 'function') {
+      return value.bind(client);
+    }
+    return value;
+  },
+});
 
 /**
  * Ensures database is initialized before performing operations.
