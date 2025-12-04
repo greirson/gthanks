@@ -50,8 +50,10 @@ ENV DATABASE_URL="file:./dev.db"
 ENV NEXT_PRIVATE_PROFILE=1
 
 # Build args for CI - NEXTAUTH_SECRET is required by ensure-env.js but replaced at runtime
-ARG SKIP_ENV_VALIDATION=false
-ARG NEXTAUTH_SECRET
+# Default to skip validation since Docker builds don't have .env.local
+ARG SKIP_ENV_VALIDATION=true
+# Placeholder secret for build only - MUST be overridden at runtime via environment
+ARG NEXTAUTH_SECRET=build-time-placeholder-replaced-at-runtime
 ENV SKIP_ENV_VALIDATION=${SKIP_ENV_VALIDATION}
 ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
 
