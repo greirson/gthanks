@@ -318,7 +318,7 @@ export class WishService {
     }
 
     // Add to list in transaction
-    return db.$transaction(async (tx) => {
+    const result = await db.$transaction(async (tx) => {
       const existingListWishes = await tx.listWish.findMany({
         where: { listId, wishId: { in: wishIds } },
         select: { wishId: true },
@@ -331,12 +331,30 @@ export class WishService {
         return { added: 0, skipped: wishIds.length };
       }
 
-      const result = await tx.listWish.createMany({
+      const createResult = await tx.listWish.createMany({
         data: newWishIds.map((wishId) => ({ wishId, listId })),
       });
 
-      return { added: result.count, skipped: wishIds.length - result.count };
+      return { added: createResult.count, skipped: wishIds.length - createResult.count };
     });
+
+    // Fire and forget audit log (single entry for bulk operation)
+    if (result.added > 0) {
+      auditService.log({
+        actorId: userId,
+        actorType: 'user',
+        category: 'content',
+        action: AuditActions.BULK_WISH_ADD_TO_LIST,
+        resourceType: 'list',
+        resourceId: listId,
+        details: {
+          count: result.added,
+          wishIds: wishIds,
+        },
+      });
+    }
+
+    return result;
   }
 
   /**
@@ -382,6 +400,21 @@ export class WishService {
       }
     }
 
+    // Fire and forget audit log (single entry for bulk operation)
+    if (result.count > 0) {
+      auditService.log({
+        actorId: userId,
+        actorType: 'user',
+        category: 'content',
+        action: AuditActions.BULK_WISH_DELETE,
+        resourceType: 'wish',
+        details: {
+          count: result.count,
+          wishIds: ownedWishIds,
+        },
+      });
+    }
+
     return { deleted: result.count };
   }
 
@@ -406,6 +439,21 @@ export class WishService {
     const result = await db.$transaction(async (tx) => {
       return tx.listWish.deleteMany({ where: { wishId: { in: wishIds } } });
     });
+
+    // Fire and forget audit log (single entry for bulk operation)
+    if (result.count > 0) {
+      auditService.log({
+        actorId: userId,
+        actorType: 'user',
+        category: 'content',
+        action: AuditActions.BULK_WISH_REMOVE_FROM_LIST,
+        resourceType: 'wish',
+        details: {
+          count: result.count,
+          wishIds: ownedWishIds,
+        },
+      });
+    }
 
     return { removed: result.count };
   }

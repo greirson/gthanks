@@ -307,10 +307,34 @@ export class ReservationService {
       id: reservationId,
     });
 
+    // Fetch reservation with wish details for audit log before deleting
+    const reservation = await db.reservation.findUnique({
+      where: { id: reservationId },
+      include: {
+        wish: {
+          select: { id: true, title: true },
+        },
+      },
+    });
+
     // Remove reservation
     await db.reservation.delete({
       where: { id: reservationId },
     });
+
+    // Fire and forget audit log
+    if (reservation) {
+      auditService.log({
+        actorId: userId,
+        actorType: 'user',
+        category: 'content',
+        action: AuditActions.RESERVATION_REMOVED,
+        resourceType: 'reservation',
+        resourceId: reservationId,
+        resourceName: reservation.wish?.title,
+        details: { wishId: reservation.wishId, reason: 'user_cancelled' },
+      });
+    }
   }
 
   /**
@@ -329,9 +353,14 @@ export class ReservationService {
       throw new ForbiddenError('Authentication required to remove reservations');
     }
 
-    // Find reservation
+    // Find reservation with wish details for audit log
     const reservation = await db.reservation.findFirst({
       where: { wishId },
+      include: {
+        wish: {
+          select: { id: true, title: true },
+        },
+      },
     });
 
     if (!reservation) {
@@ -347,6 +376,18 @@ export class ReservationService {
     // Remove reservation
     await db.reservation.delete({
       where: { id: reservation.id },
+    });
+
+    // Fire and forget audit log
+    auditService.log({
+      actorId: userId,
+      actorType: 'user',
+      category: 'content',
+      action: AuditActions.RESERVATION_REMOVED,
+      resourceType: 'reservation',
+      resourceId: reservation.id,
+      resourceName: reservation.wish?.title,
+      details: { wishId, reason: 'user_cancelled' },
     });
   }
 
@@ -622,6 +663,20 @@ export class ReservationService {
       },
     });
 
+    // Fire and forget audit log
+    auditService.log({
+      actorId: userId,
+      actorType: 'user',
+      category: 'content',
+      action: AuditActions.RESERVATION_MARKED_PURCHASED,
+      resourceType: 'reservation',
+      resourceId: reservationId,
+      details: {
+        wishId: updated.wish.id,
+        wishTitle: updated.wish.title,
+      },
+    });
+
     return updated;
   }
 
@@ -675,6 +730,21 @@ export class ReservationService {
         }
       }
     });
+
+    // Fire and forget audit log (single entry for bulk operation)
+    if (succeeded.length > 0) {
+      auditService.log({
+        actorId: userId,
+        actorType: 'user',
+        category: 'content',
+        action: AuditActions.BULK_RESERVATION_CANCEL,
+        resourceType: 'reservation',
+        details: {
+          count: succeeded.length,
+          reservationIds: succeeded,
+        },
+      });
+    }
 
     return {
       succeeded,
@@ -739,6 +809,21 @@ export class ReservationService {
       }
     });
 
+    // Fire and forget audit log (single entry for bulk operation)
+    if (succeeded.length > 0) {
+      auditService.log({
+        actorId: userId,
+        actorType: 'user',
+        category: 'content',
+        action: AuditActions.BULK_RESERVATION_PURCHASED,
+        resourceType: 'reservation',
+        details: {
+          count: succeeded.length,
+          reservationIds: succeeded,
+        },
+      });
+    }
+
     return {
       succeeded,
       failed,
@@ -798,6 +883,20 @@ export class ReservationService {
       },
     });
 
+    // Fire and forget audit log
+    auditService.log({
+      actorId: userId,
+      actorType: 'user',
+      category: 'content',
+      action: AuditActions.RESERVATION_UNMARKED_PURCHASED,
+      resourceType: 'reservation',
+      resourceId: reservationId,
+      details: {
+        wishId: updated.wish.id,
+        wishTitle: updated.wish.title,
+      },
+    });
+
     return updated;
   }
 
@@ -853,6 +952,21 @@ export class ReservationService {
         }
       }
     });
+
+    // Fire and forget audit log (single entry for bulk operation)
+    if (succeeded.length > 0) {
+      auditService.log({
+        actorId: userId,
+        actorType: 'user',
+        category: 'content',
+        action: AuditActions.BULK_RESERVATION_UNPURCHASED,
+        resourceType: 'reservation',
+        details: {
+          count: succeeded.length,
+          reservationIds: succeeded,
+        },
+      });
+    }
 
     return {
       succeeded,

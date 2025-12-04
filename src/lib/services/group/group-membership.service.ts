@@ -120,6 +120,9 @@ export class GroupMembershipService {
           groupId: groupId,
         },
       },
+      include: {
+        user: { select: { name: true, email: true } },
+      },
     });
 
     if (data.role === 'member' && currentMember?.role === 'admin') {
@@ -135,6 +138,8 @@ export class GroupMembershipService {
       }
     }
 
+    const previousRole = currentMember?.role;
+
     // Update the role
     await this.db.userGroup.update({
       where: {
@@ -147,6 +152,29 @@ export class GroupMembershipService {
         role: data.role,
       },
     });
+
+    // Get group name for audit log
+    const group = await this.db.group.findUnique({
+      where: { id: groupId },
+      select: { name: true },
+    });
+
+    // Fire and forget audit log
+    auditService.log({
+      actorId: adminUserId,
+      actorType: 'user',
+      category: 'content',
+      action: AuditActions.GROUP_ROLE_CHANGED,
+      resourceType: 'group',
+      resourceId: groupId,
+      resourceName: group?.name || undefined,
+      details: {
+        targetUserId: data.userId,
+        targetUserName: currentMember?.user?.name || currentMember?.user?.email || undefined,
+        oldRole: previousRole,
+        newRole: data.role,
+      },
+    });
   }
 
   /**
@@ -156,13 +184,16 @@ export class GroupMembershipService {
     // Check permissions
     await permissionService.require(userId, 'admin', { type: 'group', id: groupId });
 
-    // Verify target user is a member
+    // Verify target user is a member and get user details for audit log
     const membership = await this.db.userGroup.findUnique({
       where: {
         userId_groupId: {
           userId: targetUserId,
           groupId: groupId,
         },
+      },
+      include: {
+        user: { select: { name: true, email: true } },
       },
     });
 
@@ -184,12 +215,33 @@ export class GroupMembershipService {
       }
     }
 
+    // Get group name for audit log
+    const group = await this.db.group.findUnique({
+      where: { id: groupId },
+      select: { name: true },
+    });
+
     await this.db.userGroup.delete({
       where: {
         userId_groupId: {
           userId: targetUserId,
           groupId: groupId,
         },
+      },
+    });
+
+    // Fire and forget audit log
+    auditService.log({
+      actorId: userId,
+      actorType: 'user',
+      category: 'content',
+      action: AuditActions.GROUP_MEMBER_REMOVED,
+      resourceType: 'group',
+      resourceId: groupId,
+      resourceName: group?.name,
+      details: {
+        removedUserId: targetUserId,
+        removedUserName: membership.user?.name || membership.user?.email,
       },
     });
   }
@@ -228,6 +280,12 @@ export class GroupMembershipService {
       }
     }
 
+    // Get group name for audit log
+    const group = await this.db.group.findUnique({
+      where: { id: groupId },
+      select: { name: true },
+    });
+
     await this.db.userGroup.delete({
       where: {
         userId_groupId: {
@@ -235,6 +293,17 @@ export class GroupMembershipService {
           groupId: groupId,
         },
       },
+    });
+
+    // Fire and forget audit log
+    auditService.log({
+      actorId: userId,
+      actorType: 'user',
+      category: 'content',
+      action: AuditActions.GROUP_MEMBER_LEFT,
+      resourceType: 'group',
+      resourceId: groupId,
+      resourceName: group?.name,
     });
   }
 
