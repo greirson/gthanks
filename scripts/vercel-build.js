@@ -69,6 +69,10 @@ function main() {
   log('Generating Prisma client...');
   execSync('npx prisma generate', { stdio: 'inherit' });
 
+  // Push schema to database (creates tables if they don't exist)
+  log('Pushing schema to database...');
+  execSync('npx prisma db push --skip-generate', { stdio: 'inherit' });
+
   // Run Next.js build
   log('Running Next.js build...');
   execSync('next build', { stdio: 'inherit' });
