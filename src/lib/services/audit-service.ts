@@ -31,6 +31,33 @@ class AuditService {
   private settingsCacheTime: number = 0;
   private readonly CACHE_TTL = 60000; // 1 minute
 
+  // Actor name cache to avoid repeated database lookups (NICE-17)
+  private actorNameCache = new Map<string, { name: string | null; expiry: number }>();
+  private readonly ACTOR_CACHE_TTL = 60000; // 1 minute
+
+  /**
+   * Sanitize details field to prevent storage abuse
+   * Limits JSON to 10KB max
+   */
+  private sanitizeDetails(details: Record<string, unknown> | undefined): string | null {
+    if (!details) {
+      return null;
+    }
+
+    const json = JSON.stringify(details);
+
+    // Limit to 10KB to prevent storage abuse
+    if (json.length > 10240) {
+      return JSON.stringify({
+        _truncated: true,
+        _originalSize: json.length,
+        _message: 'Details exceeded 10KB limit and were truncated',
+      });
+    }
+
+    return json;
+  }
+
   /**
    * Log an audit event (fire-and-forget)
    *
@@ -78,7 +105,7 @@ class AuditService {
         resourceType: entry.resourceType ?? null,
         resourceId: entry.resourceId ?? null,
         resourceName: entry.resourceName ?? null,
-        details: entry.details ? JSON.stringify(entry.details) : null,
+        details: this.sanitizeDetails(entry.details),
         ipAddress: entry.ipAddress ?? null,
         userAgent: entry.userAgent ?? null,
       },
@@ -88,14 +115,29 @@ class AuditService {
   /**
    * Resolve actor name from user ID
    * Returns name, email, or null if not found
+   * Uses in-memory cache with 1-minute TTL to reduce database queries (NICE-17)
    */
   private async resolveActorName(userId: string): Promise<string | null> {
+    // Check cache first
+    const cached = this.actorNameCache.get(userId);
+    if (cached && cached.expiry > Date.now()) {
+      return cached.name;
+    }
+
     try {
       const user = await db.user.findUnique({
         where: { id: userId },
         select: { name: true, email: true },
       });
-      return user?.name || user?.email || null;
+      const name = user?.name || user?.email || null;
+
+      // Cache the result
+      this.actorNameCache.set(userId, {
+        name,
+        expiry: Date.now() + this.ACTOR_CACHE_TTL,
+      });
+
+      return name;
     } catch {
       // Don't let name resolution failure break audit logging
       return null;
@@ -204,6 +246,24 @@ class AuditService {
     // Execute query with pagination
     const effectivePageSize = Math.min(pageSize, 100); // Max 100 per page
 
+    // For polling requests (with `since` param), skip the expensive count query (NICE-15)
+    if (since) {
+      const data = await db.auditLog.findMany({
+        where,
+        orderBy: { timestamp: 'desc' },
+        take: effectivePageSize,
+      });
+
+      return {
+        data: data.map((log) => ({
+          ...log,
+          timestamp: log.timestamp.toISOString(),
+        })),
+        pagination: null, // Signal to client this is a polling response
+      };
+    }
+
+    // Full pagination for non-polling requests
     const [data, total] = await Promise.all([
       db.auditLog.findMany({
         where,
@@ -281,9 +341,12 @@ class AuditService {
    * Respects AUDIT_LOG_MAX_ENTRIES and AUDIT_LOG_RETENTION_DAYS
    */
   async cleanup(): Promise<{ deleted: number }> {
-    // Guard against invalid environment variable values
-    const maxEntries = Math.max(1000, parseInt(process.env.AUDIT_LOG_MAX_ENTRIES || '50000'));
-    const retentionDays = Math.max(1, parseInt(process.env.AUDIT_LOG_RETENTION_DAYS || '30'));
+    // Parse with NaN fallback to defaults
+    const maxEntriesRaw = parseInt(process.env.AUDIT_LOG_MAX_ENTRIES || '50000', 10);
+    const retentionDaysRaw = parseInt(process.env.AUDIT_LOG_RETENTION_DAYS || '30', 10);
+
+    const maxEntries = Number.isNaN(maxEntriesRaw) ? 50000 : Math.max(1000, maxEntriesRaw);
+    const retentionDays = Number.isNaN(retentionDaysRaw) ? 30 : Math.max(1, retentionDaysRaw);
 
     let totalDeleted = 0;
 
@@ -325,10 +388,12 @@ class AuditService {
 
   /**
    * Invalidate settings cache (for testing or manual refresh)
+   * Also clears the actor name cache
    */
   invalidateCache(): void {
     this.settingsCache = null;
     this.settingsCacheTime = 0;
+    this.actorNameCache.clear();
   }
 }
 
