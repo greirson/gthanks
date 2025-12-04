@@ -5,6 +5,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth-utils';
 import { getUserFriendlyError } from '@/lib/errors';
 import { rateLimiter, getRateLimitHeaders, getClientIdentifier } from '@/lib/rate-limiter';
+import { AuditActions } from '@/lib/schemas/audit-log';
+import { auditService } from '@/lib/services/audit-service';
 import { userService } from '@/lib/services/user-service';
 import { logger } from '@/lib/services/logger';
 
@@ -64,6 +66,18 @@ export async function POST(request: NextRequest) {
 
     // Use service layer
     const userEmail = await userService.addEmail(user.id, data.email, true);
+
+    // Fire and forget audit log
+    auditService.log({
+      actorId: user.id,
+      actorName: user.name || user.email || undefined,
+      actorType: 'user',
+      category: 'user',
+      action: AuditActions.EMAIL_ADDED,
+      resourceType: 'user_email',
+      resourceId: userEmail.id,
+      resourceName: userEmail.email,
+    });
 
     return NextResponse.json(
       {

@@ -1,6 +1,8 @@
 import { resolveAvatarUrlSync } from '@/lib/avatar-utils';
 import { db } from '@/lib/db';
 import { AppError, ForbiddenError, NotFoundError, ValidationError } from '@/lib/errors';
+import { AuditActions } from '@/lib/schemas/audit-log';
+import { auditService } from '@/lib/services/audit-service';
 import { GroupMemberDetails, GroupPermissions } from '@/lib/services/group-types';
 import { permissionService } from '@/lib/services/permission-service';
 import { GroupAddMemberInput, GroupMemberInput } from '@/lib/validators/group';
@@ -58,11 +60,33 @@ export class GroupMembershipService {
       throw new ValidationError('User is already a member of this group');
     }
 
+    // Get group name for audit log
+    const group = await this.db.group.findUnique({
+      where: { id: groupId },
+      select: { name: true },
+    });
+
     // Add member
     await this.db.userGroup.create({
       data: {
         userId: targetUser.id,
         groupId: groupId,
+        role: data.role || 'member',
+      },
+    });
+
+    // Fire and forget audit log
+    auditService.log({
+      actorId: userId,
+      actorType: 'user',
+      category: 'content',
+      action: AuditActions.GROUP_MEMBER_ADDED,
+      resourceType: 'group',
+      resourceId: groupId,
+      resourceName: group?.name || undefined,
+      details: {
+        addedUserId: targetUser.id,
+        addedUserEmail: targetUser.email,
         role: data.role || 'member',
       },
     });
@@ -96,6 +120,9 @@ export class GroupMembershipService {
           groupId: groupId,
         },
       },
+      include: {
+        user: { select: { name: true, email: true } },
+      },
     });
 
     if (data.role === 'member' && currentMember?.role === 'admin') {
@@ -111,6 +138,8 @@ export class GroupMembershipService {
       }
     }
 
+    const previousRole = currentMember?.role;
+
     // Update the role
     await this.db.userGroup.update({
       where: {
@@ -123,6 +152,29 @@ export class GroupMembershipService {
         role: data.role,
       },
     });
+
+    // Get group name for audit log
+    const group = await this.db.group.findUnique({
+      where: { id: groupId },
+      select: { name: true },
+    });
+
+    // Fire and forget audit log
+    auditService.log({
+      actorId: adminUserId,
+      actorType: 'user',
+      category: 'content',
+      action: AuditActions.GROUP_ROLE_CHANGED,
+      resourceType: 'group',
+      resourceId: groupId,
+      resourceName: group?.name || undefined,
+      details: {
+        targetUserId: data.userId,
+        targetUserName: currentMember?.user?.name || currentMember?.user?.email || undefined,
+        oldRole: previousRole,
+        newRole: data.role,
+      },
+    });
   }
 
   /**
@@ -132,13 +184,16 @@ export class GroupMembershipService {
     // Check permissions
     await permissionService.require(userId, 'admin', { type: 'group', id: groupId });
 
-    // Verify target user is a member
+    // Verify target user is a member and get user details for audit log
     const membership = await this.db.userGroup.findUnique({
       where: {
         userId_groupId: {
           userId: targetUserId,
           groupId: groupId,
         },
+      },
+      include: {
+        user: { select: { name: true, email: true } },
       },
     });
 
@@ -160,12 +215,33 @@ export class GroupMembershipService {
       }
     }
 
+    // Get group name for audit log
+    const group = await this.db.group.findUnique({
+      where: { id: groupId },
+      select: { name: true },
+    });
+
     await this.db.userGroup.delete({
       where: {
         userId_groupId: {
           userId: targetUserId,
           groupId: groupId,
         },
+      },
+    });
+
+    // Fire and forget audit log
+    auditService.log({
+      actorId: userId,
+      actorType: 'user',
+      category: 'content',
+      action: AuditActions.GROUP_MEMBER_REMOVED,
+      resourceType: 'group',
+      resourceId: groupId,
+      resourceName: group?.name,
+      details: {
+        removedUserId: targetUserId,
+        removedUserName: membership.user?.name || membership.user?.email,
       },
     });
   }
@@ -204,6 +280,12 @@ export class GroupMembershipService {
       }
     }
 
+    // Get group name for audit log
+    const group = await this.db.group.findUnique({
+      where: { id: groupId },
+      select: { name: true },
+    });
+
     await this.db.userGroup.delete({
       where: {
         userId_groupId: {
@@ -211,6 +293,17 @@ export class GroupMembershipService {
           groupId: groupId,
         },
       },
+    });
+
+    // Fire and forget audit log
+    auditService.log({
+      actorId: userId,
+      actorType: 'user',
+      category: 'content',
+      action: AuditActions.GROUP_MEMBER_LEFT,
+      resourceType: 'group',
+      resourceId: groupId,
+      resourceName: group?.name,
     });
   }
 

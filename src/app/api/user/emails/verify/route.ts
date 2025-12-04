@@ -4,6 +4,8 @@ import { verifyEmailToken } from '@/lib/email-verification';
 import { rateLimiter, getClientIdentifier } from '@/lib/rate-limiter';
 // eslint-disable-next-line local-rules/no-direct-db-import -- Read-only query for first-email check, utilities handle verification
 import { db } from '@/lib/db';
+import { AuditActions } from '@/lib/schemas/audit-log';
+import { auditService } from '@/lib/services/audit-service';
 import { updateEmailPrimaryStatus } from '@/lib/utils/email-constraints';
 import { logger } from '@/lib/services/logger';
 import { getAppBaseUrl } from '@/lib/utils';
@@ -73,6 +75,17 @@ export async function GET(request: NextRequest) {
         )
       );
     }
+
+    // Fire and forget audit log
+    auditService.log({
+      actorId: verifiedEmail.userId,
+      actorType: 'user',
+      category: 'user',
+      action: AuditActions.EMAIL_VERIFIED,
+      resourceType: 'user_email',
+      resourceId: verifiedEmail.id,
+      resourceName: verifiedEmail.email,
+    });
 
     // Auto-promote if this is the user's first verified email
     const verifiedCount = await db.userEmail.count({

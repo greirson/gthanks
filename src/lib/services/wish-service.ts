@@ -2,6 +2,7 @@ import { Prisma, Wish } from '@prisma/client';
 
 import { db } from '@/lib/db';
 import { ForbiddenError, NotFoundError, ValidationError } from '@/lib/errors';
+import { AuditActions } from '@/lib/schemas/audit-log';
 import {
   WishCreateInput,
   WishQueryOptions,
@@ -9,6 +10,7 @@ import {
   WishUpdateInput,
 } from '@/lib/validators/wish';
 
+import { auditService } from './audit-service';
 import { imageProcessor } from './image-processor';
 import { logger } from './logger';
 import { permissionService } from './permission-service';
@@ -106,6 +108,18 @@ export class WishService {
         }
       }
 
+      // Fire and forget audit log
+      auditService.log({
+        actorId: userId,
+        actorType: 'user',
+        category: 'content',
+        action: AuditActions.WISH_CREATED,
+        resourceType: 'wish',
+        resourceId: result.id,
+        resourceName: result.title,
+        details: { price: result.price, wishLevel: result.wishLevel },
+      });
+
       return result;
     } catch (error) {
       logger.error(
@@ -189,6 +203,22 @@ export class WishService {
         await imageProcessor.deleteImage(_oldLocalImagePath);
       }
 
+      // Fire and forget audit log
+      auditService.log({
+        actorId: userId,
+        actorType: 'user',
+        category: 'content',
+        action: AuditActions.WISH_UPDATED,
+        resourceType: 'wish',
+        resourceId: wishId,
+        resourceName: result.title,
+        details: {
+          updatedFields: Object.keys(data).filter(
+            (k) => data[k as keyof WishUpdateInput] !== undefined
+          ),
+        },
+      });
+
       return result;
     } catch (error) {
       logger.error(
@@ -250,6 +280,17 @@ export class WishService {
     if (wish.localImagePath) {
       await imageProcessor.deleteImage(wish.localImagePath);
     }
+
+    // Fire and forget audit log
+    auditService.log({
+      actorId: userId,
+      actorType: 'user',
+      category: 'content',
+      action: AuditActions.WISH_DELETED,
+      resourceType: 'wish',
+      resourceId: wishId,
+      resourceName: wish.title,
+    });
   }
 
   /**
@@ -277,7 +318,7 @@ export class WishService {
     }
 
     // Add to list in transaction
-    return db.$transaction(async (tx) => {
+    const result = await db.$transaction(async (tx) => {
       const existingListWishes = await tx.listWish.findMany({
         where: { listId, wishId: { in: wishIds } },
         select: { wishId: true },
@@ -290,12 +331,30 @@ export class WishService {
         return { added: 0, skipped: wishIds.length };
       }
 
-      const result = await tx.listWish.createMany({
+      const createResult = await tx.listWish.createMany({
         data: newWishIds.map((wishId) => ({ wishId, listId })),
       });
 
-      return { added: result.count, skipped: wishIds.length - result.count };
+      return { added: createResult.count, skipped: wishIds.length - createResult.count };
     });
+
+    // Fire and forget audit log (single entry for bulk operation)
+    if (result.added > 0) {
+      auditService.log({
+        actorId: userId,
+        actorType: 'user',
+        category: 'content',
+        action: AuditActions.BULK_WISH_ADD_TO_LIST,
+        resourceType: 'list',
+        resourceId: listId,
+        details: {
+          count: result.added,
+          wishIds: wishIds,
+        },
+      });
+    }
+
+    return result;
   }
 
   /**
@@ -341,6 +400,21 @@ export class WishService {
       }
     }
 
+    // Fire and forget audit log (single entry for bulk operation)
+    if (result.count > 0) {
+      auditService.log({
+        actorId: userId,
+        actorType: 'user',
+        category: 'content',
+        action: AuditActions.BULK_WISH_DELETE,
+        resourceType: 'wish',
+        details: {
+          count: result.count,
+          wishIds: ownedWishIds,
+        },
+      });
+    }
+
     return { deleted: result.count };
   }
 
@@ -365,6 +439,21 @@ export class WishService {
     const result = await db.$transaction(async (tx) => {
       return tx.listWish.deleteMany({ where: { wishId: { in: wishIds } } });
     });
+
+    // Fire and forget audit log (single entry for bulk operation)
+    if (result.count > 0) {
+      auditService.log({
+        actorId: userId,
+        actorType: 'user',
+        category: 'content',
+        action: AuditActions.BULK_WISH_REMOVE_FROM_LIST,
+        resourceType: 'wish',
+        details: {
+          count: result.count,
+          wishIds: ownedWishIds,
+        },
+      });
+    }
 
     return { removed: result.count };
   }

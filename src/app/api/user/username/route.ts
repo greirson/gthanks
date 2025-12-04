@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { getCurrentUser } from '@/lib/auth-utils';
 import { ConflictError, ForbiddenError, handleApiError } from '@/lib/errors';
 import { getClientIdentifier, getRateLimitHeaders, rateLimiter } from '@/lib/rate-limiter';
+import { AuditActions } from '@/lib/schemas/audit-log';
+import { auditService } from '@/lib/services/audit-service';
 import { userService } from '@/lib/services/user-service';
 import { usernameSchema } from '@/lib/validators/vanity-url';
 
@@ -72,6 +74,18 @@ export async function PUT(request: NextRequest) {
 
     // Set username via service
     const updatedUser = await userService.setUsername(user.id, data.username);
+
+    // Fire and forget audit log
+    auditService.log({
+      actorId: user.id,
+      actorName: user.name || user.email || undefined,
+      actorType: 'user',
+      category: 'user',
+      action: AuditActions.USERNAME_CHANGED,
+      resourceType: 'user',
+      resourceId: user.id,
+      details: { newUsername: data.username },
+    });
 
     return NextResponse.json(
       {

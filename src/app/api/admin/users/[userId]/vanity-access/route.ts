@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentAdmin } from '@/lib/auth-admin';
 import { userService } from '@/lib/services/user-service';
 import { getErrorMessage, getUserFriendlyError } from '@/lib/errors';
-import { AdminService } from '@/lib/services/admin-service';
+import { auditService } from '@/lib/services/audit-service';
+import { AuditActions } from '@/lib/schemas/audit-log';
 import { logger } from '@/lib/services/logger';
 
 interface RouteParams {
@@ -51,18 +52,23 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     // Update user vanity URL access using service
     const updatedUser = await userService.setVanityAccess(userId, validatedBody.canUseVanityUrls);
 
-    // Create audit log
-    AdminService.createAuditLog(
-      admin.id,
-      'UPDATE',
-      'USER_VANITY_ACCESS',
-      userId,
-      { canUseVanityUrls: !validatedBody.canUseVanityUrls },
-      { canUseVanityUrls: validatedBody.canUseVanityUrls },
-      { endpoint: `/api/admin/users/${userId}/vanity-access` },
-      request.headers.get('x-forwarded-for') || undefined,
-      request.headers.get('user-agent') || undefined
-    );
+    // Fire-and-forget audit log - NO await
+    auditService.log({
+      actorId: admin.id,
+      actorName: admin.name || admin.email,
+      actorType: 'user',
+      category: 'admin',
+      action: AuditActions.VANITY_ACCESS_CHANGED,
+      resourceType: 'user',
+      resourceId: userId,
+      resourceName: updatedUser.name || updatedUser.email || undefined,
+      details: {
+        oldValue: !validatedBody.canUseVanityUrls,
+        newValue: validatedBody.canUseVanityUrls,
+      },
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0] || undefined,
+      userAgent: request.headers.get('user-agent')?.slice(0, 500) || undefined,
+    });
 
     return NextResponse.json({
       user: {

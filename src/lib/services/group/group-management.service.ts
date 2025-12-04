@@ -1,6 +1,8 @@
 import { resolveGroupAvatarUrlSync } from '@/lib/avatar-utils';
 import { db } from '@/lib/db';
 import { NotFoundError, ValidationError } from '@/lib/errors';
+import { AuditActions } from '@/lib/schemas/audit-log';
+import { auditService } from '@/lib/services/audit-service';
 import { GroupWithCounts, GroupWithDetails } from '@/lib/services/group-types';
 import { permissionService } from '@/lib/services/permission-service';
 import { GroupCreateInput, GroupUpdateInput } from '@/lib/validators/group';
@@ -64,6 +66,17 @@ export class GroupManagementService {
       return groupWithCounts as GroupWithCounts;
     });
 
+    // Fire and forget audit log
+    auditService.log({
+      actorId: userId,
+      actorType: 'user',
+      category: 'content',
+      action: AuditActions.GROUP_CREATED,
+      resourceType: 'group',
+      resourceId: group.id,
+      resourceName: group.name,
+    });
+
     return group;
   }
 
@@ -104,6 +117,22 @@ export class GroupManagementService {
       throw new NotFoundError('Group not found');
     }
 
+    // Fire and forget audit log
+    auditService.log({
+      actorId: userId,
+      actorType: 'user',
+      category: 'content',
+      action: AuditActions.GROUP_UPDATED,
+      resourceType: 'group',
+      resourceId: groupId,
+      resourceName: groupWithCounts.name,
+      details: {
+        updatedFields: Object.keys(data).filter(
+          (key) => data[key as keyof GroupUpdateInput] !== undefined
+        ),
+      },
+    });
+
     return groupWithCounts as GroupWithCounts;
   }
 
@@ -113,6 +142,16 @@ export class GroupManagementService {
   async deleteGroup(groupId: string, userId: string): Promise<void> {
     // Check permissions
     await permissionService.require(userId, 'delete', { type: 'group', id: groupId });
+
+    // Fetch group details for audit log before deletion
+    const group = await this.db.group.findUnique({
+      where: { id: groupId },
+      include: {
+        _count: {
+          select: { userGroups: true },
+        },
+      },
+    });
 
     // Delete group and all associations
     await this.db.$transaction(async (tx) => {
@@ -136,6 +175,20 @@ export class GroupManagementService {
         where: { id: groupId },
       });
     });
+
+    // Fire and forget audit log
+    if (group) {
+      auditService.log({
+        actorId: userId,
+        actorType: 'user',
+        category: 'content',
+        action: AuditActions.GROUP_DELETED,
+        resourceType: 'group',
+        resourceId: groupId,
+        resourceName: group.name,
+        details: { memberCount: group._count.userGroups },
+      });
+    }
   }
 
   /**

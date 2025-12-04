@@ -32,8 +32,8 @@ export default defineConfig({
 
   // Shared settings for all projects
   use: {
-    // Base URL for all tests
-    baseURL: process.env.BASE_URL || 'http://localhost:3000',
+    // Base URL for all tests - use port 3001 to avoid conflicts with other services
+    baseURL: process.env.BASE_URL || 'http://localhost:3001',
 
     // Collect trace on first retry of failed test
     trace: 'on-first-retry',
@@ -90,12 +90,20 @@ export default defineConfig({
   ],
 
   // Web server configuration
+  // Use port 3001 to avoid conflicts with other services (e.g., Claude Code MCP)
   webServer: {
-    command: 'pnpm dev',
-    url: 'http://localhost:3000',
+    command: 'PORT=3001 pnpm dev',
+    url: 'http://localhost:3001',
     reuseExistingServer: !process.env.CI,
     stdout: 'ignore',
     stderr: 'pipe',
     timeout: 120 * 1000, // 2 minutes to start
+    // Override NEXTAUTH_URL for E2E tests to ensure redirects go to localhost
+    // This is critical because .env.local may have production URL
+    env: {
+      ...process.env,
+      NEXTAUTH_URL: 'http://localhost:3001',
+      PORT: '3001',
+    },
   },
 });

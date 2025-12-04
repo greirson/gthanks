@@ -6,12 +6,15 @@ import AppleProvider from 'next-auth/providers/apple';
 import EmailProvider from 'next-auth/providers/email';
 import FacebookProvider from 'next-auth/providers/facebook';
 import GoogleProvider from 'next-auth/providers/google';
+import { headers } from 'next/headers';
 
 import { getAppleClientSecret } from '@/lib/auth/apple-client-secret-generator';
 // OIDC provider not available in NextAuth v4.24 - using custom provider
 
 import { db } from '@/lib/db';
 import { createEmailService } from '@/lib/email';
+import { AuditActions } from '@/lib/schemas/audit-log';
+import { auditService } from '@/lib/services/audit-service';
 import { logger } from '@/lib/services/logger';
 import {
   RegenerationReason,
@@ -21,7 +24,25 @@ import {
 } from '@/lib/services/session-service';
 import { signupRestrictionService } from '@/lib/services/signup-restriction.service';
 import { UserProfileService } from '@/lib/services/user-profile';
+import { getClientIp } from '@/lib/utils/client-ip';
 import { sanitizeRedirectUrl } from '@/lib/utils/url-validation';
+
+/**
+ * Helper to extract IP and User Agent for audit logging
+ * Uses next/headers to get request context in NextAuth callbacks
+ */
+function getAuditContext(): { ipAddress?: string; userAgent?: string } {
+  try {
+    const headersList = headers();
+    return {
+      ipAddress: getClientIp(headersList),
+      userAgent: headersList.get('user-agent')?.slice(0, 500) || undefined,
+    };
+  } catch {
+    // headers() may fail in some contexts, return empty
+    return {};
+  }
+}
 
 const authOptions: NextAuthOptions = {
   adapter: createEncryptedPrismaAdapter(),
@@ -70,6 +91,17 @@ const authOptions: NextAuthOptions = {
   </div>
 </body>
 </html>`,
+        });
+
+        // Audit log: Magic link sent (fire-and-forget)
+        const auditContext = getAuditContext();
+        auditService.log({
+          actorType: 'anonymous', // User not logged in yet
+          actorName: email,
+          category: 'auth',
+          action: AuditActions.MAGIC_LINK_SENT,
+          details: { email },
+          ...auditContext,
         });
       },
     }),
@@ -268,6 +300,22 @@ const authOptions: NextAuthOptions = {
           if (!signupRestrictionService.isSignupAllowed(user.email)) {
             signupRestrictionService.logSignupDenial(user.email, 'email');
             const errorCode = signupRestrictionService.getErrorCode();
+
+            // Audit log: Login failure - signup restricted (fire-and-forget)
+            const auditContext = getAuditContext();
+            auditService.log({
+              actorType: 'anonymous',
+              actorName: user.email,
+              category: 'auth',
+              action: AuditActions.LOGIN_FAILURE,
+              details: {
+                reason: 'signup_restricted',
+                provider: 'email',
+                errorCode,
+              },
+              ...auditContext,
+            });
+
             return `/auth/error?error=${errorCode}`;
           }
 
@@ -277,6 +325,19 @@ const authOptions: NextAuthOptions = {
         }
 
         // No email provided - should not happen with email provider
+        // Audit log: Login failure - no email (fire-and-forget)
+        const noEmailAuditContext = getAuditContext();
+        auditService.log({
+          actorType: 'anonymous',
+          category: 'auth',
+          action: AuditActions.LOGIN_FAILURE,
+          details: {
+            reason: 'no_email_provided',
+            provider: 'email',
+          },
+          ...noEmailAuditContext,
+        });
+
         return `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/auth/error?error=EmailRequired`;
       }
 
@@ -287,6 +348,19 @@ const authOptions: NextAuthOptions = {
       ) {
         // OAuth providers must provide an email
         if (!user.email) {
+          // Audit log: Login failure - OAuth no email (fire-and-forget)
+          const oauthNoEmailContext = getAuditContext();
+          auditService.log({
+            actorType: 'anonymous',
+            category: 'auth',
+            action: AuditActions.LOGIN_FAILURE,
+            details: {
+              reason: 'no_email_provided',
+              provider: account.provider,
+            },
+            ...oauthNoEmailContext,
+          });
+
           return `/auth/error?error=EmailRequired&provider=${account.provider}`;
         }
 
@@ -419,6 +493,21 @@ const authOptions: NextAuthOptions = {
                 },
               });
 
+              // Audit log: OAuth provider connected to existing account (fire-and-forget)
+              const auditContext = getAuditContext();
+              auditService.log({
+                actorId: existingUser.id,
+                actorName: existingUser.name || user.email || undefined,
+                actorType: 'user',
+                category: 'auth',
+                action: AuditActions.OAUTH_CONNECT,
+                details: {
+                  provider: account.provider,
+                  linkedToExistingAccount: true,
+                },
+                ...auditContext,
+              });
+
               return true;
             } catch (linkError) {
               // Log OAuth link errors
@@ -426,6 +515,22 @@ const authOptions: NextAuthOptions = {
                 provider: account.provider,
                 userId: existingUser.id,
               });
+
+              // Audit log: Login failure - account link failed (fire-and-forget)
+              const linkFailedContext = getAuditContext();
+              auditService.log({
+                actorId: existingUser.id,
+                actorName: user.email || undefined,
+                actorType: 'user',
+                category: 'auth',
+                action: AuditActions.LOGIN_FAILURE,
+                details: {
+                  reason: 'account_link_failed',
+                  provider: account.provider,
+                },
+                ...linkFailedContext,
+              });
+
               return '/auth/error?error=AccountLinkFailed';
             }
           }
@@ -434,6 +539,22 @@ const authOptions: NextAuthOptions = {
           if (!signupRestrictionService.isSignupAllowed(user.email)) {
             signupRestrictionService.logSignupDenial(user.email, account.provider);
             const errorCode = signupRestrictionService.getErrorCode();
+
+            // Audit log: Login failure - signup restricted (fire-and-forget)
+            const signupRestrictedContext = getAuditContext();
+            auditService.log({
+              actorType: 'anonymous',
+              actorName: user.email,
+              category: 'auth',
+              action: AuditActions.LOGIN_FAILURE,
+              details: {
+                reason: 'signup_restricted',
+                provider: account.provider,
+                errorCode,
+              },
+              ...signupRestrictedContext,
+            });
+
             return `/auth/error?error=${errorCode}`;
           }
 
@@ -446,6 +567,21 @@ const authOptions: NextAuthOptions = {
             provider: account?.provider,
             hasEmail: !!user.email,
           });
+
+          // Audit log: Login failure - database error (fire-and-forget)
+          const dbErrorContext = getAuditContext();
+          auditService.log({
+            actorType: 'anonymous',
+            actorName: user.email || undefined,
+            category: 'auth',
+            action: AuditActions.LOGIN_FAILURE,
+            details: {
+              reason: 'database_error',
+              provider: account?.provider,
+            },
+            ...dbErrorContext,
+          });
+
           return '/auth/error?error=DatabaseError';
         }
       }
@@ -610,11 +746,39 @@ const authOptions: NextAuthOptions = {
           }
         }
       }
+
+      // Audit log: Login success (fire-and-forget)
+      if (user.id) {
+        const auditContext = getAuditContext();
+        auditService.log({
+          actorId: user.id,
+          actorName: user.name || user.email || undefined,
+          actorType: 'user',
+          category: 'auth',
+          action: AuditActions.LOGIN_SUCCESS,
+          details: {
+            provider: account?.provider || 'unknown',
+            isNewUser: isNewUser || false,
+          },
+          ...auditContext,
+        });
+      }
     },
     signOut: ({ session }) => {
       // Log sign-out event
       if (session?.user?.id) {
         logger.info({ userId: session.user.id }, 'User signed out');
+
+        // Audit log: Logout (fire-and-forget)
+        const auditContext = getAuditContext();
+        auditService.log({
+          actorId: session.user.id,
+          actorName: session.user.name || session.user.email || undefined,
+          actorType: 'user',
+          category: 'auth',
+          action: AuditActions.LOGOUT,
+          ...auditContext,
+        });
       }
     },
   },

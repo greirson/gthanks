@@ -44,8 +44,19 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const body: unknown = await request.json();
     const { reason } = SuspendSchema.parse(body);
 
+    // Get IP and user agent for audit logging
+    const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0] || undefined;
+    const userAgent = request.headers.get('user-agent') || undefined;
+
     // Suspend user
-    const suspendedUser = await AdminService.suspendUser(userId, admin.id, reason);
+    const suspendedUser = await AdminService.suspendUser(
+      userId,
+      admin.id,
+      reason,
+      undefined,
+      ipAddress,
+      userAgent
+    );
 
     return NextResponse.json({
       user: suspendedUser,

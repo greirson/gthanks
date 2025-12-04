@@ -1153,11 +1153,235 @@ const mockDb = {
     }),
   },
   auditLog: {
-    create: jest.fn().mockResolvedValue({}),
-    findMany: jest.fn(),
-    findUnique: jest.fn(),
+    create: jest.fn().mockImplementation((args) => {
+      const id = args.data.id || `audit-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const log = {
+        id,
+        timestamp: args.data.timestamp || new Date(),
+        actorId: args.data.actorId || null,
+        actorName: args.data.actorName || null,
+        actorType: args.data.actorType,
+        category: args.data.category,
+        action: args.data.action,
+        resourceType: args.data.resourceType || null,
+        resourceId: args.data.resourceId || null,
+        resourceName: args.data.resourceName || null,
+        details: args.data.details || null,
+        ipAddress: args.data.ipAddress || null,
+        userAgent: args.data.userAgent || null,
+      };
+      mockDataStore.auditLogs.set(id, log);
+      return Promise.resolve(log);
+    }),
+    findMany: jest.fn().mockImplementation((args) => {
+      let logs = Array.from(mockDataStore.auditLogs.values());
+
+      // Apply where filters
+      if (args?.where) {
+        if (args.where.action) {
+          logs = logs.filter((log) => log.action === args.where.action);
+        }
+        if (args.where.category) {
+          logs = logs.filter((log) => log.category === args.where.category);
+        }
+        if (args.where.actorId) {
+          logs = logs.filter((log) => log.actorId === args.where.actorId);
+        }
+        if (args.where.timestamp?.lt) {
+          const cutoff = new Date(args.where.timestamp.lt);
+          logs = logs.filter((log) => new Date(log.timestamp) < cutoff);
+        }
+        if (args.where.timestamp?.lte) {
+          const cutoff = new Date(args.where.timestamp.lte);
+          logs = logs.filter((log) => new Date(log.timestamp) <= cutoff);
+        }
+        if (args.where.timestamp?.gt) {
+          const cutoff = new Date(args.where.timestamp.gt);
+          logs = logs.filter((log) => new Date(log.timestamp) > cutoff);
+        }
+        if (args.where.timestamp?.gte) {
+          const cutoff = new Date(args.where.timestamp.gte);
+          logs = logs.filter((log) => new Date(log.timestamp) >= cutoff);
+        }
+        if (args.where.id?.in) {
+          logs = logs.filter((log) => args.where.id.in.includes(log.id));
+        }
+        // Handle OR conditions for search
+        if (args.where.OR) {
+          logs = logs.filter((log) => {
+            return args.where.OR.some((condition) => {
+              if (condition.action?.contains) {
+                return log.action?.includes(condition.action.contains);
+              }
+              if (condition.resourceName?.contains) {
+                return log.resourceName?.includes(condition.resourceName.contains);
+              }
+              if (condition.actorName?.contains) {
+                return log.actorName?.includes(condition.actorName.contains);
+              }
+              return false;
+            });
+          });
+        }
+      }
+
+      // Apply orderBy
+      if (args?.orderBy) {
+        const key = Object.keys(args.orderBy)[0];
+        const direction = args.orderBy[key];
+        logs.sort((a, b) => {
+          if (direction === 'asc') {
+            return new Date(a[key]) - new Date(b[key]);
+          } else {
+            return new Date(b[key]) - new Date(a[key]);
+          }
+        });
+      }
+
+      // Apply skip
+      if (args?.skip) {
+        logs = logs.slice(args.skip);
+      }
+
+      // Apply take
+      if (args?.take) {
+        logs = logs.slice(0, args.take);
+      }
+
+      // Apply select
+      if (args?.select) {
+        logs = logs.map((log) => {
+          const selected = {};
+          Object.keys(args.select).forEach((key) => {
+            if (args.select[key]) {
+              selected[key] = log[key];
+            }
+          });
+          return selected;
+        });
+      }
+
+      return Promise.resolve(logs);
+    }),
+    findFirst: jest.fn().mockImplementation((args) => {
+      let logs = Array.from(mockDataStore.auditLogs.values());
+
+      // Apply where filters
+      if (args?.where) {
+        if (args.where.action) {
+          logs = logs.filter((log) => log.action === args.where.action);
+        }
+        if (args.where.category) {
+          logs = logs.filter((log) => log.category === args.where.category);
+        }
+      }
+
+      // Apply orderBy
+      if (args?.orderBy) {
+        const key = Object.keys(args.orderBy)[0];
+        const direction = args.orderBy[key];
+        logs.sort((a, b) => {
+          if (direction === 'asc') {
+            return new Date(a[key]) - new Date(b[key]);
+          } else {
+            return new Date(b[key]) - new Date(a[key]);
+          }
+        });
+      }
+
+      return Promise.resolve(logs[0] || null);
+    }),
+    findUnique: jest.fn().mockImplementation((args) => {
+      if (args?.where?.id) {
+        return Promise.resolve(mockDataStore.auditLogs.get(args.where.id) || null);
+      }
+      return Promise.resolve(null);
+    }),
+    count: jest.fn().mockImplementation((args) => {
+      let logs = Array.from(mockDataStore.auditLogs.values());
+
+      // Apply where filters
+      if (args?.where) {
+        if (args.where.timestamp?.lt) {
+          const cutoff = new Date(args.where.timestamp.lt);
+          logs = logs.filter((log) => new Date(log.timestamp) < cutoff);
+        }
+      }
+
+      return Promise.resolve(logs.length);
+    }),
+    deleteMany: jest.fn().mockImplementation((args) => {
+      let count = 0;
+
+      if (!args?.where || Object.keys(args.where).length === 0) {
+        // Delete all
+        count = mockDataStore.auditLogs.size;
+        mockDataStore.auditLogs.clear();
+      } else {
+        // Delete matching entries
+        const toDelete = [];
+        for (const [id, log] of mockDataStore.auditLogs.entries()) {
+          let shouldDelete = true;
+
+          if (args.where.timestamp?.lt) {
+            const cutoff = new Date(args.where.timestamp.lt);
+            shouldDelete = shouldDelete && new Date(log.timestamp) < cutoff;
+          }
+
+          if (args.where.id?.in) {
+            shouldDelete = shouldDelete && args.where.id.in.includes(id);
+          }
+
+          if (shouldDelete) {
+            toDelete.push(id);
+          }
+        }
+
+        toDelete.forEach((id) => {
+          mockDataStore.auditLogs.delete(id);
+          count++;
+        });
+      }
+
+      return Promise.resolve({ count });
+    }),
     update: jest.fn(),
     delete: jest.fn(),
+  },
+  auditLogSettings: {
+    findFirst: jest.fn().mockImplementation(() => {
+      // Return default settings
+      return Promise.resolve({
+        id: 'default',
+        authEnabled: true,
+        userManagementEnabled: true,
+        contentEnabled: true,
+        adminEnabled: true,
+        updatedAt: new Date(),
+      });
+    }),
+    create: jest.fn().mockImplementation((args) => {
+      return Promise.resolve({
+        id: args.data.id || 'default',
+        authEnabled: args.data.authEnabled ?? true,
+        userManagementEnabled: args.data.userManagementEnabled ?? true,
+        contentEnabled: args.data.contentEnabled ?? true,
+        adminEnabled: args.data.adminEnabled ?? true,
+        updatedAt: new Date(),
+      });
+    }),
+    upsert: jest.fn().mockImplementation((args) => {
+      return Promise.resolve({
+        id: args.where.id || 'default',
+        authEnabled: args.update?.authEnabled ?? args.create?.authEnabled ?? true,
+        userManagementEnabled:
+          args.update?.userManagementEnabled ?? args.create?.userManagementEnabled ?? true,
+        contentEnabled: args.update?.contentEnabled ?? args.create?.contentEnabled ?? true,
+        adminEnabled: args.update?.adminEnabled ?? args.create?.adminEnabled ?? true,
+        updatedAt: new Date(),
+      });
+    }),
+    update: jest.fn(),
   },
   apiKey: {
     create: jest.fn(),

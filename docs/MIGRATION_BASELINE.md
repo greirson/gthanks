@@ -48,6 +48,7 @@ The gthanks project has the following migrations that may need baselining:
 | `0_baseline`                                   | Initial schema with all tables (User, Wish, List, Group, etc.)                  |
 | `20251122_reservation_authentication_required` | Adds SiteSettings, updates Reservation to require userId                        |
 | `20251202_add_personal_access_tokens`          | Adds PersonalAccessToken table, ListWish.sortOrder, Reservation purchase fields |
+| `20251203_add_audit_logging`                   | Adds AuditLog, AuditLogSettings tables for admin activity tracking              |
 
 ## Step 1: Backup Your Database
 
@@ -127,6 +128,7 @@ pnpm migrate:resolve --applied 0_baseline
 # Mark subsequent migrations as applied
 pnpm migrate:resolve --applied 20251122_reservation_authentication_required
 pnpm migrate:resolve --applied 20251202_add_personal_access_tokens
+pnpm migrate:resolve --applied 20251203_add_audit_logging
 ```
 
 > **Note:** Do NOT use `--` before the arguments. `pnpm migrate:resolve --applied` is correct, `pnpm migrate:resolve -- --applied` is wrong.
@@ -137,6 +139,7 @@ pnpm migrate:resolve --applied 20251202_add_personal_access_tokens
 docker exec -it gthanks-app npx prisma migrate resolve --applied 0_baseline
 docker exec -it gthanks-app npx prisma migrate resolve --applied 20251122_reservation_authentication_required
 docker exec -it gthanks-app npx prisma migrate resolve --applied 20251202_add_personal_access_tokens
+docker exec -it gthanks-app npx prisma migrate resolve --applied 20251203_add_audit_logging
 ```
 
 > In Docker, the entrypoint script handles path resolution, so `npx` works directly.
@@ -157,9 +160,9 @@ pnpm migrate:status
 Prisma schema loaded from prisma/schema.prisma
 Datasource "db": SQLite database "gthanks.db" at "file:./data/gthanks.db"
 
-3 migrations found in prisma/migrations
+4 migrations found in prisma/migrations
 
-No pending migrations to apply.
+Database schema is up to date!
 ```
 
 Also verify the migrations table:
@@ -181,9 +184,10 @@ psql $DATABASE_URL -c "SELECT migration_name, finished_at FROM _prisma_migration
 ```
 migration_name                                | finished_at
 ----------------------------------------------|-------------------------
-0_baseline                                    | 2025-12-02 10:30:00.000
-20251122_reservation_authentication_required  | 2025-12-02 10:30:01.000
-20251202_add_personal_access_tokens           | 2025-12-02 10:30:02.000
+0_baseline                                    | 2025-12-03 10:30:00.000
+20251122_reservation_authentication_required  | 2025-12-03 10:30:01.000
+20251202_add_personal_access_tokens           | 2025-12-03 10:30:02.000
+20251203_add_audit_logging                    | 2025-12-03 10:30:03.000
 ```
 
 ## Step 6: Test the Application
