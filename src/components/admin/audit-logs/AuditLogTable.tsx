@@ -267,6 +267,99 @@ function EmptyState() {
   );
 }
 
+/**
+ * Memoized row component - prevents re-parsing details on parent re-renders
+ */
+const AuditLogRow = React.memo(function AuditLogRow({
+  log,
+  onViewDetails,
+}: {
+  log: AuditLog;
+  onViewDetails: (log: AuditLog) => void;
+}) {
+  const timestamp = new Date(log.timestamp);
+  const relativeTime = formatDistanceToNow(timestamp, { addSuffix: true });
+  const absoluteTime = format(timestamp, 'MMM d, HH:mm:ss');
+  const actor = formatActor(log);
+
+  // Memoize the parsed details to prevent re-parsing on each render
+  const parsedDetails = useMemo(() => parseDetails(log.details), [log.details]);
+  const hasDetails = parsedDetails || log.ipAddress || log.userAgent;
+
+  return (
+    <tr className="transition-colors hover:bg-muted/40">
+      {/* Timestamp - compact */}
+      <td className="whitespace-nowrap px-2 py-1.5">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="cursor-default text-muted-foreground">{absoluteTime}</span>
+          </TooltipTrigger>
+          <TooltipContent className="text-xs">{relativeTime}</TooltipContent>
+        </Tooltip>
+      </td>
+
+      {/* Actor - compact inline */}
+      <td className="whitespace-nowrap px-2 py-1.5">
+        <span className="font-medium">{actor.name}</span>
+        {actor.id && (
+          <span className="ml-1 font-mono text-[10px] text-muted-foreground">{actor.id}</span>
+        )}
+      </td>
+
+      {/* Category - tiny badge */}
+      <td className="px-2 py-1.5">
+        <Badge
+          variant="outline"
+          className={cn(
+            'h-4 px-1 text-[10px] font-medium leading-none',
+            getCategoryStyle(log.category)
+          )}
+        >
+          {log.category}
+        </Badge>
+      </td>
+
+      {/* Action */}
+      <td className="whitespace-nowrap px-2 py-1.5 font-medium">{formatAction(log.action)}</td>
+
+      {/* Resource - compact with tooltip */}
+      <td className="hidden max-w-[200px] truncate px-2 py-1.5 lg:table-cell">
+        {log.resourceType ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="cursor-default font-mono text-[10px] text-muted-foreground">
+                {formatResourceCompact(log)}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs text-xs">
+              <div className="space-y-0.5">
+                <p>Type: {log.resourceType}</p>
+                {log.resourceId && <p className="font-mono">ID: {log.resourceId}</p>}
+                {log.resourceName && <p>Name: {log.resourceName}</p>}
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <span className="text-muted-foreground/50">-</span>
+        )}
+      </td>
+
+      {/* Details button - tiny */}
+      <td className="px-2 py-1.5">
+        {hasDetails && (
+          <button
+            onClick={() => onViewDetails(log)}
+            className="inline-flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+            aria-label={`View details for ${formatAction(log.action)}`}
+          >
+            <Eye className="h-3 w-3" aria-hidden="true" />
+          </button>
+        )}
+      </td>
+    </tr>
+  );
+});
+
 export function AuditLogTable({
   logs,
   isLoading = false,
@@ -316,22 +409,37 @@ export function AuditLogTable({
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-border/60 bg-muted/30">
-                  <th className="whitespace-nowrap px-2 py-2 text-left font-medium text-muted-foreground">
+                  <th
+                    scope="col"
+                    className="whitespace-nowrap px-2 py-2 text-left font-medium text-muted-foreground"
+                  >
                     Time
                   </th>
-                  <th className="whitespace-nowrap px-2 py-2 text-left font-medium text-muted-foreground">
+                  <th
+                    scope="col"
+                    className="whitespace-nowrap px-2 py-2 text-left font-medium text-muted-foreground"
+                  >
                     Actor
                   </th>
-                  <th className="whitespace-nowrap px-2 py-2 text-left font-medium text-muted-foreground">
+                  <th
+                    scope="col"
+                    className="whitespace-nowrap px-2 py-2 text-left font-medium text-muted-foreground"
+                  >
                     Cat
                   </th>
-                  <th className="whitespace-nowrap px-2 py-2 text-left font-medium text-muted-foreground">
+                  <th
+                    scope="col"
+                    className="whitespace-nowrap px-2 py-2 text-left font-medium text-muted-foreground"
+                  >
                     Action
                   </th>
-                  <th className="hidden whitespace-nowrap px-2 py-2 text-left font-medium text-muted-foreground lg:table-cell">
+                  <th
+                    scope="col"
+                    className="hidden whitespace-nowrap px-2 py-2 text-left font-medium text-muted-foreground lg:table-cell"
+                  >
                     Resource
                   </th>
-                  <th className="w-8 px-2 py-2">
+                  <th scope="col" className="w-8 px-2 py-2">
                     <span className="sr-only">Details</span>
                   </th>
                 </tr>
@@ -342,95 +450,9 @@ export function AuditLogTable({
                 ) : logs.length === 0 ? (
                   <EmptyState />
                 ) : (
-                  logs.map((log) => {
-                    const timestamp = new Date(log.timestamp);
-                    const relativeTime = formatDistanceToNow(timestamp, { addSuffix: true });
-                    const absoluteTime = format(timestamp, 'MMM d, HH:mm:ss');
-                    const details = parseDetails(log.details);
-                    const actor = formatActor(log);
-                    const hasDetails = details || log.ipAddress || log.userAgent;
-
-                    return (
-                      <tr key={log.id} className="transition-colors hover:bg-muted/40">
-                        {/* Timestamp - compact */}
-                        <td className="whitespace-nowrap px-2 py-1.5">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="cursor-default text-muted-foreground">
-                                {absoluteTime}
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent className="text-xs">{relativeTime}</TooltipContent>
-                          </Tooltip>
-                        </td>
-
-                        {/* Actor - compact inline */}
-                        <td className="whitespace-nowrap px-2 py-1.5">
-                          <span className="font-medium">{actor.name}</span>
-                          {actor.id && (
-                            <span className="ml-1 font-mono text-[10px] text-muted-foreground">
-                              {actor.id}
-                            </span>
-                          )}
-                        </td>
-
-                        {/* Category - tiny badge */}
-                        <td className="px-2 py-1.5">
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              'h-4 px-1 text-[10px] font-medium leading-none',
-                              getCategoryStyle(log.category)
-                            )}
-                          >
-                            {log.category}
-                          </Badge>
-                        </td>
-
-                        {/* Action */}
-                        <td className="whitespace-nowrap px-2 py-1.5 font-medium">
-                          {formatAction(log.action)}
-                        </td>
-
-                        {/* Resource - compact with tooltip */}
-                        <td className="hidden max-w-[200px] truncate px-2 py-1.5 lg:table-cell">
-                          {log.resourceType ? (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="cursor-default font-mono text-[10px] text-muted-foreground">
-                                  {formatResourceCompact(log)}
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent className="max-w-xs text-xs">
-                                <div className="space-y-0.5">
-                                  <p>Type: {log.resourceType}</p>
-                                  {log.resourceId && (
-                                    <p className="font-mono">ID: {log.resourceId}</p>
-                                  )}
-                                  {log.resourceName && <p>Name: {log.resourceName}</p>}
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          ) : (
-                            <span className="text-muted-foreground/50">-</span>
-                          )}
-                        </td>
-
-                        {/* Details button - tiny */}
-                        <td className="px-2 py-1.5">
-                          {hasDetails && (
-                            <button
-                              onClick={() => handleViewDetails(log)}
-                              className="inline-flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
-                              aria-label={`View details for ${formatAction(log.action)}`}
-                            >
-                              <Eye className="h-3 w-3" aria-hidden="true" />
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })
+                  logs.map((log) => (
+                    <AuditLogRow key={log.id} log={log} onViewDetails={handleViewDetails} />
+                  ))
                 )}
               </tbody>
             </table>

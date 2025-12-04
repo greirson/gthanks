@@ -2,7 +2,7 @@
 
 import { RefreshCw, Settings } from 'lucide-react';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import {
@@ -99,6 +99,25 @@ export default function AuditLogsPage() {
   const [pageSize, setPageSize] = useState(initialPageSize);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // Sync state when searchParams change (browser back/forward navigation)
+  useEffect(() => {
+    const parsedFilters = parseFiltersFromParams(searchParams);
+    const parsedPage = parseInt(searchParams.get('page') || '1', 10) || 1;
+    const parsedPageSize =
+      parseInt(searchParams.get('pageSize') || String(DEFAULT_PAGE_SIZE), 10) || DEFAULT_PAGE_SIZE;
+
+    // Only update if values actually changed to avoid unnecessary re-renders
+    setFilters((prev) => {
+      if (JSON.stringify(prev) !== JSON.stringify(parsedFilters)) {
+        return parsedFilters;
+      }
+      return prev;
+    });
+
+    setPage((prev) => (prev !== parsedPage ? parsedPage : prev));
+    setPageSize((prev) => (prev !== parsedPageSize ? parsedPageSize : prev));
+  }, [searchParams]);
 
   // Fetch audit logs with polling
   const {
