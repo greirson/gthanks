@@ -7,8 +7,13 @@ const globalForPrisma = globalThis as unknown as {
   dbInitPromise: Promise<void> | undefined;
 };
 
-// Initialize database on first import
-if (!globalForPrisma.dbInitPromise && typeof window === 'undefined') {
+// Initialize database on first import (skip during build phase)
+// Skip auto-init during Next.js build to prevent database connection errors
+const isBuilding =
+  process.env.NEXT_PHASE === 'phase-production-build' ||
+  process.argv.some((arg) => arg.includes('next') && process.argv.includes('build'));
+
+if (!globalForPrisma.dbInitPromise && typeof window === 'undefined' && !isBuilding) {
   globalForPrisma.dbInitPromise = ensureDatabaseInitialized().catch((error) => {
     console.error('[DB] Failed to auto-initialize database:', error);
     // Don't throw here - let the actual database operations fail with proper error messages
