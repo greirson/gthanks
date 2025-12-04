@@ -80,37 +80,70 @@ if echo "$DATABASE_URL" | grep -q "^file:"; then
   fi
 fi
 
-# Generate Prisma Client for runtime platform, then apply migrations
+# Generate Prisma Client for runtime platform, then apply schema
 # Use direct binary path to ensure version consistency (avoid npx downloading latest)
 node_modules/.bin/prisma generate
 
-# Try to apply migrations, and if it fails due to P3005, baseline the database
-if ! node_modules/.bin/prisma migrate deploy 2>&1 | tee /tmp/migrate-output.log; then
-  # Check if the error is P3005 (database not empty)
-  if grep -q "P3005" /tmp/migrate-output.log; then
-    echo ""
-    echo "Detected existing database without migration history (P3005)"
-    echo "Baselining database by marking existing migrations as applied..."
-    echo ""
-
-    # Mark the baseline migration as applied (existing schema matches baseline)
-    node_modules/.bin/prisma migrate resolve --applied 0_baseline || {
-      echo "ERROR: Failed to baseline existing database"
+# Database sync strategy:
+# - PostgreSQL: Use db push (no migration history needed, works across providers)
+# - SQLite: Use migrate deploy (preserves migration history for dev)
+if echo "$DATABASE_URL" | grep -qE "^postgres(ql)?:"; then
+  echo "Applying schema with prisma db push (PostgreSQL)..."
+  # Note: --skip-generate since we already ran prisma generate above
+  # We don't use --accept-data-loss to prevent accidental data loss in production
+  # If schema changes would cause data loss, the deploy will fail (safer)
+  node_modules/.bin/prisma db push --skip-generate 2>&1 | tee /tmp/db-push-output.log || {
+    if grep -q "destructive changes" /tmp/db-push-output.log; then
+      echo ""
+      echo "WARNING: Schema changes would cause data loss."
+      echo "Review the changes and either:"
+      echo "  1. Create a proper migration with data handling"
+      echo "  2. Set FORCE_DB_PUSH=true to accept data loss"
+      echo ""
+      if [ "$FORCE_DB_PUSH" = "true" ]; then
+        echo "FORCE_DB_PUSH=true detected, proceeding with --accept-data-loss..."
+        node_modules/.bin/prisma db push --skip-generate --accept-data-loss || {
+          echo "ERROR: Failed to sync PostgreSQL schema"
+          exit 1
+        }
+      else
+        exit 1
+      fi
+    else
+      echo "ERROR: Failed to sync PostgreSQL schema"
+      cat /tmp/db-push-output.log
       exit 1
-    }
+    fi
+  }
+else
+  # SQLite: Try to apply migrations, and if it fails due to P3005, baseline the database
+  if ! node_modules/.bin/prisma migrate deploy 2>&1 | tee /tmp/migrate-output.log; then
+    # Check if the error is P3005 (database not empty)
+    if grep -q "P3005" /tmp/migrate-output.log; then
+      echo ""
+      echo "Detected existing database without migration history (P3005)"
+      echo "Baselining database by marking existing migrations as applied..."
+      echo ""
 
-    echo "Database baselined successfully, retrying migration deployment..."
+      # Mark the baseline migration as applied (existing schema matches baseline)
+      node_modules/.bin/prisma migrate resolve --applied 0_baseline || {
+        echo "ERROR: Failed to baseline existing database"
+        exit 1
+      }
 
-    # Retry migration deployment
-    node_modules/.bin/prisma migrate deploy || {
-      echo "ERROR: Database migration failed after baselining"
+      echo "Database baselined successfully, retrying migration deployment..."
+
+      # Retry migration deployment
+      node_modules/.bin/prisma migrate deploy || {
+        echo "ERROR: Database migration failed after baselining"
+        exit 1
+      }
+    else
+      # Different error, fail
+      echo "ERROR: Database migration failed (not a P3005 error)"
+      cat /tmp/migrate-output.log
       exit 1
-    }
-  else
-    # Different error, fail
-    echo "ERROR: Database migration failed (not a P3005 error)"
-    cat /tmp/migrate-output.log
-    exit 1
+    fi
   fi
 fi
 
