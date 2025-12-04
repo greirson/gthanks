@@ -9,3 +9,5 @@ next.config.js
 **/*.spec.tsx
 **/e2e/**
 **/__tests__/**
+tests/helpers/**
+tests/integration/**
