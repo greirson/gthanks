@@ -5,10 +5,26 @@
  * Requires CRON_SECRET environment variable for authorization.
  */
 
+import { timingSafeEqual } from 'crypto';
+
 import { NextRequest, NextResponse } from 'next/server';
 
 import { cleanupExpiredTokens } from '@/lib/cron/cleanup-expired-tokens';
 import { logger } from '@/lib/services/logger';
+
+/**
+ * Performs constant-time string comparison to prevent timing attacks.
+ * Returns false for different length strings without leaking length info.
+ */
+function secureCompare(a: string, b: string): boolean {
+  // Handle different lengths safely (timingSafeEqual requires same length)
+  if (a.length !== b.length) {
+    // Still do a comparison to avoid timing leak on length check
+    timingSafeEqual(Buffer.from(a), Buffer.from(a));
+    return false;
+  }
+  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
 
 export async function GET(request: NextRequest) {
   // Verify cron secret to prevent unauthorized access
@@ -20,7 +36,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
   }
 
-  if (authHeader !== expectedAuth) {
+  if (!authHeader || !secureCompare(authHeader, expectedAuth)) {
     logger.warn('Unauthorized cron request attempt:', {
       hasAuth: !!authHeader,
       ip: request.headers.get('x-forwarded-for') || 'unknown',
