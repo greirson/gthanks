@@ -24,6 +24,7 @@ import {
 } from '@/lib/services/session-service';
 import { signupRestrictionService } from '@/lib/services/signup-restriction.service';
 import { UserProfileService } from '@/lib/services/user-profile';
+import { getClientIp } from '@/lib/utils/client-ip';
 import { sanitizeRedirectUrl } from '@/lib/utils/url-validation';
 
 /**
@@ -34,11 +35,8 @@ function getAuditContext(): { ipAddress?: string; userAgent?: string } {
   try {
     const headersList = headers();
     return {
-      ipAddress:
-        headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-        headersList.get('x-real-ip') ||
-        undefined,
-      userAgent: headersList.get('user-agent') || undefined,
+      ipAddress: getClientIp(headersList),
+      userAgent: headersList.get('user-agent')?.slice(0, 500) || undefined,
     };
   } catch {
     // headers() may fail in some contexts, return empty
