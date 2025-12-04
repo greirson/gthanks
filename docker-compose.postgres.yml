@@ -25,8 +25,8 @@ services:
 
   gthanks:
     image: greirson/gthanks:${GTHANKS_VERSION:-latest}
-    expose:
-      - 3000
+    ports:
+      - ${GTHANKS_PORT:-3000}:3000
     depends_on:
       postgres:
         condition: service_healthy
