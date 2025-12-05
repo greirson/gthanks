@@ -1391,9 +1391,45 @@ const mockDb = {
     delete: jest.fn(),
   },
   account: {
-    create: jest.fn(),
-    findUnique: jest.fn(),
-    findMany: jest.fn(),
+    create: jest.fn().mockImplementation((data) => {
+      const id = `account-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+      const account = {
+        id,
+        userId: data.data.userId,
+        type: data.data.type,
+        provider: data.data.provider,
+        providerAccountId: data.data.providerAccountId,
+        refresh_token: data.data.refresh_token || null,
+        access_token: data.data.access_token || null,
+        expires_at: data.data.expires_at || null,
+        token_type: data.data.token_type || null,
+        scope: data.data.scope || null,
+        id_token: data.data.id_token || null,
+        session_state: data.data.session_state || null,
+      };
+      mockDataStore.accounts.set(id, account);
+      return Promise.resolve(account);
+    }),
+    findUnique: jest.fn().mockImplementation((args) => {
+      if (args.where.provider_providerAccountId) {
+        const { provider, providerAccountId } = args.where.provider_providerAccountId;
+        const account = Array.from(mockDataStore.accounts.values()).find(
+          (a) => a.provider === provider && a.providerAccountId === providerAccountId
+        );
+        if (account && args.include?.user) {
+          const user = mockDataStore.users.get(account.userId);
+          return Promise.resolve({ ...account, user });
+        }
+        return Promise.resolve(account || null);
+      }
+      if (args.where.id) {
+        return Promise.resolve(mockDataStore.accounts.get(args.where.id) || null);
+      }
+      return Promise.resolve(null);
+    }),
+    findMany: jest.fn().mockImplementation(() => {
+      return Promise.resolve(Array.from(mockDataStore.accounts.values()));
+    }),
     update: jest.fn(),
     delete: jest.fn(),
   },
