@@ -49,6 +49,7 @@ services:
       - SMTP_PORT=${SMTP_PORT:-587}
       - SMTP_USER=${SMTP_USER:-}
       - SMTP_PASS=${SMTP_PASS:-}
+      - DISABLE_MAGIC_LINK_LOGIN=${DISABLE_MAGIC_LINK_LOGIN:-}
     volumes:
       - uploads:/app/uploads
     restart: unless-stopped
