@@ -808,9 +808,11 @@ const authOptions: NextAuthOptions = {
     callbackUrl: {
       name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.callback-url`,
       options: {
-        sameSite: 'lax',
+        // Apple uses response_mode: "form_post" which is a cross-site POST request,
+        // so sameSite must be 'none' with secure: true to preserve callbackUrl
+        sameSite: 'none',
         path: '/',
-        secure: process.env.NODE_ENV === 'production',
+        secure: true, // Must be true for sameSite: 'none'
       },
     },
     csrfToken: {
