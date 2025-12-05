@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Github, Code, Shield, Heart } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
@@ -131,7 +132,18 @@ export default function HomePage() {
       <main className="flex w-full max-w-md flex-col items-center">
         {/* Sticky Note: App Name */}
         <div className="mb-6 -rotate-2 transform cursor-default rounded-sm bg-gradient-to-br from-amber-100 to-amber-200 px-8 py-5 shadow-lg transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:from-amber-200/90 dark:to-amber-300/90">
-          <span className="font-handwriting text-4xl text-amber-900 sm:text-5xl">gthanks</span>
+          <span className="flex items-center font-handwriting text-4xl text-amber-900 sm:text-5xl">
+            <Image
+              src="/logo-symbol.png"
+              alt="g"
+              width={48}
+              height={48}
+              className="mr-0.5 inline-block h-10 w-10 [filter:brightness(0)_sepia(1)_saturate(10)_hue-rotate(350deg)] sm:h-12 sm:w-12"
+              sizes="(max-width: 640px) 40px, 48px"
+              priority
+            />
+            thanks
+          </span>
         </div>
 
         {/* Sticky Note: Tagline */}

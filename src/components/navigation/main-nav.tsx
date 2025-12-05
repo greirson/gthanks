@@ -99,12 +99,14 @@ export function MainNav({ user }: MainNavProps) {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/wishes" className="flex items-center gap-2" aria-label="gthanks home">
-            <div
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary"
+            <Image
+              src="/logo.png"
+              alt=""
+              width={32}
+              height={32}
+              className="h-8 w-8 rounded-lg"
               aria-hidden="true"
-            >
-              <Gift className="h-5 w-5 text-primary-foreground" />
-            </div>
+            />
             <span className="text-xl font-bold">gthanks</span>
           </Link>
 

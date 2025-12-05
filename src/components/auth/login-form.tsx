@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { signIn } from 'next-auth/react';
+import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
@@ -118,6 +119,17 @@ export function LoginForm({
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
+      {/* Logo - purple in light mode, white in dark mode */}
+      <div className="mb-6">
+        <Image
+          src="/logo-symbol.png"
+          alt="gthanks logo"
+          width={64}
+          height={64}
+          className="h-16 w-16 [filter:brightness(0)_sepia(1)_saturate(5)_hue-rotate(220deg)] dark:opacity-80 dark:[filter:none]"
+          priority
+        />
+      </div>
       {loginMessage && (
         <div className="mb-6 w-full max-w-md rounded-lg border-l-4 border-blue-500 bg-blue-50 p-4 dark:bg-blue-950">
           <div
