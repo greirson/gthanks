@@ -1,9 +1,11 @@
+import { isAppleOAuthConfigured } from '@/lib/auth/apple-client-secret-generator';
+
 // Server-side utility to check which OAuth providers are configured
 export function getAvailableOAuthProviders() {
   const providers = {
     google: !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
     facebook: !!(process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET),
-    apple: !!(process.env.APPLE_CLIENT_ID && process.env.APPLE_CLIENT_SECRET),
+    apple: isAppleOAuthConfigured(),
     oauth: !!(
       process.env.OAUTH_CLIENT_ID &&
       process.env.OAUTH_CLIENT_SECRET &&
