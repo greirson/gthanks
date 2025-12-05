@@ -153,50 +153,48 @@ See `docs/DOCKER_DEPLOYMENT.md` for complete deployment documentation including:
 
 ## Environment Variables
 
-### Required
-
 ```env
-NEXTAUTH_SECRET=your-32-character-secret-here  # Generate: openssl rand -base64 32
-DATABASE_URL=file:./data/gthanks.db            # SQLite (dev) or postgresql://... (prod)
-```
+# Required
+NEXTAUTH_SECRET=                               # Required. Generate: openssl rand -base64 32
+DATABASE_URL=file:./data/gthanks.db            # Database connection (SQLite or postgresql://...)
 
-### Optional - Authentication
-
-```env
-NEXTAUTH_URL=http://localhost:3000             # Your app's public URL
+# App URL
+NEXTAUTH_URL=http://localhost:3000             # Public URL (auto-detected in most cases)
 
 # Google OAuth
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_CLIENT_ID=                              # Google OAuth client ID
+GOOGLE_CLIENT_SECRET=                          # Google OAuth client secret
 
 # Facebook OAuth
-FACEBOOK_CLIENT_ID=your-facebook-app-id
-FACEBOOK_CLIENT_SECRET=your-facebook-app-secret
+FACEBOOK_CLIENT_ID=                            # Facebook OAuth app ID
+FACEBOOK_CLIENT_SECRET=                        # Facebook OAuth app secret
 
 # Apple Sign In
-APPLE_CLIENT_ID=your-apple-service-id
-APPLE_CLIENT_SECRET=your-apple-client-secret
+APPLE_CLIENT_ID=                               # Apple Sign In service ID
+APPLE_CLIENT_SECRET=                           # Apple client secret (or use auto-generation below)
+APPLE_TEAM_ID=                                 # Apple Team ID for auto-generated secrets
+APPLE_KEY_ID=                                  # Apple Key ID for auto-generated secrets
+APPLE_PRIVATE_KEY_BASE64=                      # Base64-encoded Apple private key
 
 # Generic OIDC Provider (Pocket ID, Auth0, Keycloak, etc.)
-OAUTH_CLIENT_ID=your-client-id
-OAUTH_CLIENT_SECRET=your-client-secret
-OAUTH_ISSUER=https://auth.example.com
-```
+OAUTH_CLIENT_ID=                               # OIDC client ID
+OAUTH_CLIENT_SECRET=                           # OIDC client secret
+OAUTH_ISSUER=                                  # OIDC issuer URL (e.g., https://auth.example.com)
+OAUTH_NAME=OAuth                               # Display name for OIDC provider button
+OAUTH_SCOPE=openid email profile               # OIDC scopes to request
 
-### Optional - Email
+# Magic Link Authentication
+DISABLE_MAGIC_LINK_LOGIN=false                 # Set 'true' to hide magic link (requires OAuth)
 
-```env
-EMAIL_FROM=noreply@example.com
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
-```
+# Email (SMTP)
+EMAIL_FROM=noreply@localhost                   # Sender email address
+SMTP_HOST=                                     # SMTP server hostname
+SMTP_PORT=587                                  # SMTP server port
+SMTP_USER=                                     # SMTP username
+SMTP_PASS=                                     # SMTP password
 
-### Optional - Monitoring
-
-```env
-SENTRY_DSN=https://...@sentry.io/...
+# Monitoring
+SENTRY_DSN=                                    # Sentry error tracking DSN
 ```
 
 See `docs/SECRETS_MANAGEMENT.md` for secure secrets handling and complete environment variable reference.

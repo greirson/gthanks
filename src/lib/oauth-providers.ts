@@ -13,7 +13,7 @@ export function getAvailableOAuthProviders() {
 
   const oauthConfig = {
     name: process.env.OAUTH_NAME || 'OAuth',
-    displayName: process.env.OAUTH_NAME || 'OAuth',
+    displayName: process.env.OAUTH_NAME || 'OAuth Provider',
   };
 
   return {
@@ -21,4 +21,15 @@ export function getAvailableOAuthProviders() {
     oauthConfig,
     hasAnyProvider: Object.values(providers).some(Boolean),
   };
+}
+
+/**
+ * Check if magic link login is disabled.
+ * Magic link can only be disabled when:
+ * 1. DISABLE_MAGIC_LINK_LOGIN environment variable is set to 'true'
+ * 2. At least one OAuth provider is configured (safety: users must have a way to log in)
+ */
+export function isMagicLinkDisabled(): boolean {
+  const { hasAnyProvider } = getAvailableOAuthProviders();
+  return process.env.DISABLE_MAGIC_LINK_LOGIN === 'true' && hasAnyProvider;
 }

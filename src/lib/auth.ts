@@ -9,6 +9,7 @@ import GoogleProvider from 'next-auth/providers/google';
 import { headers } from 'next/headers';
 
 import { getAppleClientSecret } from '@/lib/auth/apple-client-secret-generator';
+import { isMagicLinkDisabled } from '@/lib/oauth-providers';
 // OIDC provider not available in NextAuth v4.24 - using custom provider
 
 import { db } from '@/lib/db';
@@ -47,27 +48,31 @@ function getAuditContext(): { ipAddress?: string; userAgent?: string } {
 const authOptions: NextAuthOptions = {
   adapter: createEncryptedPrismaAdapter(),
   providers: [
-    EmailProvider({
-      from: process.env.EMAIL_FROM || 'noreply@localhost',
-      maxAge: 15 * 60, // 15 minutes
-      // Server config is required by EmailProvider constructor even when using
-      // custom sendVerificationRequest. These values are not used for sending
-      // but must be present to prevent initialization errors.
-      server: {
-        host: process.env.SMTP_HOST || 'localhost',
-        port: Number(process.env.SMTP_PORT) || 587,
-        auth: {
-          user: process.env.SMTP_USER || '',
-          pass: process.env.SMTP_PASS || '',
-        },
-      },
-      sendVerificationRequest: async ({ identifier: email, url, provider: _provider }) => {
-        const emailService = createEmailService();
+    // Email/Magic Link provider - conditionally enabled based on DISABLE_MAGIC_LINK_LOGIN
+    ...(isMagicLinkDisabled()
+      ? []
+      : [
+          EmailProvider({
+            from: process.env.EMAIL_FROM || 'noreply@localhost',
+            maxAge: 15 * 60, // 15 minutes
+            // Server config is required by EmailProvider constructor even when using
+            // custom sendVerificationRequest. These values are not used for sending
+            // but must be present to prevent initialization errors.
+            server: {
+              host: process.env.SMTP_HOST || 'localhost',
+              port: Number(process.env.SMTP_PORT) || 587,
+              auth: {
+                user: process.env.SMTP_USER || '',
+                pass: process.env.SMTP_PASS || '',
+              },
+            },
+            sendVerificationRequest: async ({ identifier: email, url, provider: _provider }) => {
+              const emailService = createEmailService();
 
-        await emailService.send({
-          to: email,
-          subject: 'Sign in to gThanks',
-          html: `<!DOCTYPE html>
+              await emailService.send({
+                to: email,
+                subject: 'Sign in to gThanks',
+                html: `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -91,20 +96,21 @@ const authOptions: NextAuthOptions = {
   </div>
 </body>
 </html>`,
-        });
+              });
 
-        // Audit log: Magic link sent (fire-and-forget)
-        const auditContext = getAuditContext();
-        auditService.log({
-          actorType: 'anonymous', // User not logged in yet
-          actorName: email,
-          category: 'auth',
-          action: AuditActions.MAGIC_LINK_SENT,
-          details: { email },
-          ...auditContext,
-        });
-      },
-    }),
+              // Audit log: Magic link sent (fire-and-forget)
+              const auditContext = getAuditContext();
+              auditService.log({
+                actorType: 'anonymous', // User not logged in yet
+                actorName: email,
+                category: 'auth',
+                action: AuditActions.MAGIC_LINK_SENT,
+                details: { email },
+                ...auditContext,
+              });
+            },
+          }),
+        ]),
     ...(process.env.GOOGLE_CLIENT_ID
       ? [
           GoogleProvider({

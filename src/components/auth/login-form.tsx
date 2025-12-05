@@ -29,9 +29,15 @@ interface LoginFormProps {
   availableProviders: OAuthProvider;
   oauthConfig: OAuthConfig;
   loginMessage?: string | null;
+  showMagicLink?: boolean;
 }
 
-export function LoginForm({ availableProviders, oauthConfig, loginMessage }: LoginFormProps) {
+export function LoginForm({
+  availableProviders,
+  oauthConfig,
+  loginMessage,
+  showMagicLink = true,
+}: LoginFormProps) {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
@@ -124,9 +130,11 @@ export function LoginForm({ availableProviders, oauthConfig, loginMessage }: Log
         <CardHeader>
           <CardTitle as="h1">Sign in to gthanks</CardTitle>
           <CardDescription>
-            {hasAnyOAuthProvider
+            {hasAnyOAuthProvider && showMagicLink
               ? 'Choose your preferred sign-in method. Your account is linked to your email address, so you can use any provider with the same email.'
-              : 'Enter your email to receive a magic login link'}
+              : hasAnyOAuthProvider && !showMagicLink
+                ? 'Sign in with your organization account.'
+                : 'Enter your email to receive a magic login link'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -213,49 +221,53 @@ export function LoginForm({ availableProviders, oauthConfig, loginMessage }: Log
                   )}
                 </div>
 
-                {/* Divider */}
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
+                {/* Divider - only show if magic link is enabled */}
+                {showMagicLink && (
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">
+                        Or continue with email
+                      </span>
+                    </div>
                   </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                      Or continue with email
-                    </span>
-                  </div>
-                </div>
+                )}
               </>
             )}
 
-            {/* Magic Link Form */}
-            <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
-              <div>
-                <label htmlFor="email-input" className="sr-only">
-                  Email address
-                </label>
-                <Input
-                  id="email-input"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoading || oauthLoading !== null}
-                  required
-                  aria-describedby="email-help"
-                  className="w-full"
-                />
-                <div id="email-help" className="sr-only">
-                  Enter your email address to receive a magic login link
+            {/* Magic Link Form - only show if enabled */}
+            {showMagicLink && (
+              <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
+                <div>
+                  <label htmlFor="email-input" className="sr-only">
+                    Email address
+                  </label>
+                  <Input
+                    id="email-input"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={isLoading || oauthLoading !== null}
+                    required
+                    aria-describedby="email-help"
+                    className="w-full"
+                  />
+                  <div id="email-help" className="sr-only">
+                    Enter your email address to receive a magic login link
+                  </div>
                 </div>
-              </div>
-              <ThemeButton
-                type="submit"
-                disabled={isLoading || oauthLoading !== null}
-                className="w-full"
-              >
-                {isLoading ? 'Sending...' : 'Send Login Link'}
-              </ThemeButton>
-            </form>
+                <ThemeButton
+                  type="submit"
+                  disabled={isLoading || oauthLoading !== null}
+                  className="w-full"
+                >
+                  {isLoading ? 'Sending...' : 'Send Login Link'}
+                </ThemeButton>
+              </form>
+            )}
           </div>
         </CardContent>
       </Card>
