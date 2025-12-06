@@ -1,26 +1,26 @@
 # gthanks - Implementation Roadmap & Missing Features
 
-**Last Updated**: 2025-11-17
+**Last Updated**: 2025-12-05
 **Status**: Production-ready MVP with identified gaps and improvements needed
 
 ---
 
-## 🔴 CRITICAL PRIORITY - Security & Foundation
+## CRITICAL PRIORITY - Security & Foundation
 
 ### 1. **Rate Limiting - Distributed Implementation**
 
-- **Status**: ⚠️ In-memory only (single-instance)
-- **Issue**: Current rate limiting won't scale across multiple serverless instances
+- **Status**: In-memory only (single-instance)
+- **Issue**: Current rate limiting won't scale across multiple instances
 - **Action Required**:
   - Migrate to Redis/Upstash for distributed rate limiting
   - Add connection pooling for Redis
   - Update middleware to use distributed storage
-  - Test with multiple Vercel instances
+  - Test with multiple instances
 - **Impact**: Security risk under load, DoS vulnerability in multi-instance deployments
 
 ### 2. **CSRF Protection**
 
-- **Status**: ❌ Not documented/verified
+- **Status**: Not documented/verified
 - **Issue**: No explicit CSRF token validation mentioned in API routes or middleware
 - **Action Required**:
   - Verify NextAuth CSRF protection is enabled
@@ -31,7 +31,7 @@
 
 ### 3. **Input Sanitization & XSS Prevention**
 
-- **Status**: ⚠️ Zod validation exists but sanitization unclear
+- **Status**: Zod validation exists but sanitization unclear
 - **Issue**: No explicit HTML sanitization strategy documented
 - **Action Required**:
   - Audit all user-generated content fields (wish notes, list descriptions, group names)
@@ -42,7 +42,7 @@
 
 ### 4. **Database Connection Pooling (Production)**
 
-- **Status**: ⚠️ Not configured for PostgreSQL production
+- **Status**: Not configured for PostgreSQL production
 - **Issue**: No explicit connection pool limits or PgBouncer setup documented
 - **Action Required**:
   - Configure Prisma connection pooling (`connection_limit` parameter)
@@ -53,7 +53,7 @@
 
 ### 5. **Session Security Hardening**
 
-- **Status**: ⚠️ Session regeneration implemented but needs audit
+- **Status**: Session regeneration implemented but needs audit
 - **Issue**: Need comprehensive session security audit
 - **Action Required**:
   - Verify session fixation prevention (regenerateSession implemented)
@@ -65,7 +65,7 @@
 
 ### 6. **SQL Injection Prevention Audit**
 
-- **Status**: ✅ Likely safe (Prisma ORM) but unverified
+- **Status**: Likely safe (Prisma ORM) but unverified
 - **Issue**: No explicit audit of raw SQL usage
 - **Action Required**:
   - Search codebase for `$queryRaw` and `$executeRaw`
@@ -76,11 +76,11 @@
 
 ---
 
-## 🟠 HIGH PRIORITY - Infrastructure & Performance
+## HIGH PRIORITY - Infrastructure & Performance
 
 ### 7. **File Upload Security**
 
-- **Status**: ⚠️ Image uploads exist but need security review
+- **Status**: Image uploads exist but need security review
 - **Issue**: File upload limits, MIME type validation, and virus scanning unclear
 - **Action Required**:
   - Verify file size limits (currently 5MB documented)
@@ -92,8 +92,8 @@
 
 ### 8. **Image Storage Migration (S3/Cloudinary)**
 
-- **Status**: ❌ Local filesystem storage only
-- **Issue**: Not scalable for multi-instance deployments (Vercel/serverless)
+- **Status**: Local filesystem storage only
+- **Issue**: Not scalable for multi-instance deployments
 - **Action Required**:
   - Implement S3-compatible storage adapter (AWS S3, Cloudflare R2, Backblaze B2)
   - Add environment variable for storage backend selection
@@ -104,7 +104,7 @@
 
 ### 9. **Cache Strategy Implementation**
 
-- **Status**: ❌ No caching layer documented
+- **Status**: No caching layer documented
 - **Issue**: No caching for expensive queries or metadata extraction
 - **Action Required**:
   - Implement Redis/Upstash cache for:
@@ -118,19 +118,19 @@
 
 ### 10. **Database Indexing Audit**
 
-- **Status**: ✅ Basic indexes exist but need optimization
+- **Status**: Basic indexes exist but need optimization
 - **Issue**: Need performance testing to identify missing indexes
 - **Action Required**:
   - Run query performance profiling (Prisma Studio, PostgreSQL logs)
   - Identify slow queries (>100ms)
   - Add composite indexes for common query patterns
   - Document indexing strategy
-  - Add monitoring for slow queries (Sentry)
+  - Add monitoring for slow queries
 - **Impact**: Slow page loads, database performance degradation
 
 ### 11. **Background Job Queue**
 
-- **Status**: ❌ No job queue system implemented
+- **Status**: No job queue system implemented
 - **Issue**: Long-running tasks (image processing, email sending) block HTTP requests
 - **Action Required**:
   - Implement job queue (BullMQ, Inngest, Quirrel)
@@ -145,10 +145,10 @@
 
 ### 12. **Monitoring & Alerting Enhancement**
 
-- **Status**: ⚠️ Sentry configured but incomplete
+- **Status**: Basic monitoring only
 - **Issue**: Need comprehensive monitoring strategy
 - **Action Required**:
-  - Add custom Sentry metrics:
+  - Add custom metrics:
     - Rate limit hit rate
     - Failed reservation attempts
     - Image processing failures
@@ -161,11 +161,11 @@
 
 ---
 
-## 🟡 MEDIUM PRIORITY - User Experience & Features
+## MEDIUM PRIORITY - User Experience & Features
 
 ### 13. **Wish Reservation Notifications**
 
-- **Status**: ❌ Not implemented
+- **Status**: Not implemented
 - **Issue**: Users don't know when gifts are reserved on their lists
 - **Action Required**:
   - Implement email notification when wish is reserved
@@ -176,7 +176,7 @@
 
 ### 14. **List Collaboration Features**
 
-- **Status**: ⚠️ Co-admin exists but limited
+- **Status**: Co-admin exists but limited
 - **Issue**: Co-admins can't manage reservations or see full list activity
 - **Action Required**:
   - Add activity log for list changes
@@ -187,7 +187,7 @@
 
 ### 15. **Mobile App (PWA) Implementation**
 
-- **Status**: ❌ Not implemented (mobile-responsive web only)
+- **Status**: Not implemented (mobile-responsive web only)
 - **Issue**: No offline support, no native app features
 - **Action Required**:
   - Add Progressive Web App (PWA) manifest
@@ -199,7 +199,7 @@
 
 ### 16. **Advanced Filtering & Search**
 
-- **Status**: ⚠️ Basic filtering exists but limited
+- **Status**: Basic filtering exists but limited
 - **Issue**: No full-text search, limited sort options
 - **Action Required**:
   - Implement full-text search for wishes (title, notes, URL)
@@ -214,7 +214,7 @@
 
 ### 17. **Bulk Import/Export**
 
-- **Status**: ❌ Not implemented
+- **Status**: Not implemented
 - **Issue**: No way to import wishlists from other platforms or export for backup
 - **Action Required**:
   - Add CSV/JSON export for wishes and lists
@@ -227,7 +227,7 @@
 
 ### 18. **Wish Templates & Quick Add**
 
-- **Status**: ⚠️ Quick add exists but limited
+- **Status**: Quick add exists but limited
 - **Issue**: No wish templates for common items
 - **Action Required**:
   - Create wish templates (books, electronics, clothing, etc.)
@@ -238,7 +238,7 @@
 
 ### 19. **Gift Recommendations**
 
-- **Status**: ❌ Not implemented
+- **Status**: Not implemented
 - **Issue**: No AI/ML suggestions for gift ideas
 - **Action Required**:
   - Integrate OpenAI API for gift suggestions based on:
@@ -251,7 +251,7 @@
 
 ### 20. **Multi-Language Support (i18n)**
 
-- **Status**: ❌ English only
+- **Status**: English only
 - **Issue**: Not accessible to non-English speakers
 - **Action Required**:
   - Implement next-intl or next-i18next
@@ -263,11 +263,11 @@
 
 ---
 
-## 🟢 LOW PRIORITY - Developer Experience & Optimization
+## LOW PRIORITY - Developer Experience & Optimization
 
 ### 21. **API Documentation (OpenAPI/Swagger)**
 
-- **Status**: ❌ JSDoc comments exist but no formal API docs
+- **Status**: JSDoc comments exist but no formal API docs
 - **Issue**: No interactive API documentation for developers
 - **Action Required**:
   - Generate OpenAPI 3.0 spec from API routes
@@ -279,7 +279,7 @@
 
 ### 22. **Storybook Component Library**
 
-- **Status**: ❌ Not implemented
+- **Status**: Not implemented
 - **Issue**: No isolated component development/documentation
 - **Action Required**:
   - Set up Storybook for component library
@@ -290,7 +290,7 @@
 
 ### 23. **End-to-End Testing Coverage**
 
-- **Status**: ⚠️ E2E tests exist but incomplete (see `/test-e2e` slash command)
+- **Status**: E2E tests exist but incomplete (see `/test-e2e` slash command)
 - **Issue**: Need comprehensive E2E test coverage
 - **Action Required**:
   - Add E2E tests for:
@@ -306,7 +306,7 @@
 
 ### 24. **Performance Budget Enforcement**
 
-- **Status**: ❌ No performance budgets configured
+- **Status**: No performance budgets configured
 - **Issue**: No automated performance regression detection
 - **Action Required**:
   - Set Lighthouse CI performance budgets:
@@ -319,7 +319,7 @@
 
 ### 25. **Code Splitting Optimization**
 
-- **Status**: ⚠️ Basic Next.js code splitting but needs audit
+- **Status**: Basic Next.js code splitting but needs audit
 - **Issue**: Large bundle sizes possible with Radix UI and dependencies
 - **Action Required**:
   - Audit bundle with `@next/bundle-analyzer`
@@ -333,7 +333,7 @@
 
 ### 26. **Environment-Specific Config Management**
 
-- **Status**: ⚠️ `.env` files used but no formal config system
+- **Status**: `.env` files used but no formal config system
 - **Issue**: Environment variables scattered, no validation
 - **Action Required**:
   - Implement typed environment config system (t3-env, zod-env)
@@ -344,22 +344,16 @@
 
 ### 27. **Git Hooks & Pre-Commit Checks**
 
-- **Status**: ❌ No pre-commit hooks configured
-- **Issue**: Code quality issues committed to repo
+- **Status**: Husky configured with pre-commit hooks
+- **Issue**: Documented as not configured but actually implemented
 - **Action Required**:
-  - Set up Husky for git hooks
-  - Add pre-commit hooks:
-    - ESLint checks
-    - TypeScript type checking
-    - Prettier formatting
-    - Unit test run
-    - No console.log checks
+  - Verify all hooks working correctly
   - Add commit message linting (Conventional Commits)
 - **Impact**: Inconsistent code quality, broken builds
 
 ### 28. **Dependency Update Strategy**
 
-- **Status**: ⚠️ No automated dependency updates
+- **Status**: No automated dependency updates
 - **Issue**: Security vulnerabilities and outdated dependencies
 - **Action Required**:
   - Set up Dependabot or Renovate
@@ -371,11 +365,11 @@
 
 ---
 
-## 📊 UNDOCUMENTED FEATURES (Audit Needed)
+## UNDOCUMENTED FEATURES (Audit Needed)
 
 ### 29. **Email Verification System**
 
-- **Status**: ✅ Implemented (found in codebase)
+- **Status**: Implemented (found in codebase)
 - **Documentation Gap**: Not covered in CLAUDE.md
 - **Audit Required**:
   - `/api/user/emails/add` - Add email
@@ -387,7 +381,7 @@
 
 ### 30. **Avatar Management System**
 
-- **Status**: ✅ Implemented (found in codebase)
+- **Status**: Implemented (found in codebase)
 - **Documentation Gap**: Not covered in CLAUDE.md
 - **Audit Required**:
   - `/api/user/avatar` - Upload user avatar
@@ -399,7 +393,7 @@
 
 ### 31. **Vanity URL System**
 
-- **Status**: ✅ Implemented (found in codebase)
+- **Status**: Implemented (found in codebase)
 - **Documentation Gap**: Partially documented but incomplete
 - **Audit Required**:
   - `/api/user/username` - Set username (one-time only restriction)
@@ -411,7 +405,7 @@
 
 ### 32. **Invitation System (Lists & Groups)**
 
-- **Status**: ✅ Implemented (found in codebase)
+- **Status**: Implemented (found in codebase)
 - **Documentation Gap**: Not fully documented
 - **Audit Required**:
   - List invitations:
@@ -427,7 +421,7 @@
 
 ### 33. **Onboarding Flow**
 
-- **Status**: ✅ Implemented (found in codebase)
+- **Status**: Implemented (found in codebase)
 - **Documentation Gap**: Mentioned but not detailed
 - **Audit Required**:
   - `/api/user/onboarding` - Initialize onboarding
@@ -440,7 +434,7 @@
 
 ### 34. **Public List Access System**
 
-- **Status**: ✅ Implemented (found in codebase)
+- **Status**: Implemented (found in codebase)
 - **Documentation Gap**: Mentioned but architecture unclear
 - **Audit Required**:
   - `/api/lists/public/[shareToken]` - Access public list
@@ -452,19 +446,18 @@
 
 ### 35. **Cron Job System**
 
-- **Status**: ✅ Implemented (found in codebase)
-- **Documentation Gap**: Documented in `docs/VERCEL_DEPLOYMENT.md` but not CLAUDE.md
+- **Status**: Implemented (found in codebase)
+- **Documentation Gap**: Documented in `src/lib/cron/README.md`
 - **Audit Required**:
   - `/api/cron/cleanup-tokens` - Token cleanup job
   - `CRON_SECRET` authentication
-  - `vercel.json` configuration
-  - Scheduled task strategy
+  - External scheduler setup for Docker deployments
   - Document cron job deployment and monitoring
 - **Impact**: Expired tokens accumulate if cron fails
 
 ### 36. **Metadata Scraping System**
 
-- **Status**: ✅ Implemented (found in codebase)
+- **Status**: Implemented (found in codebase)
 - **Documentation Gap**: Known limitations documented but architecture missing
 - **Audit Required**:
   - `/api/metadata` - URL metadata extraction
@@ -477,7 +470,7 @@
 
 ### 37. **Admin User Management**
 
-- **Status**: ✅ Implemented (found in codebase)
+- **Status**: Implemented (found in codebase)
 - **Documentation Gap**: Admin features mentioned but not detailed
 - **Audit Required**:
   - 11 admin API endpoints for user management
@@ -490,11 +483,11 @@
 
 ---
 
-## 🔍 DISCOVERED GAPS IN DOCUMENTATION
+## DISCOVERED GAPS IN DOCUMENTATION
 
 ### 38. **Service Layer Documentation**
 
-- **Status**: ⚠️ Architecture documented but individual services not detailed
+- **Status**: Architecture documented but individual services not detailed
 - **Gap**: Need comprehensive service API documentation
 - **Action Required**:
   - Document each service file in `.claude/guides/services/`:
@@ -510,7 +503,7 @@
 
 ### 39. **Component Architecture Guide**
 
-- **Status**: ⚠️ Components listed but usage patterns unclear
+- **Status**: Components listed but usage patterns unclear
 - **Gap**: Need component usage guidelines and examples
 - **Action Required**:
   - Create `.claude/guides/components/` directory
@@ -524,7 +517,7 @@
 
 ### 40. **API Route Conventions**
 
-- **Status**: ✅ Documented in `.claude/guides/api.md`
+- **Status**: Documented in `.claude/guides/api.md`
 - **Gap**: Need comprehensive API endpoint catalog
 - **Action Required**:
   - Create `.claude/guides/api-endpoints.md` with all 70 endpoints
@@ -535,7 +528,7 @@
 
 ### 41. **Database Schema Documentation**
 
-- **Status**: ⚠️ High-level schema in architecture guide
+- **Status**: High-level schema in architecture guide
 - **Gap**: Need detailed field documentation
 - **Action Required**:
   - Generate Prisma schema documentation
@@ -547,7 +540,7 @@
 
 ### 42. **Testing Strategy Documentation**
 
-- **Status**: ✅ Testing guide exists (`.claude/guides/testing.md`)
+- **Status**: Testing guide exists (`.claude/guides/testing.md`)
 - **Gap**: Need test coverage reports and gaps identified
 - **Action Required**:
   - Run coverage report and document current coverage
@@ -559,7 +552,7 @@
 
 ### 43. **Deployment Guides Enhancement**
 
-- **Status**: ✅ Docker and Vercel guides exist
+- **Status**: Docker guide exists
 - **Gap**: Need additional deployment scenarios
 - **Action Required**:
   - Add guides for:
@@ -573,7 +566,7 @@
 
 ---
 
-## 📋 AUDIT CHECKLIST - Items to Verify
+## AUDIT CHECKLIST - Items to Verify
 
 ### Security Audit
 
@@ -625,7 +618,7 @@
 
 ---
 
-## 🎯 PRIORITIZATION MATRIX
+## PRIORITIZATION MATRIX
 
 ### Priority 1 (Do First - Security & Foundation)
 
@@ -666,7 +659,7 @@
 
 ---
 
-## 📈 ESTIMATED EFFORT (T-Shirt Sizing)
+## ESTIMATED EFFORT (T-Shirt Sizing)
 
 | Priority Level            | Total Items  | Estimated Effort           |
 | ------------------------- | ------------ | -------------------------- |
@@ -680,7 +673,7 @@
 
 ---
 
-## 🚀 NEXT STEPS
+## NEXT STEPS
 
 1. **Immediate Actions (This Week)**:
    - Run security audit (#2, #3, #6)
@@ -708,4 +701,4 @@
 
 **Document Owner**: Development Team
 **Review Frequency**: Weekly during Priority 1-2, Monthly thereafter
-**Last Audit**: 2025-11-17
+**Last Audit**: 2025-12-05

@@ -193,8 +193,6 @@ SMTP_PORT=587                                  # SMTP server port
 SMTP_USER=                                     # SMTP username
 SMTP_PASS=                                     # SMTP password
 
-# Monitoring
-SENTRY_DSN=                                    # Sentry error tracking DSN
 ```
 
 See `docs/SECRETS_MANAGEMENT.md` for secure secrets handling and complete environment variable reference.
