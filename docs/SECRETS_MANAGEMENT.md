@@ -53,7 +53,7 @@ NEXTAUTH_SECRET=<32-char-random-string>
 ### Production Only (Required)
 
 ```env
-# Cron jobs (if using Vercel)
+# Cron jobs
 CRON_SECRET=<32-char-random-string>
 
 # Email (for magic links)
@@ -62,9 +62,6 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=<smtp-username>
 SMTP_PASS=<smtp-password>
-
-# Monitoring (optional but recommended)
-SENTRY_DSN=<sentry-dsn>
 ```
 
 ### Optional (All Environments)
@@ -379,21 +376,14 @@ EMAIL_FROM=noreply@yourdomain.com
 2. **Update environment variable:**
 
    ```bash
-   # For Docker
    # Edit .env or docker-compose.yml
    NEXTAUTH_SECRET=new-secret-here
-
-   # For Vercel
-   vercel env add NEXTAUTH_SECRET
-   # Enter new value, select Production
    ```
 
 3. **Deploy application:**
 
    ```bash
-   docker compose up -d  # Docker
-   # OR
-   git push origin production  # Vercel
+   docker compose up -d
    ```
 
 4. **Notify users:**
@@ -546,9 +536,6 @@ SMTP_PORT=587
 SMTP_USER=staging@yourdomain.com
 SMTP_PASS=staging-email-password
 EMAIL_FROM=staging@yourdomain.com
-
-# Monitoring (optional)
-SENTRY_DSN=https://staging-sentry-dsn@sentry.io/...
 ```
 
 **Security notes:**
@@ -588,11 +575,6 @@ SMTP_HOST=smtp.sendgrid.net
 SMTP_PORT=587
 SMTP_USER=apikey
 SMTP_PASS=<sendgrid-api-key>
-
-# Monitoring (REQUIRED)
-SENTRY_DSN=https://prod-sentry-dsn@sentry.io/...
-SENTRY_ORG=your-org
-SENTRY_PROJECT=gthanks
 
 # Rate limiting (if distributed)
 REDIS_URL=redis://prod-redis.example.com:6379
@@ -668,37 +650,6 @@ services:
 
 ---
 
-### Vercel Deployment
-
-**Add secrets via CLI:**
-
-```bash
-# Production
-vercel env add NEXTAUTH_SECRET production
-
-# Staging
-vercel env add NEXTAUTH_SECRET preview
-
-# Development
-vercel env add NEXTAUTH_SECRET development
-```
-
-**Add secrets via Dashboard:**
-
-1. Go to Vercel dashboard
-2. Select project
-3. Settings → Environment Variables
-4. Add variable
-5. Select environment (Production, Preview, Development)
-
-**Pull secrets for local development:**
-
-```bash
-vercel env pull .env.local
-```
-
----
-
 ## Secrets Checklist
 
 ### Before First Deployment
@@ -708,7 +659,6 @@ vercel env pull .env.local
 - [ ] Generate database password (16+ characters)
 - [ ] Create OAuth credentials (per environment)
 - [ ] Configure email SMTP credentials
-- [ ] Set up monitoring (Sentry DSN)
 - [ ] Verify all secrets are set in deployment platform
 - [ ] Verify no secrets committed to Git
 
@@ -719,7 +669,6 @@ vercel env pull .env.local
 - [ ] Test OAuth providers (if configured)
 - [ ] Test email sending (magic links)
 - [ ] Verify cron jobs authenticate correctly
-- [ ] Check monitoring dashboard (Sentry)
 
 ### Regular Maintenance
 
@@ -775,9 +724,8 @@ vercel env pull .env.local
 - [Google OAuth Setup](https://console.cloud.google.com)
 - [Facebook OAuth Setup](https://developers.facebook.com)
 - [Docker Secrets](https://docs.docker.com/engine/swarm/secrets/)
-- [Vercel Environment Variables](https://vercel.com/docs/environment-variables)
 
 ---
 
-**Last Updated:** 2025-11-17
+**Last Updated:** 2025-12-05
 **Status:** Production-ready
