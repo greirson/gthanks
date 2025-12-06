@@ -29,11 +29,6 @@ const getAllowedHosts = (): string[] => {
     }
   }
 
-  // Add Vercel deployment URL
-  if (process.env.VERCEL_URL) {
-    hosts.push(process.env.VERCEL_URL);
-  }
-
   return hosts.filter(Boolean);
 };
 
