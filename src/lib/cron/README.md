@@ -1,6 +1,6 @@
 # Cron Jobs
 
-This directory contains background job functions that run on a schedule via Vercel Cron Jobs.
+This directory contains background job functions that run on a schedule.
 
 ## Available Jobs
 
@@ -13,8 +13,6 @@ This directory contains background job functions that run on a schedule via Verc
 - Prevents security risks from expired tokens remaining in the database
 - Reduces database bloat from accumulating old records
 - Magic links expire after 15 minutes but tokens stay in DB indefinitely without cleanup
-
-**Schedule**: Daily at midnight UTC (configured in `/vercel.json`)
 
 **API Endpoint**: `/api/cron/cleanup-tokens`
 
@@ -54,34 +52,75 @@ curl -X GET http://localhost:3000/api/cron/cleanup-tokens \
   -H "Authorization: Bearer YOUR_CRON_SECRET"
 ```
 
-## Production Setup
+## Production Setup (Docker)
 
-1. **Add CRON_SECRET to Vercel**:
+### 1. Set CRON_SECRET in your environment
 
-   ```bash
-   vercel env add CRON_SECRET
-   # Enter a secure random value (use: openssl rand -base64 32)
-   ```
+Add to your `.env` or Docker environment:
 
-2. **Deploy with vercel.json**:
-   The `vercel.json` file in the project root configures the cron schedule:
+```bash
+# Generate a secure random value
+openssl rand -base64 32
+```
 
-   ```json
-   {
-     "crons": [
-       {
-         "path": "/api/cron/cleanup-tokens",
-         "schedule": "0 0 * * *"
-       }
-     ]
-   }
-   ```
+```env
+CRON_SECRET=your-generated-secret
+```
 
-3. **Verify in Vercel Dashboard**:
-   - Go to your project settings
-   - Navigate to "Cron Jobs" tab
-   - You should see the scheduled job listed
-   - Vercel automatically adds the correct Authorization header
+### 2. Set up external cron scheduler
+
+Since Docker deployments don't have built-in cron scheduling like serverless platforms, you need an external scheduler. Options include:
+
+**Option A: Host cron job**
+
+Add to your host's crontab (`crontab -e`):
+
+```bash
+# Run token cleanup daily at midnight
+0 0 * * * curl -X GET "https://your-domain.com/api/cron/cleanup-tokens" -H "Authorization: Bearer YOUR_CRON_SECRET" >> /var/log/gthanks-cron.log 2>&1
+```
+
+**Option B: Separate cron container**
+
+Add to your `docker-compose.yml`:
+
+```yaml
+services:
+  cron:
+    image: alpine:latest
+    command: >
+      sh -c "echo '0 0 * * * wget -q -O - --header=\"Authorization: Bearer $$CRON_SECRET\" http://app:3000/api/cron/cleanup-tokens' | crontab - && crond -f"
+    environment:
+      - CRON_SECRET=${CRON_SECRET}
+    depends_on:
+      - app
+    restart: unless-stopped
+```
+
+**Option C: External cron service**
+
+Use services like:
+
+- [cron-job.org](https://cron-job.org) (free)
+- [EasyCron](https://www.easycron.com)
+- [Cronitor](https://cronitor.io)
+
+Configure them to call your endpoint with the Authorization header.
+
+### 3. Verify cron execution
+
+Check the logs to verify the cron job is running:
+
+```bash
+# View recent cron logs
+docker logs gthanks-app --tail=100 | grep cleanup
+```
+
+**Expected output:**
+
+```
+Cleaned up expired tokens: MagicLinks: 5, VerificationTokens: 12
+```
 
 ## Cron Schedule Format
 
@@ -100,6 +139,6 @@ Examples:
 ## Security Notes
 
 - The API endpoint requires Bearer token authentication
-- Only Vercel's cron service should have the `CRON_SECRET`
+- Only your cron scheduler should have the `CRON_SECRET`
 - Unauthorized requests return 401 status
 - Failed cleanups are logged but don't expose sensitive data

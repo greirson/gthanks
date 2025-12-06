@@ -1,7 +1,7 @@
 /**
  * Expired Token Cleanup Cron Endpoint
  *
- * Protected endpoint called by Vercel Cron Jobs to clean up expired tokens.
+ * Protected endpoint called by external cron scheduler to clean up expired tokens.
  * Requires CRON_SECRET environment variable for authorization.
  */
 

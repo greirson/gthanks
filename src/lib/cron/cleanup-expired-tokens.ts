@@ -5,7 +5,7 @@
  * - Security risks from expired tokens remaining in database
  * - Database bloat from accumulating old records
  *
- * Runs daily via Vercel Cron Jobs
+ * Runs daily via external cron scheduler
  */
 
 import { db } from '@/lib/db';

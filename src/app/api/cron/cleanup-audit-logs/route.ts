@@ -1,7 +1,7 @@
 /**
  * Audit Log Cleanup Cron Endpoint
  *
- * Protected endpoint called by Vercel Cron Jobs to clean up old audit log entries.
+ * Protected endpoint called by external cron scheduler to clean up old audit log entries.
  * Requires CRON_SECRET environment variable for authorization.
  *
  * Cleanup respects:

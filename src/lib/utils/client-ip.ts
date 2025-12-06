@@ -2,7 +2,7 @@
  * Get client IP address from request headers
  *
  * Priority order (most reliable first):
- * 1. x-real-ip - Set by Vercel/nginx (most reliable)
+ * 1. x-real-ip - Set by reverse proxy (most reliable)
  * 2. cf-connecting-ip - Set by Cloudflare
  * 3. x-forwarded-for - First IP (original client when behind trusted proxy)
  *
@@ -12,7 +12,7 @@
 export function getClientIp(
   headers: Headers | { get: (name: string) => string | null }
 ): string | undefined {
-  // Vercel sets x-real-ip
+  // Reverse proxy typically sets x-real-ip
   const realIp = headers.get('x-real-ip');
   if (realIp) {
     return realIp.trim();
