@@ -183,3 +183,8 @@ zen_generated.code
 .playwright-profile/
 .env*.local
 .env.vercel
+
+
+# Davia
+.davia/
+.claude/skills/davia-documentation/SKILL.md
